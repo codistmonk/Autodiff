@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import autodiff.nodes.Convolution2D;
 import autodiff.nodes.Data;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.MaxPooling2D;
@@ -129,7 +130,7 @@ public class DefaultProcessorTest {
 				10F, 11F, 12F,
 				13F, 14F, 15F,
 				16F, 17F, 18F);
-		final Node<?> y = new MaxPooling2D().setArgument(x).setOffsetXY(1).setStrideXY(2).setKernelSide(3).autoShape();
+		final Node<?> y = new MaxPooling2D().setInputs(x).setOffsetXY(1).setStrideXY(2).setKernelSide(3).autoShape();
 		
 		assertArrayEquals(new int[] { 1, 2, 1, 1 }, y.getShape());
 		
@@ -138,6 +139,27 @@ public class DefaultProcessorTest {
 		assertArrayEquals(new float[] {
 				9F,
 				18F
+		}, y.get(new float[y.getLength()]), 0F);
+	}
+	
+	@Test
+	public final void testConvolution1() {
+		final Node<?> inputs = new Data().setShape(1, 1, 3, 3).set(
+				1F, 2F, 3F,
+				4F, 5F, 6F,
+				7F, 8F, 9F);
+		final Node<?> kernel = new Data().setShape(2, 2).set(
+				1F, 2F,
+				3F, 4F);
+		final Node<?> y = new Convolution2D().setInputs(inputs).setKernel(kernel).setStrideXY(2).autoShape();
+		
+		assertArrayEquals(new int[] { 1, 1, 2, 2 }, y.getShape());
+		
+		this.getProcessor().fullForward(y);
+		
+		assertArrayEquals(new float[] {
+				37F, 21F,
+				23F, 9F
 		}, y.get(new float[y.getLength()]), 0F);
 	}
 	

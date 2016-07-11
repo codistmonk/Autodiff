@@ -132,16 +132,58 @@ public final class DefaultProcessor implements NodeProcessor {
 		
 		@Override
 		public final Void visit(final Convolution2D node) {
-			// TODO Auto-generated method stub
+			final Node<?> inputs = node.getInputs();
+			final Node<?> kernel = node.getKernel();
+			final int[] inputsShape = inputs.getShape();
+			final int[] kernelShape = kernel.getShape();
+			final int inputWidth = inputsShape[inputsShape.length - 1];
+			final int inputHeight = inputsShape[inputsShape.length - 2];
+			final int offsetX = node.getOffsetX();
+			final int offsetY = node.getOffsetY();
+			final int strideX = node.getStrideX();
+			final int strideY = node.getStrideY();
+			final int kernelWidth = kernelShape[kernelShape.length - 1];
+			final int kernelHeight = kernelShape[kernelShape.length - 2];
+			final int hh = (kernelHeight - 1) / 2;
+			final int hw = (kernelWidth - 1) / 2;
+			final int inputSize = inputWidth * inputHeight;
+			final int inputCount = inputs.getLength() / inputSize; 
+			
+			for (int i = 0, j = 0; i < inputCount; ++i) {
+				for (int y = offsetY; y < inputHeight; y += strideY) {
+					final int top = max(0, y - hh);
+					final int bottomEnd = min(top + kernelHeight, inputHeight);
+					final int dky = top - (y - hh);
+					
+					for (int x = offsetX; x < inputWidth; x += strideX, ++j) {
+						final int left = max(0, x - hw);
+						final int rightEnd = min(left + kernelWidth, inputWidth);
+						final int dkx = left - (x - hw);
+						float value = 0F;
+						
+						for (int yy = top; yy < bottomEnd; ++yy) {
+							for (int xx = left; xx < rightEnd; ++xx) {
+								final float inputValue = inputs.get(xx + inputWidth * yy + inputSize * i);
+								final float kernelValue = kernel.get((dkx + xx - left) + kernelWidth * (dky + yy - top));
+								
+								value += inputValue * kernelValue;
+							}
+						}
+						
+						node.set(j, value);
+					}
+				}
+			}
+			
 			return null;
 		}
 		
 		@Override
 		public final Void visit(final MaxPooling2D node) {
-			final Node<?> argument = node.getArgument();
-			final int[] argumentShape = argument.getShape();
-			final int inputHeight = argumentShape[argumentShape.length - 2];
-			final int inputWidth = argumentShape[argumentShape.length - 1];
+			final Node<?> inputs = node.getInputs();
+			final int[] inputsShape = inputs.getShape();
+			final int inputHeight = inputsShape[inputsShape.length - 2];
+			final int inputWidth = inputsShape[inputsShape.length - 1];
 			final int offsetX = node.getOffsetX();
 			final int offsetY = node.getOffsetY();
 			final int strideX = node.getStrideX();
@@ -151,7 +193,7 @@ public final class DefaultProcessor implements NodeProcessor {
 			final int hh = (kernelHeight - 1) / 2;
 			final int hw = (kernelWidth - 1) / 2;
 			final int inputSize = inputWidth * inputHeight;
-			final int inputCount = argument.getLength() / inputSize; 
+			final int inputCount = inputs.getLength() / inputSize; 
 			
 			for (int i = 0, j = 0; i < inputCount; ++i) {
 				for (int y = offsetY; y < inputHeight; y += strideY) {
@@ -165,7 +207,7 @@ public final class DefaultProcessor implements NodeProcessor {
 						
 						for (int yy = top; yy < bottomEnd; ++yy) {
 							for (int xx = left; xx < rightEnd; ++xx) {
-								final float inputValue = argument.get(xx + inputWidth * yy + inputSize * i);
+								final float inputValue = inputs.get(xx + inputWidth * yy + inputSize * i);
 								
 								if (value < inputValue) {
 									value = inputValue;

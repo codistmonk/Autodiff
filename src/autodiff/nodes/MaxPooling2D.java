@@ -17,6 +17,14 @@ public final class MaxPooling2D extends UnaryNode<MaxPooling2D> implements Node2
 	
 	private int kernelHeight = 1;
 	
+	public final Node<?> getInputs() {
+		return this.getArgument();
+	}
+	
+	public final MaxPooling2D setInputs(final Node<?> inputs) {
+		return this.setArgument(inputs);
+	}
+	
 	@Override
 	public final <V> V accept(final NodeVisitor<V> visitor) {
 		return visitor.visit(this);

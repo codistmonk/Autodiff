@@ -13,6 +13,22 @@ public final class Convolution2D extends BinaryNode<Convolution2D> implements No
 	
 	private int strideY = 1;
 	
+	public final Node<?> getInputs() {
+		return this.getLeft();
+	}
+	
+	public final Convolution2D setInputs(final Node<?> inputs) {
+		return this.setLeft(inputs);
+	}
+	
+	public final Node<?> getKernel() {
+		return this.getRight();
+	}
+	
+	public final Convolution2D setKernel(final Node<?> kernel) {
+		return this.setRight(kernel);
+	}
+	
 	@Override
 	public final <V> V accept(final NodeVisitor<V> visitor) {
 		return visitor.visit(this);
