@@ -82,19 +82,38 @@ public final class DefaultProcessor implements NodeProcessor {
 			
 			return null;
 		}
-
+		
 		@Override
 		public final Void visit(final MatrixMultiplication node) {
-			// TODO Auto-generated method stub
+			final Node<?> left = node.getLeft();
+			final Node<?> right = node.getRight();
+			final int[] leftShape = left.getLengths(new int[2]);
+			final int[] rightShape = right.getLengths(new int[2]);
+			final int rows = leftShape[0];
+			final int columns = rightShape[1];
+			final int stride = leftShape[1];
+			
+			for (int r = 0; r < rows; ++r) {
+				for (int c = 0; c < columns; ++c) {
+					float value = 0F;
+					
+					for (int k = 0; k < stride; ++k) {
+						value += left.get(k + r * stride) * right.get(c + k * columns);
+					}
+					
+					node.set(c + r * columns, value);
+				}
+			}
+			
 			return null;
 		}
-
+		
 		@Override
 		public final Void visit(final Convolution2D node) {
 			// TODO Auto-generated method stub
 			return null;
 		}
-
+		
 		private static final long serialVersionUID = -8842155630294708599L;
 		
 		public static final Forwarder INSTANCE = new Forwarder();

@@ -94,6 +94,15 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 		return this.get(0);
 	}
 	
+	public default float[] get(final float[] result) {
+		checkLength(this.getLength(), result.length);
+		
+		this.getFloatBuffer().position(0);
+		this.getFloatBuffer().get(result);
+		
+		return result;
+	}
+	
 	public default float get(final int index) {
 		return this.getFloatBuffer().get(index);
 	}
