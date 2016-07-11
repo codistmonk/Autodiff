@@ -74,6 +74,10 @@ public final class MaxPooling2D extends UnaryNode<MaxPooling2D> implements Node2
 		return this.kernelWidth;
 	}
 	
+	public final MaxPooling2D setKernelSide(final int kernelSide) {
+		return this.setKernelWidth(kernelSide).setKernelHeight(kernelSide);
+	}
+	
 	public final MaxPooling2D setKernelWidth(final int kernelWidth) {
 		this.kernelWidth = kernelWidth;
 		

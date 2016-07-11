@@ -7,11 +7,29 @@ public interface Node2D<N extends Node2D<?>> extends Node<N> {
 	
 	public abstract int getOffsetX();
 	
+	@SuppressWarnings("unchecked")
+	public default N setOffsetXY(final int offsetX, final int offsetY) {
+		return (N) this.setOffsetX(offsetX).setOffsetY(offsetY);
+	}
+	
+	public default N setOffsetXY(final int offsetXY) {
+		return this.setOffsetXY(offsetXY, offsetXY);
+	}
+	
 	public abstract N setOffsetX(int offsetX);
 	
 	public abstract int getOffsetY();
 	
 	public abstract N setOffsetY(int offsetY);
+	
+	@SuppressWarnings("unchecked")
+	public default N setStrideXY(final int strideX, final int strideY) {
+		return (N) this.setStrideX(strideX).setStrideY(strideY);
+	}
+	
+	public default N setStrideXY(final int strideXY) {
+		return this.setStrideXY(strideXY, strideXY);
+	}
 	
 	public abstract int getStrideX();
 	

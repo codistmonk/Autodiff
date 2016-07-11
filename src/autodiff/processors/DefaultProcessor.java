@@ -1,5 +1,7 @@
 package autodiff.processors;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.util.Collections.reverse;
 
 import autodiff.nodes.Convolution2D;
@@ -136,7 +138,46 @@ public final class DefaultProcessor implements NodeProcessor {
 		
 		@Override
 		public final Void visit(final MaxPooling2D node) {
-			// TODO Auto-generated method stub
+			final Node<?> argument = node.getArgument();
+			final int[] argumentShape = argument.getShape();
+			final int inputHeight = argumentShape[argumentShape.length - 2];
+			final int inputWidth = argumentShape[argumentShape.length - 1];
+			final int offsetX = node.getOffsetX();
+			final int offsetY = node.getOffsetY();
+			final int strideX = node.getStrideX();
+			final int strideY = node.getStrideY();
+			final int kernelWidth = node.getKernelWidth();
+			final int kernelHeight = node.getKernelHeight();
+			final int hh = (kernelHeight - 1) / 2;
+			final int hw = (kernelWidth - 1) / 2;
+			final int inputSize = inputWidth * inputHeight;
+			final int inputCount = argument.getLength() / inputSize; 
+			
+			for (int i = 0, j = 0; i < inputCount; ++i) {
+				for (int y = offsetY; y < inputHeight; y += strideY) {
+					final int top = max(0, y - hh);
+					final int bottomEnd = min(top + kernelHeight, inputHeight);
+					
+					for (int x = offsetX; x < inputWidth; x += strideX, ++j) {
+						final int left = max(0, x - hw);
+						final int rightEnd = min(left + kernelWidth, inputWidth);
+						float value = Float.NEGATIVE_INFINITY;
+						
+						for (int yy = top; yy < bottomEnd; ++yy) {
+							for (int xx = left; xx < rightEnd; ++xx) {
+								final float inputValue = argument.get(xx + inputWidth * yy + inputSize * i);
+								
+								if (value < inputValue) {
+									value = inputValue;
+								}
+							}
+						}
+						
+						node.set(j, value);
+					}
+				}
+			}
+			
 			return null;
 		}
 		
