@@ -47,6 +47,10 @@ public abstract interface NodeVisitor<V> extends Serializable {
 		return this.visit((BinaryNode<?>) node);
 	}
 	
+	public default V visit(final Sum node) {
+		return this.visit((UnaryNode<?>) node);
+	}
+	
 	public default V visit(final MaxPooling2D node) {
 		return this.visit((UnaryNode<?>) node);
 	}

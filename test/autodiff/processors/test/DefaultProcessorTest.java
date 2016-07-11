@@ -8,6 +8,7 @@ import autodiff.nodes.Data;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
 import autodiff.nodes.Selection;
+import autodiff.nodes.Sum;
 import autodiff.processors.DefaultProcessor;
 import autodiff.processors.NodeProcessor;
 
@@ -70,6 +71,31 @@ public class DefaultProcessorTest {
 					8F, 12F,
 					10F, 15F
 			}, c.get(new float[c.getLength()]), 0F);
+		}
+	}
+	
+	@Test
+	public final void testSum1() {
+		final Node<?> x = new Data().setShape(1, 2, 3).set(1F, 2F, 3F, 4F, 5F, 6F);
+		
+		{
+			final Node<?> y = new Sum().setArgument(x).autoShape();
+			
+			assertArrayEquals(new int[] { 1, 2 }, y.getShape());
+			
+			this.getProcessor().fullForward(y);
+			
+			assertArrayEquals(new float[] { 6F, 15F }, y.get(new float[y.getLength()]), 0F);
+		}
+		
+		{
+			final Node<?> y = new Sum().setArgument(x).setStride(6).autoShape();
+			
+			assertArrayEquals(new int[] { 1 }, y.getShape());
+			
+			this.getProcessor().fullForward(y);
+			
+			assertArrayEquals(new float[] { 21F }, y.get(new float[y.getLength()]), 0F);
 		}
 	}
 	

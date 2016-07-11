@@ -2,15 +2,17 @@ package autodiff.processors;
 
 import static java.util.Collections.reverse;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-
 import autodiff.nodes.Convolution2D;
 import autodiff.nodes.MatrixMultiplication;
+import autodiff.nodes.MaxPooling2D;
 import autodiff.nodes.Node;
 import autodiff.nodes.NodeVisitor;
 import autodiff.nodes.Selection;
+import autodiff.nodes.Sum;
+
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 /**
  * @author codistmonk (creation 2016-07-11)
@@ -109,7 +111,31 @@ public final class DefaultProcessor implements NodeProcessor {
 		}
 		
 		@Override
+		public final Void visit(final Sum node) {
+			final int n = node.getArgument().getLength();
+			final int stride = node.getStride();
+			
+			for (int i = 0, j = 0; i < n; i += stride, ++j) {
+				float value = 0F;
+				
+				for (int k = 0; k < stride; ++k) {
+					value += node.getArgument().get(i + k);
+				}
+				
+				node.set(j, value);
+			}
+			
+			return null;
+		}
+		
+		@Override
 		public final Void visit(final Convolution2D node) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+		
+		@Override
+		public final Void visit(final MaxPooling2D node) {
 			// TODO Auto-generated method stub
 			return null;
 		}
