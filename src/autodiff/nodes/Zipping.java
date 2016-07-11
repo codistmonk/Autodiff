@@ -7,6 +7,11 @@ public final class Zipping extends BinaryNode<Zipping> {
 	
 	private String operation;
 	
+	@Override
+	public final <V> V accept(final NodeVisitor<V> visitor) {
+		return visitor.visit(this);
+	}
+	
 	public final String getOperation() {
 		return this.operation;
 	}

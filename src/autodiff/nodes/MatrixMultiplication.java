@@ -6,6 +6,11 @@ package autodiff.nodes;
 public final class MatrixMultiplication extends BinaryNode<MatrixMultiplication> {
 	
 	@Override
+	public final <V> V accept(final NodeVisitor<V> visitor) {
+		return visitor.visit(this);
+	}
+	
+	@Override
 	public final MatrixMultiplication autoShape() {
 		final Node<?> left = this.getLeft();
 		final Node<?> right = this.getRight();

@@ -14,6 +14,11 @@ public final class Convolution2D extends BinaryNode<Convolution2D> implements No
 	private int strideY = 1;
 	
 	@Override
+	public final <V> V accept(final NodeVisitor<V> visitor) {
+		return visitor.visit(this);
+	}
+	
+	@Override
 	public final int getOffsetX() {
 		return this.offsetX;
 	}

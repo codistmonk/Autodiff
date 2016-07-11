@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -23,6 +24,10 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 		return (N) this;
 	}
 	
+	public default <V> V accept(final NodeVisitor<V> visitor) {
+		return visitor.visit(this);
+	}
+	
 	public abstract N setByteBuffer(ByteBuffer byteBuffer);
 	
 	public abstract ByteBuffer getByteBuffer();
@@ -32,6 +37,20 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 	public abstract List<Node<?>> getArguments();
 	
 	public abstract void setupDiffs(boolean setupDiffs);
+	
+	public default boolean setupDiffs() {
+		if (!this.getArguments().isEmpty()) {
+			boolean needSetup = false;
+			
+			for (final Node<?> argument : this.getArguments()) {
+				needSetup |= argument.setupDiffs();
+			}
+			
+			this.setupDiffs(needSetup);
+		}
+		
+		return this.getDiffs() != null;
+	}
 	
 	public abstract Node<?> getDiffs();
 	
@@ -83,7 +102,7 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 	public default N set(final float... values) {
 		checkLength(this.getLength(), values.length);
 		
-		this.getFloatBuffer().position();
+		this.getFloatBuffer().position(0);
 		this.getFloatBuffer().put(values);
 		
 		return (N) this;
@@ -94,6 +113,14 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 		this.getFloatBuffer().put(index, value);
 		
 		return (N) this;
+	}
+	
+	public default <C extends Collection<Node<?>>> C collectTo(final C result) {
+		if (result.add(this)) {
+			this.getArguments().forEach(a -> a.collectTo(result));
+		}
+		
+		return result;
 	}
 	
 	public default void checkScalar() {

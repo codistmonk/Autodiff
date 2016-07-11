@@ -7,6 +7,11 @@ public final class Mapping extends UnaryNode<Mapping> {
 	
 	private String operation;
 	
+	@Override
+	public final <V> V accept(final NodeVisitor<V> visitor) {
+		return visitor.visit(this);
+	}
+	
 	public final String getOperation() {
 		return this.operation;
 	}
