@@ -5,50 +5,68 @@ package autodiff.nodes;
  */
 public interface Node2D<N extends Node2D<?>> extends Node<N> {
 	
-	public abstract int getOffsetX();
+	public abstract int[] getOffsets();
+	
+	public default N setOffsets(final int value) {
+		return this.setOffsets(value, value);
+	}
+	
+	public default N setOffsets(final int horizontal, final int vertical) {
+		return this.setOffsets(horizontal, horizontal, vertical, vertical);
+	}
 	
 	@SuppressWarnings("unchecked")
-	public default N setOffsetXY(final int offsetX, final int offsetY) {
-		return (N) this.setOffsetX(offsetX).setOffsetY(offsetY);
+	public default N setOffsets(final int left, final int right, final int top, final int bottom) {
+		final int[] offsets = this.getOffsets();
+		
+		offsets[LEFT] = left;
+		offsets[RIGHT] = right;
+		offsets[TOP] = top;
+		offsets[BOTTOM] = bottom;
+		
+		return (N) this;
 	}
 	
-	public default N setOffsetXY(final int offsetXY) {
-		return this.setOffsetXY(offsetXY, offsetXY);
+	public abstract int[] getStrides();
+	
+	public default N setStrides(final int value) {
+		return this.setStrides(value, value);
 	}
-	
-	public abstract N setOffsetX(int offsetX);
-	
-	public abstract int getOffsetY();
-	
-	public abstract N setOffsetY(int offsetY);
 	
 	@SuppressWarnings("unchecked")
-	public default N setStrideXY(final int strideX, final int strideY) {
-		return (N) this.setStrideX(strideX).setStrideY(strideY);
+	public default N setStrides(final int horizontal, final int vertical) {
+		final int[] strides = this.getStrides();
+		
+		strides[HORIZONTAL] = horizontal;
+		strides[VERTICAL] = vertical;
+		
+		return (N) this;
 	}
-	
-	public default N setStrideXY(final int strideXY) {
-		return this.setStrideXY(strideXY, strideXY);
-	}
-	
-	public abstract int getStrideX();
-	
-	public abstract N setStrideX(int offsetX);
-	
-	public abstract int getStrideY();
-	
-	public abstract N setStrideY(int offsetY);
 	
 	@Override
 	public default N autoShape() {
 		final int[] shape = this.getArguments().get(0).getShape().clone();
 		final int h = shape[shape.length - 2];
 		final int w = shape[shape.length - 1];
+		final int[] offsets = this.getOffsets();
+		final int[] strides = this.getStrides();
 		
-		shape[shape.length - 2] = (h - this.getOffsetY() + this.getStrideY() - 1) / this.getStrideY();
-		shape[shape.length - 1] = (w - this.getOffsetX() + this.getStrideX() - 1) / this.getStrideX();
+		shape[shape.length - 1] = (w - offsets[LEFT] - offsets[RIGHT] + strides[HORIZONTAL] - 1) / strides[HORIZONTAL];
+		shape[shape.length - 2] = (h - offsets[TOP] - offsets[BOTTOM] + strides[VERTICAL] - 1) / strides[VERTICAL];
 		
 		return this.setShape(shape);
 	}
+	
+	public static final int LEFT = 0;
+	
+	public static final int RIGHT = 1;
+	
+	public static final int TOP = 2;
+	
+	public static final int BOTTOM = 3;
+	
+	public static final int HORIZONTAL = 0;
+	
+	public static final int VERTICAL = 1;
 	
 }

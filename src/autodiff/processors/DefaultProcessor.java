@@ -8,6 +8,7 @@ import autodiff.nodes.Convolution2D;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.MaxPooling2D;
 import autodiff.nodes.Node;
+import autodiff.nodes.Node2D;
 import autodiff.nodes.NodeVisitor;
 import autodiff.nodes.Selection;
 import autodiff.nodes.Sum;
@@ -138,10 +139,14 @@ public final class DefaultProcessor implements NodeProcessor {
 			final int[] kernelShape = kernel.getShape();
 			final int inputWidth = inputsShape[inputsShape.length - 1];
 			final int inputHeight = inputsShape[inputsShape.length - 2];
-			final int offsetX = node.getOffsetX();
-			final int offsetY = node.getOffsetY();
-			final int strideX = node.getStrideX();
-			final int strideY = node.getStrideY();
+			final int[] offsets = node.getOffsets();
+			final int leftOffset = offsets[Node2D.LEFT];
+			final int rightOffset = offsets[Node2D.RIGHT];
+			final int topOffset = offsets[Node2D.TOP];
+			final int bottomOffset = offsets[Node2D.BOTTOM];
+			final int[] strides = node.getStrides();
+			final int strideX = strides[Node2D.HORIZONTAL];
+			final int strideY = strides[Node2D.VERTICAL];
 			final int kernelWidth = kernelShape[kernelShape.length - 1];
 			final int kernelHeight = kernelShape[kernelShape.length - 2];
 			final int hh = (kernelHeight - 1) / 2;
@@ -150,12 +155,12 @@ public final class DefaultProcessor implements NodeProcessor {
 			final int inputCount = inputs.getLength() / inputSize; 
 			
 			for (int i = 0, j = 0; i < inputCount; ++i) {
-				for (int y = offsetY; y < inputHeight; y += strideY) {
+				for (int y = topOffset; y < inputHeight - bottomOffset; y += strideY) {
 					final int top = max(0, y - hh);
 					final int bottomEnd = min(top + kernelHeight, inputHeight);
 					final int dky = top - (y - hh);
 					
-					for (int x = offsetX; x < inputWidth; x += strideX, ++j) {
+					for (int x = leftOffset; x < inputWidth - rightOffset; x += strideX, ++j) {
 						final int left = max(0, x - hw);
 						final int rightEnd = min(left + kernelWidth, inputWidth);
 						final int dkx = left - (x - hw);
@@ -184,23 +189,28 @@ public final class DefaultProcessor implements NodeProcessor {
 			final int[] inputsShape = inputs.getShape();
 			final int inputHeight = inputsShape[inputsShape.length - 2];
 			final int inputWidth = inputsShape[inputsShape.length - 1];
-			final int offsetX = node.getOffsetX();
-			final int offsetY = node.getOffsetY();
-			final int strideX = node.getStrideX();
-			final int strideY = node.getStrideY();
-			final int kernelWidth = node.getKernelWidth();
-			final int kernelHeight = node.getKernelHeight();
+			final int[] offsets = node.getOffsets();
+			final int leftOffset = offsets[Node2D.LEFT];
+			final int rightOffset = offsets[Node2D.RIGHT];
+			final int topOffset = offsets[Node2D.TOP];
+			final int bottomOffset = offsets[Node2D.BOTTOM];
+			final int[] strides = node.getStrides();
+			final int strideX = strides[Node2D.HORIZONTAL];
+			final int strideY = strides[Node2D.VERTICAL];
+			final int[] kernelShape = node.getKernelShape();
+			final int kernelWidth = kernelShape[MaxPooling2D.WIDTH];
+			final int kernelHeight = kernelShape[MaxPooling2D.HEIGHT];
 			final int hh = (kernelHeight - 1) / 2;
 			final int hw = (kernelWidth - 1) / 2;
 			final int inputSize = inputWidth * inputHeight;
 			final int inputCount = inputs.getLength() / inputSize; 
 			
 			for (int i = 0, j = 0; i < inputCount; ++i) {
-				for (int y = offsetY; y < inputHeight; y += strideY) {
+				for (int y = topOffset; y < inputHeight - bottomOffset; y += strideY) {
 					final int top = max(0, y - hh);
 					final int bottomEnd = min(top + kernelHeight, inputHeight);
 					
-					for (int x = offsetX; x < inputWidth; x += strideX, ++j) {
+					for (int x = leftOffset; x < inputWidth - rightOffset; x += strideX, ++j) {
 						final int left = max(0, x - hw);
 						final int rightEnd = min(left + kernelWidth, inputWidth);
 						float value = Float.NEGATIVE_INFINITY;

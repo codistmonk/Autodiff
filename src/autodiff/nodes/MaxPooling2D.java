@@ -5,17 +5,11 @@ package autodiff.nodes;
  */
 public final class MaxPooling2D extends UnaryNode<MaxPooling2D> implements Node2D<MaxPooling2D> {
 	
-	private int offsetX;
+	private final int[] offsets = { 0, 0, 0, 0 };
 	
-	private int offsetY;
+	private final int[] strides = { 1, 1 };
 	
-	private int strideX = 1;
-	
-	private int strideY = 1;
-	
-	private int kernelWidth = 1;
-	
-	private int kernelHeight = 1;
+	private final int[] kernelShape = { 1, 1 };
 	
 	public final Node<?> getInputs() {
 		return this.getArgument();
@@ -31,77 +25,36 @@ public final class MaxPooling2D extends UnaryNode<MaxPooling2D> implements Node2
 	}
 	
 	@Override
-	public final int getOffsetX() {
-		return this.offsetX;
+	public final int[] getOffsets() {
+		return this.offsets;
 	}
 	
 	@Override
-	public final MaxPooling2D setOffsetX(final int offsetX) {
-		this.offsetX = offsetX;
-		
-		return this;
+	public final int[] getStrides() {
+		return this.strides;
 	}
 	
-	@Override
-	public final int getOffsetY() {
-		return this.offsetY;
-	}
-	
-	@Override
-	public final MaxPooling2D setOffsetY(final int offsetY) {
-		this.offsetY = offsetY;
-		
-		return this;
-	}
-	
-	@Override
-	public final int getStrideX() {
-		return this.strideX;
-	}
-	
-	@Override
-	public final MaxPooling2D setStrideX(final int strideX) {
-		this.strideX = strideX;
-		
-		return this;
-	}
-	
-	@Override
-	public final int getStrideY() {
-		return this.strideY;
-	}
-	
-	@Override
-	public final MaxPooling2D setStrideY(final int strideY) {
-		this.strideY = strideY;
-		
-		return this;
-	}
-	
-	public final int getKernelWidth() {
-		return this.kernelWidth;
+	public final int[] getKernelShape() {
+		return this.kernelShape;
 	}
 	
 	public final MaxPooling2D setKernelSide(final int kernelSide) {
-		return this.setKernelWidth(kernelSide).setKernelHeight(kernelSide);
+		return this.setKernelShape(kernelSide, kernelSide);
 	}
 	
-	public final MaxPooling2D setKernelWidth(final int kernelWidth) {
-		this.kernelWidth = kernelWidth;
+	public final MaxPooling2D setKernelShape(final int width, final  int height) {
+		final int[] shape = this.getKernelShape();
 		
-		return this;
-	}
-	
-	public final int getKernelHeight() {
-		return this.kernelHeight;
-	}
-	
-	public final MaxPooling2D setKernelHeight(final int kernelHeight) {
-		this.kernelHeight = kernelHeight;
+		shape[WIDTH] = width;
+		shape[HEIGHT] = height;
 		
 		return this;
 	}
 	
 	private static final long serialVersionUID = 1919526061727846118L;
+	
+	public static final int HEIGHT = 0;
+	
+	public static final int WIDTH = 1;
 	
 }

@@ -109,7 +109,7 @@ public class DefaultProcessorTest {
 				1F, 2F, 3F,
 				4F, 5F, 6F,
 				7F, 8F, 9F);
-		final Node<?> y = new MaxPooling2D().setArgument(x).setStrideXY(2).setKernelSide(2).autoShape();
+		final Node<?> y = new MaxPooling2D().setArgument(x).setStrides(2).setKernelSide(2).autoShape();
 		
 		assertArrayEquals(new int[] { 1, 1, 2, 2 }, y.getShape());
 		
@@ -130,7 +130,7 @@ public class DefaultProcessorTest {
 				10F, 11F, 12F,
 				13F, 14F, 15F,
 				16F, 17F, 18F);
-		final Node<?> y = new MaxPooling2D().setInputs(x).setOffsetXY(1).setStrideXY(2).setKernelSide(3).autoShape();
+		final Node<?> y = new MaxPooling2D().setInputs(x).setOffsets(1).setStrides(2).setKernelSide(3).autoShape();
 		
 		assertArrayEquals(new int[] { 1, 2, 1, 1 }, y.getShape());
 		
@@ -151,7 +151,7 @@ public class DefaultProcessorTest {
 		final Node<?> kernel = new Data().setShape(2, 2).set(
 				1F, 2F,
 				3F, 4F);
-		final Node<?> y = new Convolution2D().setInputs(inputs).setKernel(kernel).setStrideXY(2).autoShape();
+		final Node<?> y = new Convolution2D().setInputs(inputs).setKernel(kernel).setStrides(2).autoShape();
 		
 		assertArrayEquals(new int[] { 1, 1, 2, 2 }, y.getShape());
 		

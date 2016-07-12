@@ -5,13 +5,9 @@ package autodiff.nodes;
  */
 public final class Convolution2D extends BinaryNode<Convolution2D> implements Node2D<Convolution2D> {
 	
-	private int offsetX;
+	private final int[] offsets = { 0, 0, 0, 0 };
 	
-	private int offsetY;
-	
-	private int strideX = 1;
-	
-	private int strideY = 1;
+	private final int[] strides = { 1, 1 };
 	
 	public final Node<?> getInputs() {
 		return this.getLeft();
@@ -35,51 +31,13 @@ public final class Convolution2D extends BinaryNode<Convolution2D> implements No
 	}
 	
 	@Override
-	public final int getOffsetX() {
-		return this.offsetX;
+	public final int[] getOffsets() {
+		return this.offsets;
 	}
 	
 	@Override
-	public final Convolution2D setOffsetX(final int offsetX) {
-		this.offsetX = offsetX;
-		
-		return this;
-	}
-	
-	@Override
-	public final int getOffsetY() {
-		return this.offsetY;
-	}
-	
-	@Override
-	public final Convolution2D setOffsetY(final int offsetY) {
-		this.offsetY = offsetY;
-		
-		return this;
-	}
-	
-	@Override
-	public final int getStrideX() {
-		return this.strideX;
-	}
-	
-	@Override
-	public final Convolution2D setStrideX(final int strideX) {
-		this.strideX = strideX;
-		
-		return this;
-	}
-	
-	@Override
-	public final int getStrideY() {
-		return this.strideY;
-	}
-	
-	@Override
-	public final Convolution2D setStrideY(final int strideY) {
-		this.strideY = strideY;
-		
-		return this;
+	public final int[] getStrides() {
+		return this.strides;
 	}
 	
 	private static final long serialVersionUID = -3377967560676134755L;

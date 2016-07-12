@@ -15,7 +15,7 @@ public final class Node2DTest {
 	
 	@Test
 	public final void testShapes1() {
-		final Node2D<?> x = new MaxPooling2D().setArgument(new Data().setShape(1, 4, 4)).setOffsetX(1).setStrideX(2).autoShape();
+		final Node2D<?> x = new MaxPooling2D().setArgument(new Data().setShape(1, 4, 4)).setOffsets(1, 0, 0, 0).setStrides(2, 1).autoShape();
 		
 		assertArrayEquals(new int[] { 1, 4, 2 }, x.getShape());
 	}
