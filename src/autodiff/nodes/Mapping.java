@@ -1,12 +1,11 @@
 package autodiff.nodes;
 
+import static java.lang.Math.pow;
 import static multij.tools.Tools.cast;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
-
-import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2016-07-11)
@@ -76,26 +75,37 @@ public final class Mapping extends UnaryNode<Mapping> {
 	
 	static {
 		final String x = "x";
+		final double epsilon = pow(2.0, -4.0);
 		
 		define(SQUARED, x, $(x, SQUARED),
 				$(x, TIMES, x));
 		defineDiff(SQUARED, x,
 				$(2, TIMES, x));
 		
+		// TODO asymptotic cases
 		define(SHI, x,
 				$(LN, $(1, "+", $(EXP, x))));
-		defineDiff(SHI, x,
-				$(SIGMOID, x));
-		
+		// TODO asymptotic cases
 		define(SIGMOID, x,
 				$(1, "/", $(1, "+", $(EXP, $("-", x)))));
+		// TODO asymptotic cases
+		define(BUMP, x,
+				$($(1, "-", $(SIGMOID, x)), TIMES, $(SIGMOID, x)));
+		
+		defineDiff(SHI, x,
+				$(SIGMOID, x));
 		defineDiff(SIGMOID, x,
-				$($(EXP, x), "/", $($(1, "+", $(EXP, x)), SQUARED)));
+				$(BUMP, x));
 		
 		define(RELU, x,
 				$(MAX, 0, x));
 		defineDiff(RELU, x,
 				$(SIGMOID, x));
+		
+		define(STEP, x,
+				$("cases", $(0, "if", $(x, "<", 0)), $(1, "otherwise")));
+		defineDiff(STEP, x,
+				epsilon);
 		
 		defineDiff(SQRT, x,
 				$(1, "/", $(2, TIMES, $(SQRT, x))));
