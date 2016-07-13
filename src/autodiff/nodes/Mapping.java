@@ -4,7 +4,9 @@ import static java.lang.Math.pow;
 import static multij.tools.Tools.cast;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -12,19 +14,19 @@ import java.util.Map;
  */
 public final class Mapping extends UnaryNode<Mapping> {
 	
-	private String operation;
+	private String functionName;
 	
 	@Override
 	public final <V> V accept(final NodeVisitor<V> visitor) {
 		return visitor.visit(this);
 	}
 	
-	public final String getOperation() {
-		return this.operation;
+	public final String getFunctionName() {
+		return this.functionName;
 	}
 	
-	public final Mapping setOperation(final String operation) {
-		this.operation = operation;
+	public final Mapping setFunctioName(final String functionName) {
+		this.functionName = functionName;
 		
 		return this;
 	}
@@ -36,15 +38,17 @@ public final class Mapping extends UnaryNode<Mapping> {
 	
 	private static final long serialVersionUID = -2566458738220643925L;
 	
-	private static final Map<String, Object[]> forwards = new HashMap<>();
+	private static final Map<String, List<Object>> forwards = new HashMap<>();
 	
-	private static final Map<String, Object[]> diffs = new HashMap<>();
+	private static final Map<String, List<Object>> diffs = new HashMap<>();
 	
 	public static final String FORALL = "\\forall";
 	
 	public static final String IN = "\\in";
 	
 	public static final String R = "\\mathbb{R}";
+	
+	public static final String ID = "id";
 	
 	public static final String SQUARED = "^2";
 	
@@ -53,6 +57,10 @@ public final class Mapping extends UnaryNode<Mapping> {
 	public static final String TIMES = "\\cdot";
 	
 	public static final String D = "\\partial";
+	
+	public static final String ABS = "\\abs";
+	
+	public static final String NEG = "\\neg";
 	
 	public static final String EXP = "\\exp";
 	
@@ -75,7 +83,25 @@ public final class Mapping extends UnaryNode<Mapping> {
 	
 	static {
 		final String x = "x";
-		final double epsilon = pow(2.0, -4.0);
+		final double epsilon = pow(2.0, -14.0);
+		
+		define(ID, x,
+				x);
+		defineDiff(ID, x,
+				1);
+		
+		define(ABS, x,
+				$(ABS, x));
+		defineDiff(ABS, x,
+				1);
+		
+		define(NEG, x,
+				$(NEG, x));
+		defineDiff(NEG, x,
+				-1);
+		
+		defineDiff(SQUARED, x,
+				$(2, TIMES, x));
 		
 		define(SQUARED, x, $(x, SQUARED),
 				$(x, TIMES, x));
@@ -107,40 +133,60 @@ public final class Mapping extends UnaryNode<Mapping> {
 		defineDiff(STEP, x,
 				epsilon);
 		
+		define(SQRT, x,
+				$(SQRT, x));
 		defineDiff(SQRT, x,
 				$(1, "/", $(2, TIMES, $(SQRT, x))));
 		
+		define(EXP, x,
+				$(EXP, x));
 		defineDiff(EXP, x,
 				$(EXP, x));
 		
+		define(LN, x,
+				$(LN, x));
 		defineDiff(LN, x,
 				$(1, "/", x));
 	}
 	
-	public static final void define(final String functionName, final String variableName, final Object... definition) {
+	public static final void define(final String functionName, final String variableName, final Object definition) {
 		forwards.put(functionName, $(FORALL, $(variableName), IN, R, $($(functionName, variableName), "=", definition)));
 	}
 	
-	public static final void define(final String functionName, final String variableName, final Object[] notation, final Object... definition) {
+	public static final void define(final String functionName, final String variableName, final List<Object> notation, final Object definition) {
 		forwards.put(functionName, $(FORALL, $(variableName), IN, R, $(notation, "=", definition)));
 	}
 	
-	public static final void defineDiff(final String functionName, final String variableName, final Object... definition) {
+	public static final void defineDiff(final String functionName, final String variableName, final Object definition) {
 		diffs.put(functionName, $(FORALL, $(variableName), IN, R, $($($(D, functionName, 0), variableName), "=", definition)));
 	}
 	
-	public static final Object[] $(final Object... objects) {
+	public static final List<Object> getForward(final String functionName) {
+		return forwards.get(functionName);
+	}
+	
+	public static final List<Object> getDiff(final String functionName) {
+		return diffs.get(functionName);
+	}
+	
+	public static final Object n(final Object object) {
+		final Number number = cast(Number.class, object);
+		
+		if (number != null && !(number instanceof BigDecimal)) {
+			return new BigDecimal("" + number);
+		}
+		
+		return object;
+	}
+	
+	public static final List<Object> $(final Object... objects) {
 		final int n = objects.length;
 		
 		for (int i = 0; i < n; ++i) {
-			final Number number = cast(Number.class, objects[i]);
-			
-			if (number != null && !(number instanceof BigDecimal)) {
-				objects[i] = new BigDecimal("" + number);
-			}
+			objects[i] = n(objects[i]);
 		}
 		
-		return objects;
+		return Arrays.asList(objects);
 	}
 	
 }

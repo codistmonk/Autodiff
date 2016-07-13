@@ -109,6 +109,10 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 	
 	@SuppressWarnings("unchecked")
 	public default N set(final float... values) {
+		if (this.getFloatBuffer() == null) {
+			this.setShape(values.length);
+		}
+		
 		checkLength(this.getLength(), values.length);
 		
 		this.getFloatBuffer().position(0);

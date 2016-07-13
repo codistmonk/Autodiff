@@ -1,11 +1,13 @@
 package autodiff.processors.test;
 
+import static java.lang.Math.exp;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
 
 import autodiff.nodes.Convolution2D;
 import autodiff.nodes.Data;
+import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.MaxPooling2D;
 import autodiff.nodes.Node;
@@ -163,8 +165,60 @@ public class DefaultProcessorTest {
 		}, y.get(new float[y.getLength()]), 0F);
 	}
 	
+	@Test
+	public final void testMapping1() {
+		final Node<?> x = new Data().set(-1F, 0F, 1F);
+		final Node<?> y = new Mapping().setArgument(x).setFunctioName(Mapping.ID).autoShape();
+		
+		assertArrayEquals(x.getShape(), y.getShape());
+		
+		this.getProcessor().fullForward(y);
+		
+		assertArrayEquals(new float[] { -1F, 0F, 1F }, y.get(new float[y.getLength()]), 0F);
+	}
+	
+	@Test
+	public final void testMapping2() {
+		final Node<?> x = new Data().set(-1F, 0F, 1F);
+		final Node<?> y = new Mapping().setArgument(x).setFunctioName(Mapping.SQUARED).autoShape();
+		
+		assertArrayEquals(x.getShape(), y.getShape());
+		
+		this.getProcessor().fullForward(y);
+		
+		assertArrayEquals(new float[] { 1F, 0F, 1F }, y.get(new float[y.getLength()]), 0F);
+	}
+	
+	@Test
+	public final void testMapping3() {
+		final Node<?> x = new Data().set(0F, 1F, 4F);
+		final Node<?> y = new Mapping().setArgument(x).setFunctioName(Mapping.SQRT).autoShape();
+		
+		assertArrayEquals(x.getShape(), y.getShape());
+		
+		this.getProcessor().fullForward(y);
+		
+		assertArrayEquals(new float[] { 0F, 1F, 2F }, y.get(new float[y.getLength()]), 0F);
+	}
+	
+	@Test
+	public final void testMapping4() {
+		final Node<?> x = new Data().set(-1F, 0F, 1F);
+		final Node<?> y = new Mapping().setArgument(x).setFunctioName(Mapping.SIGMOID).autoShape();
+		
+		assertArrayEquals(x.getShape(), y.getShape());
+		
+		this.getProcessor().fullForward(y);
+		
+		assertArrayEquals(new float[] { sigmoid(-1F), sigmoid(0F), sigmoid(1F) }, y.get(new float[y.getLength()]), 0F);
+	}
+	
 	public final NodeProcessor getProcessor() {
 		return DefaultProcessor.INSTANCE;
+	}
+	
+	public static final float sigmoid(final float x) {
+		return 1F / (1F + (float) exp(-x));
 	}
 	
 }

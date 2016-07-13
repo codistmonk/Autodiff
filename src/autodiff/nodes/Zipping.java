@@ -5,19 +5,19 @@ package autodiff.nodes;
  */
 public final class Zipping extends BinaryNode<Zipping> {
 	
-	private String operation;
+	private String functionName;
 	
 	@Override
 	public final <V> V accept(final NodeVisitor<V> visitor) {
 		return visitor.visit(this);
 	}
 	
-	public final String getOperation() {
-		return this.operation;
+	public final String getFunctionName() {
+		return this.functionName;
 	}
 	
-	public final Zipping setOperation(final String operation) {
-		this.operation = operation;
+	public final Zipping setFunctionName(final String functionName) {
+		this.functionName = functionName;
 		
 		return this;
 	}
