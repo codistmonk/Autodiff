@@ -1,12 +1,14 @@
 package autodiff.processors;
 
-import static autodiff.nodes.Mapping.*;
+import static autodiff.nodes.Functions.*;
 import static autodiff.rules.PatternPredicate.rule;
 import static java.lang.Math.*;
 import static java.util.Collections.reverse;
+import static multij.tools.Tools.cast;
 import static multij.tools.Tools.debugPrint;
 
 import autodiff.nodes.Convolution2D;
+import autodiff.nodes.Functions;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.MaxPooling2D;
@@ -15,6 +17,7 @@ import autodiff.nodes.Node2D;
 import autodiff.nodes.NodeVisitor;
 import autodiff.nodes.Selection;
 import autodiff.nodes.Sum;
+import autodiff.nodes.Zipping;
 import autodiff.rules.Disjunction;
 
 import java.io.Serializable;
@@ -23,6 +26,8 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+
+import multij.tools.Pair;
 
 /**
  * @author codistmonk (creation 2016-07-11)
@@ -252,12 +257,37 @@ public final class DefaultProcessor implements NodeProcessor {
 			
 			switch (functionName) {
 			default:
-				final List<Object> forward = Mapping.getForward(functionName);
+				final List<Object> forward = Functions.getForward(functionName);
 				debugPrint(forward);
 				final FloatSupplier output = this.context.newSupplier(forward);
 				
 				for (int i = 0; i < n; ++i) {
 					this.context.getInputs().get(0).set(argument.get(i));
+					node.set(i, output.get());
+				}
+			}
+			
+			return null;
+		}
+		
+		@Override
+		public final Void visit(final Zipping node) {
+			final Node<?> left = node.getLeft();
+			final Node<?> right = node.getRight();
+			final int n = node.getLength();
+			final String functionName = node.getFunctionName();
+			
+			debugPrint(functionName);
+			
+			switch (functionName) {
+			default:
+				final List<Object> forward = Functions.getForward(functionName);
+				debugPrint(forward);
+				final FloatSupplier output = this.context.newSupplier(forward);
+				
+				for (int i = 0; i < n; ++i) {
+					this.context.getInputs().get(0).set(left.get(i));
+					this.context.getInputs().get(1).set(right.get(i));
 					node.set(i, output.get());
 				}
 			}
@@ -300,6 +330,79 @@ public final class DefaultProcessor implements NodeProcessor {
 						
 						return this.rules.applyTo(m.get(z), m);
 					}));
+				}
+				
+				{
+					final autodiff.rules.Variable x0 = new autodiff.rules.Variable();
+					final autodiff.rules.Variable x1 = new autodiff.rules.Variable();
+					final autodiff.rules.Variable y = new autodiff.rules.Variable();
+					final autodiff.rules.Variable z = new autodiff.rules.Variable();
+					
+					this.rules.add(rule($(FORALL, $(x0, x1), IN, R, $(y, "=", z)), (__, m) -> {
+						final String variable0Name = (String) m.get(x0);
+						final Variable variable0 = new Variable();
+						
+						if (this.variables.put(variable0Name, variable0) != null) {
+							throw new IllegalStateException();
+						}
+						
+						final String variable1Name = (String) m.get(x1);
+						final Variable variable1 = new Variable();
+						
+						if (this.variables.put(variable1Name, variable1) != null) {
+							throw new IllegalStateException();
+						}
+						
+						if (this.inputs.isEmpty()) {
+							this.inputs.add(variable0);
+							this.inputs.add(variable1);
+						}
+						
+						return this.rules.applyTo(m.get(z), m);
+					}));
+				}
+				
+				{
+					this.rules.add((expr, __) -> {
+						final List<Object> list = cast(List.class, expr);
+						
+						return list != null && 2 <= list.size() && "cases".equals(list.get(0));
+					}, (expr, m) -> {
+						final List<?> list = (List<?>) expr;
+						final List<Pair<FloatSupplier, FloatSupplier>> conditionAndResults = new ArrayList<>();
+						
+						for (int i = 1; i < list.size(); ++i) {
+							final List<?> caseElement = (List<?>) list.get(i);
+							
+							if (caseElement.size() == 3) {
+								if (!"if".equals(caseElement.get(1))) {
+									throw new IllegalArgumentException();
+								}
+								
+								conditionAndResults.add(new Pair<>(this.rules.applyTo(caseElement.get(2), m), this.rules.applyTo(caseElement.get(0), m)));
+							} else {
+								if (caseElement.size() != 2 || !"otherwise".equals(caseElement.get(1))) {
+									throw new IllegalArgumentException();
+								}
+								
+								conditionAndResults.add(new Pair<>(null, this.rules.applyTo(caseElement.get(0), m)));
+							}
+						}
+						
+						FloatSupplier result = null;
+						
+						for (int i = conditionAndResults.size() - 1; 0 <= i; --i) {
+							final Pair<FloatSupplier, FloatSupplier> conditionAndResult = conditionAndResults.get(i);
+							
+							if (conditionAndResult.getFirst() == null) {
+								result = conditionAndResult.getSecond();
+							} else {
+								result = new IfThenElse(conditionAndResult.getFirst(), conditionAndResult.getSecond(), result);
+							}
+						}
+						
+						return result;
+					});
 				}
 				
 				{
@@ -375,6 +478,60 @@ public final class DefaultProcessor implements NodeProcessor {
 					
 					this.rules.add(rule($(x, "/", y), (__, m) -> {
 						return new Div(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
+					}));
+				}
+				
+				{
+					final autodiff.rules.Variable x = new autodiff.rules.Variable();
+					final autodiff.rules.Variable y = new autodiff.rules.Variable();
+					
+					this.rules.add(rule($(x, "=", y), (__, m) -> {
+						return new Equal(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
+					}));
+				}
+				
+				{
+					final autodiff.rules.Variable x = new autodiff.rules.Variable();
+					final autodiff.rules.Variable y = new autodiff.rules.Variable();
+					
+					this.rules.add(rule($(x, NEQ, y), (__, m) -> {
+						return new NotEqual(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
+					}));
+				}
+				
+				{
+					final autodiff.rules.Variable x = new autodiff.rules.Variable();
+					final autodiff.rules.Variable y = new autodiff.rules.Variable();
+					
+					this.rules.add(rule($(x, "<", y), (__, m) -> {
+						return new Less(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
+					}));
+				}
+				
+				{
+					final autodiff.rules.Variable x = new autodiff.rules.Variable();
+					final autodiff.rules.Variable y = new autodiff.rules.Variable();
+					
+					this.rules.add(rule($(x, "<=", y), (__, m) -> {
+						return new LessOrEqual(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
+					}));
+				}
+				
+				{
+					final autodiff.rules.Variable x = new autodiff.rules.Variable();
+					final autodiff.rules.Variable y = new autodiff.rules.Variable();
+					
+					this.rules.add(rule($(x, ">", y), (__, m) -> {
+						return new Greater(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
+					}));
+				}
+				
+				{
+					final autodiff.rules.Variable x = new autodiff.rules.Variable();
+					final autodiff.rules.Variable y = new autodiff.rules.Variable();
+					
+					this.rules.add(rule($(x, ">=", y), (__, m) -> {
+						return new GreaterOrEqual(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
 					}));
 				}
 				
@@ -488,8 +645,6 @@ public final class DefaultProcessor implements NodeProcessor {
 			return this.source;
 		}
 		
-		public abstract float diff(float x);
-		
 		private static final long serialVersionUID = 5214749986194295496L;
 		
 	}
@@ -516,11 +671,45 @@ public final class DefaultProcessor implements NodeProcessor {
 			return this.right;
 		}
 		
-		public abstract float diffLeft(float x, float y);
-		
-		public abstract float diffRight(float x, float y);
-		
 		private static final long serialVersionUID = 1573188791368623911L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-07-13)
+	 */
+	public static final class IfThenElse implements FloatSupplier {
+		
+		private final FloatSupplier condition;
+		
+		private final FloatSupplier resultIfConditionNot0;
+		
+		private final FloatSupplier resultElse;
+		
+		public IfThenElse(final FloatSupplier condition, final FloatSupplier resultIfConditionNot0, final FloatSupplier resultElse) {
+			this.condition = condition;
+			this.resultIfConditionNot0 = resultIfConditionNot0;
+			this.resultElse = resultElse;
+		}
+		
+		public final FloatSupplier getCondition() {
+			return this.condition;
+		}
+		
+		public final FloatSupplier getResultIfConditionNot0() {
+			return this.resultIfConditionNot0;
+		}
+		
+		public final FloatSupplier getResultElse() {
+			return this.resultElse;
+		}
+		
+		@Override
+		public final float get() {
+			return this.getCondition().get() != 0F ? this.getResultIfConditionNot0().get() : this.getResultElse().get();
+		}
+		
+		private static final long serialVersionUID = -1559004754514756270L;
 		
 	}
 	
@@ -536,11 +725,6 @@ public final class DefaultProcessor implements NodeProcessor {
 		@Override
 		public final float get() {
 			return forward(this.getSource().get());
-		}
-		
-		@Override
-		public final float diff(final float x) {
-			return signum(x);
 		}
 		
 		public static final float forward(final float x) {
@@ -565,11 +749,6 @@ public final class DefaultProcessor implements NodeProcessor {
 			return forward(this.getSource().get());
 		}
 		
-		@Override
-		public final float diff(final float x) {
-			return (float) (1.0 / (2.0 * sqrt(x)));
-		}
-		
 		public static final float forward(final float x) {
 			return (float) sqrt(x);
 		}
@@ -590,11 +769,6 @@ public final class DefaultProcessor implements NodeProcessor {
 		@Override
 		public final float get() {
 			return forward(this.getSource().get());
-		}
-		
-		@Override
-		public final float diff(final float x) {
-			return -1F;
 		}
 		
 		public static final float forward(final float x) {
@@ -619,11 +793,6 @@ public final class DefaultProcessor implements NodeProcessor {
 			return forward(this.getSource().get());
 		}
 		
-		@Override
-		public final float diff(final float x) {
-			return this.get();
-		}
-		
 		public static final float forward(final float x) {
 			return (float) exp(x);
 		}
@@ -644,11 +813,6 @@ public final class DefaultProcessor implements NodeProcessor {
 		@Override
 		public final float get() {
 			return forward(this.getSource().get());
-		}
-		
-		@Override
-		public final float diff(final float x) {
-			return 1F / x;
 		}
 		
 		public static final float forward(final float x) {
@@ -673,16 +837,6 @@ public final class DefaultProcessor implements NodeProcessor {
 			return forward(this.getLeft().get(), this.getRight().get());
 		}
 		
-		@Override
-		public final float diffLeft(final float x, final float y) {
-			return 1F;
-		}
-		
-		@Override
-		public final float diffRight(final float x, final float y) {
-			return 1F;
-		}
-		
 		public static final float forward(final float x, final float y) {
 			return x + y;
 		}
@@ -705,16 +859,6 @@ public final class DefaultProcessor implements NodeProcessor {
 			return forward(this.getLeft().get(), this.getRight().get());
 		}
 		
-		@Override
-		public final float diffLeft(final float x, final float y) {
-			return 1F;
-		}
-		
-		@Override
-		public final float diffRight(final float x, final float y) {
-			return -1F;
-		}
-		
 		public static final float forward(final float x, final float y) {
 			return x - y;
 		}
@@ -734,17 +878,7 @@ public final class DefaultProcessor implements NodeProcessor {
 		
 		@Override
 		public final float get() {
-			return this.getLeft().get() * this.getRight().get();
-		}
-		
-		@Override
-		public final float diffLeft(final float x, final float y) {
-			return y;
-		}
-		
-		@Override
-		public final float diffRight(final float x, final float y) {
-			return x;
+			return forward(this.getLeft().get(), this.getRight().get());
 		}
 		
 		public static final float forward(final float x, final float y) {
@@ -766,17 +900,7 @@ public final class DefaultProcessor implements NodeProcessor {
 		
 		@Override
 		public final float get() {
-			return this.getLeft().get() / this.getRight().get();
-		}
-		
-		@Override
-		public final float diffLeft(final float x, final float y) {
-			return 1F / y;
-		}
-		
-		@Override
-		public final float diffRight(final float x, final float y) {
-			return -x / (y * y);
+			return forward(this.getLeft().get(), this.getRight().get());
 		}
 		
 		public static final float forward(final float x, final float y) {
@@ -784,6 +908,138 @@ public final class DefaultProcessor implements NodeProcessor {
 		}
 		
 		private static final long serialVersionUID = -8379848103818534300L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-07-13)
+	 */
+	public static final class Equal extends Binary {
+		
+		public Equal(final FloatSupplier left, final FloatSupplier right) {
+			super(left, right);
+		}
+		
+		@Override
+		public final float get() {
+			return forward(this.getLeft().get(), this.getRight().get());
+		}
+		
+		public static final float forward(final float x, final float y) {
+			return x == y ? 1F : 0F;
+		}
+		
+		private static final long serialVersionUID = 5253789665470122119L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-07-13)
+	 */
+	public static final class NotEqual extends Binary {
+		
+		public NotEqual(final FloatSupplier left, final FloatSupplier right) {
+			super(left, right);
+		}
+		
+		@Override
+		public final float get() {
+			return forward(this.getLeft().get(), this.getRight().get());
+		}
+		
+		public static final float forward(final float x, final float y) {
+			return x != y ? 1F : 0F;
+		}
+		
+		private static final long serialVersionUID = 213031248648498288L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-07-13)
+	 */
+	public static final class Less extends Binary {
+		
+		public Less(final FloatSupplier left, final FloatSupplier right) {
+			super(left, right);
+		}
+		
+		@Override
+		public final float get() {
+			return forward(this.getLeft().get(), this.getRight().get());
+		}
+		
+		public static final float forward(final float x, final float y) {
+			return x < y ? 1F : 0F;
+		}
+		
+		private static final long serialVersionUID = 7113362991557989862L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-07-13)
+	 */
+	public static final class LessOrEqual extends Binary {
+		
+		public LessOrEqual(final FloatSupplier left, final FloatSupplier right) {
+			super(left, right);
+		}
+		
+		@Override
+		public final float get() {
+			return forward(this.getLeft().get(), this.getRight().get());
+		}
+		
+		public static final float forward(final float x, final float y) {
+			return x <= y ? 1F : 0F;
+		}
+		
+		private static final long serialVersionUID = 7528620124735745742L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-07-13)
+	 */
+	public static final class Greater extends Binary {
+		
+		public Greater(final FloatSupplier left, final FloatSupplier right) {
+			super(left, right);
+		}
+		
+		@Override
+		public final float get() {
+			return forward(this.getLeft().get(), this.getRight().get());
+		}
+		
+		public static final float forward(final float x, final float y) {
+			return x > y ? 1F : 0F;
+		}
+		
+		private static final long serialVersionUID = -1705577150600444376L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-07-13)
+	 */
+	public static final class GreaterOrEqual extends Binary {
+		
+		public GreaterOrEqual(final FloatSupplier left, final FloatSupplier right) {
+			super(left, right);
+		}
+		
+		@Override
+		public final float get() {
+			return forward(this.getLeft().get(), this.getRight().get());
+		}
+		
+		public static final float forward(final float x, final float y) {
+			return x >= y ? 1F : 0F;
+		}
+		
+		private static final long serialVersionUID = -5380457151343076928L;
 		
 	}
 	

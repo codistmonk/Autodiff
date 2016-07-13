@@ -7,12 +7,14 @@ import org.junit.Test;
 
 import autodiff.nodes.Convolution2D;
 import autodiff.nodes.Data;
+import autodiff.nodes.Functions;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.MaxPooling2D;
 import autodiff.nodes.Node;
 import autodiff.nodes.Selection;
 import autodiff.nodes.Sum;
+import autodiff.nodes.Zipping;
 import autodiff.processors.DefaultProcessor;
 import autodiff.processors.NodeProcessor;
 
@@ -168,7 +170,7 @@ public class DefaultProcessorTest {
 	@Test
 	public final void testMapping1() {
 		final Node<?> x = new Data().set(-1F, 0F, 1F);
-		final Node<?> y = new Mapping().setArgument(x).setFunctioName(Mapping.ID).autoShape();
+		final Node<?> y = new Mapping().setArgument(x).setFunctioName(Functions.ID).autoShape();
 		
 		assertArrayEquals(x.getShape(), y.getShape());
 		
@@ -180,7 +182,7 @@ public class DefaultProcessorTest {
 	@Test
 	public final void testMapping2() {
 		final Node<?> x = new Data().set(-1F, 0F, 1F);
-		final Node<?> y = new Mapping().setArgument(x).setFunctioName(Mapping.SQUARED).autoShape();
+		final Node<?> y = new Mapping().setArgument(x).setFunctioName(Functions.SQUARED).autoShape();
 		
 		assertArrayEquals(x.getShape(), y.getShape());
 		
@@ -192,7 +194,7 @@ public class DefaultProcessorTest {
 	@Test
 	public final void testMapping3() {
 		final Node<?> x = new Data().set(0F, 1F, 4F);
-		final Node<?> y = new Mapping().setArgument(x).setFunctioName(Mapping.SQRT).autoShape();
+		final Node<?> y = new Mapping().setArgument(x).setFunctioName(Functions.SQRT).autoShape();
 		
 		assertArrayEquals(x.getShape(), y.getShape());
 		
@@ -204,13 +206,38 @@ public class DefaultProcessorTest {
 	@Test
 	public final void testMapping4() {
 		final Node<?> x = new Data().set(-1F, 0F, 1F);
-		final Node<?> y = new Mapping().setArgument(x).setFunctioName(Mapping.SIGMOID).autoShape();
+		final Node<?> y = new Mapping().setArgument(x).setFunctioName(Functions.SIGMOID).autoShape();
 		
 		assertArrayEquals(x.getShape(), y.getShape());
 		
 		this.getProcessor().fullForward(y);
 		
 		assertArrayEquals(new float[] { sigmoid(-1F), sigmoid(0F), sigmoid(1F) }, y.get(new float[y.getLength()]), 0F);
+	}
+	
+	@Test
+	public final void testMapping5() {
+		final Node<?> x = new Data().set(-1F, 0F, 1F);
+		final Node<?> y = new Mapping().setArgument(x).setFunctioName(Functions.STEP).autoShape();
+		
+		assertArrayEquals(x.getShape(), y.getShape());
+		
+		this.getProcessor().fullForward(y);
+		
+		assertArrayEquals(new float[] { 0F, 1F, 1F }, y.get(new float[y.getLength()]), 0F);
+	}
+	
+	@Test
+	public final void testZipping1() {
+		final Node<?> x = new Data().set(-1F, 0F, 1F);
+		final Node<?> y = new Data().set(-1F, 0F, 1F);
+		final Node<?> z = new Zipping().setLeft(x).setRight(y).setFunctionName("+").autoShape();
+		
+		assertArrayEquals(x.getShape(), y.getShape());
+		
+		this.getProcessor().fullForward(z);
+		
+		assertArrayEquals(new float[] { -2F, 0F, 2F }, z.get(new float[z.getLength()]), 0F);
 	}
 	
 	public final NodeProcessor getProcessor() {
