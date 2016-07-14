@@ -34,12 +34,16 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 	
 	public abstract FloatBuffer getFloatBuffer();
 	
+	public default boolean hasArguments() {
+		return !this.getArguments().isEmpty();
+	}
+	
 	public abstract List<Node<?>> getArguments();
 	
 	public abstract void setupDiffs(boolean setupDiffs);
 	
 	public default boolean setupDiffs() {
-		if (!this.getArguments().isEmpty()) {
+		if (this.hasArguments()) {
 			boolean needSetup = false;
 			
 			for (final Node<?> argument : this.getArguments()) {
@@ -49,6 +53,10 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 			this.setupDiffs(needSetup);
 		}
 		
+		return this.getDiffs() != null;
+	}
+	
+	public default boolean hasDiffs() {
 		return this.getDiffs() != null;
 	}
 	
@@ -105,6 +113,10 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 	
 	public default float get(final int index) {
 		return this.getFloatBuffer().get(index);
+	}
+	
+	public default N add(final int index, final float value) {
+		return this.set(index, this.get(index) + value);
 	}
 	
 	@SuppressWarnings("unchecked")

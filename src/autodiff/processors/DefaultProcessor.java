@@ -4,6 +4,7 @@ import static autodiff.nodes.Functions.*;
 import static autodiff.rules.PatternPredicate.rule;
 import static java.lang.Math.*;
 import static java.util.Collections.reverse;
+import static java.util.stream.Collectors.toList;
 import static multij.tools.Tools.cast;
 import static multij.tools.Tools.debugPrint;
 
@@ -22,6 +23,7 @@ import autodiff.rules.Disjunction;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -61,7 +63,7 @@ public final class DefaultProcessor implements NodeProcessor {
 		
 		reverse(nodes);
 		
-		nodes.stream().filter(n -> !n.getArguments().isEmpty()).forEach(n -> this.fill(n, 0F));
+		nodes.stream().filter(Node::hasArguments).forEach(n -> this.fill(n, 0F));
 		nodes.forEach(n -> n.accept(this.getForwarder()));
 		
 		return node;
@@ -70,9 +72,13 @@ public final class DefaultProcessor implements NodeProcessor {
 	@Override
 	public final <N extends Node<?>> N fullBackwardDiff(final N node) {
 		if (node.setupDiffs()) {
+			final Collection<Node<?>> nodes = node.collectTo(new LinkedHashSet<>()).stream().filter(Node::hasDiffs).collect(toList());
+			
+			nodes.forEach(n -> this.fill(n.getDiffs(), 0F));
+			
 			this.fill(node.getDiffs(), 1F);
 			
-			node.collectTo(new LinkedHashSet<>()).forEach(n -> n.accept(this.getBackwardDiffer()));
+			nodes.forEach(n -> n.accept(this.getBackwardDiffer()));
 		}
 		
 		return node;
@@ -574,6 +580,19 @@ public final class DefaultProcessor implements NodeProcessor {
 	 * @author codistmonk (creation 2016-07-11)
 	 */
 	public static final class BackwardDiffer implements NodeVisitor<Void> {
+		
+		@Override
+		public final Void visit(final Selection node) {
+			final int m = node.getVectors().getLength();
+			final int n = node.getIndices().getLength();
+			final int stride = m / n;
+			
+			for (int i = 0, j = 0; i < m; i += stride, ++j) {
+				node.getVectors().getDiffs().add(i + (int) node.getIndices().get(j), node.getDiffs().get(j));
+			}
+			
+			return null;
+		}
 		
 		private static final long serialVersionUID = -2003909030537706641L;
 		

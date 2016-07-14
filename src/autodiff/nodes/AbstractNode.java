@@ -78,7 +78,7 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	@Override
 	public final void setupDiffs(final boolean setupDiffs) {
 		if (setupDiffs) {
-			if (this.getDiffs() == null) {
+			if (!this.hasDiffs()) {
 				this.diffs = new Data().setShape(this.getShape());
 			}
 		} else {

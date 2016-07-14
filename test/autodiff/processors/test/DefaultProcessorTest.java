@@ -21,7 +21,7 @@ import autodiff.processors.NodeProcessor;
 /**
  * @author codistmonk (creation 2016-07-11)
  */
-public class DefaultProcessorTest {
+public final class DefaultProcessorTest {
 	
 	@Test
 	public final void testSelection1() {
@@ -44,6 +44,20 @@ public class DefaultProcessorTest {
 		this.getProcessor().fullForward(xi);
 		
 		assertEquals(33.0, xi.get(), 0.0);
+		
+		x.setupDiffs(true);
+		
+		assertArrayEquals(x.getShape(), x.getDiffs().getShape());
+		
+		this.getProcessor().fullBackwardDiff(xi);
+		
+		assertArrayEquals(new float[] { 0F, 1F }, x.getDiffs().get(new float[x.getLength()]), 0F);
+		
+		i.set(0F);
+		
+		this.getProcessor().fullBackwardDiff(xi);
+		
+		assertArrayEquals(new float[] { 1F, 0F }, x.getDiffs().get(new float[x.getLength()]), 0F);
 	}
 	
 	@Test
