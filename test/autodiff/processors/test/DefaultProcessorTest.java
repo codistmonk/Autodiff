@@ -383,6 +383,16 @@ public final class DefaultProcessorTest {
 		this.getProcessor().fullForward(z);
 		
 		assertArrayEquals(new float[] { 1F, 3F, 5F }, z.get(new float[z.getLength()]), 0F);
+		
+		x.setupDiffs(true);
+		a.setupDiffs(true);
+		b.setupDiffs(true);
+		
+		this.getProcessor().fullBackwardDiff(z);
+		
+		assertArrayEquals(new float[] { 2F, 2F, 2F }, x.getDiffs().get(new float[x.getLength()]), 0F);
+		assertArrayEquals(new float[] { 0F }, a.getDiffs().get(new float[a.getLength()]), 0F);
+		assertArrayEquals(new float[] { 3F }, b.getDiffs().get(new float[b.getLength()]), 0F);
 	}
 	
 	public final NodeProcessor getProcessor() {

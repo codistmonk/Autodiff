@@ -6,7 +6,7 @@ import static java.lang.Math.*;
 import static java.util.Collections.reverse;
 import static java.util.stream.Collectors.toList;
 import static multij.tools.Tools.cast;
-import static multij.tools.Tools.debugPrint;
+
 import autodiff.nodes.Convolution2D;
 import autodiff.nodes.Functions;
 import autodiff.nodes.Mapping;
@@ -258,19 +258,13 @@ public final class DefaultProcessor implements NodeProcessor {
 			final Node<?> argument = node.getArgument();
 			final int n = node.getLength();
 			final String functionName = node.getFunctionName();
+			final List<Object> forwardDefinition = Functions.getForward(functionName);
+			final FloatSupplier forward = this.context.newSupplier(forwardDefinition);
 			
-			debugPrint(functionName);
-			
-			switch (functionName) {
-			default:
-				final List<Object> forward = Functions.getForward(functionName);
-				debugPrint(forward);
-				final FloatSupplier output = this.context.newSupplier(forward);
+			for (int i = 0; i < n; ++i) {
+				this.context.getInputs().get(0).set(argument.get(i));
 				
-				for (int i = 0; i < n; ++i) {
-					this.context.getInputs().get(0).set(argument.get(i));
-					node.set(i, output.get());
-				}
+				node.set(i, forward.get());
 			}
 			
 			return null;
@@ -283,20 +277,14 @@ public final class DefaultProcessor implements NodeProcessor {
 			final int m = left.getLength();
 			final int n = right.getLength();
 			final String functionName = node.getFunctionName();
+			final List<Object> forwardDefinition = Functions.getForward(functionName);
+			final FloatSupplier forward = this.context.newSupplier(forwardDefinition);
 			
-			debugPrint(functionName);
-			
-			switch (functionName) {
-			default:
-				final List<Object> forward = Functions.getForward(functionName);
-				debugPrint(forward);
-				final FloatSupplier output = this.context.newSupplier(forward);
+			for (int i = 0; i < m; ++i) {
+				this.context.getInputs().get(0).set(left.get(i));
+				this.context.getInputs().get(1).set(right.get(i % n));
 				
-				for (int i = 0; i < m; ++i) {
-					this.context.getInputs().get(0).set(left.get(i));
-					this.context.getInputs().get(1).set(right.get(i % n));
-					node.set(i, output.get());
-				}
+				node.set(i, forward.get());
 			}
 			
 			return null;
@@ -499,11 +487,7 @@ public final class DefaultProcessor implements NodeProcessor {
 			final Node<?> argument = node.getArgument();
 			final int n = node.getLength();
 			final String functionName = node.getFunctionName();
-			
-			debugPrint(functionName);
-			
 			final List<Object> diff = Functions.getDiff(functionName + ".0");
-			debugPrint(diff);
 			final FloatSupplier output = this.context.newSupplier(diff);
 			
 			for (int i = 0; i < n; ++i) {
@@ -524,14 +508,9 @@ public final class DefaultProcessor implements NodeProcessor {
 			final Node<?> leftDiffs = left.getDiffs();
 			final Node<?> rightDiffs = right.getDiffs();
 			
-			debugPrint(functionName);
-			
 			if (leftDiffs != null) {
-				final List<Object> leftDiff = Functions.getDiff(functionName + ".0");
-				
-				debugPrint(leftDiff);
-				
-				final FloatSupplier leftDelta = this.context.newSupplier(leftDiff);
+				final List<Object> leftDiffDefinition = Functions.getDiff(functionName + ".0");
+				final FloatSupplier leftDiff = this.context.newSupplier(leftDiffDefinition);
 				
 				for (int i = 0; i < m; ++i) {
 					final float diff = node.getDiffs().get(i);
@@ -539,16 +518,13 @@ public final class DefaultProcessor implements NodeProcessor {
 					this.context.getInputs().get(0).set(left.get(i));
 					this.context.getInputs().get(1).set(right.get(i % n));
 					
-					leftDiffs.add(i, leftDelta.get() * diff);
+					leftDiffs.add(i, leftDiff.get() * diff);
 				}
 			}
 			
 			if (rightDiffs != null) {
-				final List<Object> rightDiff = Functions.getDiff(functionName + ".1");
-				
-				debugPrint(rightDiff);
-				
-				final FloatSupplier rightDelta = this.context.newSupplier(rightDiff);
+				final List<Object> rightDiffDefinition = Functions.getDiff(functionName + ".1");
+				final FloatSupplier rightDiff = this.context.newSupplier(rightDiffDefinition);
 				
 				for (int i = 0; i < m; ++i) {
 					final float diff = node.getDiffs().get(i);
@@ -556,7 +532,7 @@ public final class DefaultProcessor implements NodeProcessor {
 					this.context.getInputs().get(0).set(left.get(i));
 					this.context.getInputs().get(1).set(right.get(i % n));
 					
-					rightDiffs.add(i, rightDelta.get() * diff);
+					rightDiffs.add(i % n, rightDiff.get() * diff);
 				}
 			}
 			
