@@ -650,6 +650,59 @@ public final class DefaultProcessor implements NodeProcessor {
 			return null;
 		}
 		
+		@Override
+		public final Void visit(final MaxPooling2D node) {
+			final Node<?> inputs = node.getInputs();
+			final int[] inputsShape = inputs.getShape();
+			final int inputHeight = inputsShape[inputsShape.length - 2];
+			final int inputWidth = inputsShape[inputsShape.length - 1];
+			final int[] offsets = node.getOffsets();
+			final int leftOffset = offsets[Node2D.LEFT];
+			final int rightOffset = offsets[Node2D.RIGHT];
+			final int topOffset = offsets[Node2D.TOP];
+			final int bottomOffset = offsets[Node2D.BOTTOM];
+			final int[] strides = node.getStrides();
+			final int strideX = strides[Node2D.HORIZONTAL];
+			final int strideY = strides[Node2D.VERTICAL];
+			final int[] kernelShape = node.getKernelShape();
+			final int kernelWidth = kernelShape[MaxPooling2D.WIDTH];
+			final int kernelHeight = kernelShape[MaxPooling2D.HEIGHT];
+			final int hh = (kernelHeight - 1) / 2;
+			final int hw = (kernelWidth - 1) / 2;
+			final int inputSize = inputWidth * inputHeight;
+			final int inputCount = inputs.getLength() / inputSize; 
+			
+			for (int i = 0, j = 0; i < inputCount; ++i) {
+				for (int y = topOffset; y < inputHeight - bottomOffset; y += strideY) {
+					final int top = max(0, y - hh);
+					final int bottomEnd = min(top + kernelHeight, inputHeight);
+					
+					for (int x = leftOffset; x < inputWidth - rightOffset; x += strideX, ++j) {
+						final int left = max(0, x - hw);
+						final int rightEnd = min(left + kernelWidth, inputWidth);
+						float value = Float.NEGATIVE_INFINITY;
+						int valueIndex = -1;
+						
+						for (int yy = top; yy < bottomEnd; ++yy) {
+							for (int xx = left; xx < rightEnd; ++xx) {
+								final int inputIndex = xx + inputWidth * yy + inputSize * i;
+								final float inputValue = inputs.get(inputIndex);
+								
+								if (value < inputValue) {
+									value = inputValue;
+									valueIndex = inputIndex;
+								}
+							}
+						}
+						
+						node.getArgument().getDiffs().add(valueIndex, node.getDiffs().get(j));
+					}
+				}
+			}
+			
+			return null;
+		}
+		
 		private static final long serialVersionUID = -2003909030537706641L;
 		
 		public static final BackwardDiffer INSTANCE = new BackwardDiffer();

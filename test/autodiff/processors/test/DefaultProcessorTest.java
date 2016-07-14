@@ -175,6 +175,16 @@ public final class DefaultProcessorTest {
 				5F, 6F,
 				8F, 9F
 		}, y.get(new float[y.getLength()]), 0F);
+		
+		x.setupDiffs(true);
+		
+		this.getProcessor().fullBackwardDiff(y);
+		
+		assertArrayEquals(new float[] {
+				0F, 0F, 0F,
+				0F, 1F, 1F,
+				0F, 1F, 1F
+		}, x.getDiffs().get(new float[x.getLength()]), 0F);
 	}
 	
 	@Test
@@ -183,6 +193,7 @@ public final class DefaultProcessorTest {
 				1F, 2F, 3F,
 				4F, 5F, 6F,
 				7F, 8F, 9F,
+				
 				10F, 11F, 12F,
 				13F, 14F, 15F,
 				16F, 17F, 18F);
@@ -196,6 +207,20 @@ public final class DefaultProcessorTest {
 				9F,
 				18F
 		}, y.get(new float[y.getLength()]), 0F);
+		
+		x.setupDiffs(true);
+		
+		this.getProcessor().fullBackwardDiff(y);
+		
+		assertArrayEquals(new float[] {
+				0F, 0F, 0F,
+				0F, 0F, 0F,
+				0F, 0F, 1F,
+				
+				0F, 0F, 0F,
+				0F, 0F, 0F,
+				0F, 0F, 1F
+		}, x.getDiffs().get(new float[x.getLength()]), 0F);
 	}
 	
 	@Test
