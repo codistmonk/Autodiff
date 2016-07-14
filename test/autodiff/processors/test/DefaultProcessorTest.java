@@ -76,6 +76,19 @@ public final class DefaultProcessorTest {
 		assertArrayEquals(new float[] {
 				23F
 		}, c.get(new float[c.getLength()]), 0F);
+		
+		a.setupDiffs(true);
+		b.setupDiffs(true);
+		
+		this.getProcessor().fullBackwardDiff(c);
+		
+		assertArrayEquals(new float[] {
+				4F, 5F
+		}, a.getDiffs().get(new float[a.getLength()]), 0F);
+		
+		assertArrayEquals(new float[] {
+				2F, 3F
+		}, b.getDiffs().get(new float[b.getLength()]), 0F);
 	}
 	
 	@Test
@@ -95,6 +108,19 @@ public final class DefaultProcessorTest {
 				8F, 12F,
 				10F, 15F
 		}, c.get(new float[c.getLength()]), 0F);
+		
+		a.setupDiffs(true);
+		b.setupDiffs(true);
+		
+		this.getProcessor().fullBackwardDiff(c);
+		
+		assertArrayEquals(new float[] {
+				9F, 9F
+		}, a.getDiffs().get(new float[a.getLength()]), 0F);
+		
+		assertArrayEquals(new float[] {
+				5F, 5F
+		}, b.getDiffs().get(new float[b.getLength()]), 0F);
 	}
 	
 	@Test

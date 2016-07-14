@@ -594,6 +594,46 @@ public final class DefaultProcessor implements NodeProcessor {
 			return null;
 		}
 		
+		@Override
+		public final Void visit(final MatrixMultiplication node) {
+			final Node<?> left = node.getLeft();
+			final Node<?> right = node.getRight();
+			final Node<?> leftDiffs = left.getDiffs();
+			final Node<?> rightDiffs = right.getDiffs();
+			
+			if (leftDiffs == null && rightDiffs == null) {
+				return null;
+			}
+			
+			final int[] leftShape = left.getLengths(new int[2]);
+			final int[] rightShape = right.getLengths(new int[2]);
+			final int rows = leftShape[0];
+			final int columns = rightShape[1];
+			final int stride = leftShape[1];
+			
+			for (int r = 0; r < rows; ++r) {
+				for (int c = 0; c < columns; ++c) {
+					final int resultIndex = c + r * columns;
+					final float diff = node.getDiffs().get(resultIndex);
+					
+					for (int k = 0; k < stride; ++k) {
+						final int leftIndex = k + r * stride;
+						final int rightIndex = c + k * columns;
+						
+						if (leftDiffs != null) {
+							leftDiffs.add(leftIndex, right.get(rightIndex) * diff);
+						}
+						
+						if (rightDiffs != null) {
+							rightDiffs.add(rightIndex, left.get(leftIndex) * diff);
+						}
+					}
+				}
+			}
+			
+			return null;
+		}
+		
 		private static final long serialVersionUID = -2003909030537706641L;
 		
 		public static final BackwardDiffer INSTANCE = new BackwardDiffer();
