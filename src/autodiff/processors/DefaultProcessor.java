@@ -274,7 +274,8 @@ public final class DefaultProcessor implements NodeProcessor {
 		public final Void visit(final Zipping node) {
 			final Node<?> left = node.getLeft();
 			final Node<?> right = node.getRight();
-			final int n = node.getLength();
+			final int m = left.getLength();
+			final int n = right.getLength();
 			final String functionName = node.getFunctionName();
 			
 			debugPrint(functionName);
@@ -285,9 +286,9 @@ public final class DefaultProcessor implements NodeProcessor {
 				debugPrint(forward);
 				final FloatSupplier output = this.context.newSupplier(forward);
 				
-				for (int i = 0; i < n; ++i) {
+				for (int i = 0; i < m; ++i) {
 					this.context.getInputs().get(0).set(left.get(i));
-					this.context.getInputs().get(1).set(right.get(i));
+					this.context.getInputs().get(1).set(right.get(i % n));
 					node.set(i, output.get());
 				}
 			}

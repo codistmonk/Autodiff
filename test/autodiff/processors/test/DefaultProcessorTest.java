@@ -240,6 +240,19 @@ public class DefaultProcessorTest {
 		assertArrayEquals(new float[] { -2F, 0F, 2F }, z.get(new float[z.getLength()]), 0F);
 	}
 	
+	@Test
+	public final void testNet1() {
+		final Node<?> x = new Data().set(-1F, 0F, 1F);
+		final Node<?> a = new Data().set(2F);
+		final Node<?> b = new Data().set(3F);
+		final Node<?> ax = new Zipping().setLeft(x).setRight(a).setFunctionName(Functions.TIMES).autoShape();
+		final Node<?> z = new Zipping().setLeft(ax).setRight(b).setFunctionName("+").autoShape();
+		
+		this.getProcessor().fullForward(z);
+		
+		assertArrayEquals(new float[] { 1F, 3F, 5F }, z.get(new float[z.getLength()]), 0F);
+	}
+	
 	public final NodeProcessor getProcessor() {
 		return DefaultProcessor.INSTANCE;
 	}
