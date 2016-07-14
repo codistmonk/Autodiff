@@ -1,6 +1,7 @@
 package autodiff.nodes;
 
 import static java.lang.Math.pow;
+import static java.util.Collections.synchronizedMap;
 import static multij.tools.Tools.cast;
 
 import java.math.BigDecimal;
@@ -21,9 +22,9 @@ public final class Functions {
 		throw new IllegalInstantiationException();
 	}
 	
-	private static final Map<String, List<Object>> forwards = new HashMap<>();
+	private static final Map<String, List<Object>> forwards = synchronizedMap(new HashMap<>());
 	
-	private static final Map<String, List<Object>> diffs = new HashMap<>();
+	private static final Map<String, List<Object>> diffs = synchronizedMap(new HashMap<>());
 	
 	public static final String CASES = "cases";
 	
@@ -76,10 +77,11 @@ public final class Functions {
 	
 	public static final String STEP = "\\step";
 	
+	public static final double EPSILON = pow(2.0, -14.0);
+	
 	static {
 		final String x = "x";
 		final String y = "y";
-		final double epsilon = pow(2.0, -14.0);
 		
 		define(ID, x,
 				x);
@@ -126,7 +128,7 @@ public final class Functions {
 		define(STEP, x,
 				$(CASES, $(0, IF, $(x, "<", 0)), $(1, OTHERWISE)));
 		defineDiff(STEP, x,
-				epsilon);
+				EPSILON);
 		
 		autodefine(SQRT, x);
 		defineDiff(SQRT, x,
@@ -146,8 +148,16 @@ public final class Functions {
 		autodefineInfix("/", $(x, y));
 	}
 	
+	public static final Map<String, List<Object>> getForwards() {
+		return forwards;
+	}
+	
+	public static final Map<String, List<Object>> getDiffs() {
+		return diffs;
+	}
+	
 	public static final void define(final String functionName, final List<Object> variableNames, final List<Object> notation, final Object definition) {
-		forwards.put(functionName, $(FORALL, variableNames, IN, R, $(notation, "=", definition)));
+		getForwards().put(functionName, $(FORALL, variableNames, IN, R, $(notation, "=", definition)));
 	}
 	
 	public static final void defineInfix(final String functionName, final List<Object> variableNames, final Object definition) {
@@ -184,15 +194,15 @@ public final class Functions {
 	}
 	
 	public static final void defineDiff(final String functionName, final String variableName, final Object definition) {
-		diffs.put(functionName, $(FORALL, $(variableName), IN, R, $($($(D, functionName, 0), variableName), "=", definition)));
+		getDiffs().put(functionName, $(FORALL, $(variableName), IN, R, $($($(D, functionName, 0), variableName), "=", definition)));
 	}
 	
 	public static final List<Object> getForward(final String functionName) {
-		return forwards.get(functionName);
+		return getForwards().get(functionName);
 	}
 	
 	public static final List<Object> getDiff(final String functionName) {
-		return diffs.get(functionName);
+		return getDiffs().get(functionName);
 	}
 	
 	public static final Object n(final Object object) {

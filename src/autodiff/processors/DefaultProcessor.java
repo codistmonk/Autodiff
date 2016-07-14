@@ -7,7 +7,6 @@ import static java.util.Collections.reverse;
 import static java.util.stream.Collectors.toList;
 import static multij.tools.Tools.cast;
 import static multij.tools.Tools.debugPrint;
-
 import autodiff.nodes.Convolution2D;
 import autodiff.nodes.Functions;
 import autodiff.nodes.Mapping;
@@ -20,6 +19,7 @@ import autodiff.nodes.Selection;
 import autodiff.nodes.Sum;
 import autodiff.nodes.Zipping;
 import autodiff.rules.Disjunction;
+import autodiff.rules.PatternPredicate;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -306,280 +306,14 @@ public final class DefaultProcessor implements NodeProcessor {
 		
 		public static final Forwarder INSTANCE = new Forwarder();
 		
-		/**
-		 * @author codistmonk (creation 2016-07-13)
-		 */
-		public static final class Context implements Serializable {
-			
-			private final Disjunction<Object, FloatSupplier> rules = new Disjunction<>();
-			
-			private final List<Variable> inputs = new ArrayList<>();
-			
-			private final Map<String, Variable> variables = new HashMap<>();
-			
-			{
-				{
-					final autodiff.rules.Variable x = new autodiff.rules.Variable();
-					final autodiff.rules.Variable y = new autodiff.rules.Variable();
-					final autodiff.rules.Variable z = new autodiff.rules.Variable();
-					
-					this.rules.add(rule($(FORALL, $(x), IN, R, $(y, "=", z)), (__, m) -> {
-						final String variableName = (String) m.get(x);
-						final Variable variable = new Variable();
-						
-						if (this.variables.put(variableName, variable) != null) {
-							throw new IllegalStateException();
-						}
-						
-						if (this.inputs.isEmpty()) {
-							this.inputs.add(variable);
-						}
-						
-						return this.rules.applyTo(m.get(z), m);
-					}));
-				}
-				
-				{
-					final autodiff.rules.Variable x0 = new autodiff.rules.Variable();
-					final autodiff.rules.Variable x1 = new autodiff.rules.Variable();
-					final autodiff.rules.Variable y = new autodiff.rules.Variable();
-					final autodiff.rules.Variable z = new autodiff.rules.Variable();
-					
-					this.rules.add(rule($(FORALL, $(x0, x1), IN, R, $(y, "=", z)), (__, m) -> {
-						final String variable0Name = (String) m.get(x0);
-						final Variable variable0 = new Variable();
-						
-						if (this.variables.put(variable0Name, variable0) != null) {
-							throw new IllegalStateException();
-						}
-						
-						final String variable1Name = (String) m.get(x1);
-						final Variable variable1 = new Variable();
-						
-						if (this.variables.put(variable1Name, variable1) != null) {
-							throw new IllegalStateException();
-						}
-						
-						if (this.inputs.isEmpty()) {
-							this.inputs.add(variable0);
-							this.inputs.add(variable1);
-						}
-						
-						return this.rules.applyTo(m.get(z), m);
-					}));
-				}
-				
-				{
-					this.rules.add((expr, __) -> {
-						final List<?> list = cast(List.class, expr);
-						
-						return list != null && 2 <= list.size() && CASES.equals(list.get(0));
-					}, (expr, m) -> {
-						final List<?> list = (List<?>) expr;
-						final List<Pair<FloatSupplier, FloatSupplier>> conditionAndResults = new ArrayList<>();
-						
-						for (int i = 1; i < list.size(); ++i) {
-							final List<?> caseElement = (List<?>) list.get(i);
-							
-							if (caseElement.size() == 3) {
-								if (!IF.equals(caseElement.get(1))) {
-									throw new IllegalArgumentException();
-								}
-								
-								conditionAndResults.add(new Pair<>(
-										this.rules.applyTo(caseElement.get(2), m), this.rules.applyTo(caseElement.get(0), m)));
-							} else {
-								if (caseElement.size() != 2 || !OTHERWISE.equals(caseElement.get(1))) {
-									throw new IllegalArgumentException();
-								}
-								
-								conditionAndResults.add(new Pair<>(null, this.rules.applyTo(caseElement.get(0), m)));
-							}
-						}
-						
-						FloatSupplier result = null;
-						
-						for (int i = conditionAndResults.size() - 1; 0 <= i; --i) {
-							final Pair<FloatSupplier, FloatSupplier> conditionAndResult = conditionAndResults.get(i);
-							
-							if (conditionAndResult.getFirst() == null) {
-								result = conditionAndResult.getSecond();
-							} else {
-								result = new IfThenElse(conditionAndResult.getFirst(), conditionAndResult.getSecond(), result);
-							}
-						}
-						
-						return result;
-					});
-				}
-				
-				{
-					final autodiff.rules.Variable x = new autodiff.rules.Variable();
-					
-					this.rules.add(rule($(ABS, x), (__, m) -> {
-						return new Abs(this.rules.applyTo(m.get(x), m));
-					}));
-				}
-				
-				{
-					final autodiff.rules.Variable x = new autodiff.rules.Variable();
-					
-					this.rules.add(rule($(SQRT, x), (__, m) -> {
-						return new Sqrt(this.rules.applyTo(m.get(x), m));
-					}));
-				}
-				
-				{
-					final autodiff.rules.Variable x = new autodiff.rules.Variable();
-					
-					this.rules.add(rule($(EXP, x), (__, m) -> {
-						return new Exp(this.rules.applyTo(m.get(x), m));
-					}));
-				}
-				
-				{
-					final autodiff.rules.Variable x = new autodiff.rules.Variable();
-					
-					this.rules.add(rule($("-", x), (__, m) -> {
-						return new Neg(this.rules.applyTo(m.get(x), m));
-					}));
-				}
-				
-				{
-					final autodiff.rules.Variable x = new autodiff.rules.Variable();
-					
-					this.rules.add(rule($(LN, x), (__, m) -> {
-						return new Ln(this.rules.applyTo(m.get(x), m));
-					}));
-				}
-				
-				{
-					final autodiff.rules.Variable x = new autodiff.rules.Variable();
-					final autodiff.rules.Variable y = new autodiff.rules.Variable();
-					
-					this.rules.add(rule($(x, "+", y), (__, m) -> {
-						return new Plus(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
-					}));
-				}
-				
-				{
-					final autodiff.rules.Variable x = new autodiff.rules.Variable();
-					final autodiff.rules.Variable y = new autodiff.rules.Variable();
-					
-					this.rules.add(rule($(x, "-", y), (__, m) -> {
-						return new Minus(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
-					}));
-				}
-				
-				{
-					final autodiff.rules.Variable x = new autodiff.rules.Variable();
-					final autodiff.rules.Variable y = new autodiff.rules.Variable();
-					
-					this.rules.add(rule($(x, TIMES, y), (__, m) -> {
-						return new Times(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
-					}));
-				}
-				
-				{
-					final autodiff.rules.Variable x = new autodiff.rules.Variable();
-					final autodiff.rules.Variable y = new autodiff.rules.Variable();
-					
-					this.rules.add(rule($(x, "/", y), (__, m) -> {
-						return new Div(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
-					}));
-				}
-				
-				{
-					final autodiff.rules.Variable x = new autodiff.rules.Variable();
-					final autodiff.rules.Variable y = new autodiff.rules.Variable();
-					
-					this.rules.add(rule($(x, "=", y), (__, m) -> {
-						return new Equal(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
-					}));
-				}
-				
-				{
-					final autodiff.rules.Variable x = new autodiff.rules.Variable();
-					final autodiff.rules.Variable y = new autodiff.rules.Variable();
-					
-					this.rules.add(rule($(x, NEQ, y), (__, m) -> {
-						return new NotEqual(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
-					}));
-				}
-				
-				{
-					final autodiff.rules.Variable x = new autodiff.rules.Variable();
-					final autodiff.rules.Variable y = new autodiff.rules.Variable();
-					
-					this.rules.add(rule($(x, "<", y), (__, m) -> {
-						return new Less(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
-					}));
-				}
-				
-				{
-					final autodiff.rules.Variable x = new autodiff.rules.Variable();
-					final autodiff.rules.Variable y = new autodiff.rules.Variable();
-					
-					this.rules.add(rule($(x, LEQ, y), (__, m) -> {
-						return new LessOrEqual(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
-					}));
-				}
-				
-				{
-					final autodiff.rules.Variable x = new autodiff.rules.Variable();
-					final autodiff.rules.Variable y = new autodiff.rules.Variable();
-					
-					this.rules.add(rule($(x, ">", y), (__, m) -> {
-						return new Greater(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
-					}));
-				}
-				
-				{
-					final autodiff.rules.Variable x = new autodiff.rules.Variable();
-					final autodiff.rules.Variable y = new autodiff.rules.Variable();
-					
-					this.rules.add(rule($(x, GEQ, y), (__, m) -> {
-						return new GreaterOrEqual(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
-					}));
-				}
-				
-				this.rules.add((object, __) -> object instanceof String, (name, __) -> this.variables.get(name));
-				this.rules.add((object, __) -> object instanceof Number, (x, __) -> new Constant(((Number) x).floatValue()));
-			}
-			
-			public final Disjunction<Object, FloatSupplier> getRules() {
-				return this.rules;
-			}
-			
-			public final List<Variable> getInputs() {
-				return this.inputs;
-			}
-			
-			public final Map<String, Variable> getVariables() {
-				return this.variables;
-			}
-			
-			public final Context reset() {
-				this.getInputs().clear();
-				this.getVariables().clear();
-				
-				return this;
-			}
-			
-			public final FloatSupplier newSupplier(final Object definition) {
-				return this.reset().getRules().applyTo(definition);
-			}
-			
-			private static final long serialVersionUID = 5823521748135325332L;
-			
-		}
-		
 	}
 	
 	/**
 	 * @author codistmonk (creation 2016-07-11)
 	 */
 	public static final class BackwardDiffer implements NodeVisitor<Void> {
+		
+		private final Context context = new Context();
 		
 		@Override
 		public final Void visit(final Selection node) {
@@ -760,9 +494,335 @@ public final class DefaultProcessor implements NodeProcessor {
 			return null;
 		}
 		
+		@Override
+		public final Void visit(final Mapping node) {
+			final Node<?> argument = node.getArgument();
+			final int n = node.getLength();
+			final String functionName = node.getFunctionName();
+			
+			debugPrint(functionName);
+			
+			switch (functionName) {
+			default:
+				final List<Object> diff = Functions.getDiff(functionName);
+				debugPrint(diff);
+				final FloatSupplier output = this.context.newSupplier(diff);
+				
+				for (int i = 0; i < n; ++i) {
+					this.context.getInputs().get(0).set(argument.get(i));
+					node.getArgument().getDiffs().add(i, output.get());
+				}
+			}
+			
+			return null;
+		}
+		
 		private static final long serialVersionUID = -2003909030537706641L;
 		
 		public static final BackwardDiffer INSTANCE = new BackwardDiffer();
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-07-13)
+	 */
+	public static final class Context implements Serializable {
+		
+		private final Disjunction<Object, FloatSupplier> rules = new Disjunction<>();
+		
+		private final List<Variable> inputs = new ArrayList<>();
+		
+		private final Map<String, Variable> variables = new HashMap<>();
+		
+		{
+			for (final List<Object> definition : Functions.getForwards().values()) {
+				{
+					final autodiff.rules.Variable x = new autodiff.rules.Variable();
+					final autodiff.rules.Variable y = new autodiff.rules.Variable();
+					final autodiff.rules.Variable z = new autodiff.rules.Variable();
+					final List<Object> function1DefinitionPattern = $(FORALL, $(x), IN, R, $(y, "=", z));
+					final Map<autodiff.rules.Variable, Object> mapping = new HashMap<>();
+					
+					if (autodiff.rules.Variable.match(function1DefinitionPattern, definition, mapping)
+							&& !mapping.get(y).equals(mapping.get(z))) {
+						this.rules.add(new PatternPredicate(mapping.get(y)), (__, m) -> this.rules.applyTo(mapping.get(z), m));
+					}
+				}
+				
+				{
+					final autodiff.rules.Variable x0 = new autodiff.rules.Variable();
+					final autodiff.rules.Variable x1 = new autodiff.rules.Variable();
+					final autodiff.rules.Variable y = new autodiff.rules.Variable();
+					final autodiff.rules.Variable z = new autodiff.rules.Variable();
+					final List<Object> function2DefinitionPattern = $(FORALL, $(x0, x1), IN, R, $(y, "=", z));
+					final Map<autodiff.rules.Variable, Object> mapping = new HashMap<>();
+					
+					if (autodiff.rules.Variable.match(function2DefinitionPattern, definition, mapping)
+							&& !mapping.get(y).equals(mapping.get(z))) {
+						this.rules.add(new PatternPredicate(mapping.get(y)), (__, m) -> this.rules.applyTo(mapping.get(z), m));
+					}
+				}
+			}
+			
+			{
+				this.rules.add((expr, __) -> {
+					final List<?> list = cast(List.class, expr);
+					
+					return list != null && 2 <= list.size() && CASES.equals(list.get(0));
+				}, (expr, m) -> {
+					final List<?> list = (List<?>) expr;
+					final List<Pair<FloatSupplier, FloatSupplier>> conditionAndResults = new ArrayList<>();
+					
+					for (int i = 1; i < list.size(); ++i) {
+						final List<?> caseElement = (List<?>) list.get(i);
+						
+						if (caseElement.size() == 3) {
+							if (!IF.equals(caseElement.get(1))) {
+								throw new IllegalArgumentException();
+							}
+							
+							conditionAndResults.add(new Pair<>(
+									this.rules.applyTo(caseElement.get(2), m), this.rules.applyTo(caseElement.get(0), m)));
+						} else {
+							if (caseElement.size() != 2 || !OTHERWISE.equals(caseElement.get(1))) {
+								throw new IllegalArgumentException();
+							}
+							
+							conditionAndResults.add(new Pair<>(null, this.rules.applyTo(caseElement.get(0), m)));
+						}
+					}
+					
+					FloatSupplier result = null;
+					
+					for (int i = conditionAndResults.size() - 1; 0 <= i; --i) {
+						final Pair<FloatSupplier, FloatSupplier> conditionAndResult = conditionAndResults.get(i);
+						
+						if (conditionAndResult.getFirst() == null) {
+							result = conditionAndResult.getSecond();
+						} else {
+							result = new IfThenElse(conditionAndResult.getFirst(), conditionAndResult.getSecond(), result);
+						}
+					}
+					
+					return result;
+				});
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(ABS, x), (__, m) -> {
+					return new Abs(this.rules.applyTo(m.get(x), m));
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(SQRT, x), (__, m) -> {
+					return new Sqrt(this.rules.applyTo(m.get(x), m));
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(EXP, x), (__, m) -> {
+					return new Exp(this.rules.applyTo(m.get(x), m));
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($("-", x), (__, m) -> {
+					return new Neg(this.rules.applyTo(m.get(x), m));
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(LN, x), (__, m) -> {
+					return new Ln(this.rules.applyTo(m.get(x), m));
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(x, "+", y), (__, m) -> {
+					return new Plus(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(x, "-", y), (__, m) -> {
+					return new Minus(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(x, TIMES, y), (__, m) -> {
+					return new Times(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(x, "/", y), (__, m) -> {
+					return new Div(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(x, "=", y), (__, m) -> {
+					return new Equal(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(x, NEQ, y), (__, m) -> {
+					return new NotEqual(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(x, "<", y), (__, m) -> {
+					return new Less(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(x, LEQ, y), (__, m) -> {
+					return new LessOrEqual(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(x, ">", y), (__, m) -> {
+					return new Greater(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(x, GEQ, y), (__, m) -> {
+					return new GreaterOrEqual(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
+				}));
+			}
+			
+			this.rules.add((object, __) -> object instanceof String, (name, __) -> this.variables.get(name));
+			this.rules.add((object, __) -> object instanceof Number, (x, __) -> new Constant(((Number) x).floatValue()));
+		}
+		
+		public final Disjunction<Object, FloatSupplier> getRules() {
+			return this.rules;
+		}
+		
+		public final List<Variable> getInputs() {
+			return this.inputs;
+		}
+		
+		public final Map<String, Variable> getVariables() {
+			return this.variables;
+		}
+		
+		public final Context reset() {
+			this.getInputs().clear();
+			this.getVariables().clear();
+			
+			return this;
+		}
+		
+		public final FloatSupplier newSupplier(final Object definition) {
+			this.reset();
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				final autodiff.rules.Variable z = new autodiff.rules.Variable();
+				final List<Object> function1DefinitionPattern = $(FORALL, $(x), IN, R, $(y, "=", z));
+				final Map<autodiff.rules.Variable, Object> mapping = new HashMap<>();
+				
+				if (autodiff.rules.Variable.match(function1DefinitionPattern, definition, mapping)) {
+					final String variableName = (String) mapping.get(x);
+					final Variable variable = new Variable();
+					
+					if (this.variables.put(variableName, variable) != null) {
+						throw new IllegalStateException();
+					}
+					
+					if (this.inputs.isEmpty()) {
+						this.inputs.add(variable);
+					}
+					
+					return this.rules.applyTo(mapping.get(z), mapping);
+				}
+			}
+			
+			{
+				final autodiff.rules.Variable x0 = new autodiff.rules.Variable();
+				final autodiff.rules.Variable x1 = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				final autodiff.rules.Variable z = new autodiff.rules.Variable();
+				final List<Object> function2DefinitionPattern = $(FORALL, $(x0, x1), IN, R, $(y, "=", z));
+				final Map<autodiff.rules.Variable, Object> mapping = new HashMap<>();
+				
+				if (autodiff.rules.Variable.match(function2DefinitionPattern, definition, mapping)) {
+					final String variable0Name = (String) mapping.get(x0);
+					final Variable variable0 = new Variable();
+					
+					if (this.variables.put(variable0Name, variable0) != null) {
+						throw new IllegalStateException();
+					}
+					
+					final String variable1Name = (String) mapping.get(x1);
+					final Variable variable1 = new Variable();
+					
+					if (this.variables.put(variable1Name, variable1) != null) {
+						throw new IllegalStateException();
+					}
+					
+					if (this.inputs.isEmpty()) {
+						this.inputs.add(variable0);
+						this.inputs.add(variable1);
+					}
+					
+					return this.rules.applyTo(mapping.get(z), mapping);
+				}
+			}
+			
+			return null;
+		}
+		
+		private static final long serialVersionUID = 5823521748135325332L;
 		
 	}
 	

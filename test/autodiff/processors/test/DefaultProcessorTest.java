@@ -1,5 +1,6 @@
 package autodiff.processors.test;
 
+import static autodiff.nodes.Functions.EPSILON;
 import static java.lang.Math.exp;
 import static org.junit.Assert.*;
 
@@ -270,6 +271,12 @@ public final class DefaultProcessorTest {
 		this.getProcessor().fullForward(y);
 		
 		assertArrayEquals(new float[] { -1F, 0F, 1F }, y.get(new float[y.getLength()]), 0F);
+		
+		x.setupDiffs(true);
+		
+		this.getProcessor().fullBackwardDiff(y);
+		
+		assertArrayEquals(new float[] { 1F, 1F, 1F }, x.getDiffs().get(new float[x.getLength()]), 0F);
 	}
 	
 	@Test
@@ -282,6 +289,12 @@ public final class DefaultProcessorTest {
 		this.getProcessor().fullForward(y);
 		
 		assertArrayEquals(new float[] { 1F, 0F, 1F }, y.get(new float[y.getLength()]), 0F);
+		
+		x.setupDiffs(true);
+		
+		this.getProcessor().fullBackwardDiff(y);
+		
+		assertArrayEquals(new float[] { -2F, 0F, 2F }, x.getDiffs().get(new float[x.getLength()]), 0F);
 	}
 	
 	@Test
@@ -294,6 +307,12 @@ public final class DefaultProcessorTest {
 		this.getProcessor().fullForward(y);
 		
 		assertArrayEquals(new float[] { 0F, 1F, 2F }, y.get(new float[y.getLength()]), 0F);
+		
+		x.setupDiffs(true);
+		
+		this.getProcessor().fullBackwardDiff(y);
+		
+		assertArrayEquals(new float[] { Float.POSITIVE_INFINITY, 0.5F, 0.25F }, x.getDiffs().get(new float[x.getLength()]), 0F);
 	}
 	
 	@Test
@@ -306,6 +325,12 @@ public final class DefaultProcessorTest {
 		this.getProcessor().fullForward(y);
 		
 		assertArrayEquals(new float[] { sigmoid(-1F), sigmoid(0F), sigmoid(1F) }, y.get(new float[y.getLength()]), 0F);
+		
+		x.setupDiffs(true);
+		
+		this.getProcessor().fullBackwardDiff(y);
+		
+		assertArrayEquals(new float[] { sigmoidDiff(-1F), sigmoidDiff(0F), sigmoidDiff(1F) }, x.getDiffs().get(new float[x.getLength()]), 0F);
 	}
 	
 	@Test
@@ -318,6 +343,12 @@ public final class DefaultProcessorTest {
 		this.getProcessor().fullForward(y);
 		
 		assertArrayEquals(new float[] { 0F, 1F, 1F }, y.get(new float[y.getLength()]), 0F);
+		
+		x.setupDiffs(true);
+		
+		this.getProcessor().fullBackwardDiff(y);
+		
+		assertArrayEquals(new float[] { (float) EPSILON, (float) EPSILON, (float) EPSILON }, x.getDiffs().get(new float[x.getLength()]), 0F);
 	}
 	
 	@Test
@@ -352,6 +383,12 @@ public final class DefaultProcessorTest {
 	
 	public static final float sigmoid(final float x) {
 		return 1F / (1F + (float) exp(-x));
+	}
+	
+	public static final float sigmoidDiff(final float x) {
+		final float y = sigmoid(x);
+		
+		return y * (1F - y);
 	}
 	
 }
