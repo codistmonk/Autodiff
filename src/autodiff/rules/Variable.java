@@ -47,8 +47,8 @@ public final class Variable implements Serializable {
 			return existing.equals(target);
 		}
 		
-		final List<Object> patternList = cast(List.class, pattern);
-		final List<Object> targetList = cast(List.class, target);
+		final List<?> patternList = cast(List.class, pattern);
+		final List<?> targetList = cast(List.class, target);
 		
 		if (patternList != null && targetList != null) {
 			final int n = patternList.size();
@@ -76,7 +76,7 @@ public final class Variable implements Serializable {
 			return mapping.getOrDefault(variable, variable);
 		}
 		
-		final List<Object> targetList = cast(List.class, target);
+		final List<?> targetList = cast(List.class, target);
 		
 		if (targetList != null) {
 			final int n = targetList.size();
