@@ -1,4 +1,4 @@
 /**
  * @author codistmonk (creation 2016-07-11)
  */
-package autodiff.processors;
+package autodiff.computing;

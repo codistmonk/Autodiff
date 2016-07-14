@@ -1,4 +1,4 @@
-package autodiff.nodes;
+package autodiff.computing;
 
 import static java.lang.Math.pow;
 import static java.util.Collections.synchronizedMap;

@@ -1,14 +1,16 @@
-package autodiff.processors.test;
+package autodiff.computing.test;
 
-import static autodiff.nodes.Functions.EPSILON;
+import static autodiff.computing.Functions.EPSILON;
 import static java.lang.Math.exp;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import autodiff.computing.DefaultProcessor;
+import autodiff.computing.Functions;
+import autodiff.computing.NodeProcessor;
 import autodiff.nodes.Convolution2D;
 import autodiff.nodes.Data;
-import autodiff.nodes.Functions;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.MaxPooling2D;
@@ -16,8 +18,6 @@ import autodiff.nodes.Node;
 import autodiff.nodes.Selection;
 import autodiff.nodes.Sum;
 import autodiff.nodes.Zipping;
-import autodiff.processors.DefaultProcessor;
-import autodiff.processors.NodeProcessor;
 
 /**
  * @author codistmonk (creation 2016-07-11)

@@ -1,14 +1,12 @@
-package autodiff.processors;
+package autodiff.computing;
 
-import static autodiff.nodes.Functions.*;
+import static autodiff.computing.Functions.*;
 import static autodiff.rules.PatternPredicate.rule;
 import static java.lang.Math.*;
 import static java.util.Collections.reverse;
 import static java.util.stream.Collectors.toList;
 import static multij.tools.Tools.cast;
-
 import autodiff.nodes.Convolution2D;
-import autodiff.nodes.Functions;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.MaxPooling2D;
