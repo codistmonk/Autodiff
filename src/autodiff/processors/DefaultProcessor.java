@@ -634,6 +634,22 @@ public final class DefaultProcessor implements NodeProcessor {
 			return null;
 		}
 		
+		@Override
+		public final Void visit(final Sum node) {
+			final int n = node.getArgument().getLength();
+			final int stride = node.getStride();
+			
+			for (int i = 0, j = 0; i < n; i += stride, ++j) {
+				final float diff = node.getDiffs().get(j);
+				
+				for (int k = 0; k < stride; ++k) {
+					node.getArgument().getDiffs().add(i + k, diff);
+				}
+			}
+			
+			return null;
+		}
+		
 		private static final long serialVersionUID = -2003909030537706641L;
 		
 		public static final BackwardDiffer INSTANCE = new BackwardDiffer();
