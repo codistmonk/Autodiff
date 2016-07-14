@@ -143,9 +143,20 @@ public final class Functions {
 				$(1, "/", x));
 		
 		autodefineInfix("+", $(x, y));
+		defineDiff("+", 0, $(x, y), 1);
+		defineDiff("+", 1, $(x, y), 1);
+		
 		autodefineInfix("-", $(x, y));
+		defineDiff("-", 0, $(x, y), 1);
+		defineDiff("-", 1, $(x, y), -1);
+		
 		autodefineInfix(TIMES, $(x, y));
+		defineDiff(TIMES, 0, $(x, y), y);
+		defineDiff(TIMES, 1, $(x, y), x);
+		
 		autodefineInfix("/", $(x, y));
+		defineDiff("/", 0, $(x, y), $(1, "/", y));
+		defineDiff("/", 1, $(x, y), $($("-", x), "/", $(y, TIMES, y)));
 	}
 	
 	public static final Map<String, List<Object>> getForwards() {
@@ -171,12 +182,19 @@ public final class Functions {
 	}
 	
 	public static final void define(final String functionName, final List<Object> variableNames, final Object definition) {
-		final List<Object> notation = $(new Object[1 + variableNames.size()]);
-		
-		notation.set(0, functionName);
-		Collections.copy(notation.subList(1, notation.size()), variableNames);
+		final List<Object> notation = application(functionName, variableNames);
 		
 		define(functionName, variableNames, notation, definition);
+	}
+	
+	public static final List<Object> application(final Object function, final List<Object> variableNames) {
+		final List<Object> result = $(new Object[1 + variableNames.size()]);
+		
+		result.set(0, function);
+		
+		Collections.copy(result.subList(1, result.size()), variableNames);
+		
+		return result;
 	}
 	
 	public static final void define(final String functionName, final String variableName, final Object definition) {
@@ -194,7 +212,13 @@ public final class Functions {
 	}
 	
 	public static final void defineDiff(final String functionName, final String variableName, final Object definition) {
-		getDiffs().put(functionName, $(FORALL, $(variableName), IN, R, $($($(D, functionName, 0), variableName), "=", definition)));
+		defineDiff(functionName, 0, $(variableName), definition);
+	}
+	
+	public static final void defineDiff(final String functionName, final int variableIndex, final List<Object> variableNames, final Object definition) {
+		final List<Object> notation = application($(D, functionName, variableIndex), variableNames);
+		
+		getDiffs().put(functionName + "." + variableIndex, $(FORALL, variableNames, IN, R, $(notation, "=", definition)));
 	}
 	
 	public static final List<Object> getForward(final String functionName) {

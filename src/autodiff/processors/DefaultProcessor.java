@@ -502,15 +502,61 @@ public final class DefaultProcessor implements NodeProcessor {
 			
 			debugPrint(functionName);
 			
-			switch (functionName) {
-			default:
-				final List<Object> diff = Functions.getDiff(functionName);
-				debugPrint(diff);
-				final FloatSupplier output = this.context.newSupplier(diff);
+			final List<Object> diff = Functions.getDiff(functionName + ".0");
+			debugPrint(diff);
+			final FloatSupplier output = this.context.newSupplier(diff);
+			
+			for (int i = 0; i < n; ++i) {
+				this.context.getInputs().get(0).set(argument.get(i));
+				node.getArgument().getDiffs().add(i, output.get());
+			}
+			
+			return null;
+		}
+		
+		@Override
+		public final Void visit(final Zipping node) {
+			final Node<?> left = node.getLeft();
+			final Node<?> right = node.getRight();
+			final int m = left.getLength();
+			final int n = right.getLength();
+			final String functionName = node.getFunctionName();
+			final Node<?> leftDiffs = left.getDiffs();
+			final Node<?> rightDiffs = right.getDiffs();
+			
+			debugPrint(functionName);
+			
+			if (leftDiffs != null) {
+				final List<Object> leftDiff = Functions.getDiff(functionName + ".0");
 				
-				for (int i = 0; i < n; ++i) {
-					this.context.getInputs().get(0).set(argument.get(i));
-					node.getArgument().getDiffs().add(i, output.get());
+				debugPrint(leftDiff);
+				
+				final FloatSupplier leftDelta = this.context.newSupplier(leftDiff);
+				
+				for (int i = 0; i < m; ++i) {
+					final float diff = node.getDiffs().get(i);
+					
+					this.context.getInputs().get(0).set(left.get(i));
+					this.context.getInputs().get(1).set(right.get(i % n));
+					
+					leftDiffs.add(i, leftDelta.get() * diff);
+				}
+			}
+			
+			if (rightDiffs != null) {
+				final List<Object> rightDiff = Functions.getDiff(functionName + ".1");
+				
+				debugPrint(rightDiff);
+				
+				final FloatSupplier rightDelta = this.context.newSupplier(rightDiff);
+				
+				for (int i = 0; i < m; ++i) {
+					final float diff = node.getDiffs().get(i);
+					
+					this.context.getInputs().get(0).set(left.get(i));
+					this.context.getInputs().get(1).set(right.get(i % n));
+					
+					rightDiffs.add(i, rightDelta.get() * diff);
 				}
 			}
 			
@@ -819,7 +865,7 @@ public final class DefaultProcessor implements NodeProcessor {
 				}
 			}
 			
-			return null;
+			throw new IllegalArgumentException("" + definition);
 		}
 		
 		private static final long serialVersionUID = 5823521748135325332L;
