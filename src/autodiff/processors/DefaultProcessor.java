@@ -365,9 +365,9 @@ public final class DefaultProcessor implements NodeProcessor {
 				
 				{
 					this.rules.add((expr, __) -> {
-						final List<Object> list = cast(List.class, expr);
+						final List<?> list = cast(List.class, expr);
 						
-						return list != null && 2 <= list.size() && "cases".equals(list.get(0));
+						return list != null && 2 <= list.size() && CASES.equals(list.get(0));
 					}, (expr, m) -> {
 						final List<?> list = (List<?>) expr;
 						final List<Pair<FloatSupplier, FloatSupplier>> conditionAndResults = new ArrayList<>();
@@ -376,13 +376,14 @@ public final class DefaultProcessor implements NodeProcessor {
 							final List<?> caseElement = (List<?>) list.get(i);
 							
 							if (caseElement.size() == 3) {
-								if (!"if".equals(caseElement.get(1))) {
+								if (!IF.equals(caseElement.get(1))) {
 									throw new IllegalArgumentException();
 								}
 								
-								conditionAndResults.add(new Pair<>(this.rules.applyTo(caseElement.get(2), m), this.rules.applyTo(caseElement.get(0), m)));
+								conditionAndResults.add(new Pair<>(
+										this.rules.applyTo(caseElement.get(2), m), this.rules.applyTo(caseElement.get(0), m)));
 							} else {
-								if (caseElement.size() != 2 || !"otherwise".equals(caseElement.get(1))) {
+								if (caseElement.size() != 2 || !OTHERWISE.equals(caseElement.get(1))) {
 									throw new IllegalArgumentException();
 								}
 								
@@ -513,7 +514,7 @@ public final class DefaultProcessor implements NodeProcessor {
 					final autodiff.rules.Variable x = new autodiff.rules.Variable();
 					final autodiff.rules.Variable y = new autodiff.rules.Variable();
 					
-					this.rules.add(rule($(x, "<=", y), (__, m) -> {
+					this.rules.add(rule($(x, LEQ, y), (__, m) -> {
 						return new LessOrEqual(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
 					}));
 				}
@@ -531,13 +532,13 @@ public final class DefaultProcessor implements NodeProcessor {
 					final autodiff.rules.Variable x = new autodiff.rules.Variable();
 					final autodiff.rules.Variable y = new autodiff.rules.Variable();
 					
-					this.rules.add(rule($(x, ">=", y), (__, m) -> {
+					this.rules.add(rule($(x, GEQ, y), (__, m) -> {
 						return new GreaterOrEqual(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
 					}));
 				}
 				
 				this.rules.add((object, __) -> object instanceof String, (name, __) -> this.variables.get(name));
-				this.rules.add((object, __) -> object instanceof Number, (x, __2) -> new Constant(((Number) x).floatValue()));
+				this.rules.add((object, __) -> object instanceof Number, (x, __) -> new Constant(((Number) x).floatValue()));
 			}
 			
 			public final Disjunction<Object, FloatSupplier> getRules() {

@@ -25,6 +25,12 @@ public final class Functions {
 	
 	private static final Map<String, List<Object>> diffs = new HashMap<>();
 	
+	public static final String CASES = "cases";
+	
+	public static final String IF = "if";
+	
+	public static final String OTHERWISE = "otherwise";
+	
 	public static final String FORALL = "\\forall";
 	
 	public static final String IN = "\\in";
@@ -41,7 +47,11 @@ public final class Functions {
 	
 	public static final String NEQ = "\\neq";
 	
-	public static final String D = "\\partial";
+	public static final String LEQ = "\\leq";
+	
+	public static final String GEQ = "\\geq";
+	
+	public static final String D = "\\tilde\\partial";
 	
 	public static final String ABS = "\\abs";
 	
@@ -114,7 +124,7 @@ public final class Functions {
 				$(SIGMOID, x));
 		
 		define(STEP, x,
-				$("cases", $(0, "if", $(x, "<", 0)), $(1, "otherwise")));
+				$(CASES, $(0, IF, $(x, "<", 0)), $(1, OTHERWISE)));
 		defineDiff(STEP, x,
 				epsilon);
 		
