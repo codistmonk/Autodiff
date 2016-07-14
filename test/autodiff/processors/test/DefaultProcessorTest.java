@@ -242,6 +242,22 @@ public final class DefaultProcessorTest {
 				37F, 21F,
 				23F, 9F
 		}, y.get(new float[y.getLength()]), 0F);
+		
+		inputs.setupDiffs(true);
+		kernel.setupDiffs(true);
+		
+		this.getProcessor().fullBackwardDiff(y);
+		
+		assertArrayEquals(new float[] {
+				1F, 2F, 1F,
+				3F, 4F, 3F,
+				1F, 2F, 1F
+		}, inputs.getDiffs().get(new float[inputs.getLength()]), 0F);
+		
+		assertArrayEquals(new float[] {
+				20F, 10F,
+				10F, 5F
+		}, kernel.getDiffs().get(new float[kernel.getLength()]), 0F);
 	}
 	
 	@Test
