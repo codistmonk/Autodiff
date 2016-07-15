@@ -264,7 +264,7 @@ public final class DefaultProcessorTest {
 	@Test
 	public final void testMapping1() {
 		final Node<?> x = new Data().set(-1F, 0F, 1F);
-		final Node<?> y = new Mapping().setArgument(x).setFunctioName(Functions.ID).autoShape();
+		final Node<?> y = new Mapping().setArgument(x).setFunctionName(Functions.ID).autoShape();
 		
 		assertArrayEquals(x.getShape(), y.getShape());
 		
@@ -282,7 +282,7 @@ public final class DefaultProcessorTest {
 	@Test
 	public final void testMapping2() {
 		final Node<?> x = new Data().set(-1F, 0F, 1F);
-		final Node<?> y = new Mapping().setArgument(x).setFunctioName(Functions.SQUARED).autoShape();
+		final Node<?> y = new Mapping().setArgument(x).setFunctionName(Functions.SQUARED).autoShape();
 		
 		assertArrayEquals(x.getShape(), y.getShape());
 		
@@ -300,7 +300,7 @@ public final class DefaultProcessorTest {
 	@Test
 	public final void testMapping3() {
 		final Node<?> x = new Data().set(0F, 1F, 4F);
-		final Node<?> y = new Mapping().setArgument(x).setFunctioName(Functions.SQRT).autoShape();
+		final Node<?> y = new Mapping().setArgument(x).setFunctionName(Functions.SQRT).autoShape();
 		
 		assertArrayEquals(x.getShape(), y.getShape());
 		
@@ -318,7 +318,7 @@ public final class DefaultProcessorTest {
 	@Test
 	public final void testMapping4() {
 		final Node<?> x = new Data().set(-1F, 0F, 1F);
-		final Node<?> y = new Mapping().setArgument(x).setFunctioName(Functions.SIGMOID).autoShape();
+		final Node<?> y = new Mapping().setArgument(x).setFunctionName(Functions.SIGMOID).autoShape();
 		
 		assertArrayEquals(x.getShape(), y.getShape());
 		
@@ -336,7 +336,7 @@ public final class DefaultProcessorTest {
 	@Test
 	public final void testMapping5() {
 		final Node<?> x = new Data().set(-1F, 0F, 1F);
-		final Node<?> y = new Mapping().setArgument(x).setFunctioName(Functions.STEP).autoShape();
+		final Node<?> y = new Mapping().setArgument(x).setFunctionName(Functions.STEP).autoShape();
 		
 		assertArrayEquals(x.getShape(), y.getShape());
 		

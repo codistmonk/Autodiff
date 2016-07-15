@@ -6,6 +6,7 @@ import static java.lang.Math.*;
 import static java.util.Collections.reverse;
 import static java.util.stream.Collectors.toList;
 import static multij.tools.Tools.cast;
+
 import autodiff.nodes.Convolution2D;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
@@ -485,12 +486,12 @@ public final class DefaultProcessor implements NodeProcessor {
 			final Node<?> argument = node.getArgument();
 			final int n = node.getLength();
 			final String functionName = node.getFunctionName();
-			final List<Object> diff = Functions.getDiff(functionName + ".0");
-			final FloatSupplier output = this.context.newSupplier(diff);
+			final List<Object> argumentDiffDefinition = Functions.getDiff(functionName + ".0");
+			final FloatSupplier argumentDiff = this.context.newSupplier(argumentDiffDefinition);
 			
 			for (int i = 0; i < n; ++i) {
 				this.context.getInputs().get(0).set(argument.get(i));
-				node.getArgument().getDiffs().add(i, output.get());
+				node.getArgument().getDiffs().add(i, argumentDiff.get() * node.getDiffs().get(i));
 			}
 			
 			return null;
@@ -670,6 +671,22 @@ public final class DefaultProcessor implements NodeProcessor {
 			
 			{
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(SIN, x), (__, m) -> {
+					return new Sin(this.rules.applyTo(m.get(x), m));
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(COS, x), (__, m) -> {
+					return new Cos(this.rules.applyTo(m.get(x), m));
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				final autodiff.rules.Variable y = new autodiff.rules.Variable();
 				
 				this.rules.add(rule($(x, "+", y), (__, m) -> {
@@ -717,7 +734,7 @@ public final class DefaultProcessor implements NodeProcessor {
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				final autodiff.rules.Variable y = new autodiff.rules.Variable();
 				
-				this.rules.add(rule($(x, NEQ, y), (__, m) -> {
+				this.rules.add(rule($(x, "!=", y), (__, m) -> {
 					return new NotEqual(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
 				}));
 			}
@@ -735,7 +752,7 @@ public final class DefaultProcessor implements NodeProcessor {
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				final autodiff.rules.Variable y = new autodiff.rules.Variable();
 				
-				this.rules.add(rule($(x, LEQ, y), (__, m) -> {
+				this.rules.add(rule($(x, "<=", y), (__, m) -> {
 					return new LessOrEqual(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
 				}));
 			}
@@ -753,7 +770,7 @@ public final class DefaultProcessor implements NodeProcessor {
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				final autodiff.rules.Variable y = new autodiff.rules.Variable();
 				
-				this.rules.add(rule($(x, GEQ, y), (__, m) -> {
+				this.rules.add(rule($(x, ">=", y), (__, m) -> {
 					return new GreaterOrEqual(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
 				}));
 			}
@@ -1087,6 +1104,50 @@ public final class DefaultProcessor implements NodeProcessor {
 		}
 		
 		private static final long serialVersionUID = -6123018025469779034L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-07-14)
+	 */
+	public static final class Sin extends Unary {
+		
+		public Sin(final FloatSupplier source) {
+			super(source);
+		}
+		
+		@Override
+		public final float get() {
+			return forward(this.getSource().get());
+		}
+		
+		public static final float forward(final float x) {
+			return (float) sin(x);
+		}
+		
+		private static final long serialVersionUID = 6014483055967223083L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-07-14)
+	 */
+	public static final class Cos extends Unary {
+		
+		public Cos(final FloatSupplier source) {
+			super(source);
+		}
+		
+		@Override
+		public final float get() {
+			return forward(this.getSource().get());
+		}
+		
+		public static final float forward(final float x) {
+			return (float) cos(x);
+		}
+		
+		private static final long serialVersionUID = 1097749855046748151L;
 		
 	}
 	

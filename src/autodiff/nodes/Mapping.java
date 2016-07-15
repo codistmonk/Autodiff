@@ -16,7 +16,7 @@ public final class Mapping extends UnaryNode<Mapping> {
 		return this.functionName;
 	}
 	
-	public final Mapping setFunctioName(final String functionName) {
+	public final Mapping setFunctionName(final String functionName) {
 		this.functionName = functionName;
 		
 		return this;

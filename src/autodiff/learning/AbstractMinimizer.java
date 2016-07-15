@@ -1,7 +1,10 @@
 package autodiff.learning;
 
 import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import autodiff.computing.NodeProcessor;
 import autodiff.nodes.Node;
@@ -15,6 +18,8 @@ public abstract class AbstractMinimizer implements Minimizer {
 	
 	private final List<Node<?>> parameters;
 	
+	private final Map<Node<?>, BitSet> parameterLocks;
+	
 	private final List<float[]> bestParameters;
 	
 	private final Node<?> cost;
@@ -22,6 +27,7 @@ public abstract class AbstractMinimizer implements Minimizer {
 	protected AbstractMinimizer(final Node<?> cost) {
 		this.processor = Minimizer.super.getProcessor();
 		this.parameters = new ArrayList<>();
+		this.parameterLocks = new HashMap<>();
 		this.bestParameters = new ArrayList<>();
 		this.cost = cost;
 	}
@@ -38,6 +44,11 @@ public abstract class AbstractMinimizer implements Minimizer {
 	@Override
 	public final List<Node<?>> getParameters() {
 		return this.parameters;
+	}
+	
+	@Override
+	public final Map<Node<?>, BitSet> getParameterLocks() {
+		return this.parameterLocks;
 	}
 	
 	@Override
@@ -59,6 +70,8 @@ public abstract class AbstractMinimizer implements Minimizer {
 		for (int i = 0; i < n; ++i) {
 			this.getParameters().get(i).set(this.bestParameters.get(i));
 		}
+		
+		this.getProcessor().fullForward(this.getCost());
 	}
 	
 	private static final long serialVersionUID = 1301441706877706262L;

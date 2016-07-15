@@ -38,7 +38,7 @@ public abstract interface Minimizer extends Runnable, Serializable {
 		while (!this.isDone()) {
 			this.updateParameters();
 			
-			bestCost = updateCost(bestCost);
+			bestCost = this.updateCost(bestCost);
 		}
 		
 		this.restoreBestParameters();

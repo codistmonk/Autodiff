@@ -2,10 +2,13 @@ package autodiff.computing;
 
 import static java.lang.Math.pow;
 import static java.util.Collections.synchronizedMap;
+import static java.util.Collections.unmodifiableSet;
 import static multij.tools.Tools.cast;
+import static multij.tools.Tools.set;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -32,11 +35,11 @@ public final class Functions {
 	
 	public static final String OTHERWISE = "otherwise";
 	
-	public static final String FORALL = "\\forall";
+	public static final String FORALL = "forall";
 	
-	public static final String IN = "\\in";
+	public static final String IN = "in";
 	
-	public static final String R = "\\mathbb{R}";
+	public static final String R = "|R";
 	
 	public static final String ID = "id";
 	
@@ -44,40 +47,44 @@ public final class Functions {
 	
 	public static final String SQRT = "sqrt";
 	
-	public static final String TIMES = "\\cdot";
+	public static final String TIMES = ".*";
 	
-	public static final String NEQ = "\\neq";
+	public static final String D = "~d";
 	
-	public static final String LEQ = "\\leq";
+	public static final String ABS = "abs";
 	
-	public static final String GEQ = "\\geq";
+	public static final String NEG = "neg";
 	
-	public static final String D = "\\tilde\\partial";
+	public static final String EXP = "exp";
 	
-	public static final String ABS = "\\abs";
+	public static final String LN = "ln";
 	
-	public static final String NEG = "\\neg";
+	public static final String SIN = "sin";
 	
-	public static final String EXP = "\\exp";
-	
-	public static final String LN = "\\ln";
+	public static final String COS = "cos";
 	
 	/**
 	 * Smoothed half identity.
 	 */
-	public static final String SHI = "\\shi";
+	public static final String SHI = "shi";
 	
-	public static final String SIGMOID = "\\sigmoid";
+	public static final String SIGMOID = "sigmoid";
 	
-	public static final String BUMP = "\\bump";
+	public static final String BUMP = "bump";
 	
-	public static final String RELU = "\\relu";
+	public static final String RELU = "relu";
 	
-	public static final String MAX = "\\max";
+	public static final String MAX = "max";
 	
-	public static final String STEP = "\\step";
+	public static final String STEP = "step";
 	
 	public static final double EPSILON = pow(2.0, -14.0);
+	
+	public static final Collection<String> INFIX_OPERATORS = unmodifiableSet(set("+", "-", TIMES, "/", "=", "!=", "<", "<=", ">", ">="));
+	
+	public static final Collection<String> PREFIX_OPERATORS = unmodifiableSet(set("-", ABS, SHI, SIGMOID, BUMP, RELU, EXP, LN, SIN, COS, SQRT, STEP));
+	
+	public static final Collection<String> POSTFIX_OPERATORS = unmodifiableSet(set(SQUARED));
 	
 	static {
 		final String x = "x";
@@ -141,6 +148,14 @@ public final class Functions {
 		autodefine(LN, x);
 		defineDiff(LN, x,
 				$(1, "/", x));
+		
+		autodefine(SIN, x);
+		defineDiff(SIN, x,
+				$(COS, x));
+		
+		autodefine(COS, x);
+		defineDiff(COS, x,
+				$("-", $(SIN, x)));
 		
 		autodefineInfix("+", $(x, y));
 		defineDiff("+", 0, $(x, y), 1);
