@@ -25,9 +25,7 @@ public final class Functions {
 		throw new IllegalInstantiationException();
 	}
 	
-	private static final Map<String, List<Object>> forwards = synchronizedMap(new HashMap<>());
-	
-	private static final Map<String, List<Object>> diffs = synchronizedMap(new HashMap<>());
+	private static final Map<String, List<Object>> definitions = synchronizedMap(new HashMap<>());
 	
 	public static final String CASES = "cases";
 	
@@ -174,16 +172,12 @@ public final class Functions {
 		defineDiff("/", 1, $(x, y), $($("-", x), "/", $(y, TIMES, y)));
 	}
 	
-	public static final Map<String, List<Object>> getForwards() {
-		return forwards;
-	}
-	
-	public static final Map<String, List<Object>> getDiffs() {
-		return diffs;
+	public static final Map<String, List<Object>> getDefinitions() {
+		return definitions;
 	}
 	
 	public static final void define(final String functionName, final List<Object> variableNames, final List<Object> notation, final Object definition) {
-		getForwards().put(functionName, $(FORALL, variableNames, IN, R, $(notation, "=", definition)));
+		getDefinitions().put(functionName, $(FORALL, variableNames, IN, R, $(notation, "=", definition)));
 	}
 	
 	public static final void defineInfix(final String functionName, final List<Object> variableNames, final Object definition) {
@@ -231,17 +225,25 @@ public final class Functions {
 	}
 	
 	public static final void defineDiff(final String functionName, final int variableIndex, final List<Object> variableNames, final Object definition) {
-		final List<Object> notation = application($(D, functionName, variableIndex), variableNames);
+		final List<Object> notation = application($(D, variableIndex, functionName), variableNames);
 		
-		getDiffs().put(functionName + "." + variableIndex, $(FORALL, variableNames, IN, R, $(notation, "=", definition)));
+		getDefinitions().put(diffName(functionName, variableIndex), $(FORALL, variableNames, IN, R, $(notation, "=", definition)));
 	}
 	
-	public static final List<Object> getForward(final String functionName) {
-		return getForwards().get(functionName);
+	public static final List<Object> getDefinition(final String functionName) {
+		return getDefinitions().get(functionName);
 	}
 	
-	public static final List<Object> getDiff(final String functionName) {
-		return getDiffs().get(functionName);
+	public static final List<Object> getDiffDefinition(final String functionName, final int variableIndex) {
+		return getDefinitions().get(diffName(functionName, variableIndex));
+	}
+	
+	public static final List<Object> getDiffDefinition(final String functionName) {
+		return getDiffDefinition(functionName, 0);
+	}
+	
+	public static final String diffName(final String functionName, final int variableIndex) {
+		return "~d_" + variableIndex + " " + functionName;
 	}
 	
 	public static final Object n(final Object object) {

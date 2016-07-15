@@ -257,7 +257,7 @@ public final class DefaultProcessor implements NodeProcessor {
 			final Node<?> argument = node.getArgument();
 			final int n = node.getLength();
 			final String functionName = node.getFunctionName();
-			final List<Object> forwardDefinition = Functions.getForward(functionName);
+			final List<Object> forwardDefinition = Functions.getDefinition(functionName);
 			final FloatSupplier forward = this.context.newSupplier(forwardDefinition);
 			
 			for (int i = 0; i < n; ++i) {
@@ -276,7 +276,7 @@ public final class DefaultProcessor implements NodeProcessor {
 			final int m = left.getLength();
 			final int n = right.getLength();
 			final String functionName = node.getFunctionName();
-			final List<Object> forwardDefinition = Functions.getForward(functionName);
+			final List<Object> forwardDefinition = Functions.getDefinition(functionName);
 			final FloatSupplier forward = this.context.newSupplier(forwardDefinition);
 			
 			for (int i = 0; i < m; ++i) {
@@ -486,7 +486,7 @@ public final class DefaultProcessor implements NodeProcessor {
 			final Node<?> argument = node.getArgument();
 			final int n = node.getLength();
 			final String functionName = node.getFunctionName();
-			final List<Object> argumentDiffDefinition = Functions.getDiff(functionName + ".0");
+			final List<Object> argumentDiffDefinition = Functions.getDiffDefinition(functionName);
 			final FloatSupplier argumentDiff = this.context.newSupplier(argumentDiffDefinition);
 			
 			for (int i = 0; i < n; ++i) {
@@ -508,7 +508,7 @@ public final class DefaultProcessor implements NodeProcessor {
 			final Node<?> rightDiffs = right.getDiffs();
 			
 			if (leftDiffs != null) {
-				final List<Object> leftDiffDefinition = Functions.getDiff(functionName + ".0");
+				final List<Object> leftDiffDefinition = Functions.getDiffDefinition(functionName, 0);
 				final FloatSupplier leftDiff = this.context.newSupplier(leftDiffDefinition);
 				
 				for (int i = 0; i < m; ++i) {
@@ -522,7 +522,7 @@ public final class DefaultProcessor implements NodeProcessor {
 			}
 			
 			if (rightDiffs != null) {
-				final List<Object> rightDiffDefinition = Functions.getDiff(functionName + ".1");
+				final List<Object> rightDiffDefinition = Functions.getDiffDefinition(functionName, 1);
 				final FloatSupplier rightDiff = this.context.newSupplier(rightDiffDefinition);
 				
 				for (int i = 0; i < m; ++i) {
@@ -556,7 +556,7 @@ public final class DefaultProcessor implements NodeProcessor {
 		private final Map<String, Variable> variables = new HashMap<>();
 		
 		{
-			for (final List<Object> definition : Functions.getForwards().values()) {
+			for (final List<Object> definition : Functions.getDefinitions().values()) {
 				{
 					final autodiff.rules.Variable x = new autodiff.rules.Variable();
 					final autodiff.rules.Variable y = new autodiff.rules.Variable();
