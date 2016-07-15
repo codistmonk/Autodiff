@@ -1,20 +1,20 @@
 package autodiff.nodes;
 
-import java.util.Arrays;
+import static multij.tools.Tools.intRange;
 
 /**
  * @author codistmonk (creation 2016-07-11)
  */
 public final class Sum extends UnaryNode<Sum> {
 	
-	private int stride;
+	private int[] strides;
 	
-	public final int getStride() {
-		return this.stride;
+	public final int[] getStrides() {
+		return this.strides;
 	}
 	
-	public final Sum setStride(final int stride) {
-		this.stride = stride;
+	public final Sum setStrides(final int... strides) {
+		this.strides = strides;
 		
 		return this;
 	}
@@ -26,24 +26,22 @@ public final class Sum extends UnaryNode<Sum> {
 	
 	@Override
 	public final Sum autoShape() {
-		final int[] argumentShape = this.getArgument().getShape();
-		final int[] shape;
-		
-		if (this.getStride() <= 0) {
-			this.setStride(argumentShape[argumentShape.length - 1]);
+		if (this.getStrides() == null) {
+			this.setStrides(this.getArgument().getLength());
 		}
 		
-		final int n = this.getArgument().getLength();
+		final int m = this.getStrides().length;
+		final int[] lengths = this.getArgument().getLengths(new int[m]);
+		final int[] shape = new int[m];
 		
-		Node.check(n % this.getStride() == 0, () -> "Bad argument: " + n + " not divisible by " + this.getStride());
-		
-		int j = argumentShape.length - 1;
-		
-		for (int tmp = argumentShape[j]; tmp < this.getStride(); tmp *= argumentShape[j], --j) {
-			// NOP
+		for (final int i : intRange(m)) {
+			final int n = lengths[i];
+			final int s = this.getStrides()[i];
+			
+			Node.check(n % s == 0, () -> "Bad argument: length(" + m + " " + i + ")=" + n + " not divisible by " + s);
+			
+			shape[i] = lengths[i] / s;
 		}
-		
-		shape = Arrays.copyOf(argumentShape, j);
 		
 		return this.setShape(shape);
 	}

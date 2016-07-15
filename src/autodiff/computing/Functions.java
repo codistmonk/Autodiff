@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +25,7 @@ public final class Functions {
 		throw new IllegalInstantiationException();
 	}
 	
-	private static final Map<String, List<Object>> definitions = synchronizedMap(new HashMap<>());
+	private static final Map<String, List<Object>> definitions = synchronizedMap(new LinkedHashMap<>());
 	
 	public static final String CASES = "cases";
 	
@@ -42,6 +42,8 @@ public final class Functions {
 	public static final String ID = "id";
 	
 	public static final String SQUARED = "^2";
+	
+	public static final String SQMINUS = "-^2";
 	
 	public static final String SQRT = "sqrt";
 	
@@ -61,6 +63,8 @@ public final class Functions {
 	
 	public static final String COS = "cos";
 	
+	public static final String SUM = "sum";
+	
 	/**
 	 * Smoothed half identity.
 	 */
@@ -78,7 +82,7 @@ public final class Functions {
 	
 	public static final double EPSILON = pow(2.0, -14.0);
 	
-	public static final Collection<String> INFIX_OPERATORS = unmodifiableSet(set("+", "-", TIMES, "/", "=", "!=", "<", "<=", ">", ">="));
+	public static final Collection<String> INFIX_OPERATORS = unmodifiableSet(set("+", "-", TIMES, "/", SQMINUS, "=", "!=", "<", "<=", ">", ">="));
 	
 	public static final Collection<String> PREFIX_OPERATORS = unmodifiableSet(set("-", ABS, SHI, SIGMOID, BUMP, RELU, EXP, LN, SIN, COS, SQRT, STEP));
 	
@@ -156,20 +160,35 @@ public final class Functions {
 				$("-", $(SIN, x)));
 		
 		autodefineInfix("+", $(x, y));
-		defineDiff("+", 0, $(x, y), 1);
-		defineDiff("+", 1, $(x, y), 1);
+		defineDiff("+", 0, $(x, y),
+				1);
+		defineDiff("+", 1, $(x, y),
+				1);
 		
 		autodefineInfix("-", $(x, y));
-		defineDiff("-", 0, $(x, y), 1);
-		defineDiff("-", 1, $(x, y), -1);
+		defineDiff("-", 0, $(x, y),
+				1);
+		defineDiff("-", 1, $(x, y),
+				-1);
 		
 		autodefineInfix(TIMES, $(x, y));
-		defineDiff(TIMES, 0, $(x, y), y);
-		defineDiff(TIMES, 1, $(x, y), x);
+		defineDiff(TIMES, 0, $(x, y),
+				y);
+		defineDiff(TIMES, 1, $(x, y),
+				x);
 		
 		autodefineInfix("/", $(x, y));
-		defineDiff("/", 0, $(x, y), $(1, "/", y));
-		defineDiff("/", 1, $(x, y), $($("-", x), "/", $(y, TIMES, y)));
+		defineDiff("/", 0, $(x, y),
+				$(1, "/", y));
+		defineDiff("/", 1, $(x, y),
+				$($("-", x), "/", $(y, TIMES, y)));
+		
+		defineInfix(SQMINUS, $(x, y),
+				$($(x, "-", y), SQUARED));
+		defineDiff(SQMINUS, 0, $(x, y),
+				$(2, TIMES, $(x, "-", y)));
+		defineDiff(SQMINUS, 1, $(x, y),
+				$(2, TIMES, $(y, "-", x)));
 	}
 	
 	public static final Map<String, List<Object>> getDefinitions() {

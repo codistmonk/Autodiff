@@ -5,6 +5,7 @@ import static autodiff.rules.PatternPredicate.rule;
 import static java.lang.Math.*;
 import static java.util.Collections.reverse;
 import static java.util.stream.Collectors.toList;
+import static multij.tools.Tools.cartesian;
 import static multij.tools.Tools.cast;
 
 import autodiff.nodes.Convolution2D;
@@ -87,6 +88,27 @@ public final class DefaultProcessor implements NodeProcessor {
 	
 	public static final DefaultProcessor INSTANCE = new DefaultProcessor();
 	
+	public static final int horner(final int[] lengths, final int[] indices) {
+		int result = indices[0];
+		
+		for (int i = 1; i < indices.length; ++i) {
+			result = indices[i] + lengths[i] * result;
+		}
+		
+		return result;
+	}
+	
+	public static final int[] bounds(final int... lengths) {
+		final int n = lengths.length;
+		final int[] result = new int[n * 2];
+		
+		for (int i = 0; i < n; ++i) {
+			result[2 * i + 1] = lengths[i] - 1;
+		}
+		
+		return result;
+	}
+	
 	/**
 	 * @author codistmonk (creation 2016-07-11)
 	 */
@@ -134,17 +156,27 @@ public final class DefaultProcessor implements NodeProcessor {
 		
 		@Override
 		public final Void visit(final Sum node) {
-			final int n = node.getArgument().getLength();
-			final int stride = node.getStride();
+			final int[] strides = node.getStrides();
+			final int[] outerBounds = bounds(node.getShape());
+			final int[] innerBounds0 = bounds(strides);
+			final int[] innerBounds = innerBounds0.clone();
 			
-			for (int i = 0, j = 0; i < n; i += stride, ++j) {
-				float value = 0F;
-				
-				for (int k = 0; k < stride; ++k) {
-					value += node.getArgument().get(i + k);
+			for (final int[] i : cartesian(outerBounds)) {
+				for (int j = 0; j < i.length; ++j) {
+					innerBounds[2 * j + 0] = i[j];
+					innerBounds[2 * j + 1] = i[j] + strides[j] - 1;
 				}
 				
-				node.set(j, value);
+				final int outputIndex = horner(node.getShape(), i);
+				float sum = 0F;
+				
+				for (final int[] j : cartesian(innerBounds)) {
+					final int k = horner(node.getArgument().getShape(), j);
+					
+					sum += node.getArgument().get(k);
+				}
+				
+				node.set(outputIndex, sum);
 			}
 			
 			return null;
@@ -352,14 +384,23 @@ public final class DefaultProcessor implements NodeProcessor {
 		
 		@Override
 		public final Void visit(final Sum node) {
-			final int n = node.getArgument().getLength();
-			final int stride = node.getStride();
+			final int[] strides = node.getStrides();
+			final int[] outerBounds = bounds(node.getShape());
+			final int[] innerBounds0 = bounds(strides);
+			final int[] innerBounds = innerBounds0.clone();
 			
-			for (int i = 0, j = 0; i < n; i += stride, ++j) {
-				final float diff = node.getDiffs().get(j);
+			for (final int[] i : cartesian(outerBounds)) {
+				for (int j = 0; j < i.length; ++j) {
+					innerBounds[2 * j + 0] = i[j];
+					innerBounds[2 * j + 1] = i[j] + strides[j] - 1;
+				}
 				
-				for (int k = 0; k < stride; ++k) {
-					node.getArgument().getDiffs().add(i + k, diff);
+				final int outputIndex = horner(node.getShape(), i);
+				
+				for (final int[] j : cartesian(innerBounds)) {
+					final int k = horner(node.getArgument().getShape(), j);
+					
+					node.getArgument().getDiffs().add(k, node.getDiffs().get(outputIndex));
 				}
 			}
 			
@@ -553,7 +594,7 @@ public final class DefaultProcessor implements NodeProcessor {
 		
 		private final List<Variable> inputs = new ArrayList<>();
 		
-		private final Map<String, Variable> variables = new HashMap<>();
+		private final Map<Object, Variable> variables = new HashMap<>();
 		
 		{
 			for (final List<Object> definition : Functions.getDefinitions().values()) {
@@ -566,7 +607,14 @@ public final class DefaultProcessor implements NodeProcessor {
 					
 					if (autodiff.rules.Variable.match(function1DefinitionPattern, definition, mapping)
 							&& !mapping.get(y).equals(mapping.get(z))) {
-						this.rules.add(new PatternPredicate(mapping.get(y)), (__, m) -> this.rules.applyTo(mapping.get(z), m));
+						final Map<Object, Object> m_ = new HashMap<>();
+						
+						m_.put(mapping.get(x), x);
+						
+						final Object y_ = autodiff.rules.Variable.rewrite(mapping.get(y), m_);
+						final Object z_ = autodiff.rules.Variable.rewrite(mapping.get(z), m_);
+						
+						this.rules.add(new PatternPredicate(y_), (__, m) -> this.rules.applyTo(z_, m));
 					}
 				}
 				
@@ -580,7 +628,15 @@ public final class DefaultProcessor implements NodeProcessor {
 					
 					if (autodiff.rules.Variable.match(function2DefinitionPattern, definition, mapping)
 							&& !mapping.get(y).equals(mapping.get(z))) {
-						this.rules.add(new PatternPredicate(mapping.get(y)), (__, m) -> this.rules.applyTo(mapping.get(z), m));
+						final Map<Object, Object> m_ = new HashMap<>();
+						
+						m_.put(mapping.get(x0), x0);
+						m_.put(mapping.get(x1), x1);
+						
+						final Object y_ = autodiff.rules.Variable.rewrite(mapping.get(y), m_);
+						final Object z_ = autodiff.rules.Variable.rewrite(mapping.get(z), m_);
+						
+						this.rules.add(new PatternPredicate(y_), (__, m) -> this.rules.applyTo(z_, m));
 					}
 				}
 			}
@@ -775,7 +831,15 @@ public final class DefaultProcessor implements NodeProcessor {
 				}));
 			}
 			
-			this.rules.add((object, __) -> object instanceof String, (name, __) -> this.variables.get(name));
+			this.rules.add((object, __) -> object instanceof autodiff.rules.Variable, (name, m) -> {
+				final Object value = transitiveGet(m, name);
+				
+				if (value instanceof FloatSupplier) {
+					return (FloatSupplier) value;
+				}
+				
+				return this.rules.applyTo(value, m);
+			});
 			this.rules.add((object, __) -> object instanceof Number, (x, __) -> new Constant(((Number) x).floatValue()));
 		}
 		
@@ -787,7 +851,7 @@ public final class DefaultProcessor implements NodeProcessor {
 			return this.inputs;
 		}
 		
-		public final Map<String, Variable> getVariables() {
+		public final Map<Object, Variable> getVariables() {
 			return this.variables;
 		}
 		
@@ -809,10 +873,9 @@ public final class DefaultProcessor implements NodeProcessor {
 				final Map<autodiff.rules.Variable, Object> mapping = new HashMap<>();
 				
 				if (autodiff.rules.Variable.match(function1DefinitionPattern, definition, mapping)) {
-					final String variableName = (String) mapping.get(x);
 					final Variable variable = new Variable();
 					
-					if (this.variables.put(variableName, variable) != null) {
+					if (this.variables.put(x, variable) != null) {
 						throw new IllegalStateException();
 					}
 					
@@ -820,7 +883,13 @@ public final class DefaultProcessor implements NodeProcessor {
 						this.inputs.add(variable);
 					}
 					
-					return this.rules.applyTo(mapping.get(z), mapping);
+					final Map<Object, Object> m_ = new HashMap<>();
+					m_.put(mapping.get(x), x);
+					final Object z_ = autodiff.rules.Variable.rewrite(mapping.get(z), m_);
+					
+					mapping.put(x, variable);
+					
+					return this.rules.applyTo(z_, mapping);
 				}
 			}
 			
@@ -833,17 +902,15 @@ public final class DefaultProcessor implements NodeProcessor {
 				final Map<autodiff.rules.Variable, Object> mapping = new HashMap<>();
 				
 				if (autodiff.rules.Variable.match(function2DefinitionPattern, definition, mapping)) {
-					final String variable0Name = (String) mapping.get(x0);
 					final Variable variable0 = new Variable();
 					
-					if (this.variables.put(variable0Name, variable0) != null) {
+					if (this.variables.put(x0, variable0) != null) {
 						throw new IllegalStateException();
 					}
 					
-					final String variable1Name = (String) mapping.get(x1);
 					final Variable variable1 = new Variable();
 					
-					if (this.variables.put(variable1Name, variable1) != null) {
+					if (this.variables.put(x1, variable1) != null) {
 						throw new IllegalStateException();
 					}
 					
@@ -852,7 +919,15 @@ public final class DefaultProcessor implements NodeProcessor {
 						this.inputs.add(variable1);
 					}
 					
-					return this.rules.applyTo(mapping.get(z), mapping);
+					final Map<Object, Object> m_ = new HashMap<>();
+					m_.put(mapping.get(x0), x0);
+					m_.put(mapping.get(x1), x1);
+					final Object z_ = autodiff.rules.Variable.rewrite(mapping.get(z), m_);
+					
+					mapping.put(x0, variable0);
+					mapping.put(x1, variable1);
+					
+					return this.rules.applyTo(z_, mapping);
 				}
 			}
 			
@@ -860,6 +935,19 @@ public final class DefaultProcessor implements NodeProcessor {
 		}
 		
 		private static final long serialVersionUID = 5823521748135325332L;
+		
+		@SuppressWarnings("unchecked")
+		public static final <T> T transitiveGet(final Map<?, ?> map, final Object key) {
+			Object result = key;
+			Object next = map.get(result);
+			
+			while (next != null) {
+				result = next;
+				next = map.get(result);
+			}
+			
+			return (T) result;
+		}
 		
 	}
 	
@@ -888,6 +976,11 @@ public final class DefaultProcessor implements NodeProcessor {
 			return this.value;
 		}
 		
+		@Override
+		public final String toString() {
+			return "" + this.get(); 
+		}
+		
 		private static final long serialVersionUID = 1017034235821362234L;
 		
 	}
@@ -910,6 +1003,11 @@ public final class DefaultProcessor implements NodeProcessor {
 			return this;
 		}
 		
+		@Override
+		public final String toString() {
+			return "(" + this.get() + ")"; 
+		}
+		
 		private static final long serialVersionUID = -654537403002828566L;
 		
 	}
@@ -919,14 +1017,19 @@ public final class DefaultProcessor implements NodeProcessor {
 	 */
 	public static abstract class Unary implements FloatSupplier {
 		
-		private final FloatSupplier source;
+		private final FloatSupplier argument;
 		
-		protected Unary(final FloatSupplier source) {
-			this.source = source;
+		protected Unary(final FloatSupplier argument) {
+			this.argument = argument;
 		}
 		
-		protected final FloatSupplier getSource() {
-			return this.source;
+		@Override
+		public final String toString() {
+			return "(" + this.getClass().getSimpleName() + " " + this.getArgument() + ")"; 
+		}
+		
+		protected final FloatSupplier getArgument() {
+			return this.argument;
 		}
 		
 		private static final long serialVersionUID = 5214749986194295496L;
@@ -953,6 +1056,11 @@ public final class DefaultProcessor implements NodeProcessor {
 		
 		public final FloatSupplier getRight() {
 			return this.right;
+		}
+		
+		@Override
+		public final String toString() {
+			return "(" + this.getLeft() + " " + this.getClass().getSimpleName() + " " + this.getRight() + ")"; 
 		}
 		
 		private static final long serialVersionUID = 1573188791368623911L;
@@ -993,6 +1101,11 @@ public final class DefaultProcessor implements NodeProcessor {
 			return this.getCondition().get() != 0F ? this.getResultIfConditionNot0().get() : this.getResultElse().get();
 		}
 		
+		@Override
+		public final String toString() {
+			return "(" + this.getCondition() + " ? " + this.getResultIfConditionNot0() + " : " + this.getResultElse() + ")"; 
+		}
+		
 		private static final long serialVersionUID = -1559004754514756270L;
 		
 	}
@@ -1008,7 +1121,7 @@ public final class DefaultProcessor implements NodeProcessor {
 		
 		@Override
 		public final float get() {
-			return forward(this.getSource().get());
+			return forward(this.getArgument().get());
 		}
 		
 		public static final float forward(final float x) {
@@ -1030,7 +1143,7 @@ public final class DefaultProcessor implements NodeProcessor {
 		
 		@Override
 		public final float get() {
-			return forward(this.getSource().get());
+			return forward(this.getArgument().get());
 		}
 		
 		public static final float forward(final float x) {
@@ -1052,7 +1165,7 @@ public final class DefaultProcessor implements NodeProcessor {
 		
 		@Override
 		public final float get() {
-			return forward(this.getSource().get());
+			return forward(this.getArgument().get());
 		}
 		
 		public static final float forward(final float x) {
@@ -1074,7 +1187,7 @@ public final class DefaultProcessor implements NodeProcessor {
 		
 		@Override
 		public final float get() {
-			return forward(this.getSource().get());
+			return forward(this.getArgument().get());
 		}
 		
 		public static final float forward(final float x) {
@@ -1096,7 +1209,7 @@ public final class DefaultProcessor implements NodeProcessor {
 		
 		@Override
 		public final float get() {
-			return forward(this.getSource().get());
+			return forward(this.getArgument().get());
 		}
 		
 		public static final float forward(final float x) {
@@ -1118,7 +1231,7 @@ public final class DefaultProcessor implements NodeProcessor {
 		
 		@Override
 		public final float get() {
-			return forward(this.getSource().get());
+			return forward(this.getArgument().get());
 		}
 		
 		public static final float forward(final float x) {
@@ -1140,7 +1253,7 @@ public final class DefaultProcessor implements NodeProcessor {
 		
 		@Override
 		public final float get() {
-			return forward(this.getSource().get());
+			return forward(this.getArgument().get());
 		}
 		
 		public static final float forward(final float x) {

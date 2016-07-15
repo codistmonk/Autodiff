@@ -4,8 +4,6 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-import multij.tools.Tools;
-
 /**
  * @author codistmonk (creation 2015-12-07)
  *
@@ -21,7 +19,6 @@ public abstract interface Rule<T, R> extends Serializable {
 	public abstract boolean test(T object, Map<Variable, Object> mapping);
 	
 	public default R applyTo(final T object) {
-		Tools.debugPrint(object);
 		return this.applyTo(object, new HashMap<>());
 	}
 	

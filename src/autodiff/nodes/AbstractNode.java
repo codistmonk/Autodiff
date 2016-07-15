@@ -2,6 +2,7 @@ package autodiff.nodes;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -89,6 +90,11 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	@Override
 	public final Node<?> getDiffs() {
 		return this.diffs;
+	}
+	
+	@Override
+	public final String toString() {
+		return this.getClass().getSimpleName() + Arrays.toString(this.get(new float[this.getLength()]));
 	}
 	
 	private static final long serialVersionUID = 8399842389497413524L;

@@ -69,11 +69,11 @@ public final class Variable implements Serializable {
 		return pattern.equals(target);
 	}
 	
-	public static final Object rewrite(final Object target, final Map<Variable, Object> mapping) {
-		final Variable variable = cast(Variable.class, target);
+	public static final Object rewrite(final Object target, final Map<?, Object> mapping) {
+		final Object replacement = mapping.get(target);
 		
-		if (variable != null) {
-			return mapping.getOrDefault(variable, variable);
+		if (replacement != null) {
+			return replacement;
 		}
 		
 		final List<?> targetList = cast(List.class, target);
