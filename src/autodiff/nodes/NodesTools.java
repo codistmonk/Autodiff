@@ -49,7 +49,11 @@ public final class NodesTools {
 			}
 			
 			if (SUM.equals(objects[0])) {
-				return new Sum().setStrides(((Number) objects[1]).intValue()).setArgument($(objects[2])).autoShape();
+				return new Sum().setStrides((int[]) objects[1]).setArgument($(objects[2])).autoShape();
+			}
+			
+			if ("@".equals(objects[1])) {
+				return new Selection().setLeft($(objects[0])).setRight($(objects[2])).autoShape();
 			}
 		}
 		
