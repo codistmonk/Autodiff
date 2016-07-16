@@ -8,6 +8,8 @@ import static autodiff.computing.Functions.TIMES;
 import static autodiff.nodes.NodesTools.$;
 import static org.junit.Assert.*;
 
+import autodiff.io.Iris;
+import autodiff.io.LabeledData;
 import autodiff.learning.GradientDescent;
 import autodiff.nodes.Data;
 import autodiff.nodes.Node;
@@ -85,6 +87,18 @@ public final class GradientDescentTest {
 		
 		assertArrayEquals(new float[] { 3F, -1F }, k.get(new float[k.getLength()]), 1E-4F);
 		assertEquals(0.0, z.get(), 1.0E-4);
+	}
+	
+	@Test
+	public final void testIris1() {
+		final Random random = new Random(2L);
+		final LabeledData allData = Iris.getIrisData();
+		
+		allData.shuffle(random);
+		
+		final LabeledData[] trainTest = allData.split(2.0 / 3.0);
+		
+		fail("TODO");
 	}
 	
 }

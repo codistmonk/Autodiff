@@ -1,6 +1,10 @@
 package autodiff.nodes;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,9 +19,9 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	
 	private Node<?> diffs;
 	
-	private ByteBuffer byteBuffer;
+	private transient ByteBuffer byteBuffer;
 	
-	private FloatBuffer floatBuffer;
+	private transient FloatBuffer floatBuffer;
 	
 	private int[] shape;
 	
@@ -39,7 +43,7 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	public final N setShape(final int... shape) {
 		if (this.getByteBuffer() == null) {
 			this.shape = shape;
-			this.setByteBuffer(ByteBuffer.allocateDirect(Float.BYTES * this.getLength()));
+			this.setByteBuffer(ByteBuffer.allocateDirect(Float.BYTES * this.getLength()).order(ByteOrder.nativeOrder()));
 		} else {
 			Node.super.setShape(shape);
 			this.shape = shape;
@@ -95,6 +99,18 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	@Override
 	public final String toString() {
 		return Arrays.toString(this.get(new float[this.getLength()]));
+	}
+	
+	private final void writeObject(final ObjectOutputStream out) throws IOException {
+		out.defaultWriteObject();
+		out.writeObject(this.get(new float[this.getLength()]));
+	}
+	
+	private final void readObject(final ObjectInputStream in) throws ClassNotFoundException, IOException {
+		in.defaultReadObject();
+		
+		this.setShape(this.getShape());
+		this.set((float[]) in.readObject());
 	}
 	
 	private static final long serialVersionUID = 8399842389497413524L;
