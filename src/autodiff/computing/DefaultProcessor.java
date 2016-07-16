@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import multij.tools.Pair;
+import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2016-07-11)
@@ -289,13 +290,19 @@ public final class DefaultProcessor implements NodeProcessor {
 			final Node<?> argument = node.getArgument();
 			final int n = node.getLength();
 			final String functionName = node.getFunctionName();
-			final List<Object> forwardDefinition = Functions.getDefinition(functionName);
+			final List<Object> forwardDefinition = Functions.getDefinition(functionName, 1);
 			final FloatSupplier forward = this.context.newSupplier(forwardDefinition);
 			
 			for (int i = 0; i < n; ++i) {
 				this.context.getInputs().get(0).set(argument.get(i));
 				
-				node.set(i, forward.get());
+				try {
+					node.set(i, forward.get());
+				} catch (final Exception e) {
+					Tools.debugError(argument.get(i), node.getFunctionName());
+					Tools.debugError(argument);
+					throw e;
+				}
 			}
 			
 			return null;
@@ -308,7 +315,7 @@ public final class DefaultProcessor implements NodeProcessor {
 			final int m = left.getLength();
 			final int n = right.getLength();
 			final String functionName = node.getFunctionName();
-			final List<Object> forwardDefinition = Functions.getDefinition(functionName);
+			final List<Object> forwardDefinition = Functions.getDefinition(functionName, 2);
 			final FloatSupplier forward = this.context.newSupplier(forwardDefinition);
 			
 			for (int i = 0; i < m; ++i) {
@@ -527,7 +534,7 @@ public final class DefaultProcessor implements NodeProcessor {
 			final Node<?> argument = node.getArgument();
 			final int n = node.getLength();
 			final String functionName = node.getFunctionName();
-			final List<Object> argumentDiffDefinition = Functions.getDiffDefinition(functionName);
+			final List<Object> argumentDiffDefinition = Functions.getDiffDefinition(functionName, 1);
 			final FloatSupplier argumentDiff = this.context.newSupplier(argumentDiffDefinition);
 			
 			for (int i = 0; i < n; ++i) {
@@ -549,7 +556,7 @@ public final class DefaultProcessor implements NodeProcessor {
 			final Node<?> rightDiffs = right.getDiffs();
 			
 			if (leftDiffs != null) {
-				final List<Object> leftDiffDefinition = Functions.getDiffDefinition(functionName, 0);
+				final List<Object> leftDiffDefinition = Functions.getDiffDefinition(functionName, 2, 0);
 				final FloatSupplier leftDiff = this.context.newSupplier(leftDiffDefinition);
 				
 				for (int i = 0; i < m; ++i) {
@@ -563,7 +570,7 @@ public final class DefaultProcessor implements NodeProcessor {
 			}
 			
 			if (rightDiffs != null) {
-				final List<Object> rightDiffDefinition = Functions.getDiffDefinition(functionName, 1);
+				final List<Object> rightDiffDefinition = Functions.getDiffDefinition(functionName, 2, 1);
 				final FloatSupplier rightDiff = this.context.newSupplier(rightDiffDefinition);
 				
 				for (int i = 0; i < m; ++i) {

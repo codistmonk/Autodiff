@@ -131,9 +131,11 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 	}
 	
 	public default <C extends Collection<Node<?>>> C collectTo(final C result) {
-		if (result.add(this)) {
-			this.getArguments().forEach(a -> a.collectTo(result));
-		}
+		// for ordered collections, make sure this is added after its dependents
+		result.remove(this);
+		result.add(this);
+		
+		this.getArguments().forEach(a -> a.collectTo(result));
 		
 		return result;
 	}

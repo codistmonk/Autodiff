@@ -53,8 +53,6 @@ public final class Functions {
 	
 	public static final String ABS = "abs";
 	
-	public static final String NEG = "neg";
-	
 	public static final String EXP = "exp";
 	
 	public static final String LN = "ln";
@@ -101,9 +99,9 @@ public final class Functions {
 		defineDiff(ABS, x,
 				1);
 		
-		define(NEG, x,
+		define("-", x,
 				$("-", x));
-		defineDiff(NEG, x,
+		defineDiff("-", x,
 				-1);
 		
 		defineDiff(SQUARED, x,
@@ -196,7 +194,7 @@ public final class Functions {
 	}
 	
 	public static final void define(final String functionName, final List<Object> variableNames, final List<Object> notation, final Object definition) {
-		getDefinitions().put(functionName, $(FORALL, variableNames, IN, R, $(notation, "=", definition)));
+		getDefinitions().put(fName(functionName, variableNames.size()), $(FORALL, variableNames, IN, R, $(notation, "=", definition)));
 	}
 	
 	public static final void defineInfix(final String functionName, final List<Object> variableNames, final Object definition) {
@@ -246,19 +244,23 @@ public final class Functions {
 	public static final void defineDiff(final String functionName, final int variableIndex, final List<Object> variableNames, final Object definition) {
 		final List<Object> notation = application($(D, variableIndex, functionName), variableNames);
 		
-		getDefinitions().put(diffName(functionName, variableIndex), $(FORALL, variableNames, IN, R, $(notation, "=", definition)));
+		getDefinitions().put(diffName(fName(functionName, variableNames.size()), variableIndex), $(FORALL, variableNames, IN, R, $(notation, "=", definition)));
 	}
 	
-	public static final List<Object> getDefinition(final String functionName) {
-		return getDefinitions().get(functionName);
+	public static final List<Object> getDefinition(final String functionName, final int variableCount) {
+		return getDefinitions().get(fName(functionName, variableCount));
 	}
 	
-	public static final List<Object> getDiffDefinition(final String functionName, final int variableIndex) {
-		return getDefinitions().get(diffName(functionName, variableIndex));
+	public static final List<Object> getDiffDefinition(final String functionName, final int variableCount, final int variableIndex) {
+		return getDefinitions().get(diffName(fName(functionName, variableCount), variableIndex));
 	}
 	
-	public static final List<Object> getDiffDefinition(final String functionName) {
-		return getDiffDefinition(functionName, 0);
+	public static final List<Object> getDiffDefinition(final String functionName, final int variableCount) {
+		return getDiffDefinition(functionName, variableCount, 0);
+	}
+	
+	public static final String fName(final String functionName, final int variableCount) {
+		return functionName + " (" + variableCount + ")";
 	}
 	
 	public static final String diffName(final String functionName, final int variableIndex) {

@@ -12,7 +12,7 @@ import autodiff.nodes.Node;
 /**
  * @author codistmonk (creation 2016-07-14)
  */
-public abstract class AbstractMinimizer implements Minimizer {
+public abstract class AbstractMinimizer<M extends AbstractMinimizer<?>> implements Minimizer<M> {
 	
 	private NodeProcessor processor;
 	
@@ -24,12 +24,15 @@ public abstract class AbstractMinimizer implements Minimizer {
 	
 	private final Node<?> cost;
 	
+	private boolean savingBestParameters;
+	
 	protected AbstractMinimizer(final Node<?> cost) {
 		this.processor = Minimizer.super.getProcessor();
 		this.parameters = new ArrayList<>();
 		this.parameterLocks = new HashMap<>();
 		this.bestParameters = new ArrayList<>();
 		this.cost = cost;
+		this.savingBestParameters = true;
 	}
 	
 	@Override
@@ -57,21 +60,38 @@ public abstract class AbstractMinimizer implements Minimizer {
 	}
 	
 	@Override
-	public final void saveBestParameters() {
-		this.bestParameters.clear();
+	public final boolean isSavingBestParameters() {
+		return this.savingBestParameters;
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public final M setSavingBestParameters(final boolean savingBestParameters) {
+		this.savingBestParameters = savingBestParameters;
 		
-		this.getParameters().forEach(n -> this.bestParameters.add(n.get(new float[n.getLength()])));
+		return (M) this;
+	}
+	
+	@Override
+	public final void saveBestParameters() {
+		if (this.isSavingBestParameters()) {
+			this.bestParameters.clear();
+			
+			this.getParameters().forEach(n -> this.bestParameters.add(n.get(new float[n.getLength()])));
+		}
 	}
 	
 	@Override
 	public final void restoreBestParameters() {
-		final int n = this.bestParameters.size();
-		
-		for (int i = 0; i < n; ++i) {
-			this.getParameters().get(i).set(this.bestParameters.get(i));
+		if (this.isSavingBestParameters()) {
+			final int n = this.bestParameters.size();
+			
+			for (int i = 0; i < n; ++i) {
+				this.getParameters().get(i).set(this.bestParameters.get(i));
+			}
+			
+			this.getProcessor().fullForward(this.getCost());
 		}
-		
-		this.getProcessor().fullForward(this.getCost());
 	}
 	
 	private static final long serialVersionUID = 1301441706877706262L;

@@ -18,6 +18,10 @@ public final class LabeledData implements Serializable {
 	
 	private final Node<?> labels;
 	
+	public LabeledData(final int itemCount, final int inputLength) {
+		this(new Data().setShape(itemCount, inputLength), new Data().setShape(itemCount));
+	}
+	
 	public LabeledData(final Node<?> inputs, final Node<?> labels) {
 		this.inputs = inputs;
 		this.labels = labels;
@@ -31,16 +35,16 @@ public final class LabeledData implements Serializable {
 		return this.labels;
 	}
 	
-	public final int getInputCount() {
+	public final int getItemCount() {
 		return this.getLabels().getLength();
 	}
 	
 	public final int getInputLength() {
-		return this.getInputs().getLength() / this.getInputCount();
+		return this.getInputs().getLength() / this.getItemCount();
 	}
 	
 	public final void shuffle(final Random random) {
-		final int n = this.getInputCount();
+		final int n = this.getItemCount();
 		
 		for (int i = 0; i < n; ++i) {
 			this.swap(i, random.nextInt(n));
@@ -60,7 +64,7 @@ public final class LabeledData implements Serializable {
 	}
 	
 	public final LabeledData[] split(final double ratio) {
-		final int n = this.getInputCount();
+		final int n = this.getItemCount();
 		final int m = (int) ceil(n * ratio);
 		
 		return array(this.slice(0, m), this.slice(m, n));
@@ -70,6 +74,13 @@ public final class LabeledData implements Serializable {
 		return new LabeledData(
 				slice(this.getInputs(), this.getInputLength(), begin, end),
 				slice(this.getLabels(), 1, begin, end));
+	}
+	
+	public final void copy(final int begin, final int end, final LabeledData target, final int targetBegin) {
+		final int inputLength = this.getInputLength();
+		
+		copy(this.getInputs(), begin * inputLength, end * inputLength, target.getInputs(), targetBegin * inputLength);
+		copy(this.getLabels(), begin, end, target.getLabels(), targetBegin);
 	}
 	
 	private static final long serialVersionUID = -3272274112365487159L;
@@ -92,6 +103,12 @@ public final class LabeledData implements Serializable {
 		}
 		
 		return result;
+	}
+	
+	public static final void copy(final Node<?> source, final int begin, final int end, final Node<?> target, final int targetBegin) {
+		for (int i = begin; i < end; ++i) {
+			target.set(targetBegin + i - begin, source.get(i));
+		}
 	}
 	
 }

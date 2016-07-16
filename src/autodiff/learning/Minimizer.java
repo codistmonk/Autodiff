@@ -13,7 +13,7 @@ import autodiff.nodes.Node;
 /**
  * @author codistmonk (creation 2016-07-14)
  */
-public abstract interface Minimizer extends Runnable, Serializable {
+public abstract interface Minimizer<M extends Minimizer<?>> extends Runnable, Serializable {
 	
 	public default NodeProcessor getProcessor() {
 		return DefaultProcessor.INSTANCE;
@@ -21,6 +21,22 @@ public abstract interface Minimizer extends Runnable, Serializable {
 	
 	public default Map<Node<?>, BitSet> getParameterLocks() {
 		return Collections.emptyMap();
+	}
+	
+	public abstract boolean isSavingBestParameters();
+	
+	public abstract M setSavingBestParameters(boolean savingBestParameters);
+	
+	@SuppressWarnings("unchecked")
+	public default M setParameters(final Node<?>... parameters) {
+		this.getParameters().clear();
+		this.getParameterLocks().clear();
+		
+		for (final Node<?> n : parameters) {
+			this.getParameters().add(n);
+		}
+		
+		return (M) this;
 	}
 	
 	public abstract List<Node<?>> getParameters();

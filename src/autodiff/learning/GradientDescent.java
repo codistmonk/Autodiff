@@ -1,13 +1,13 @@
 package autodiff.learning;
 
-import java.util.BitSet;
-
 import autodiff.nodes.Node;
+
+import java.util.BitSet;
 
 /**
  * @author codistmonk (creation 2016-07-14)
  */
-public final class GradientDescent extends AbstractMinimizer {
+public final class GradientDescent extends AbstractMinimizer<GradientDescent> {
 	
 	private int iterations;
 	
@@ -129,7 +129,7 @@ public final class GradientDescent extends AbstractMinimizer {
 	
 	@Override
 	public final boolean isDone() {
-		return this.getIterations() <= ++this.currentIteration;
+		return this.getIterations() < ++this.currentIteration;
 	}
 	
 	private static final long serialVersionUID = 463343929759033056L;
