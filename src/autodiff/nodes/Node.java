@@ -3,8 +3,6 @@ package autodiff.nodes;
 import static java.lang.Math.min;
 
 import java.io.Serializable;
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -27,12 +25,6 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 	public default <V> V accept(final NodeVisitor<V> visitor) {
 		return visitor.visit(this);
 	}
-	
-	public abstract N setByteBuffer(ByteBuffer byteBuffer);
-	
-	public abstract ByteBuffer getByteBuffer();
-	
-	public abstract FloatBuffer getFloatBuffer();
 	
 	public default boolean hasArguments() {
 		return !this.getArguments().isEmpty();
@@ -103,41 +95,39 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 	}
 	
 	public default float[] get(final float[] result) {
-		checkLength(this.getLength(), result.length);
+		final int n = this.getLength();
+		checkLength(n, result.length);
 		
-		this.getFloatBuffer().position(0);
-		this.getFloatBuffer().get(result);
+		for (int i = 0; i < n; ++i) {
+			result[i] = this.get(i);
+		}
 		
 		return result;
 	}
 	
-	public default float get(final int index) {
-		return this.getFloatBuffer().get(index);
-	}
-	
-	public default N add(final int index, final float value) {
-		return this.set(index, this.get(index) + value);
-	}
+	public abstract float get(final int index);
 	
 	@SuppressWarnings("unchecked")
 	public default N set(final float... values) {
-		if (this.getFloatBuffer() == null) {
-			this.setShape(values.length);
+		final int n = values.length;
+		
+		if (this.getShape() == null) {
+			this.setShape(n);
 		}
 		
-		checkLength(this.getLength(), values.length);
+		checkLength(this.getLength(), n);
 		
-		this.getFloatBuffer().position(0);
-		this.getFloatBuffer().put(values);
+		for (int i = 0; i < n; ++i) {
+			this.set(i, values[i]);
+		}
 		
 		return (N) this;
 	}
 	
-	@SuppressWarnings("unchecked")
-	public default N set(final int index, final float value) {
-		this.getFloatBuffer().put(index, value);
-		
-		return (N) this;
+	public abstract N set(final int index, final float value);
+	
+	public default N add(final int index, final float value) {
+		return this.set(index, this.get(index) + value);
 	}
 	
 	public default <C extends Collection<Node<?>>> C collectTo(final C result) {

@@ -56,7 +56,6 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 		return (N) this;
 	}
 	
-	@Override
 	@SuppressWarnings("unchecked")
 	public final N setByteBuffer(final ByteBuffer byteBuffer) {
 		this.byteBuffer = byteBuffer;
@@ -65,14 +64,50 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 		return (N) this;
 	}
 	
-	@Override
 	public final ByteBuffer getByteBuffer() {
 		return this.byteBuffer;
 	}
 	
-	@Override
 	public final FloatBuffer getFloatBuffer() {
 		return this.floatBuffer;
+	}
+	
+	@Override
+	public final float[] get(final float[] result) {
+		Node.checkLength(this.getLength(), result.length);
+		
+		this.getFloatBuffer().position(0);
+		this.getFloatBuffer().get(result);
+		
+		return result;
+	}
+	
+	@Override
+	public final float get(final int index) {
+		return this.getFloatBuffer().get(index);
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public final N set(final float... values) {
+		if (this.getShape() == null) {
+			this.setShape(values.length);
+		}
+		
+		Node.checkLength(this.getLength(), values.length);
+		
+		this.getFloatBuffer().position(0);
+		this.getFloatBuffer().put(values);
+		
+		return (N) this;
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public final N set(final int index, final float value) {
+		this.getFloatBuffer().put(index, value);
+		
+		return (N) this;
 	}
 	
 	@Override
