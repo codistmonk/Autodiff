@@ -48,17 +48,6 @@ public final class DefaultProcessor implements NodeProcessor {
 	}
 	
 	@Override
-	public final <N extends Node<?>> N fill(final N node, final float value) {
-		final int n = node.getLength();
-		
-		for (int i = 0; i < n; ++i) {
-			node.set(i, value);
-		}
-		
-		return node;
-	}
-	
-	@Override
 	public final <N extends Node<?>> N fullForward(final N node) {
 		final List<Node<?>> nodes = new ArrayList<>(node.collectTo(new LinkedHashSet<>()));
 		

@@ -14,7 +14,15 @@ public abstract interface NodeProcessor extends Serializable {
 	
 	public abstract NodeVisitor<Void> getBackwardDiffer();
 	
-	public abstract <N extends Node<?>> N fill(N node, float value);
+	public default <N extends Node<?>> N fill(final N node, final float value) {
+		final int n = node.getLength();
+		
+		for (int i = 0; i < n; ++i) {
+			node.set(i, value);
+		}
+		
+		return node;
+	}
 	
 	public abstract <N extends Node<?>> N fullForward(N node);
 	
