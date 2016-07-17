@@ -1,13 +1,17 @@
 package autodiff.computing;
 
+import static multij.tools.Tools.cast;
 import static multij.tools.Tools.debugPrint;
 
 import autodiff.cl.CLContext;
+import autodiff.nodes.Data;
 import autodiff.nodes.Node;
 import autodiff.nodes.NodeVisitor;
+import autodiff.nodes.Selection;
 
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 
 /**
  * @author codistmonk (creation 2016-07-17)
@@ -46,11 +50,53 @@ public final class CLProcessor implements NodeProcessor {
 	
 	@Override
 	public final <N extends Node<?>> N fullForward(final N node) {
-		final Collection<Node<?>> nodes = node.collectTo(new LinkedHashSet<>());
+		final Node<?>[] nodes = node.collectTo(new LinkedHashSet<>()).toArray(new Node[0]);
 		
-		debugPrint(nodes);
+		debugPrint(nodes.length);
 		
-		// TODO Auto-generated method stub
+		final StringBuilder programSourceBuilder = new StringBuilder("__kernel void net(");
+		final Map<Node<?>, String> nodeNames = new HashMap<>();
+		
+		for (int i = 0; i < nodes.length; ++i) {
+			final Node<?> n = nodes[i];
+			
+			if (n instanceof Data) {
+				final String nodeName = "data_" + nodeNames.size();
+				
+				nodeNames.put(n, nodeName);
+				
+				programSourceBuilder.append("__global float const * const ").append(nodeName).append(", ");
+			}
+		}
+		
+		nodeNames.put(node, "result");
+		
+		programSourceBuilder.append("__global float * const result) {\n");
+		
+		{
+			final Selection selection = cast(Selection.class, node);
+			
+			if (selection != null) {
+				final String vectorsName = nodeNames.get(selection.getVectors());
+				final String indicesName = nodeNames.get(selection.getIndices());
+				
+				debugPrint(vectorsName);
+				debugPrint(indicesName);
+				
+				final int m = selection.getVectors().getLength();
+				final int n = selection.getIndices().getLength();
+				final int stride = m / n;
+				
+				programSourceBuilder.append("	for (int i = 0, j = 0; i < ").append(m).append("; i += ").append(stride).append(", ++j) {\n");
+				programSourceBuilder.append("		result[j] = ").append(vectorsName).append("[i + ").append(indicesName).append("[j]];\n");
+				programSourceBuilder.append("	}\n");
+			}
+		}
+		
+		programSourceBuilder.append("}\n");
+		
+		debugPrint("\n" + programSourceBuilder);
+		
 		return null;
 	}
 	
