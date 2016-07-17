@@ -107,9 +107,9 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	public final N set(final int index, final float value) {
 		this.getFloatBuffer().put(index, value);
 		
-		if (!Float.isFinite(value)) {
-			throw new RuntimeException(index + ": " + value);
-		}
+//		if (!Float.isFinite(value)) {
+//			throw new RuntimeException(index + ": " + value);
+//		}
 		
 		return (N) this;
 	}

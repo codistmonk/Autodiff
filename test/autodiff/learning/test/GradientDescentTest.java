@@ -9,6 +9,7 @@ import static autodiff.computing.Functions.SUM;
 import static autodiff.computing.Functions.TIMES;
 import static autodiff.nodes.NodesTools.$;
 import static java.lang.Math.min;
+import static multij.tools.Tools.cast;
 import static multij.tools.Tools.debugPrint;
 import static org.junit.Assert.*;
 
@@ -21,10 +22,14 @@ import autodiff.learning.ConfusionMatrix;
 import autodiff.learning.GradientDescent;
 import autodiff.learning.Minimizer;
 import autodiff.nodes.Data;
+import autodiff.nodes.Mapping;
 import autodiff.nodes.Node;
+import autodiff.nodes.Zipping;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.SortedSet;
@@ -117,6 +122,87 @@ public final class GradientDescentTest {
 		final LabeledData testData = split[1];
 		final int inputLength = trainingData.getInputLength();
 		final int classCount = classIds.length;
+		
+		final Node<?> x = trainingData.getInputs();
+		final Node<?> a = new Data().setShape(inputLength, classCount);
+		final Node<?> b = new Data().setShape(classCount);
+		final Node<?> y = $($(x, a), "+", b);
+		final Node<?> cost = newCrossEntropyClassificationLoss(y, trainingData.getLabels());
+		
+		initialize(random::nextGaussian, a, b);
+		
+		{
+			this.getProcessor().fullForward(cost);
+			
+			debugPrint(cost.get());
+		}
+		
+		final GradientDescent gd = new GradientDescent(cost).setLearningRate(1E-1F).setIterations(400);
+		gd.getParameters().add(a);
+		gd.getParameters().add(b);
+		
+		{
+			final ConfusionMatrix<Integer> trainingResult = evaluate(y, trainingData, trainingData, this.getProcessor());
+			final ConfusionMatrix<Integer> testResult = evaluate($($(testData.getInputs(), a), "+", b), testData, testData, this.getProcessor());
+			
+			debugPrint(trainingData.getItemCount(), trainingResult.getCounts(), trainingResult.computeMacroF1(), trainingResult.computeAccuracy());
+			debugPrint(testData.getItemCount(), testResult.getCounts(), testResult.computeMacroF1(), testResult.computeAccuracy());
+		}
+		
+		gd.run();
+		
+		{
+			this.getProcessor().fullForward(cost);
+			
+			debugPrint(cost.get());
+		}
+		
+		{
+			final ConfusionMatrix<Integer> trainingResult = evaluate(y, trainingData, trainingData, this.getProcessor());
+			final ConfusionMatrix<Integer> testResult = evaluate($($(testData.getInputs(), a), "+", b), testData, testData, this.getProcessor());
+			
+			debugPrint(trainingData.getItemCount(), trainingResult.getCounts(), trainingResult.computeMacroF1(), trainingResult.computeAccuracy());
+			debugPrint(testData.getItemCount(), testResult.getCounts(), testResult.computeMacroF1(), testResult.computeAccuracy());
+			
+			assertTrue(0.98 <= testResult.computeAccuracy());
+		}
+	}
+	
+	public static final List<?> toTree(final Node<?> node) {
+		final List<Object> result = new ArrayList<>();
+		
+		result.add(node.getClass().getSimpleName());
+		
+		final Mapping mapping = cast(Mapping.class, node);
+		
+		if (mapping != null) {
+			result.add(mapping.getFunctionName());
+		}
+		
+		final Zipping zipping = cast(Zipping.class, node);
+		
+		if (zipping != null) {
+			result.add(zipping.getFunctionName());
+		}
+		
+		node.getArguments().forEach(n -> result.add(toTree(n)));
+		
+		return result;
+	}
+	
+	@Test
+	public final void testIris2() {
+		final Random random = new Random(2L);
+		final LabeledData allData = Iris.getIrisData();
+		final Float[] classIds = packLabels(allData.getLabels());
+		
+		allData.shuffle(random);
+		
+		final LabeledData[] split = allData.split(2.0 / 3.0);
+		final LabeledData trainingData = split[0];
+		final LabeledData testData = split[1];
+		final int inputLength = trainingData.getInputLength();
+		final int classCount = classIds.length;
 //		final int minibatchSize = trainingData.getItemCount();
 		final int minibatchSize = 40;
 		final LabeledData minibatchData = new LabeledData(minibatchSize, inputLength);
@@ -135,8 +221,8 @@ public final class GradientDescentTest {
 		final MinibatchMinimizer minibatchMinimizer = new MinibatchMinimizer(gd, trainingData, minibatchData).setEpochs(100);
 		
 		{
-			final ConfusionMatrix<Integer> trainingResult = evaluate(y, trainingData, minibatchData, DefaultProcessor.INSTANCE);
-			final ConfusionMatrix<Integer> testResult = evaluate(y, testData, minibatchData, DefaultProcessor.INSTANCE);
+			final ConfusionMatrix<Integer> trainingResult = evaluate(y, trainingData, minibatchData, this.getProcessor());
+			final ConfusionMatrix<Integer> testResult = evaluate(y, testData, minibatchData, this.getProcessor());
 			
 			debugPrint(trainingData.getItemCount(), trainingResult.getCounts(), trainingResult.computeMacroF1(), trainingResult.computeAccuracy());
 			debugPrint(testData.getItemCount(), testResult.getCounts(), testResult.computeMacroF1(), testResult.computeAccuracy());
@@ -145,14 +231,18 @@ public final class GradientDescentTest {
 		minibatchMinimizer.run();
 		
 		{
-			final ConfusionMatrix<Integer> trainingResult = evaluate(y, trainingData, minibatchData, DefaultProcessor.INSTANCE);
-			final ConfusionMatrix<Integer> testResult = evaluate(y, testData, minibatchData, DefaultProcessor.INSTANCE);
+			final ConfusionMatrix<Integer> trainingResult = evaluate(y, trainingData, minibatchData, this.getProcessor());
+			final ConfusionMatrix<Integer> testResult = evaluate(y, testData, minibatchData, this.getProcessor());
 			
 			debugPrint(trainingData.getItemCount(), trainingResult.getCounts(), trainingResult.computeMacroF1(), trainingResult.computeAccuracy());
 			debugPrint(testData.getItemCount(), testResult.getCounts(), testResult.computeMacroF1(), testResult.computeAccuracy());
 			
 			assertTrue(0.98 <= testResult.computeAccuracy());
 		}
+	}
+	
+	public final NodeProcessor getProcessor() {
+		return DefaultProcessor.INSTANCE;
 	}
 	
 	public static final Node<?> newCrossEntropyClassificationLoss(final Node<?> y, final Node<?> labels) {

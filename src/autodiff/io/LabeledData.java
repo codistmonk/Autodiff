@@ -46,8 +46,8 @@ public final class LabeledData implements Serializable {
 	public final void shuffle(final Random random) {
 		final int n = this.getItemCount();
 		
-		for (int i = 0; i < n; ++i) {
-			this.swap(i, random.nextInt(n));
+		for (int i = n; 1 < i; --i) {
+			this.swap(i - 1, random.nextInt(i));
 		}
 	}
 	

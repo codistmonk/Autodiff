@@ -30,6 +30,16 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 		return !this.getArguments().isEmpty();
 	}
 	
+	public default Node<?> getArgument(final int... indices) {
+		Node<?> result = this;
+		
+		for (final int i : indices) {
+			result = result.getArguments().get(i);
+		}
+		
+		return result;
+	}
+	
 	public abstract List<Node<?>> getArguments();
 	
 	public abstract void setupDiffs(boolean setupDiffs);

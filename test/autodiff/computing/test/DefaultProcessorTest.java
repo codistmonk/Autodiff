@@ -162,6 +162,24 @@ public final class DefaultProcessorTest {
 	
 	@Test
 	public final void testSum3() {
+		final Node<?> x = new Data().setShape(2, 3).set(1F, 2F, 3F, 4F, 5F, 6F);
+		final Node<?> y = new Sum().setArgument(x).setStrides(3).autoShape();
+		
+		assertArrayEquals(new int[] { 2 }, y.getShape());
+		
+		this.getProcessor().fullForward(y);
+		
+		assertArrayEquals(new float[] { 6F, 15F }, y.get(new float[y.getLength()]), 0F);
+		
+		x.setupDiffs(true);
+		
+		this.getProcessor().fullBackwardDiff(y);
+		
+		assertArrayEquals(new float[] { 1F, 1F, 1F, 1F, 1F, 1F }, x.getDiffs().get(new float[x.getLength()]), 0F);
+	}
+	
+	@Test
+	public final void testSum4() {
 		final Node<?> x = new Data().setShape(1, 2, 3).set(1F, 2F, 3F, 4F, 5F, 6F);
 		final Node<?> y = new Sum().setArgument(x).setStrides(6).autoShape();
 		

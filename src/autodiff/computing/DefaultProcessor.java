@@ -158,21 +158,22 @@ public final class DefaultProcessor implements NodeProcessor {
 		@Override
 		public final Void visit(final Sum node) {
 			final int[] strides = node.getStrides();
-			final int[] outerBounds = bounds(node.getShape());
-			final int[] innerBounds0 = bounds(strides);
-			final int[] innerBounds = innerBounds0.clone();
+			final int[] nodeShape = node.getShape();
+			final int[] argumentShape = node.getArgument().getShape();
+			final int[] outerBounds = bounds(nodeShape);
+			final int[] innerBounds = bounds(strides);
 			
 			for (final int[] i : cartesian(outerBounds)) {
 				for (int j = 0; j < i.length; ++j) {
-					innerBounds[2 * j + 0] = i[j];
-					innerBounds[2 * j + 1] = i[j] + strides[j] - 1;
+					innerBounds[2 * j + 0] = i[j] * strides[j];
+					innerBounds[2 * j + 1] = i[j] * strides[j] + strides[j] - 1;
 				}
 				
-				final int outputIndex = horner(node.getShape(), i);
+				final int outputIndex = horner(nodeShape, i);
 				float sum = 0F;
 				
 				for (final int[] j : cartesian(innerBounds)) {
-					final int k = horner(node.getArgument().getShape(), j);
+					final int k = horner(argumentShape, j);
 					
 					sum += node.getArgument().get(k);
 				}
@@ -392,20 +393,21 @@ public final class DefaultProcessor implements NodeProcessor {
 		@Override
 		public final Void visit(final Sum node) {
 			final int[] strides = node.getStrides();
-			final int[] outerBounds = bounds(node.getShape());
-			final int[] innerBounds0 = bounds(strides);
-			final int[] innerBounds = innerBounds0.clone();
+			final int[] nodeShape = node.getShape();
+			final int[] argumentShape = node.getArgument().getShape();
+			final int[] outerBounds = bounds(nodeShape);
+			final int[] innerBounds = bounds(strides);
 			
 			for (final int[] i : cartesian(outerBounds)) {
 				for (int j = 0; j < i.length; ++j) {
-					innerBounds[2 * j + 0] = i[j];
-					innerBounds[2 * j + 1] = i[j] + strides[j] - 1;
+					innerBounds[2 * j + 0] = i[j] * strides[j];
+					innerBounds[2 * j + 1] = i[j] * strides[j] + strides[j] - 1;
 				}
 				
-				final int outputIndex = horner(node.getShape(), i);
+				final int outputIndex = horner(nodeShape, i);
 				
 				for (final int[] j : cartesian(innerBounds)) {
-					final int k = horner(node.getArgument().getShape(), j);
+					final int k = horner(argumentShape, j);
 					
 					node.getArgument().getDiffs().add(k, node.getDiffs().get(outputIndex));
 				}
