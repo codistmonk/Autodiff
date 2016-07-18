@@ -28,4 +28,8 @@ public abstract interface NodeProcessor extends Serializable {
 	
 	public abstract <N extends Node<?>> N fullBackwardDiff(N node);
 	
+	public default void reset() {
+		// NOP
+	}
+	
 }

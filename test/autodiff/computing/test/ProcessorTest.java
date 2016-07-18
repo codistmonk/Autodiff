@@ -4,6 +4,7 @@ import static autodiff.computing.Functions.EPSILON;
 import static java.lang.Math.exp;
 import static org.junit.Assert.*;
 
+import org.junit.After;
 import org.junit.Test;
 
 import autodiff.computing.Functions;
@@ -435,6 +436,11 @@ public abstract class ProcessorTest {
 	}
 	
 	public abstract NodeProcessor getProcessor();
+	
+	@After
+	public final void afterEachTest() {
+		this.getProcessor().reset();
+	}
 	
 	public static final float sigmoid(final float x) {
 		return 1F / (1F + (float) exp(-x));
