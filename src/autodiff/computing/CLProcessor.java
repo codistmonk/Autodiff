@@ -5,14 +5,16 @@ import static multij.tools.Tools.debugPrint;
 import static org.jocl.CL.CL_MEM_READ_WRITE;
 import static org.jocl.CL.CL_MEM_USE_HOST_PTR;
 import static org.jocl.CL.setExceptionsEnabled;
-
 import autodiff.cl.CLContext;
 import autodiff.cl.CLKernel;
 import autodiff.nodes.AbstractNode;
+import autodiff.nodes.BinaryNode;
+import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
 import autodiff.nodes.NodeVisitor;
 import autodiff.nodes.Selection;
 import autodiff.nodes.Sum;
+import autodiff.nodes.UnaryNode;
 
 import java.nio.Buffer;
 import java.nio.FloatBuffer;
@@ -223,6 +225,38 @@ public final class CLProcessor implements NodeProcessor {
 		}
 		
 		@Override
+		public final CLKernel visit(final MatrixMultiplication node) {
+			return getForwardKernels().computeIfAbsent(node, __ -> {
+				final Node<?> left = node.getLeft();
+				final Node<?> right = node.getRight();
+				final int[] leftShape = left.getLengths(new int[2]);
+				final int[] rightShape = right.getLengths(new int[2]);
+				final int columns = rightShape[1];
+				final int stride = leftShape[1];
+				final String kernelName = node.getClass().getSimpleName() + getForwardKernels().size();
+				String programSource = "";
+				
+				programSource += "__kernel void " + kernelName + "(";
+				programSource += "__global float const * const left, ";
+				programSource += "__global float const * const right, ";
+				programSource += "__global float * const result) {\n";
+				programSource += "	int const gid = get_global_id(0);\n";
+				programSource += "	int const columns = " + columns + ";\n";
+				programSource += "	int const stride = " + stride + ";\n";
+				programSource += "	int const r = gid / columns;\n";
+				programSource += "	int const c = gid % columns;\n";
+				programSource += "	float value = 0.0F;\n";
+				programSource += "	for (int k = 0; k < stride; ++k) {\n";
+				programSource += "		value += left[k + r * stride] * right[c + k * columns];\n";
+				programSource += "	}\n";
+				programSource += "	result[gid] = value;\n";
+				programSource += "}\n";
+				
+				return getContext().createAndBuildProgram(programSource).createKernel(kernelName);
+			});
+		}
+		
+		@Override
 		public final CLKernel visit(final Sum node) {
 			return getForwardKernels().computeIfAbsent(node, __ -> {
 				final String kernelName = node.getClass().getSimpleName() + getForwardKernels().size();
@@ -285,7 +319,7 @@ public final class CLProcessor implements NodeProcessor {
 				final int m = node.getVectors().getLength();
 				final int n = node.getIndices().getLength();
 				final int stride = m / n;
-				final String kernelName = node.getClass().getSimpleName() + getForwardKernels().size();
+				final String kernelName = node.getClass().getSimpleName() + getBackwardDiffKernels().size();
 				String programSource = "";
 				
 				programSource += "__kernel void " + kernelName + "(";
@@ -302,9 +336,56 @@ public final class CLProcessor implements NodeProcessor {
 		}
 		
 		@Override
+		public final CLKernel visit(final MatrixMultiplication node) {
+			return getBackwardDiffKernels().computeIfAbsent(node, __ -> {
+				final Node<?> left = node.getLeft();
+				final Node<?> right = node.getRight();
+				final int[] leftShape = left.getLengths(new int[2]);
+				final int[] rightShape = right.getLengths(new int[2]);
+				final int columns = rightShape[1];
+				final int stride = leftShape[1];
+				final String kernelName = node.getClass().getSimpleName() + getBackwardDiffKernels().size();
+				String programSource = "";
+				
+				programSource += "__kernel void " + kernelName + "(";
+				programSource += "__global float const * const left, ";
+				programSource += "__global float * const leftDiffs, ";
+				programSource += "__global float const * const right, ";
+				programSource += "__global float * const rightDiffs, ";
+				programSource += "__global float const * const diffs) {\n";
+				programSource += "	int const gid = get_global_id(0);\n";
+				programSource += "	int const columns = " + columns + ";\n";
+				programSource += "	int const stride = " + stride + ";\n";
+				programSource += "	int const r = gid / columns;\n";
+				programSource += "	int const c = gid % columns;\n";
+				programSource += "	printf(\"gid: %i r: %i c: %i\\n\", gid, r, c);\n";
+				programSource += "	float const diff = diffs[gid];\n";
+				programSource += "	for (int k = 0; k < stride; ++k) {\n";
+				programSource += "		int const leftIndex = k + r * stride;\n";
+				programSource += "		int const rightIndex = c + k * columns;\n";
+				programSource += "		printf(\"leftIndex: %i rightIndex: %i\\n\", leftIndex, rightIndex);\n";
+				programSource += "		if (leftDiffs) {\n";
+				programSource += "			printf(\"leftDiffs[leftIndex]: %f\\n\", leftDiffs[leftIndex]);\n";
+				programSource += "			leftDiffs[leftIndex] += right[rightIndex] * diff;\n";
+				programSource += "			printf(\"leftDiffs[leftIndex]: %f\\n\", leftDiffs[leftIndex]);\n";
+				programSource += "		}\n";
+				programSource += "		if (rightDiffs) {\n";
+				programSource += "			printf(\"rightDiffs[rightIndex]: %f\\n\", rightDiffs[rightIndex]);\n";
+				programSource += "			rightDiffs[rightIndex] += left[leftIndex] * diff;\n";
+				programSource += "			printf(\"rightDiffs[rightIndex]: %f\\n\", rightDiffs[rightIndex]);\n";
+				programSource += "		}\n";
+				programSource += "	}\n";
+				programSource += "	printf(\"leftDiffs[0]: %f\\n\", leftDiffs[0]);\n";
+				programSource += "}\n";
+				
+				return getContext().createAndBuildProgram(programSource).createKernel(kernelName);
+			});
+		}
+		
+		@Override
 		public final CLKernel visit(final Sum node) {
 			return getBackwardDiffKernels().computeIfAbsent(node, __ -> {
-				final String kernelName = node.getClass().getSimpleName() + getForwardKernels().size();
+				final String kernelName = node.getClass().getSimpleName() + getBackwardDiffKernels().size();
 				String programSource = "";
 				
 				final int[] strides = node.getStrides();
@@ -357,18 +438,18 @@ public final class CLProcessor implements NodeProcessor {
 	final class ForwardInitializer implements NodeVisitor<CLKernel> {
 		
 		@Override
-		public final CLKernel visit(final Selection node) {
+		public final CLKernel visit(final BinaryNode<?> node) {
 			final CLKernel result = getForwardKernel(node);
 			
-			result.setArg(0, clBuffer((AbstractNode<?>) node.getVectors()));
-			result.setArg(1, clBuffer((AbstractNode<?>) node.getIndices()));
+			result.setArg(0, clBuffer((AbstractNode<?>) node.getLeft()));
+			result.setArg(1, clBuffer((AbstractNode<?>) node.getRight()));
 			result.setArg(2, clBuffer(node));
 			
 			return result;
 		}
 		
 		@Override
-		public final CLKernel visit(final Sum node) {
+		public final CLKernel visit(final UnaryNode<?> node) {
 			final CLKernel result = getForwardKernel(node);
 			
 			result.setArg(0, clBuffer((AbstractNode<?>) node.getArgument()));
@@ -393,6 +474,19 @@ public final class CLProcessor implements NodeProcessor {
 			result.setArg(0, clBuffer((AbstractNode<?>) node.getVectors().getDiffs()));
 			result.setArg(1, clBuffer((AbstractNode<?>) node.getIndices()));
 			result.setArg(2, clBuffer((AbstractNode<?>) node.getDiffs()));
+			
+			return result;
+		}
+		
+		@Override
+		public final CLKernel visit(final MatrixMultiplication node) {
+			final CLKernel result = getBackwardDiffKernel(node);
+			
+			result.setArg(0, clBuffer((AbstractNode<?>) node.getLeft()));
+			result.setArg(1, clBuffer((AbstractNode<?>) node.getLeft().getDiffs()));
+			result.setArg(2, clBuffer((AbstractNode<?>) node.getRight()));
+			result.setArg(3, clBuffer((AbstractNode<?>) node.getRight().getDiffs()));
+			result.setArg(4, clBuffer((AbstractNode<?>) node.getDiffs()));
 			
 			return result;
 		}

@@ -32,7 +32,7 @@ public abstract interface NodeVisitor<V> extends Serializable {
 	}
 	
 	public default V visit(final Selection node) {
-		return this.visit((AbstractNode<?>) node);
+		return this.visit((BinaryNode<?>) node);
 	}
 	
 	public default V visit(final Mapping node) {

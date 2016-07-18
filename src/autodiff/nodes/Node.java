@@ -30,7 +30,7 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 		return !this.getArguments().isEmpty();
 	}
 	
-	public default Node<?> getArgument(final int... indices) {
+	public default Node<?> getArgumentAt(final int... indices) {
 		Node<?> result = this;
 		
 		for (final int i : indices) {
