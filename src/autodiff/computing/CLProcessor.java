@@ -1,6 +1,7 @@
 package autodiff.computing;
 
 import static java.util.stream.Collectors.toList;
+import static multij.tools.Tools.debugPrint;
 import static org.jocl.CL.CL_MEM_READ_WRITE;
 import static org.jocl.CL.CL_MEM_USE_HOST_PTR;
 import static org.jocl.CL.setExceptionsEnabled;
@@ -11,16 +12,19 @@ import autodiff.nodes.AbstractNode;
 import autodiff.nodes.Node;
 import autodiff.nodes.NodeVisitor;
 import autodiff.nodes.Selection;
+import autodiff.nodes.Sum;
 
 import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 
+import org.jocl.CL;
 import org.jocl.Pointer;
 import org.jocl.Sizeof;
 import org.jocl.cl_mem;
@@ -134,8 +138,14 @@ public final class CLProcessor implements NodeProcessor {
 	
 	@Override
 	public final void reset() {
+		this.buffers.values().forEach(CL::clReleaseMemObject);
+		this.buffers.clear();
+		
 		this.getForwardKernels().values().forEach(CLKernel::release);
+		this.getForwardKernels().clear();
+		
 		this.getBackwardDiffKernels().values().forEach(CLKernel::release);
+		this.getBackwardDiffKernels().clear();
 	}
 	
 	final void readBuffer(final Node<?> node) {
@@ -212,6 +222,73 @@ public final class CLProcessor implements NodeProcessor {
 			});
 		}
 		
+		@Override
+		public final CLKernel visit(final Sum node) {
+			return getForwardKernels().computeIfAbsent(node, __ -> {
+				final String kernelName = node.getClass().getSimpleName() + getForwardKernels().size();
+				String programSource = "";
+				
+				final int[] strides = node.getStrides();
+				final int[] nodeShape = node.getShape();
+				final int[] argumentShape = node.getArgument().getShape();
+				final int[] initialI = new int[strides.length];
+				final int n = strides.length;
+				
+				initialI[initialI.length - 1] = -1;
+				
+				programSource += "bool nextCartesian(int const * const bounds, int * const indices) {\n";
+				programSource += "	for (int i = "+ (n - 1) + "; 0 <= i; --i) {\n";
+				programSource += "		if (++indices[i] <= bounds[2 * i + 1]) {\n";
+				programSource += "			return true;\n";
+				programSource += "		}\n";
+				programSource += "		indices[i] = bounds[2 * i + 0];\n";
+				programSource += "	}\n";
+				programSource += "	return false;\n";
+				programSource += "}\n";
+				programSource += "void cartesian(int const * const lengths, int const index, int * const indices) {\n";
+				programSource += "	for (int i = "+ (n - 1) + ", tmp = index; 0 <= i; --i) {\n";
+				programSource += "		indices[i] = tmp % lengths[i];\n";
+				programSource += "		tmp /= lengths[i];\n";
+				programSource += "	}\n";
+				programSource += "}\n";
+				programSource += "int horner(int const * const lengths, int const * const indices) {\n";
+				programSource += "	int result = indices[0];\n";
+				programSource += "	for (int i = 1; i < " + n + "; ++i) {\n";
+				programSource += "		result = indices[i] + lengths[i] * result;\n";
+				programSource += "	}\n";
+				programSource += "	return result;\n";
+				programSource += "}\n";
+				programSource += "__kernel void " + kernelName + "(";
+				programSource += "__global float const * const argument, ";
+				programSource += "__global float * const result) {\n";
+				programSource += "	int const gid = get_global_id(0);\n";
+				programSource += "	int const strides[] = " + stringOf(strides) + ";\n";
+				programSource += "	int const nodeShape[] = " + stringOf(nodeShape) + ";\n";
+				programSource += "	int const argumentShape[] = " + stringOf(argumentShape) + ";\n";
+				programSource += "	int const outerBounds[] = " + stringOf(DefaultProcessor.bounds(nodeShape)) + ";\n";
+				programSource += "	int innerBounds[] = " + stringOf(new int[2 * strides.length]) + ";\n";
+				programSource += "	int i[] = " + stringOf(initialI) + ";\n";
+				programSource += "	cartesian(nodeShape, gid, i);\n";
+				programSource += "	int j[] = " + stringOf(initialI) + ";\n";
+				programSource += "	for (int k = 0; k < " + n + "; ++k) {\n";
+				programSource += "		innerBounds[2 * k + 0] = j[k] = i[k] * strides[k];\n";
+				programSource += "		innerBounds[2 * k + 1] = i[k] * strides[k] + strides[k] - 1;\n";
+				programSource += "	}\n";
+				programSource += "	--j[" + (n - 1) + "];\n";
+				programSource += "	float sum = 0.0F;\n";
+				programSource += "	while (nextCartesian(innerBounds, j)) {\n";
+				programSource += "		int const k = horner(argumentShape, j);\n";
+				programSource += "		sum += argument[k];\n";
+				programSource += "	}\n";
+				programSource += "	result[gid] = sum;\n";
+				programSource += "}\n";
+				
+				debugPrint("\n" + programSource);
+				
+				return getContext().createAndBuildProgram(programSource).createKernel(kernelName);
+			});
+		}
+		
 		private static final long serialVersionUID = -41684012969905022L;
 		
 	}
@@ -243,6 +320,71 @@ public final class CLProcessor implements NodeProcessor {
 			});
 		}
 		
+		@Override
+		public final CLKernel visit(final Sum node) {
+			return getBackwardDiffKernels().computeIfAbsent(node, __ -> {
+				final String kernelName = node.getClass().getSimpleName() + getForwardKernels().size();
+				String programSource = "";
+				
+				final int[] strides = node.getStrides();
+				final int[] nodeShape = node.getShape();
+				final int[] argumentShape = node.getArgument().getShape();
+				final int[] initialI = new int[strides.length];
+				final int n = strides.length;
+				
+				initialI[initialI.length - 1] = -1;
+				
+				programSource += "bool nextCartesian(int const * const bounds, int * const indices) {\n";
+				programSource += "	for (int i = "+ (n - 1) + "; 0 <= i; --i) {\n";
+				programSource += "		if (++indices[i] <= bounds[2 * i + 1]) {\n";
+				programSource += "			return true;\n";
+				programSource += "		}\n";
+				programSource += "		indices[i] = bounds[2 * i + 0];\n";
+				programSource += "	}\n";
+				programSource += "	return false;\n";
+				programSource += "}\n";
+				programSource += "void cartesian(int const * const lengths, int const index, int * const indices) {\n";
+				programSource += "	for (int i = "+ (n - 1) + ", tmp = index; 0 <= i; --i) {\n";
+				programSource += "		indices[i] = tmp % lengths[i];\n";
+				programSource += "		tmp /= lengths[i];\n";
+				programSource += "	}\n";
+				programSource += "}\n";
+				programSource += "int horner(int const * const lengths, int const * const indices) {\n";
+				programSource += "	int result = indices[0];\n";
+				programSource += "	for (int i = 1; i < " + n + "; ++i) {\n";
+				programSource += "		result = indices[i] + lengths[i] * result;\n";
+				programSource += "	}\n";
+				programSource += "	return result;\n";
+				programSource += "}\n";
+				programSource += "__kernel void " + kernelName + "(";
+				programSource += "__global float * const argumentDiffs, ";
+				programSource += "__global float const * const diffs) {\n";
+				programSource += "	int const gid = get_global_id(0);\n";
+				programSource += "	int const strides[] = " + stringOf(strides) + ";\n";
+				programSource += "	int const nodeShape[] = " + stringOf(nodeShape) + ";\n";
+				programSource += "	int const argumentShape[] = " + stringOf(argumentShape) + ";\n";
+				programSource += "	int const outerBounds[] = " + stringOf(DefaultProcessor.bounds(nodeShape)) + ";\n";
+				programSource += "	int innerBounds[] = " + stringOf(new int[2 * strides.length]) + ";\n";
+				programSource += "	int i[] = " + stringOf(initialI) + ";\n";
+				programSource += "	cartesian(nodeShape, gid, i);\n";
+				programSource += "	int j[] = " + stringOf(initialI) + ";\n";
+				programSource += "	for (int k = 0; k < " + n + "; ++k) {\n";
+				programSource += "		innerBounds[2 * k + 0] = j[k] = i[k] * strides[k];\n";
+				programSource += "		innerBounds[2 * k + 1] = i[k] * strides[k] + strides[k] - 1;\n";
+				programSource += "	}\n";
+				programSource += "	--j[" + (n - 1) + "];\n";
+				programSource += "	while (nextCartesian(innerBounds, j)) {\n";
+				programSource += "		int const k = horner(argumentShape, j);\n";
+				programSource += "		argumentDiffs[k] += diffs[gid];\n";
+				programSource += "	}\n";
+				programSource += "}\n";
+				
+				debugPrint("\n" + programSource);
+				
+				return getContext().createAndBuildProgram(programSource).createKernel(kernelName);
+			});
+		}
+		
 		private static final long serialVersionUID = 4021444858946691751L;
 		
 	}
@@ -263,6 +405,16 @@ public final class CLProcessor implements NodeProcessor {
 			return result;
 		}
 		
+		@Override
+		public final CLKernel visit(final Sum node) {
+			final CLKernel result = getForwardKernel(node);
+			
+			result.setArg(0, clBuffer((AbstractNode<?>) node.getArgument()));
+			result.setArg(1, clBuffer(node));
+			
+			return result;
+		}
+		
 		private static final long serialVersionUID = -7362441160666727239L;
 		
 	}
@@ -279,6 +431,16 @@ public final class CLProcessor implements NodeProcessor {
 			result.setArg(0, clBuffer((AbstractNode<?>) node.getVectors().getDiffs()));
 			result.setArg(1, clBuffer((AbstractNode<?>) node.getIndices()));
 			result.setArg(2, clBuffer((AbstractNode<?>) node.getDiffs()));
+			
+			return result;
+		}
+		
+		@Override
+		public final CLKernel visit(final Sum node) {
+			final CLKernel result = getBackwardDiffKernel(node);
+			
+			result.setArg(0, clBuffer((AbstractNode<?>) node.getArgument().getDiffs()));
+			result.setArg(1, clBuffer((AbstractNode<?>) node.getDiffs()));
 			
 			return result;
 		}
@@ -354,6 +516,10 @@ public final class CLProcessor implements NodeProcessor {
 		}
 		
 		return 1L;
+	}
+	
+	static final String stringOf(final int[] ints) {
+		return Arrays.toString(ints).replace('[', '{').replace(']', '}');
 	}
 	
 }
