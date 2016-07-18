@@ -236,28 +236,9 @@ public final class CLProcessor implements NodeProcessor {
 				
 				initialI[initialI.length - 1] = -1;
 				
-				programSource += "bool nextCartesian(int const * const bounds, int * const indices) {\n";
-				programSource += "	for (int i = "+ (n - 1) + "; 0 <= i; --i) {\n";
-				programSource += "		if (++indices[i] <= bounds[2 * i + 1]) {\n";
-				programSource += "			return true;\n";
-				programSource += "		}\n";
-				programSource += "		indices[i] = bounds[2 * i + 0];\n";
-				programSource += "	}\n";
-				programSource += "	return false;\n";
-				programSource += "}\n";
-				programSource += "void cartesian(int const * const lengths, int const index, int * const indices) {\n";
-				programSource += "	for (int i = "+ (n - 1) + ", tmp = index; 0 <= i; --i) {\n";
-				programSource += "		indices[i] = tmp % lengths[i];\n";
-				programSource += "		tmp /= lengths[i];\n";
-				programSource += "	}\n";
-				programSource += "}\n";
-				programSource += "int horner(int const * const lengths, int const * const indices) {\n";
-				programSource += "	int result = indices[0];\n";
-				programSource += "	for (int i = 1; i < " + n + "; ++i) {\n";
-				programSource += "		result = indices[i] + lengths[i] * result;\n";
-				programSource += "	}\n";
-				programSource += "	return result;\n";
-				programSource += "}\n";
+				programSource += nextCartesian(n);
+				programSource += indexToCartesian(n);
+				programSource += indexFromCartesian(n);
 				programSource += "__kernel void " + kernelName + "(";
 				programSource += "__global float const * const argument, ";
 				programSource += "__global float * const result) {\n";
@@ -268,7 +249,7 @@ public final class CLProcessor implements NodeProcessor {
 				programSource += "	int const outerBounds[] = " + stringOf(DefaultProcessor.bounds(nodeShape)) + ";\n";
 				programSource += "	int innerBounds[] = " + stringOf(new int[2 * strides.length]) + ";\n";
 				programSource += "	int i[] = " + stringOf(initialI) + ";\n";
-				programSource += "	cartesian(nodeShape, gid, i);\n";
+				programSource += "	indexToCartesian(nodeShape, gid, i);\n";
 				programSource += "	int j[] = " + stringOf(initialI) + ";\n";
 				programSource += "	for (int k = 0; k < " + n + "; ++k) {\n";
 				programSource += "		innerBounds[2 * k + 0] = j[k] = i[k] * strides[k];\n";
@@ -277,7 +258,7 @@ public final class CLProcessor implements NodeProcessor {
 				programSource += "	--j[" + (n - 1) + "];\n";
 				programSource += "	float sum = 0.0F;\n";
 				programSource += "	while (nextCartesian(innerBounds, j)) {\n";
-				programSource += "		int const k = horner(argumentShape, j);\n";
+				programSource += "		int const k = indexFromCartesian(argumentShape, j);\n";
 				programSource += "		sum += argument[k];\n";
 				programSource += "	}\n";
 				programSource += "	result[gid] = sum;\n";
@@ -334,28 +315,9 @@ public final class CLProcessor implements NodeProcessor {
 				
 				initialI[initialI.length - 1] = -1;
 				
-				programSource += "bool nextCartesian(int const * const bounds, int * const indices) {\n";
-				programSource += "	for (int i = "+ (n - 1) + "; 0 <= i; --i) {\n";
-				programSource += "		if (++indices[i] <= bounds[2 * i + 1]) {\n";
-				programSource += "			return true;\n";
-				programSource += "		}\n";
-				programSource += "		indices[i] = bounds[2 * i + 0];\n";
-				programSource += "	}\n";
-				programSource += "	return false;\n";
-				programSource += "}\n";
-				programSource += "void cartesian(int const * const lengths, int const index, int * const indices) {\n";
-				programSource += "	for (int i = "+ (n - 1) + ", tmp = index; 0 <= i; --i) {\n";
-				programSource += "		indices[i] = tmp % lengths[i];\n";
-				programSource += "		tmp /= lengths[i];\n";
-				programSource += "	}\n";
-				programSource += "}\n";
-				programSource += "int horner(int const * const lengths, int const * const indices) {\n";
-				programSource += "	int result = indices[0];\n";
-				programSource += "	for (int i = 1; i < " + n + "; ++i) {\n";
-				programSource += "		result = indices[i] + lengths[i] * result;\n";
-				programSource += "	}\n";
-				programSource += "	return result;\n";
-				programSource += "}\n";
+				programSource += nextCartesian(n);
+				programSource += indexToCartesian(n);
+				programSource += indexFromCartesian(n);
 				programSource += "__kernel void " + kernelName + "(";
 				programSource += "__global float * const argumentDiffs, ";
 				programSource += "__global float const * const diffs) {\n";
@@ -366,7 +328,7 @@ public final class CLProcessor implements NodeProcessor {
 				programSource += "	int const outerBounds[] = " + stringOf(DefaultProcessor.bounds(nodeShape)) + ";\n";
 				programSource += "	int innerBounds[] = " + stringOf(new int[2 * strides.length]) + ";\n";
 				programSource += "	int i[] = " + stringOf(initialI) + ";\n";
-				programSource += "	cartesian(nodeShape, gid, i);\n";
+				programSource += "	indexToCartesian(nodeShape, gid, i);\n";
 				programSource += "	int j[] = " + stringOf(initialI) + ";\n";
 				programSource += "	for (int k = 0; k < " + n + "; ++k) {\n";
 				programSource += "		innerBounds[2 * k + 0] = j[k] = i[k] * strides[k];\n";
@@ -374,7 +336,7 @@ public final class CLProcessor implements NodeProcessor {
 				programSource += "	}\n";
 				programSource += "	--j[" + (n - 1) + "];\n";
 				programSource += "	while (nextCartesian(innerBounds, j)) {\n";
-				programSource += "		int const k = horner(argumentShape, j);\n";
+				programSource += "		int const k = indexFromCartesian(argumentShape, j);\n";
 				programSource += "		argumentDiffs[k] += diffs[gid];\n";
 				programSource += "	}\n";
 				programSource += "}\n";
@@ -520,6 +482,49 @@ public final class CLProcessor implements NodeProcessor {
 	
 	static final String stringOf(final int[] ints) {
 		return Arrays.toString(ints).replace('[', '{').replace(']', '}');
+	}
+	
+	static final String indexToCartesian(final int n) {
+		String result = "";
+		
+		result += "void indexToCartesian(int const * const lengths, int const index, int * const indices) {\n";
+		result += "	for (int i = "+ (n - 1) + ", tmp = index; 0 <= i; --i) {\n";
+		result += "		indices[i] = tmp % lengths[i];\n";
+		result += "		tmp /= lengths[i];\n";
+		result += "	}\n";
+		result += "}\n";
+		
+		return result;
+	}
+	
+	static final String nextCartesian(final int n) {
+		String result = "";
+		
+		result += "bool nextCartesian(int const * const bounds, int * const indices) {\n";
+		result += "	for (int i = "+ (n - 1) + "; 0 <= i; --i) {\n";
+		result += "		if (++indices[i] <= bounds[2 * i + 1]) {\n";
+		result += "			return true;\n";
+		result += "		}\n";
+		result += "		indices[i] = bounds[2 * i + 0];\n";
+		result += "	}\n";
+		result += "	return false;\n";
+		result += "}\n";
+		
+		return result;
+	}
+	
+	static final String indexFromCartesian(final int n) {
+		String result = "";
+		
+		result += "int indexFromCartesian(int const * const lengths, int const * const indices) {\n";
+		result += "	int result = indices[0];\n";
+		result += "	for (int i = 1; i < " + n + "; ++i) {\n";
+		result += "		result = indices[i] + lengths[i] * result;\n";
+		result += "	}\n";
+		result += "	return result;\n";
+		result += "}\n";
+		
+		return result;
 	}
 	
 }
