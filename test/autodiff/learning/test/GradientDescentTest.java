@@ -36,9 +36,9 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.DoubleSupplier;
 
-import org.junit.Test;
-
 import multij.tools.Tools;
+
+import org.junit.Test;
 
 /**
  * @author codistmonk (creation 2016-07-14)

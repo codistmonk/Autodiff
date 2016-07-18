@@ -35,8 +35,12 @@ public final class CLCommandQueue implements Serializable {
 	}
 	
 	public final void enqueueReadBuffer(final cl_mem buffer, final float[] result) {
+		this.enqueueReadBuffer(buffer, Sizeof.cl_float * result.length, Pointer.to(result));
+	}
+	
+	public final void enqueueReadBuffer(final cl_mem buffer, final long bytes, final Pointer result) {
 		clEnqueueReadBuffer(this.getCommandQueue(), buffer, CL_TRUE, 0,
-				Sizeof.cl_float * result.length, Pointer.to(result), 0, null, null);
+				bytes, result, 0, null, null);
 	}
 	
 	public final void release() {
