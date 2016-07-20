@@ -1,9 +1,35 @@
 package autodiff.nodes;
 
+import static multij.tools.Tools.swap;
+
 /**
  * @author codistmonk (creation 2016-07-11)
  */
 public final class MatrixMultiplication extends BinaryNode<MatrixMultiplication> {
+	
+	private boolean transposeLeft;
+	
+	private boolean transposeRight;
+	
+	public final boolean isTransposeLeft() {
+		return this.transposeLeft;
+	}
+	
+	public final MatrixMultiplication setTransposeLeft(final boolean transposeLeft) {
+		this.transposeLeft = transposeLeft;
+		
+		return this;
+	}
+	
+	public final boolean isTransposeRight() {
+		return this.transposeRight;
+	}
+	
+	public final MatrixMultiplication setTransposeRight(final boolean transposeRight) {
+		this.transposeRight = transposeRight;
+		
+		return this;
+	}
 	
 	@Override
 	public final <V> V accept(final NodeVisitor<V> visitor) {
@@ -16,6 +42,14 @@ public final class MatrixMultiplication extends BinaryNode<MatrixMultiplication>
 		final Node<?> right = this.getRight();
 		final int[] leftShape = left.getLengths(new int[2]);
 		final int[] rightShape = right.getLengths(new int[2]);
+		
+		if (this.isTransposeLeft()) {
+			swap(leftShape, 0, 1);
+		}
+		
+		if (this.isTransposeRight()) {
+			swap(rightShape, 0, 1);
+		}
 		
 		Node.checkLength(leftShape[1], rightShape[0]);
 		

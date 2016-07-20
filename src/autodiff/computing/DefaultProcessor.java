@@ -7,7 +7,7 @@ import static java.util.Collections.reverse;
 import static java.util.stream.Collectors.toList;
 import static multij.tools.Tools.cartesian;
 import static multij.tools.Tools.cast;
-
+import static multij.tools.Tools.swap;
 import autodiff.nodes.Convolution2D;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
@@ -125,6 +125,17 @@ public final class DefaultProcessor implements NodeProcessor {
 			final Node<?> right = node.getRight();
 			final int[] leftShape = left.getLengths(new int[2]);
 			final int[] rightShape = right.getLengths(new int[2]);
+			final boolean transposeLeft = node.isTransposeLeft();
+			final boolean transposeRight = node.isTransposeRight();
+			
+			if (transposeLeft) {
+				swap(leftShape, 0, 1);
+			}
+			
+			if (transposeRight) {
+				swap(rightShape, 0, 1);
+			}
+			
 			final int rows = leftShape[0];
 			final int columns = rightShape[1];
 			final int stride = leftShape[1];
@@ -134,7 +145,9 @@ public final class DefaultProcessor implements NodeProcessor {
 					float value = 0F;
 					
 					for (int k = 0; k < stride; ++k) {
-						value += left.get(k + r * stride) * right.get(c + k * columns);
+						final int leftIndex = transposeLeft ? r + k * rows : k + r * stride;
+						final int rightIndex = transposeRight ? k + c * rightShape[0] : c + k * columns;
+						value += left.get(leftIndex) * right.get(rightIndex);
 					}
 					
 					node.set(c + r * columns, value);
@@ -350,6 +363,17 @@ public final class DefaultProcessor implements NodeProcessor {
 			final Node<?> right = node.getRight();
 			final int[] leftShape = left.getLengths(new int[2]);
 			final int[] rightShape = right.getLengths(new int[2]);
+			final boolean transposeLeft = node.isTransposeLeft();
+			final boolean transposeRight = node.isTransposeRight();
+			
+			if (transposeLeft) {
+				swap(leftShape, 0, 1);
+			}
+			
+			if (transposeRight) {
+				swap(rightShape, 0, 1);
+			}
+			
 			final int rows = leftShape[0];
 			final int columns = rightShape[1];
 			final int stride = leftShape[1];
@@ -362,8 +386,8 @@ public final class DefaultProcessor implements NodeProcessor {
 					final float diff = node.getDiffs().get(resultIndex);
 					
 					for (int k = 0; k < stride; ++k) {
-						final int leftIndex = k + r * stride;
-						final int rightIndex = c + k * columns;
+						final int leftIndex = transposeLeft ? r + k * rows : k + r * stride;
+						final int rightIndex = transposeRight ? k + c * rightShape[0] : c + k * columns;
 						
 						if (leftDiffs != null) {
 							leftDiffs.add(leftIndex, right.get(rightIndex) * diff);

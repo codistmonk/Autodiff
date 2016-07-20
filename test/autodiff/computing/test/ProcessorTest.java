@@ -92,7 +92,8 @@ public abstract class ProcessorTest {
 		}, a.getDiffs().get(new float[a.getLength()]), 0F);
 		
 		assertArrayEquals(new float[] {
-				2F, 3F
+				2F,
+				3F
 		}, b.getDiffs().get(new float[b.getLength()]), 0F);
 	}
 	
@@ -124,7 +125,82 @@ public abstract class ProcessorTest {
 		}, a.getDiffs().get(new float[a.getLength()]), 0F);
 		
 		assertArrayEquals(new float[] {
-				5F, 5F
+				5F,
+				5F
+		}, b.getDiffs().get(new float[b.getLength()]), 0F);
+	}
+	
+	@Test
+	public final void testMatrixMultiplication3() {
+		final Node<?> a = new Data().setShape(3, 2).set(
+				2F, 3F,
+				4F, 5F,
+				6F, 7F);
+		final Node<?> b = new Data().setShape(3, 1).set(
+				8F,
+				9F,
+				10F);
+		final Node<?> c = new MatrixMultiplication().setLeft(a).setTransposeLeft(true).setRight(b).autoShape();
+		
+		assertArrayEquals(new int[] { 2, 1 }, c.getShape());
+		
+		this.getProcessor().fullForward(c);
+		
+		assertArrayEquals(new float[] {
+				112F, 139F
+		}, c.get(new float[c.getLength()]), 0F);
+		
+		a.setupDiffs(true);
+		b.setupDiffs(true);
+		
+		this.getProcessor().fullBackwardDiff(c);
+		
+		assertArrayEquals(new float[] {
+				8F, 8F,
+				9F, 9F,
+				10F, 10F
+		}, a.getDiffs().get(new float[a.getLength()]), 0F);
+		
+		assertArrayEquals(new float[] {
+				5F,
+				9F,
+				13F
+		}, b.getDiffs().get(new float[b.getLength()]), 0F);
+	}
+	
+	@Test
+	public final void testMatrixMultiplication4() {
+		final Node<?> a = new Data().setShape(2, 1).set(
+				8F,
+				9F);
+		final Node<?> b = new Data().setShape(3, 2).set(
+				2F, 3F,
+				4F, 5F,
+				6F, 7F);
+		final Node<?> c = new MatrixMultiplication().setLeft(a).setTransposeLeft(true).setRight(b).setTransposeRight(true).autoShape();
+		
+		assertArrayEquals(new int[] { 1, 3 }, c.getShape());
+		
+		this.getProcessor().fullForward(c);
+		
+		assertArrayEquals(new float[] {
+				43F, 77F, 111F
+		}, c.get(new float[c.getLength()]), 0F);
+		
+		a.setupDiffs(true);
+		b.setupDiffs(true);
+		
+		this.getProcessor().fullBackwardDiff(c);
+		
+		assertArrayEquals(new float[] {
+				12F,
+				15F,
+		}, a.getDiffs().get(new float[a.getLength()]), 0F);
+		
+		assertArrayEquals(new float[] {
+				8F, 9F,
+				8F, 9F,
+				8F, 9F
 		}, b.getDiffs().get(new float[b.getLength()]), 0F);
 	}
 	
