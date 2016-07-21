@@ -801,7 +801,7 @@ public final class DefaultProcessor implements NodeProcessor {
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				final autodiff.rules.Variable y = new autodiff.rules.Variable();
 				
-				this.rules.add(rule($(x, TIMES, y), (__, m) -> {
+				this.rules.add(rule($(x, "*", y), (__, m) -> {
 					return new Times(this.rules.applyTo(m.get(x), m), this.rules.applyTo(m.get(y), m));
 				}));
 			}

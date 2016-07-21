@@ -6,7 +6,6 @@ import static autodiff.computing.Functions.LN;
 import static autodiff.computing.Functions.SQMINUS;
 import static autodiff.computing.Functions.SQUARED;
 import static autodiff.computing.Functions.SUM;
-import static autodiff.computing.Functions.TIMES;
 import static autodiff.nodes.NodesTools.$;
 import static java.lang.Math.min;
 import static multij.tools.Tools.cast;
@@ -64,7 +63,7 @@ public final class GradientDescentTest {
 	public final void test2() {
 		final Random random = new Random(1L);
 		final Node<?> x = new Data().set(random.nextFloat() * 100F);
-		final Node<?> y = $($(x, SQUARED), "-", $(COS, $(8, TIMES, x)));
+		final Node<?> y = $($(x, SQUARED), "-", $(COS, $(8, "*", x)));
 		final GradientDescent gd = new GradientDescent(y).setIterations(50).setLearningRateDivisor(1.5F).setLearningRateMultiplier(1.05F);
 		
 		gd.getParameters().add(x);
@@ -86,7 +85,7 @@ public final class GradientDescentTest {
 		final Node<?> k = new Data().setShape(1, 2).set(
 				random.nextFloat(), random.nextFloat());
 		final Node<?> mv = $(m, v);
-		final Node<?> vk = $(v, ".*", k);
+		final Node<?> vk = $(v, "*", k);
 		final Node<?> vSquared = $(v, SQUARED);
 		final Node<?> v2 = $(SUM, new int[] { 2, 1 }, vSquared);
 		final Node<?> lengthConstraint = $(SUM, $(v2, SQMINUS, $(1F, 1F)));
@@ -96,7 +95,7 @@ public final class GradientDescentTest {
 		final Node<?> w0 = $(w, "@", 0);
 		final Node<?> w1 = $(w, "@", 1);
 		final Node<?> w2 = $(w, "@", 2);
-		final Node<?> z = $($(w0, ".*", colinearityConstraint), "+", $($(w1, ".*", orthogonalityConstraint), "+", $(w2, ".*", lengthConstraint)));
+		final Node<?> z = $($(w0, "*", colinearityConstraint), "+", $($(w1, "*", orthogonalityConstraint), "+", $(w2, "*", lengthConstraint)));
 		final GradientDescent gd = new GradientDescent(z).setIterations(200).setLearningRateDivisor(1.5F).setLearningRateMultiplier(1.05F);
 		
 		gd.getParameters().add(v);

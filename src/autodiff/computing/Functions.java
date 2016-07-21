@@ -47,8 +47,6 @@ public final class Functions {
 	
 	public static final String SQRT = "sqrt";
 	
-	public static final String TIMES = ".*";
-	
 	public static final String D = "~d";
 	
 	public static final String ABS = "abs";
@@ -80,7 +78,7 @@ public final class Functions {
 	
 	public static final double EPSILON = pow(2.0, -14.0);
 	
-	public static final Collection<String> INFIX_OPERATORS = unmodifiableSet(set("+", "-", TIMES, "/", SQMINUS, "=", "!=", "<", "<=", ">", ">="));
+	public static final Collection<String> INFIX_OPERATORS = unmodifiableSet(set("+", "-", "*", "/", SQMINUS, "=", "!=", "<", "<=", ">", ">="));
 	
 	public static final Collection<String> PREFIX_OPERATORS = unmodifiableSet(set("-", ABS, SHI, SIGMOID, BUMP, RELU, EXP, LN, SIN, COS, SQRT, STEP));
 	
@@ -105,12 +103,12 @@ public final class Functions {
 				-1);
 		
 		defineDiff(SQUARED, x,
-				$(2, TIMES, x));
+				$(2, "*", x));
 		
 		define(SQUARED, x, $(x, SQUARED),
-				$(x, TIMES, x));
+				$(x, "*", x));
 		defineDiff(SQUARED, x,
-				$(2, TIMES, x));
+				$(2, "*", x));
 		
 		// TODO asymptotic cases
 		define(SHI, x,
@@ -120,7 +118,7 @@ public final class Functions {
 				$(1, "/", $(1, "+", $(EXP, $("-", x)))));
 		// TODO asymptotic cases
 		define(BUMP, x,
-				$($(1, "-", $(SIGMOID, x)), TIMES, $(SIGMOID, x)));
+				$($(1, "-", $(SIGMOID, x)), "*", $(SIGMOID, x)));
 		
 		defineDiff(SHI, x,
 				$(SIGMOID, x));
@@ -139,7 +137,7 @@ public final class Functions {
 		
 		autodefine(SQRT, x);
 		defineDiff(SQRT, x,
-				$(1, "/", $(2, TIMES, $(SQRT, x))));
+				$(1, "/", $(2, "*", $(SQRT, x))));
 		
 		autodefine(EXP, x);
 		defineDiff(EXP, x,
@@ -169,24 +167,24 @@ public final class Functions {
 		defineDiff("-", 1, $(x, y),
 				-1);
 		
-		autodefineInfix(TIMES, $(x, y));
-		defineDiff(TIMES, 0, $(x, y),
+		autodefineInfix("*", $(x, y));
+		defineDiff("*", 0, $(x, y),
 				y);
-		defineDiff(TIMES, 1, $(x, y),
+		defineDiff("*", 1, $(x, y),
 				x);
 		
 		autodefineInfix("/", $(x, y));
 		defineDiff("/", 0, $(x, y),
 				$(1, "/", y));
 		defineDiff("/", 1, $(x, y),
-				$($("-", x), "/", $(y, TIMES, y)));
+				$($("-", x), "/", $(y, "*", y)));
 		
 		defineInfix(SQMINUS, $(x, y),
 				$($(x, "-", y), SQUARED));
 		defineDiff(SQMINUS, 0, $(x, y),
-				$(2, TIMES, $(x, "-", y)));
+				$(2, "*", $(x, "-", y)));
 		defineDiff(SQMINUS, 1, $(x, y),
-				$(2, TIMES, $(y, "-", x)));
+				$(2, "*", $(y, "-", x)));
 	}
 	
 	public static final Map<String, List<Object>> getDefinitions() {
