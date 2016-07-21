@@ -53,7 +53,7 @@ public final class DefaultProcessor implements NodeProcessor {
 		
 		reverse(nodes);
 		
-		nodes.stream().filter(Node::hasArguments).forEach(n -> this.fill(n, 0F));
+		nodes.stream().filter(Node::isComputationNode).forEach(n -> this.fill(n, 0F));
 		nodes.forEach(n -> n.accept(this.getForwarder()));
 		
 		return node;
@@ -108,14 +108,18 @@ public final class DefaultProcessor implements NodeProcessor {
 		
 		@Override
 		public final Void visit(final Selection node) {
-			final int m = node.getVectors().getLength();
-			final int n = node.getIndices().getLength();
-			final int stride = node.getStride();
-			final int offsetStride = node.getOffsetStride();
+			final Node<?> vectors = node.getVectors();
+			final Node<?> indices = node.getIndices();
+			final int m = vectors.getLength();
+			final int[] vectorsShape = vectors.getShape();
+			final int vectorsStride = vectorsShape[vectorsShape.length - 1];
+			final int n = indices.getLength();
+			final int[] indicesShape = indices.getShape();
+			final int indicesStride = indicesShape[indicesShape.length - 1];
 			
-			for (int i = 0, k = 0; i < m; i += stride) {
-				for (int j = 0, o = 0; j < n; ++j, o += offsetStride, ++k) {
-					node.set(k, node.getVectors().get(i + o + (int) node.getIndices().get(j)));
+			for (int i = 0, o = 0, j = 0; i < m; i += vectorsStride, j += indicesStride) {
+				for (int k = 0; k < indicesStride; ++k, ++o) {
+					node.set(o, vectors.get(i + (int) indices.get((j % n) + k)));
 				}
 			}
 			
@@ -349,15 +353,20 @@ public final class DefaultProcessor implements NodeProcessor {
 		
 		@Override
 		public final Void visit(final Selection node) {
-			final int m = node.getVectors().getLength();
-			final int n = node.getIndices().getLength();
-			final int stride = node.getStride();
-			final int offsetStride = node.getOffsetStride();
+			final Node<?> vectors = node.getVectors();
+			final Node<?> indices = node.getIndices();
+			final Node<?> vectorsDiffs = vectors.getDiffs();
+			final Node<?> diffs = node.getDiffs();
+			final int m = vectors.getLength();
+			final int[] vectorsShape = vectors.getShape();
+			final int vectorsStride = vectorsShape[vectorsShape.length - 1];
+			final int n = indices.getLength();
+			final int[] indicesShape = indices.getShape();
+			final int indicesStride = indicesShape[indicesShape.length - 1];
 			
-			for (int i = 0, k = 0; i < m; i += stride) {
-				for (int j = 0, o = 0; j < n; ++j, o += offsetStride, ++k) {
-					node.getVectors().getDiffs().add(
-							i + o + (int) node.getIndices().get(j), node.getDiffs().get(k));
+			for (int i = 0, o = 0, j = 0; i < m; i += vectorsStride, j += indicesStride) {
+				for (int k = 0; k < indicesStride; ++k, ++o) {
+					vectorsDiffs.add(i + (int) indices.get((j % n) + k), diffs.get(o));
 				}
 			}
 			

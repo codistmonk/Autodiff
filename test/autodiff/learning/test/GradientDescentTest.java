@@ -24,6 +24,7 @@ import autodiff.learning.Minimizer;
 import autodiff.nodes.Data;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.Node;
+import autodiff.nodes.ShapeNode;
 import autodiff.nodes.Zipping;
 
 import java.io.Serializable;
@@ -90,15 +91,19 @@ public final class GradientDescentTest {
 		final Node<?> v2 = $(SUM, new int[] { 2, 1 }, vSquared);
 		final Node<?> lengthConstraint = $(SUM, $(v2, SQMINUS, $(1F, 1F)));
 		final Node<?> colinearityConstraint = $(SUM, $(mv, SQMINUS, vk));
-		final Node<?> orthogonalityConstraint = $($($(v, "@", 2, $(0, 0)).setShape(1, 2), $(v, "@", 2, $(1, 1)).setShape(2, 1)), SQUARED);
+		final Node<?> orthogonalityConstraint = $($($(v, "@", $(0, 0).setShape(2, 1)).setShape(1, 2), $(v, "@", $(1, 1).setShape(2, 1)).setShape(2, 1)), SQUARED);
 		final Node<?> w = $(1, 1, 1.63);
-		final Node<?> z = $($($(w, "@", 0), ".*", colinearityConstraint), "+", $($($(w, "@", 1), ".*", orthogonalityConstraint), "+", $($(w, "@", 2), ".*", lengthConstraint)));
+		final Node<?> w0 = $(w, "@", 0);
+		final Node<?> w1 = $(w, "@", 1);
+		final Node<?> w2 = $(w, "@", 2);
+		final Node<?> z = $($(w0, ".*", colinearityConstraint), "+", $($(w1, ".*", orthogonalityConstraint), "+", $(w2, ".*", lengthConstraint)));
 		final GradientDescent gd = new GradientDescent(z).setIterations(200).setLearningRateDivisor(1.5F).setLearningRateMultiplier(1.05F);
 		
 		gd.getParameters().add(v);
 		gd.getParameters().add(k);
 		gd.run();
 		
+		Tools.debugPrint(w0, w1, w2);
 		Tools.debugPrint(m);
 		Tools.debugPrint(v);
 		Tools.debugPrint(k);
@@ -249,7 +254,8 @@ public final class GradientDescentTest {
 		final int classCount = y.getLength() / labels.getLength();
 		final Node<?> exp = $(EXP, y);
 		final Node<?> denom = $(SUM, new int[] { classCount }, exp);
-		final Node<?> num = $(exp, "@", classCount, labels);
+		final Node<?> num = $(exp, "@", new ShapeNode(labels).setShape(labels.getLength(), 1));
+//		final Node<?> num = $(exp, "@", labels.setShape(labels.getLength(), 1));
 		final Node<?> softmax = $(num, "/", denom);
 		
 		return $("-", $($(SUM, $(LN, softmax)), "/", softmax.getLength()));

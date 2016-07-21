@@ -43,15 +43,15 @@ public final class NodesTools {
 			ignore(exception);
 		}
 		
-		if (n == 4) {
-			if ("@".equals(objects[1])) {
-				return new Selection().setLeft($(objects[0])).setOffsetStride((Integer) objects[2]).setRight($(objects[3])).autoShape();
-			}
-			
-			if ("@".equals(objects[2])) {
-				return new Selection().setLeft($(objects[0])).setStride((Integer) objects[1]).setRight($(objects[3])).autoShape();
-			}
-		}
+//		if (n == 4) {
+//			if ("@".equals(objects[1])) {
+//				return new Selection().setLeft($(objects[0])).setOffsetStride((Integer) objects[2]).setRight($(objects[3])).autoShape();
+//			}
+//			
+//			if ("@".equals(objects[2])) {
+//				return new Selection().setLeft($(objects[0])).setStride((Integer) objects[1]).setRight($(objects[3])).autoShape();
+//			}
+//		}
 		
 		if (n == 3) {
 			if (INFIX_OPERATORS.contains(objects[1])) {

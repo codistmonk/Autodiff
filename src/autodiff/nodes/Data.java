@@ -6,6 +6,11 @@ package autodiff.nodes;
 public final class Data extends AbstractNode<Data> {
 	
 	@Override
+	public final boolean isComputationNode() {
+		return false;
+	}
+	
+	@Override
 	public final <V> V accept(final NodeVisitor<V> visitor) {
 		return visitor.visit(this);
 	}

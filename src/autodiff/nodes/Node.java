@@ -3,6 +3,7 @@ package autodiff.nodes;
 import static java.lang.Math.min;
 
 import java.io.Serializable;
+import java.nio.FloatBuffer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -14,6 +15,10 @@ import java.util.function.Supplier;
 public abstract interface Node<N extends Node<?>> extends Serializable {
 	
 	public abstract int[] getShape();
+	
+	public default boolean isComputationNode() {
+		return true;
+	}
 	
 	@SuppressWarnings("unchecked")
 	public default N setShape(final int... shape) {
@@ -41,6 +46,8 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 	}
 	
 	public abstract List<Node<?>> getArguments();
+	
+	public abstract FloatBuffer getFloatBuffer();
 	
 	public abstract void setupDiffs(boolean setupDiffs);
 	
@@ -105,17 +112,17 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 	}
 	
 	public default float[] get(final float[] result) {
-		final int n = this.getLength();
-		checkLength(n, result.length);
+		Node.checkLength(this.getLength(), result.length);
 		
-		for (int i = 0; i < n; ++i) {
-			result[i] = this.get(i);
-		}
+		this.getFloatBuffer().position(0);
+		this.getFloatBuffer().get(result);
 		
 		return result;
 	}
 	
-	public abstract float get(final int index);
+	public default float get(final int index) {
+		return this.getFloatBuffer().get(index);
+	}
 	
 	@SuppressWarnings("unchecked")
 	public default N set(final float... values) {
@@ -125,16 +132,20 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 			this.setShape(n);
 		}
 		
-		checkLength(this.getLength(), n);
+		Node.checkLength(this.getLength(), n);
 		
-		for (int i = 0; i < n; ++i) {
-			this.set(i, values[i]);
-		}
+		this.getFloatBuffer().position(0);
+		this.getFloatBuffer().put(values);
 		
 		return (N) this;
 	}
 	
-	public abstract N set(final int index, final float value);
+	@SuppressWarnings("unchecked")
+	public default N set(final int index, final float value) {
+		this.getFloatBuffer().put(index, value);
+		
+		return (N) this;
+	}
 	
 	public default N add(final int index, final float value) {
 		return this.set(index, this.get(index) + value);
