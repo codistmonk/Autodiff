@@ -90,7 +90,7 @@ public final class GradientDescentTest {
 		final Node<?> v2 = $(SUM, new int[] { 2, 1 }, vSquared);
 		final Node<?> lengthConstraint = $(SUM, $(v2, SQMINUS, $(1F, 1F)));
 		final Node<?> colinearityConstraint = $(SUM, $(mv, SQMINUS, vk));
-		final Node<?> orthogonalityConstraint = $($($(v, "@", $(0, 0)).setShape(1, 2), $(v, "@", $(1, 1)).setShape(2, 1)), SQUARED);
+		final Node<?> orthogonalityConstraint = $($($(v, "@", 2, $(0, 0)).setShape(1, 2), $(v, "@", 2, $(1, 1)).setShape(2, 1)), SQUARED);
 		final Node<?> w = $(1, 1, 1.63);
 		final Node<?> z = $($($(w, "@", 0), ".*", colinearityConstraint), "+", $($($(w, "@", 1), ".*", orthogonalityConstraint), "+", $($(w, "@", 2), ".*", lengthConstraint)));
 		final GradientDescent gd = new GradientDescent(z).setIterations(200).setLearningRateDivisor(1.5F).setLearningRateMultiplier(1.05F);
@@ -249,7 +249,7 @@ public final class GradientDescentTest {
 		final int classCount = y.getLength() / labels.getLength();
 		final Node<?> exp = $(EXP, y);
 		final Node<?> denom = $(SUM, new int[] { classCount }, exp);
-		final Node<?> num = $(exp, "@", labels);
+		final Node<?> num = $(exp, "@", classCount, labels);
 		final Node<?> softmax = $(num, "/", denom);
 		
 		return $("-", $($(SUM, $(LN, softmax)), "/", softmax.getLength()));

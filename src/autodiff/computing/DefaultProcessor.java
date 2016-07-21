@@ -110,10 +110,13 @@ public final class DefaultProcessor implements NodeProcessor {
 		public final Void visit(final Selection node) {
 			final int m = node.getVectors().getLength();
 			final int n = node.getIndices().getLength();
-			final int stride = m / n;
+			final int stride = node.getStride();
+			final int offsetStride = node.getOffsetStride();
 			
-			for (int i = 0, j = 0; i < m; i += stride, ++j) {
-				node.set(j, node.getVectors().get(i + (int) node.getIndices().get(j)));
+			for (int i = 0, k = 0; i < m; i += stride) {
+				for (int j = 0, o = 0; j < n; ++j, o += offsetStride, ++k) {
+					node.set(k, node.getVectors().get(i + o + (int) node.getIndices().get(j)));
+				}
 			}
 			
 			return null;
@@ -348,10 +351,14 @@ public final class DefaultProcessor implements NodeProcessor {
 		public final Void visit(final Selection node) {
 			final int m = node.getVectors().getLength();
 			final int n = node.getIndices().getLength();
-			final int stride = m / n;
+			final int stride = node.getStride();
+			final int offsetStride = node.getOffsetStride();
 			
-			for (int i = 0, j = 0; i < m; i += stride, ++j) {
-				node.getVectors().getDiffs().add(i + (int) node.getIndices().get(j), node.getDiffs().get(j));
+			for (int i = 0, k = 0; i < m; i += stride) {
+				for (int j = 0, o = 0; j < n; ++j, o += offsetStride, ++k) {
+					node.getVectors().getDiffs().add(
+							i + o + (int) node.getIndices().get(j), node.getDiffs().get(k));
+				}
 			}
 			
 			return null;

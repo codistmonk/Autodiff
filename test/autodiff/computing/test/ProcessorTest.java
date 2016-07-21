@@ -30,8 +30,8 @@ public abstract class ProcessorTest {
 	
 	@Test
 	public final void testSelection1() {
-		final Node<?> x = new Data().setShape(2).set(42F, 33F);
-		final Node<?> i = new Data().setShape(1).set(0F);
+		final Node<?> x = new Data().set(42F, 33F);
+		final Node<?> i = new Data().set(0F);
 		final Node<?> xi = new Selection().setVectors(x).setIndices(i).autoShape();
 		
 		assertArrayEquals(new int[] { 2 }, x.getShape());
@@ -63,6 +63,36 @@ public abstract class ProcessorTest {
 		this.getProcessor().fullBackwardDiff(xi);
 		
 		assertArrayEquals(new float[] { 1F, 0F }, x.getDiffs().get(new float[x.getLength()]), 0F);
+	}
+	
+	@Test
+	public final void testSelection2() {
+		final Node<?> x = new Data().setShape(2, 2).set(
+				1F, 2F,
+				3F, 4F);
+		final Node<?> i = new Data().set(
+				1F, 1F, 0F);
+		final Node<?> xi = new Selection().setVectors(x).setStride(2).setIndices(i).autoShape();
+		
+		assertArrayEquals(new int[] { 2, 2 }, x.getShape());
+		assertArrayEquals(new int[] { 3 }, i.getShape());
+		assertArrayEquals(new int[] { 2, 3 }, xi.getShape());
+		
+		this.getProcessor().fullForward(xi);
+		
+		assertArrayEquals(new float[] {
+				2F, 2F, 1F,
+				4F, 4F, 3F
+		}, xi.get(new float[xi.getLength()]), 0F);
+		
+		x.setupDiffs(true);
+		
+		this.getProcessor().fullBackwardDiff(xi);
+		
+		assertArrayEquals(new float[] {
+				1F, 2F,
+				1F, 2F
+		}, x.getDiffs().get(new float[x.getLength()]), 0F);
 	}
 	
 	@Test

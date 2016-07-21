@@ -5,6 +5,30 @@ package autodiff.nodes;
  */
 public final class Selection extends BinaryNode<Selection> {
 	
+	private int stride;
+	
+	private int offsetStride;
+	
+	public final int getStride() {
+		return this.stride;
+	}
+	
+	public final Selection setStride(final int stride) {
+		this.stride = stride;
+		
+		return this;
+	}
+	
+	public final int getOffsetStride() {
+		return this.offsetStride;
+	}
+	
+	public final Selection setOffsetStride(final int offsetStride) {
+		this.offsetStride = offsetStride;
+		
+		return this;
+	}
+	
 	@Override
 	public final <V> V accept(final NodeVisitor<V> visitor) {
 		return visitor.visit(this);
@@ -28,10 +52,18 @@ public final class Selection extends BinaryNode<Selection> {
 	
 	@Override
 	public final Selection autoShape() {
-		final int m = this.getVectors().getLength();
-		final int n = this.getIndices().getLength();
+		if (this.getStride() <= 0) {
+			this.setStride(this.getVectors().getLength());
+		}
 		
-		Node.check(m % n == 0, () -> "Incompatible dimensions: " + m + " not divisible by " + n);
+		final int m = this.getVectors().getLength();
+		final int n = this.getStride();
+		
+		Node.check(m % n == 0, () -> "Invalid stride: " + m + " not divisible by " + n);
+		
+		if (n < m) {
+			return this.setShape(m / n, this.getIndices().getLength());
+		}
 		
 		return this.setShape(this.getIndices().getShape());
 	}
