@@ -2,7 +2,6 @@ package autodiff.computing.test;
 
 import static autodiff.computing.Functions.EPSILON;
 import static java.lang.Math.exp;
-import static multij.tools.Tools.getThisMethodName;
 import static org.junit.Assert.*;
 
 import autodiff.computing.Functions;
@@ -16,9 +15,6 @@ import autodiff.nodes.Node;
 import autodiff.nodes.Selection;
 import autodiff.nodes.Sum;
 import autodiff.nodes.Zipping;
-import autodiff.ui.JGraphXTools;
-
-import multij.swing.SwingTools;
 
 import org.junit.After;
 import org.junit.Test;
@@ -573,9 +569,6 @@ public abstract class ProcessorTest {
 		assertArrayEquals(new float[] { 2F, 2F, 2F }, x.getDiffs().get(new float[x.getLength()]), 0F);
 		assertArrayEquals(new float[] { 0F }, a.getDiffs().get(new float[a.getLength()]), 0F);
 		assertArrayEquals(new float[] { 3F }, b.getDiffs().get(new float[b.getLength()]), 0F);
-		
-		SwingTools.show(JGraphXTools.newGraphComponent(z),
-				this.getClass().getSimpleName() + "." + getThisMethodName() + ".z", true);
 	}
 	
 	public abstract NodeProcessor getProcessor();

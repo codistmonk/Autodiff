@@ -1,7 +1,10 @@
 package autodiff.ui;
 
+import autodiff.nodes.BinaryNode;
+import autodiff.nodes.Mapping;
 import autodiff.nodes.Node;
 import autodiff.nodes.NodeVisitor;
+import autodiff.nodes.UnaryNode;
 import autodiff.nodes.Zipping;
 
 import com.mxgraph.model.mxGeometry;
@@ -12,13 +15,16 @@ import com.mxgraph.view.mxGraph;
 import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import multij.tools.IllegalInstantiationException;
+import multij.tools.Pair;
 
 /**
  * @author codistmonk (creation 2016-07-22)
@@ -39,34 +45,65 @@ public final class JGraphXTools {
 		
 		node.accept(new NodeVisitor<Object>() {
 			
+			private final Collection<Pair<Object, Object>> edges = new HashSet<>();
+			
 			private int depth = -1;
 			
 			@Override
 			public final Object visit(final Node<?> node) {
 				final Object result = this.begin(node);
+				final int n = node.getArguments().size();
 				
-				for (final Node<?> argument : node.getArguments()) {
-					final Object argumentVertex = argument.accept(this);
-					
-					graph.insertEdge(parent, null, "", argumentVertex, result);
+				for (int i = 0; i < n; ++i) {
+					this.connect(node.getArguments().get(i), "" + i, result);
 				}
 				
 				return this.end(result);
 			}
 			
 			@Override
-			public final Object visit(final Zipping node) {
+			public final Object visit(final UnaryNode<?> node) {
 				final Object result = this.begin(node);
 				
-				graphModel.setValue(result, graphModel.getValue(result) + "\n" + node.getFunctionName());
-				
-				final Object leftVertex = node.getLeft().accept(this);
-				final Object rightVertex = node.getRight().accept(this);
-				
-				graph.insertEdge(parent, null, "left", leftVertex, result);
-				graph.insertEdge(parent, null, "right", rightVertex, result);
+				this.connect(node.getArgument(), "argument", result);
 				
 				return this.end(result);
+			}
+			
+			@Override
+			public final Object visit(final BinaryNode<?> node) {
+				final Object result = this.begin(node);
+				
+				this.connect(node.getLeft(), "left", result);
+				this.connect(node.getRight(), "right", result);
+				
+				return this.end(result);
+			}
+			
+			@Override
+			public final Object visit(final Zipping node) {
+				final Object result = this.visit((BinaryNode<?>) node);
+				
+				graphModel.setValue(result, defaultNodeText(node) + "\n" + node.getFunctionName());
+				
+				return result;
+			}
+			
+			@Override
+			public final Object visit(final Mapping node) {
+				final Object result = this.visit((UnaryNode<?>) node);
+				
+				graphModel.setValue(result, defaultNodeText(node) + "\n" + node.getFunctionName());
+				
+				return result;
+			}
+			
+			private final void connect(final Node<?> argument, final String text, final Object targetVertex) {
+				final Object argumentVertex = argument.accept(this);
+				
+				if (this.edges.add(new Pair<>(argumentVertex, targetVertex))) {
+					graph.insertEdge(parent, null, text, argumentVertex, targetVertex);
+				}
 			}
 			
 			private final Object begin(final Node<?> node) {
@@ -75,7 +112,7 @@ public final class JGraphXTools {
 				depths.put(node, Math.max(this.depth, depths.getOrDefault(node, 0)));
 				
 				return vertices.computeIfAbsent(node,
-						n -> graph.insertVertex(parent, null, n.getClass().getSimpleName() + Arrays.toString(n.getShape()),
+						n -> graph.insertVertex(parent, null, defaultNodeText(n),
 								componentWidth / 2, componentHeight / 2, cellWidth, cellHeight));
 			}
 			
@@ -112,10 +149,8 @@ public final class JGraphXTools {
 		return graph;
 	}
 	
-	public static final mxGraphComponent newGraphComponent(final Node<?> node) {
-		final int componentWidth = 640;
-		final int componentHeight = 480;
-		final int cellWidth = 100;
+	public static final mxGraphComponent newGraphComponent(final Node<?> node, final int componentWidth, final int componentHeight) {
+		final int cellWidth = 150;
 		final int cellHeight = 50;
 		final mxGraph graph = newGraph(node, componentWidth, componentHeight,
 				cellWidth, cellHeight);
@@ -124,6 +159,10 @@ public final class JGraphXTools {
 		result.setPreferredSize(new Dimension(componentWidth, componentHeight));
 		
 		return result;
+	}
+	
+	public static final String defaultNodeText(final Node<?> node) {
+		return node.getClass().getSimpleName() + Arrays.toString(node.getShape());
 	}
 	
 }
