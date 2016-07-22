@@ -4,10 +4,8 @@ import static autodiff.computing.Functions.EXP;
 import static autodiff.computing.Functions.LN;
 import static autodiff.computing.Functions.SUM;
 import static autodiff.nodes.NodesTools.$;
-
 import autodiff.computing.NodeProcessor;
 import autodiff.io.LabeledData;
-import autodiff.learning.test.MinibatchContext;
 import autodiff.nodes.Node;
 import autodiff.nodes.ShapeNode;
 

@@ -9,13 +9,13 @@ import static autodiff.nodes.NodesTools.$;
 import static multij.tools.Tools.cast;
 import static multij.tools.Tools.debugPrint;
 import static org.junit.Assert.*;
-
 import autodiff.computing.DefaultProcessor;
 import autodiff.computing.NodeProcessor;
 import autodiff.io.Iris;
 import autodiff.io.LabeledData;
 import autodiff.learning.ConfusionMatrix;
 import autodiff.learning.GradientDescent;
+import autodiff.learning.MinibatchMinimizer;
 import autodiff.nodes.Data;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.Node;
