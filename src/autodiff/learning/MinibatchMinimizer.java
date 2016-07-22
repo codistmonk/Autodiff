@@ -66,11 +66,15 @@ public final class MinibatchMinimizer extends AbstractMinimizer<MinibatchMinimiz
 	
 	@Override
 	public final void updateParameters() {
+		this.beforeUpdateParameters();
 		this.getMinibatchContext().forEachMinibatch(this.getIterationMinimizer());
+		this.afterUpdateParameters();
 	}
 	
 	@Override
 	public final float updateCost(final float previousBestCost) {
+		this.beforeUpdateCost();
+		
 		final float[] cost = { 0F };
 		
 		this.getMinibatchContext().forEachMinibatch(() -> {
@@ -80,8 +84,12 @@ public final class MinibatchMinimizer extends AbstractMinimizer<MinibatchMinimiz
 		if (cost[0] < previousBestCost) {
 			this.saveBestParameters();
 			
+			this.afterUpdateCost();
+			
 			return cost[0];
 		}
+		
+		this.afterUpdateCost();
 		
 		return previousBestCost;
 	}

@@ -81,6 +81,8 @@ public final class GradientDescent extends AbstractMinimizer<GradientDescent> {
 	
 	@Override
 	public final void updateParameters() {
+		this.beforeUpdateParameters();
+		
 		if (isCostInvalid(this.getCost().get())) {
 			this.restoreBestParameters();
 			this.currentLearningRate /= this.getLearningRateDivisor();
@@ -114,6 +116,8 @@ public final class GradientDescent extends AbstractMinimizer<GradientDescent> {
 				}
 			}
 		}
+		
+		this.afterUpdateParameters();
 	}
 	
 	@Override
