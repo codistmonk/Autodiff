@@ -26,7 +26,7 @@ public final class NodesTools {
 		if (strides.length == 0) {
 			final int n = argument.getLength();
 			
-			return new MatrixMultiplication().setLeft(shape(argument, 1, n)).setRight(ones(n, 1)).autoShape();
+			return shape(new MatrixMultiplication().setLeft(shape(argument, 1, n)).setRight(ones(n, 1)).autoShape(), 1);
 		}
 		
 		final int[] resultShape = argument.getLengths(new int[strides.length]);
@@ -164,7 +164,7 @@ public final class NodesTools {
 			}
 			
 			if (SUM.equals(objects[0])) {
-				return new Sum().setStrides((int[]) objects[1]).setArgument($(objects[2])).autoShape();
+				return sum($(objects[2]), (int[]) objects[1]);
 			}
 			
 			if ("@".equals(objects[1])) {
@@ -183,7 +183,6 @@ public final class NodesTools {
 			
 			if (SUM.equals(objects[0])) {
 				return sum($(objects[1]));
-//				return new Sum().setArgument($(objects[1])).autoShape();
 			}
 			
 			final Node<?> left = cast(Node.class, $(objects[0]));

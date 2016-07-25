@@ -1,13 +1,10 @@
 package autodiff.computing;
 
 import static autodiff.computing.Functions.*;
-import static autodiff.nodes.NodesTools.bounds;
-import static autodiff.nodes.NodesTools.indexFromCartesian;
 import static autodiff.rules.PatternPredicate.rule;
 import static java.lang.Math.*;
 import static java.util.Collections.reverse;
 import static java.util.stream.Collectors.toList;
-import static multij.tools.Tools.cartesian;
 import static multij.tools.Tools.cast;
 import static multij.tools.Tools.swap;
 
@@ -19,7 +16,6 @@ import autodiff.nodes.Node;
 import autodiff.nodes.Node2D;
 import autodiff.nodes.NodeVisitor;
 import autodiff.nodes.Selection;
-import autodiff.nodes.Sum;
 import autodiff.nodes.Zipping;
 import autodiff.rules.Disjunction;
 import autodiff.rules.PatternPredicate;
@@ -141,35 +137,6 @@ public final class DefaultProcessor implements NodeProcessor {
 					
 					node.set(c + r * columns, value);
 				}
-			}
-			
-			return null;
-		}
-		
-		@Override
-		public final Void visit(final Sum node) {
-			final int[] strides = node.getStrides();
-			final int[] nodeShape = node.getShape();
-			final int[] argumentShape = node.getArgument().getShape();
-			final int[] outerBounds = bounds(nodeShape);
-			final int[] innerBounds = bounds(strides);
-			
-			for (final int[] i : cartesian(outerBounds)) {
-				for (int j = 0; j < i.length; ++j) {
-					innerBounds[2 * j + 0] = i[j] * strides[j];
-					innerBounds[2 * j + 1] = i[j] * strides[j] + strides[j] - 1;
-				}
-				
-				final int outputIndex = indexFromCartesian(nodeShape, i);
-				float sum = 0F;
-				
-				for (final int[] j : cartesian(innerBounds)) {
-					final int k = indexFromCartesian(argumentShape, j);
-					
-					sum += node.getArgument().get(k);
-				}
-				
-				node.set(outputIndex, sum);
 			}
 			
 			return null;
@@ -400,33 +367,7 @@ public final class DefaultProcessor implements NodeProcessor {
 			
 			return null;
 		}
-		
-		@Override
-		public final Void visit(final Sum node) {
-			final int[] strides = node.getStrides();
-			final int[] nodeShape = node.getShape();
-			final int[] argumentShape = node.getArgument().getShape();
-			final int[] outerBounds = bounds(nodeShape);
-			final int[] innerBounds = bounds(strides);
-			
-			for (final int[] i : cartesian(outerBounds)) {
-				for (int j = 0; j < i.length; ++j) {
-					innerBounds[2 * j + 0] = i[j] * strides[j];
-					innerBounds[2 * j + 1] = i[j] * strides[j] + strides[j] - 1;
-				}
 				
-				final int outputIndex = indexFromCartesian(nodeShape, i);
-				
-				for (final int[] j : cartesian(innerBounds)) {
-					final int k = indexFromCartesian(argumentShape, j);
-					
-					node.getArgument().getDiffs().add(k, node.getDiffs().get(outputIndex));
-				}
-			}
-			
-			return null;
-		}
-		
 		@Override
 		public final Void visit(final MaxPooling2D node) {
 			final Node<?> inputs = node.getInputs();

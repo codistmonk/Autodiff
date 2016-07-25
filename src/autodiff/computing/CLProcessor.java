@@ -1,8 +1,6 @@
 package autodiff.computing;
 
-import static autodiff.nodes.NodesTools.bounds;
 import static java.util.stream.Collectors.toList;
-import static multij.tools.Tools.debugPrint;
 import static org.jocl.CL.CL_MEM_READ_WRITE;
 import static org.jocl.CL.CL_MEM_USE_HOST_PTR;
 import static org.jocl.CL.setExceptionsEnabled;
@@ -15,7 +13,6 @@ import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
 import autodiff.nodes.NodeVisitor;
 import autodiff.nodes.Selection;
-import autodiff.nodes.Sum;
 import autodiff.nodes.UnaryNode;
 
 import java.nio.Buffer;
@@ -257,55 +254,7 @@ public final class CLProcessor implements NodeProcessor {
 				return getContext().createAndBuildProgram(programSource).createKernel(kernelName);
 			});
 		}
-		
-		@Override
-		public final CLKernel visit(final Sum node) {
-			return getForwardKernels().computeIfAbsent(node, __ -> {
-				final String kernelName = node.getClass().getSimpleName() + getForwardKernels().size();
-				String programSource = "";
 				
-				final int[] strides = node.getStrides();
-				final int[] nodeShape = node.getShape();
-				final int[] argumentShape = node.getArgument().getShape();
-				final int[] initialI = new int[strides.length];
-				final int n = strides.length;
-				
-				initialI[initialI.length - 1] = -1;
-				
-				programSource += nextCartesian(n);
-				programSource += indexToCartesian(n);
-				programSource += indexFromCartesian(n);
-				programSource += "__kernel void " + kernelName + "(";
-				programSource += "__global float const * const argument, ";
-				programSource += "__global float * const result) {\n";
-				programSource += "	int const gid = get_global_id(0);\n";
-				programSource += "	int const strides[] = " + stringOf(strides) + ";\n";
-				programSource += "	int const nodeShape[] = " + stringOf(nodeShape) + ";\n";
-				programSource += "	int const argumentShape[] = " + stringOf(argumentShape) + ";\n";
-				programSource += "	int const outerBounds[] = " + stringOf(bounds(nodeShape)) + ";\n";
-				programSource += "	int innerBounds[] = " + stringOf(new int[2 * strides.length]) + ";\n";
-				programSource += "	int i[] = " + stringOf(initialI) + ";\n";
-				programSource += "	indexToCartesian(nodeShape, gid, i);\n";
-				programSource += "	int j[] = " + stringOf(initialI) + ";\n";
-				programSource += "	for (int k = 0; k < " + n + "; ++k) {\n";
-				programSource += "		innerBounds[2 * k + 0] = j[k] = i[k] * strides[k];\n";
-				programSource += "		innerBounds[2 * k + 1] = i[k] * strides[k] + strides[k] - 1;\n";
-				programSource += "	}\n";
-				programSource += "	--j[" + (n - 1) + "];\n";
-				programSource += "	float sum = 0.0F;\n";
-				programSource += "	while (nextCartesian(innerBounds, j)) {\n";
-				programSource += "		int const k = indexFromCartesian(argumentShape, j);\n";
-				programSource += "		sum += argument[k];\n";
-				programSource += "	}\n";
-				programSource += "	result[gid] = sum;\n";
-				programSource += "}\n";
-				
-				debugPrint("\n" + programSource);
-				
-				return getContext().createAndBuildProgram(programSource).createKernel(kernelName);
-			});
-		}
-		
 		private static final long serialVersionUID = -41684012969905022L;
 		
 	}
@@ -384,52 +333,6 @@ public final class CLProcessor implements NodeProcessor {
 			});
 		}
 		
-		@Override
-		public final CLKernel visit(final Sum node) {
-			return getBackwardDiffKernels().computeIfAbsent(node, __ -> {
-				final String kernelName = node.getClass().getSimpleName() + getBackwardDiffKernels().size();
-				String programSource = "";
-				
-				final int[] strides = node.getStrides();
-				final int[] nodeShape = node.getShape();
-				final int[] argumentShape = node.getArgument().getShape();
-				final int[] initialI = new int[strides.length];
-				final int n = strides.length;
-				
-				initialI[initialI.length - 1] = -1;
-				
-				programSource += nextCartesian(n);
-				programSource += indexToCartesian(n);
-				programSource += indexFromCartesian(n);
-				programSource += "__kernel void " + kernelName + "(";
-				programSource += "__global float * const argumentDiffs, ";
-				programSource += "__global float const * const diffs) {\n";
-				programSource += "	int const gid = get_global_id(0);\n";
-				programSource += "	int const strides[] = " + stringOf(strides) + ";\n";
-				programSource += "	int const nodeShape[] = " + stringOf(nodeShape) + ";\n";
-				programSource += "	int const argumentShape[] = " + stringOf(argumentShape) + ";\n";
-				programSource += "	int const outerBounds[] = " + stringOf(bounds(nodeShape)) + ";\n";
-				programSource += "	int innerBounds[] = " + stringOf(new int[2 * strides.length]) + ";\n";
-				programSource += "	int i[] = " + stringOf(initialI) + ";\n";
-				programSource += "	indexToCartesian(nodeShape, gid, i);\n";
-				programSource += "	int j[] = " + stringOf(initialI) + ";\n";
-				programSource += "	for (int k = 0; k < " + n + "; ++k) {\n";
-				programSource += "		innerBounds[2 * k + 0] = j[k] = i[k] * strides[k];\n";
-				programSource += "		innerBounds[2 * k + 1] = i[k] * strides[k] + strides[k] - 1;\n";
-				programSource += "	}\n";
-				programSource += "	--j[" + (n - 1) + "];\n";
-				programSource += "	while (nextCartesian(innerBounds, j)) {\n";
-				programSource += "		int const k = indexFromCartesian(argumentShape, j);\n";
-				programSource += "		argumentDiffs[k] += diffs[gid];\n";
-				programSource += "	}\n";
-				programSource += "}\n";
-				
-				debugPrint("\n" + programSource);
-				
-				return getContext().createAndBuildProgram(programSource).createKernel(kernelName);
-			});
-		}
-		
 		private static final long serialVersionUID = 4021444858946691751L;
 		
 	}
@@ -489,16 +392,6 @@ public final class CLProcessor implements NodeProcessor {
 			result.setArg(2, clBuffer((AbstractNode<?>) node.getRight()));
 			result.setArg(3, clBuffer((AbstractNode<?>) node.getRight().getDiffs()));
 			result.setArg(4, clBuffer((AbstractNode<?>) node.getDiffs()));
-			
-			return result;
-		}
-		
-		@Override
-		public final CLKernel visit(final Sum node) {
-			final CLKernel result = getBackwardDiffKernel(node);
-			
-			result.setArg(0, clBuffer((AbstractNode<?>) node.getArgument().getDiffs()));
-			result.setArg(1, clBuffer((AbstractNode<?>) node.getDiffs()));
 			
 			return result;
 		}
