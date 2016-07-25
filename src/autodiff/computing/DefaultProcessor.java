@@ -1,6 +1,8 @@
 package autodiff.computing;
 
 import static autodiff.computing.Functions.*;
+import static autodiff.nodes.NodesTools.bounds;
+import static autodiff.nodes.NodesTools.indexFromCartesian;
 import static autodiff.rules.PatternPredicate.rule;
 import static java.lang.Math.*;
 import static java.util.Collections.reverse;
@@ -8,6 +10,7 @@ import static java.util.stream.Collectors.toList;
 import static multij.tools.Tools.cartesian;
 import static multij.tools.Tools.cast;
 import static multij.tools.Tools.swap;
+
 import autodiff.nodes.Convolution2D;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
@@ -77,27 +80,6 @@ public final class DefaultProcessor implements NodeProcessor {
 	private static final long serialVersionUID = -5998082453824765555L;
 	
 	public static final DefaultProcessor INSTANCE = new DefaultProcessor();
-	
-	public static final int horner(final int[] lengths, final int[] indices) {
-		int result = indices[0];
-		
-		for (int i = 1; i < indices.length; ++i) {
-			result = indices[i] + lengths[i] * result;
-		}
-		
-		return result;
-	}
-	
-	public static final int[] bounds(final int... lengths) {
-		final int n = lengths.length;
-		final int[] result = new int[n * 2];
-		
-		for (int i = 0; i < n; ++i) {
-			result[2 * i + 1] = lengths[i] - 1;
-		}
-		
-		return result;
-	}
 	
 	/**
 	 * @author codistmonk (creation 2016-07-11)
@@ -178,11 +160,11 @@ public final class DefaultProcessor implements NodeProcessor {
 					innerBounds[2 * j + 1] = i[j] * strides[j] + strides[j] - 1;
 				}
 				
-				final int outputIndex = horner(nodeShape, i);
+				final int outputIndex = indexFromCartesian(nodeShape, i);
 				float sum = 0F;
 				
 				for (final int[] j : cartesian(innerBounds)) {
-					final int k = horner(argumentShape, j);
+					final int k = indexFromCartesian(argumentShape, j);
 					
 					sum += node.getArgument().get(k);
 				}
@@ -433,10 +415,10 @@ public final class DefaultProcessor implements NodeProcessor {
 					innerBounds[2 * j + 1] = i[j] * strides[j] + strides[j] - 1;
 				}
 				
-				final int outputIndex = horner(nodeShape, i);
+				final int outputIndex = indexFromCartesian(nodeShape, i);
 				
 				for (final int[] j : cartesian(innerBounds)) {
-					final int k = horner(argumentShape, j);
+					final int k = indexFromCartesian(argumentShape, j);
 					
 					node.getArgument().getDiffs().add(k, node.getDiffs().get(outputIndex));
 				}

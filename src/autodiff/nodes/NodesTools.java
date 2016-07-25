@@ -4,10 +4,12 @@ import static autodiff.computing.Functions.INFIX_OPERATORS;
 import static autodiff.computing.Functions.POSTFIX_OPERATORS;
 import static autodiff.computing.Functions.PREFIX_OPERATORS;
 import static autodiff.computing.Functions.SUM;
+import static multij.tools.Tools.cartesian;
 import static multij.tools.Tools.cast;
 import static multij.tools.Tools.ignore;
 
 import java.util.Arrays;
+import java.util.function.Supplier;
 
 import multij.tools.IllegalInstantiationException;
 
@@ -18,6 +20,109 @@ public final class NodesTools {
 	
 	private NodesTools() {
 		throw new IllegalInstantiationException();
+	}
+	
+	public static final Node<?> sum(final Node<?> argument, final int... strides) {
+		if (strides.length == 0) {
+			final int n = argument.getLength();
+			
+			return new MatrixMultiplication().setLeft(shape(argument, 1, n)).setRight(ones(n, 1)).autoShape();
+		}
+		
+		final int[] resultShape = argument.getLengths(new int[strides.length]);
+		
+		for (int i = 0; i < strides.length; ++i) {
+			if (resultShape[i] % strides[i] != 0) {
+				throw new IllegalArgumentException(resultShape[i] + " not divisible by " + strides[i]);
+			}
+			
+			resultShape[i] /= strides[i];
+		}
+		
+		final int m = argument.getLength();
+		final int n = product(resultShape);
+		final Node<?> right = new Data().setShape(m, n);
+		final int[] argumentShape = argument.getShape();
+		final int[] outerBounds = bounds(resultShape);
+		final int[] innerBounds = bounds(strides);
+		
+		for (final int[] i : cartesian(outerBounds)) {
+			for (int j = 0; j < i.length; ++j) {
+				innerBounds[2 * j + 0] = i[j] * strides[j];
+				innerBounds[2 * j + 1] = i[j] * strides[j] + strides[j] - 1;
+			}
+			
+			final int outputIndex = indexFromCartesian(resultShape, i);
+			
+			for (final int[] j : cartesian(innerBounds)) {
+				final int k = indexFromCartesian(argumentShape, j);
+				
+				right.set(outputIndex + n * k, 1F);
+			}
+		}
+		
+		return shape(new MatrixMultiplication().setLeft(shape(argument, 1, m)).setRight(right).autoShape(), resultShape);
+	}
+	
+	public static final int[] indexToCartesian(final int[] lengths, final int index, final int[] result) {
+		final int n = lengths.length;
+		
+		for (int i = n - 1, tmp = index; 0 <= i; --i) {
+			result[i] = tmp % lengths[i];
+			tmp /= lengths[i];
+		}
+		
+		return result;
+	}
+	
+	public static final int indexFromCartesian(final int[] lengths, final int[] indices) {
+		int result = indices[0];
+		
+		for (int i = 1; i < indices.length; ++i) {
+			result = indices[i] + lengths[i] * result;
+		}
+		
+		return result;
+	}
+	
+	public static final int[] bounds(final int... lengths) {
+		final int n = lengths.length;
+		final int[] result = new int[n * 2];
+		
+		for (int i = 0; i < n; ++i) {
+			result[2 * i + 1] = lengths[i] - 1;
+		}
+		
+		return result;
+	}
+	
+	public static final Node<?> shape(final Node<?> node, final int... shape) {
+		return Arrays.equals(node.getShape(), shape) ? node : new ShapeNode(node).setShape(shape);
+	}
+	
+	public static final Node<?> ones(final int... shape) {
+		final Node<?> result = new Data().setShape(shape);
+		final int n = result.getLength();
+		
+		for (int i = 0; i < n; ++i) {
+			result.set(i, 1F);
+		}
+		
+		return result;
+	}
+	
+	public static void checkLength(final int expectedLength, final int actualLength) {
+		check(expectedLength == actualLength, () -> "Expected length: " + expectedLength + ", actual: " + actualLength);
+	}
+	
+	public static void check(final boolean b, final Supplier<String> errorMessage) {
+		if (!b) {
+			throw new RuntimeException(errorMessage.get());
+		}
+	}
+	
+	public static int product(final int... values) {
+		return Arrays.stream(values).reduce((x, y) -> x * y).getAsInt();
 	}
 	
 	public static final Node<?> $(final Object... objects) {
@@ -77,7 +182,8 @@ public final class NodesTools {
 			}
 			
 			if (SUM.equals(objects[0])) {
-				return new Sum().setArgument($(objects[1])).autoShape();
+				return sum($(objects[1]));
+//				return new Sum().setArgument($(objects[1])).autoShape();
 			}
 			
 			final Node<?> left = cast(Node.class, $(objects[0]));

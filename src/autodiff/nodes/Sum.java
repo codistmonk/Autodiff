@@ -1,10 +1,12 @@
 package autodiff.nodes;
 
+import static autodiff.nodes.NodesTools.*;
 import static multij.tools.Tools.intRange;
 
 /**
  * @author codistmonk (creation 2016-07-11)
  */
+@Deprecated
 public final class Sum extends UnaryNode<Sum> {
 	
 	private int[] strides;
@@ -38,7 +40,7 @@ public final class Sum extends UnaryNode<Sum> {
 			final int n = lengths[i];
 			final int s = this.getStrides()[i];
 			
-			Node.check(n % s == 0, () -> "Bad argument: length(" + m + " " + i + ")=" + n + " not divisible by " + s);
+			check(n % s == 0, () -> "Bad argument: length(" + m + " " + i + ")=" + n + " not divisible by " + s);
 			
 			shape[i] = lengths[i] / s;
 		}

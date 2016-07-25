@@ -1,5 +1,6 @@
 package autodiff.nodes;
 
+import static autodiff.nodes.NodesTools.*;
 import static java.lang.Math.min;
 
 import java.io.Serializable;
@@ -7,7 +8,6 @@ import java.nio.FloatBuffer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Supplier;
 
 /**
  * @author codistmonk (creation 2016-07-11)
@@ -22,7 +22,7 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 	
 	@SuppressWarnings("unchecked")
 	public default N setShape(final int... shape) {
-		checkLength(this.getLength(), Arrays.stream(shape).reduce((x, y) -> x * y).getAsInt());
+		checkLength(this.getLength(), product(shape));
 		
 		return (N) this;
 	}
@@ -112,7 +112,7 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 	}
 	
 	public default float[] get(final float[] result) {
-		Node.checkLength(this.getLength(), result.length);
+		checkLength(this.getLength(), result.length);
 		
 		this.getFloatBuffer().position(0);
 		this.getFloatBuffer().get(result);
@@ -132,7 +132,7 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 			this.setShape(n);
 		}
 		
-		Node.checkLength(this.getLength(), n);
+		checkLength(this.getLength(), n);
 		
 		this.getFloatBuffer().position(0);
 		this.getFloatBuffer().put(values);
@@ -163,16 +163,6 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 	
 	public default void checkScalar() {
 		checkLength(1, this.getLength());
-	}
-	
-	public static void checkLength(final int expectedLength, final int actualLength) {
-		check(expectedLength == actualLength, () -> "Expected length: " + expectedLength + ", actual: " + actualLength);
-	}
-	
-	public static void check(final boolean b, final Supplier<String> errorMessage) {
-		if (!b) {
-			throw new RuntimeException(errorMessage.get());
-		}
 	}
 	
 }

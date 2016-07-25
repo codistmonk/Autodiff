@@ -3,7 +3,6 @@ package autodiff.computing.test;
 import static autodiff.computing.Functions.EPSILON;
 import static java.lang.Math.exp;
 import static org.junit.Assert.*;
-
 import autodiff.computing.Functions;
 import autodiff.computing.NodeProcessor;
 import autodiff.nodes.Convolution2D;
@@ -12,6 +11,7 @@ import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.MaxPooling2D;
 import autodiff.nodes.Node;
+import autodiff.nodes.NodesTools;
 import autodiff.nodes.Selection;
 import autodiff.nodes.Sum;
 import autodiff.nodes.Zipping;
@@ -267,7 +267,8 @@ public abstract class ProcessorTest {
 	@Test
 	public final void testSum1() {
 		final Node<?> x = new Data().setShape(1, 2, 3).set(1F, 2F, 3F, 4F, 5F, 6F);
-		final Node<?> y = new Sum().setArgument(x).setStrides(1, 1, 3).autoShape();
+//		final Node<?> y = new Sum().setArgument(x).setStrides(1, 1, 3).autoShape();
+		final Node<?> y = NodesTools.sum(x, 1, 1, 3);
 		
 		assertArrayEquals(new int[] { 1, 2, 1 }, y.getShape());
 		

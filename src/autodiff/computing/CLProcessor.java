@@ -1,10 +1,12 @@
 package autodiff.computing;
 
+import static autodiff.nodes.NodesTools.bounds;
 import static java.util.stream.Collectors.toList;
 import static multij.tools.Tools.debugPrint;
 import static org.jocl.CL.CL_MEM_READ_WRITE;
 import static org.jocl.CL.CL_MEM_USE_HOST_PTR;
 import static org.jocl.CL.setExceptionsEnabled;
+
 import autodiff.cl.CLContext;
 import autodiff.cl.CLKernel;
 import autodiff.nodes.AbstractNode;
@@ -280,7 +282,7 @@ public final class CLProcessor implements NodeProcessor {
 				programSource += "	int const strides[] = " + stringOf(strides) + ";\n";
 				programSource += "	int const nodeShape[] = " + stringOf(nodeShape) + ";\n";
 				programSource += "	int const argumentShape[] = " + stringOf(argumentShape) + ";\n";
-				programSource += "	int const outerBounds[] = " + stringOf(DefaultProcessor.bounds(nodeShape)) + ";\n";
+				programSource += "	int const outerBounds[] = " + stringOf(bounds(nodeShape)) + ";\n";
 				programSource += "	int innerBounds[] = " + stringOf(new int[2 * strides.length]) + ";\n";
 				programSource += "	int i[] = " + stringOf(initialI) + ";\n";
 				programSource += "	indexToCartesian(nodeShape, gid, i);\n";
@@ -406,7 +408,7 @@ public final class CLProcessor implements NodeProcessor {
 				programSource += "	int const strides[] = " + stringOf(strides) + ";\n";
 				programSource += "	int const nodeShape[] = " + stringOf(nodeShape) + ";\n";
 				programSource += "	int const argumentShape[] = " + stringOf(argumentShape) + ";\n";
-				programSource += "	int const outerBounds[] = " + stringOf(DefaultProcessor.bounds(nodeShape)) + ";\n";
+				programSource += "	int const outerBounds[] = " + stringOf(bounds(nodeShape)) + ";\n";
 				programSource += "	int innerBounds[] = " + stringOf(new int[2 * strides.length]) + ";\n";
 				programSource += "	int i[] = " + stringOf(initialI) + ";\n";
 				programSource += "	indexToCartesian(nodeShape, gid, i);\n";

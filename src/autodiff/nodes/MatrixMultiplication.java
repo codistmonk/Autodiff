@@ -1,5 +1,6 @@
 package autodiff.nodes;
 
+import static autodiff.nodes.NodesTools.*;
 import static multij.tools.Tools.swap;
 
 /**
@@ -51,7 +52,7 @@ public final class MatrixMultiplication extends BinaryNode<MatrixMultiplication>
 			swap(rightShape, 0, 1);
 		}
 		
-		Node.checkLength(leftShape[1], rightShape[0]);
+		checkLength(leftShape[1], rightShape[0]);
 		
 		return this.setShape(leftShape[0], rightShape[1]);
 	}
