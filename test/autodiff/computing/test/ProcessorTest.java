@@ -5,6 +5,7 @@ import static autodiff.nodes.NodesTools.selection;
 import static autodiff.nodes.NodesTools.sum;
 import static java.lang.Math.exp;
 import static org.junit.Assert.*;
+
 import autodiff.computing.Functions;
 import autodiff.computing.NodeProcessor;
 import autodiff.nodes.Convolution2D;
@@ -13,7 +14,6 @@ import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.MaxPooling2D;
 import autodiff.nodes.Node;
-import autodiff.nodes.Selection;
 import autodiff.nodes.Zipping;
 import autodiff.ui.JGraphXTools;
 import multij.swing.SwingTools;
@@ -32,12 +32,12 @@ public abstract class ProcessorTest {
 	
 	@Test
 	public final void testSelection1() {
-		final Node<?> x = new Data().set(42F, 33F);
+		final Node<?> x = new Data().setShape(1, 2).set(42F, 33F);
 		final Node<?> i = new Data().set(0F);
 //		final Node<?> xi = new Selection().setVectors(x).setIndices(i).autoShape();
 		final Node<?> xi = selection(x, i);
 		
-		assertArrayEquals(new int[] { 2 }, x.getShape());
+		assertArrayEquals(new int[] { 1, 2 }, x.getShape());
 		assertArrayEquals(new int[] { 1 }, i.getShape());
 		assertArrayEquals(new int[] { 1, 1 }, xi.getShape());
 		
@@ -74,13 +74,13 @@ public abstract class ProcessorTest {
 		final Node<?> x = new Data().setShape(2, 2).set(
 				1F, 2F,
 				3F, 4F);
-		final Node<?> i = new Data().set(
+		final Node<?> i = new Data().setShape(1, 3).set(
 				1F, 1F, 0F);
 //		final Node<?> xi = new Selection().setVectors(x).setIndices(i).autoShape();
 		final Node<?> xi = selection(x, i);
 		
 		assertArrayEquals(new int[] { 2, 2 }, x.getShape());
-		assertArrayEquals(new int[] { 3 }, i.getShape());
+		assertArrayEquals(new int[] { 1, 3 }, i.getShape());
 		assertArrayEquals(new int[] { 2, 3 }, xi.getShape());
 		
 		this.getProcessor().fullForward(xi);
@@ -108,15 +108,18 @@ public abstract class ProcessorTest {
 				1F, 2F,
 				3F, 4F);
 		final Node<?> i = new Data().setShape(2, 1).set(
-				0F, 1F);
+				0F,
+				1F);
 //		final Node<?> xi = new Selection().setVectors(x).setIndices(i).autoShape();
 		final Node<?> xi = selection(x, i);
 		
 		assertArrayEquals(new int[] { 2, 2 }, x.getShape());
 		assertArrayEquals(new int[] { 2, 1 }, i.getShape());
-		assertArrayEquals(new int[] { 2, 1 }, xi.getShape());
+		assertArrayEquals(new int[] { 1, 2 }, xi.getShape());
 		
 		this.getProcessor().fullForward(xi);
+		
+//		SwingTools.show(JGraphXTools.newGraphComponent(xi, 800, 800), "view", true);
 		
 		assertArrayEquals(new float[] {
 				1F,

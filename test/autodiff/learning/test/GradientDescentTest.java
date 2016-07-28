@@ -80,7 +80,7 @@ public final class GradientDescentTest {
 		final Node<?> lengthConstraint = $(SUM, $(v2, SQMINUS, $(1F, 1F)));
 		final Node<?> colinearityConstraint = $(SUM, $(mv, SQMINUS, vk));
 		final Node<?> orthogonalityConstraint = $($($(v, "@", $(0, 0).setShape(2, 1)).setShape(1, 2), $(v, "@", $(1, 1).setShape(2, 1)).setShape(2, 1)), SQUARED);
-		final Node<?> w = $(1, 1, 1.63);
+		final Node<?> w = $(1, 1, 1.63).setShape(1, 3);
 		final Node<?> w0 = $(w, "@", 0);
 		final Node<?> w1 = $(w, "@", 1);
 		final Node<?> w2 = $(w, "@", 2);

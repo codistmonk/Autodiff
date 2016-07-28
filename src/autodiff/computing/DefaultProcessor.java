@@ -15,7 +15,6 @@ import autodiff.nodes.MaxPooling2D;
 import autodiff.nodes.Node;
 import autodiff.nodes.Node2D;
 import autodiff.nodes.NodeVisitor;
-import autodiff.nodes.Selection;
 import autodiff.nodes.Zipping;
 import autodiff.rules.Disjunction;
 import autodiff.rules.PatternPredicate;
@@ -83,26 +82,6 @@ public final class DefaultProcessor implements NodeProcessor {
 	public static final class Forwarder implements NodeVisitor<Void> {
 		
 		private final Context context = new Context();
-		
-		@Override
-		public final Void visit(final Selection node) {
-			final Node<?> vectors = node.getVectors();
-			final Node<?> indices = node.getIndices();
-			final int m = vectors.getLength();
-			final int[] vectorsShape = vectors.getShape();
-			final int vectorsStride = vectorsShape[vectorsShape.length - 1];
-			final int n = indices.getLength();
-			final int[] indicesShape = indices.getShape();
-			final int indicesStride = indicesShape[indicesShape.length - 1];
-			
-			for (int i = 0, o = 0, j = 0; i < m; i += vectorsStride, j += indicesStride) {
-				for (int k = 0; k < indicesStride; ++k, ++o) {
-					node.set(o, vectors.get(i + (int) indices.get((j % n) + k)));
-				}
-			}
-			
-			return null;
-		}
 		
 		@Override
 		public final Void visit(final MatrixMultiplication node) {
@@ -299,29 +278,7 @@ public final class DefaultProcessor implements NodeProcessor {
 	public static final class BackwardDiffer implements NodeVisitor<Void> {
 		
 		private final Context context = new Context();
-		
-		@Override
-		public final Void visit(final Selection node) {
-			final Node<?> vectors = node.getVectors();
-			final Node<?> indices = node.getIndices();
-			final Node<?> vectorsDiffs = vectors.getDiffs();
-			final Node<?> diffs = node.getDiffs();
-			final int m = vectors.getLength();
-			final int[] vectorsShape = vectors.getShape();
-			final int vectorsStride = vectorsShape[vectorsShape.length - 1];
-			final int n = indices.getLength();
-			final int[] indicesShape = indices.getShape();
-			final int indicesStride = indicesShape[indicesShape.length - 1];
-			
-			for (int i = 0, o = 0, j = 0; i < m; i += vectorsStride, j += indicesStride) {
-				for (int k = 0; k < indicesStride; ++k, ++o) {
-					vectorsDiffs.add(i + (int) indices.get((j % n) + k), diffs.get(o));
-				}
-			}
-			
-			return null;
-		}
-		
+				
 		@Override
 		public final Void visit(final MatrixMultiplication node) {
 			final Node<?> left = node.getLeft();

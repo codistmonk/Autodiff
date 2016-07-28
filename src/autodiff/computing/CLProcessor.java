@@ -12,7 +12,6 @@ import autodiff.nodes.BinaryNode;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
 import autodiff.nodes.NodeVisitor;
-import autodiff.nodes.Selection;
 import autodiff.nodes.UnaryNode;
 
 import java.nio.Buffer;
@@ -202,28 +201,6 @@ public final class CLProcessor implements NodeProcessor {
 	final class ForwardGetter implements NodeVisitor<CLKernel> {
 		
 		@Override
-		public final CLKernel visit(final Selection node) {
-			return getForwardKernels().computeIfAbsent(node, __ -> {
-				final int m = node.getVectors().getLength();
-				final int n = node.getIndices().getLength();
-				final int stride = m / n;
-				final String kernelName = node.getClass().getSimpleName() + getForwardKernels().size();
-				String programSource = "";
-				
-				programSource += "__kernel void " + kernelName + "(";
-				programSource += "__global float const * const vectors, ";
-				programSource += "__global float const * const indices, ";
-				programSource += "__global float * const result) {\n";
-				programSource += "	int const gid = get_global_id(0);\n";
-				programSource += "	int const stride = " + stride + ";\n";
-				programSource += "	result[gid] = vectors[gid * stride + (int) indices[gid]];\n";
-				programSource += "}\n";
-				
-				return getContext().createAndBuildProgram(programSource).createKernel(kernelName);
-			});
-		}
-		
-		@Override
 		public final CLKernel visit(final MatrixMultiplication node) {
 			return getForwardKernels().computeIfAbsent(node, __ -> {
 				final Node<?> left = node.getLeft();
@@ -263,28 +240,6 @@ public final class CLProcessor implements NodeProcessor {
 	 * @author codistmonk (creation 2016-07-18)
 	 */
 	final class BackwardDiffGetter implements NodeVisitor<CLKernel> {
-		
-		@Override
-		public final CLKernel visit(final Selection node) {
-			return getBackwardDiffKernels().computeIfAbsent(node, __ -> {
-				final int m = node.getVectors().getLength();
-				final int n = node.getIndices().getLength();
-				final int stride = m / n;
-				final String kernelName = node.getClass().getSimpleName() + getBackwardDiffKernels().size();
-				String programSource = "";
-				
-				programSource += "__kernel void " + kernelName + "(";
-				programSource += "__global float * const vectorsDiffs, ";
-				programSource += "__global float const * const indices, ";
-				programSource += "__global float const * const diffs) {\n";
-				programSource += "	int const gid = get_global_id(0);\n";
-				programSource += "	int const stride = " + stride + ";\n";
-				programSource += "	vectorsDiffs[gid * stride + (int) indices[gid]] += diffs[gid];\n";
-				programSource += "}\n";
-				
-				return getContext().createAndBuildProgram(programSource).createKernel(kernelName);
-			});
-		}
 		
 		@Override
 		public final CLKernel visit(final MatrixMultiplication node) {
@@ -371,17 +326,6 @@ public final class CLProcessor implements NodeProcessor {
 	 * @author codistmonk (creation 2016-07-18)
 	 */
 	final class BackwardDiffInitializer implements NodeVisitor<CLKernel> {
-		
-		@Override
-		public final CLKernel visit(final Selection node) {
-			final CLKernel result = getBackwardDiffKernel(node);
-			
-			result.setArg(0, clBuffer((AbstractNode<?>) node.getVectors().getDiffs()));
-			result.setArg(1, clBuffer((AbstractNode<?>) node.getIndices()));
-			result.setArg(2, clBuffer((AbstractNode<?>) node.getDiffs()));
-			
-			return result;
-		}
 		
 		@Override
 		public final CLKernel visit(final MatrixMultiplication node) {

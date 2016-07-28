@@ -13,7 +13,6 @@ import java.util.Arrays;
 import java.util.function.Supplier;
 
 import multij.tools.IllegalInstantiationException;
-import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2016-07-15)
@@ -25,14 +24,23 @@ public final class NodesTools {
 	}
 	
 	public static final Node<?> selection(final Node<?> vectors, final Node<?> indices) {
-		final int[] vectorsShape = vectors.getShape();
-		final int[] indicesShape = indices.getShape();
-		final int indicesStride = indicesShape[indicesShape.length - 1];
-//		final int vectorsStride = vectorsShape[vectorsShape.length - 1];
-		final int vectorsStride = vectors.getLength() / (indices.getLength() / indicesStride);
-		final int n = vectors.getLength() / vectorsStride;
-		final int[] resultShape = { n, indicesStride };
+		final int[] vectorsShape = vectors.getLengths(new int[2]);
+		final int[] indicesShape = indices.getLengths(new int[2]);
+		final int indicesStride = indicesShape[1];
+		final int vectorsStride = vectorsShape[1] * indicesShape[0];
+		final int m = vectors.getLength() / vectorsStride;
+		final int n = indices.getLength();
+		final int[] resultShape = { m, n };
 		
+		final Node<?> shiftData = new Data().setShape(indices.getLength());
+		
+		for (int i = 1; i < indicesShape[0]; ++i) {
+			for (int j = 0; j < indicesShape[1]; ++j) {
+				shiftData.set(j + indicesShape[1] * i, vectorsShape[1] * i);
+			}
+		}
+		
+		final Node<?> shift = new Zipping().setFunctionName("+").setLeft(indices).setRight(shiftData).autoShape();
 		final Node<?> replicationMatrix = new Data().setShape(indicesStride, indicesStride * vectorsStride);
 		
 		for (int i = 0; i < indicesStride; ++i) {
@@ -42,7 +50,7 @@ public final class NodesTools {
 		}
 		
 		final Node<?> replicatedIndices = new MatrixMultiplication()
-		.setLeft(shape(indices, indices.getLength() / indicesStride, indicesStride))
+		.setLeft(shape(shift, indices.getLength() / indicesStride, indicesStride))
 		.setRight(replicationMatrix).autoShape();
 		final Node<?> range = new Data().setShape(vectorsStride);
 		
@@ -51,12 +59,6 @@ public final class NodesTools {
 		}
 		
 		final Node<?> mask = new Zipping().setFunctionName(KRONECKER).setLeft(replicatedIndices).setRight(range).autoShape();
-		
-		shape(vectors, vectors.getLength() / vectorsStride, vectorsStride);
-		shape(mask, mask.getLength() / vectorsStride, vectorsStride);
-		Tools.debugPrint(vectors.getLength() / vectorsStride, vectorsStride);
-		Tools.debugPrint(vectorsStride, mask.getLength() / vectorsStride);
-		Tools.debugPrint(Arrays.toString(resultShape));
 		
 		return shape(new MatrixMultiplication()
 		.setLeft(shape(vectors, vectors.getLength() / vectorsStride, vectorsStride))
@@ -192,16 +194,6 @@ public final class NodesTools {
 			ignore(exception);
 		}
 		
-//		if (n == 4) {
-//			if ("@".equals(objects[1])) {
-//				return new Selection().setLeft($(objects[0])).setOffsetStride((Integer) objects[2]).setRight($(objects[3])).autoShape();
-//			}
-//			
-//			if ("@".equals(objects[2])) {
-//				return new Selection().setLeft($(objects[0])).setStride((Integer) objects[1]).setRight($(objects[3])).autoShape();
-//			}
-//		}
-		
 		if (n == 3) {
 			if (INFIX_OPERATORS.contains(objects[1])) {
 				return new Zipping().setLeft($(objects[0])).setRight($(objects[2])).setFunctionName(objects[1].toString()).autoShape();
@@ -212,7 +204,7 @@ public final class NodesTools {
 			}
 			
 			if ("@".equals(objects[1])) {
-				return new Selection().setLeft($(objects[0])).setRight($(objects[2])).autoShape();
+				return selection($(objects[0]), $(objects[2]));
 			}
 		}
 		
