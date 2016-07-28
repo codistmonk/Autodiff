@@ -3,7 +3,7 @@ package autodiff.nodes;
 /**
  * @author codistmonk (creation 2016-07-11)
  */
-public interface Node2D<N extends Node2D<?>> extends Node<N> {
+public abstract interface Node2D<N extends Node2D<?>> extends Node<N> {
 	
 	public abstract int[] getOffsets();
 	

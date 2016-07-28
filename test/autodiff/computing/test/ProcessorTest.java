@@ -16,6 +16,7 @@ import autodiff.nodes.MaxPooling2D;
 import autodiff.nodes.Node;
 import autodiff.nodes.Zipping;
 import autodiff.ui.JGraphXTools;
+
 import multij.swing.SwingTools;
 
 import org.junit.After;
@@ -34,7 +35,6 @@ public abstract class ProcessorTest {
 	public final void testSelection1() {
 		final Node<?> x = new Data().setShape(1, 2).set(42F, 33F);
 		final Node<?> i = new Data().set(0F);
-//		final Node<?> xi = new Selection().setVectors(x).setIndices(i).autoShape();
 		final Node<?> xi = selection(x, i);
 		
 		assertArrayEquals(new int[] { 1, 2 }, x.getShape());
@@ -76,7 +76,6 @@ public abstract class ProcessorTest {
 				3F, 4F);
 		final Node<?> i = new Data().setShape(1, 3).set(
 				1F, 1F, 0F);
-//		final Node<?> xi = new Selection().setVectors(x).setIndices(i).autoShape();
 		final Node<?> xi = selection(x, i);
 		
 		assertArrayEquals(new int[] { 2, 2 }, x.getShape());
@@ -85,7 +84,9 @@ public abstract class ProcessorTest {
 		
 		this.getProcessor().fullForward(xi);
 		
-//		SwingTools.show(JGraphXTools.newGraphComponent(xi, 800, 800), "view", true);
+		if ("show graph".equals("")) {
+			SwingTools.show(JGraphXTools.newGraphComponent(xi, 800, 800), "view", true);
+		}
 		
 		assertArrayEquals(new float[] {
 				2F, 2F, 1F,
@@ -110,7 +111,6 @@ public abstract class ProcessorTest {
 		final Node<?> i = new Data().setShape(2, 1).set(
 				0F,
 				1F);
-//		final Node<?> xi = new Selection().setVectors(x).setIndices(i).autoShape();
 		final Node<?> xi = selection(x, i);
 		
 		assertArrayEquals(new int[] { 2, 2 }, x.getShape());
@@ -119,10 +119,50 @@ public abstract class ProcessorTest {
 		
 		this.getProcessor().fullForward(xi);
 		
-//		SwingTools.show(JGraphXTools.newGraphComponent(xi, 800, 800), "view", true);
+		if ("show graph".equals("")) {
+			SwingTools.show(JGraphXTools.newGraphComponent(xi, 800, 800), "view", true);
+		}
 		
 		assertArrayEquals(new float[] {
 				1F,
+				4F
+		}, xi.get(new float[xi.getLength()]), 0F);
+		
+		x.setupDiffs(true);
+		
+		this.getProcessor().fullBackwardDiff(xi);
+		
+		assertArrayEquals(new float[] {
+				1F, 0F,
+				0F, 1F
+		}, x.getDiffs().get(new float[x.getLength()]), 0F);
+	}
+	
+	@Test
+	public final void testSelection4() {
+		final Node<?> x = new Data().setShape(2, 2).set(
+				1F, 2F,
+				3F, 4F);
+		final float nai = -Integer.MAX_VALUE; // not an index
+		final Node<?> i = new Data().setShape(2, 2).set(
+				0F, nai,
+				nai, 1F);
+		final Node<?> xi = selection(x, i);
+		
+		assertArrayEquals(new int[] { 2, 2 }, x.getShape());
+		assertArrayEquals(new int[] { 2, 2 }, i.getShape());
+		assertArrayEquals(new int[] { 1, 4 }, xi.getShape());
+		
+		this.getProcessor().fullForward(xi);
+		
+		if ("show graph".equals("")) {
+			SwingTools.show(JGraphXTools.newGraphComponent(xi, 800, 800), "view", true);
+		}
+		
+		assertArrayEquals(new float[] {
+				1F,
+				0F,
+				0F,
 				4F
 		}, xi.get(new float[xi.getLength()]), 0F);
 		

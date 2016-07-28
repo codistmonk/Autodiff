@@ -23,6 +23,24 @@ public final class NodesTools {
 		throw new IllegalInstantiationException();
 	}
 	
+	public static final int LEFT_OFFSET = 0;
+	
+	public static final int RIGHT_OFFSET = 1;
+	
+	public static final int TOP_OFFSET = 2;
+	
+	public static final int BOTTOM_OFFSET = 3;
+	
+	public static final int HORIZONTAL_STRIDE = 0;
+	
+	public static final int VERTICAL_STRIDE = 1;
+	
+//	public static final Node<?> patches(final Node<?> images, final int[] offsets, final int[] strides) {
+//		final int[] shape = images.getShape();
+//		final int imageWidth = shape[shape.length - 1];
+//		final int imageHeight = shape[shape.length - 2];
+//	}
+	
 	public static final Node<?> selection(final Node<?> vectors, final Node<?> indices) {
 		final int[] vectorsShape = vectors.getLengths(new int[2]);
 		final int[] indicesShape = indices.getLengths(new int[2]);
