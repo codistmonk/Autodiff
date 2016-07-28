@@ -1,6 +1,7 @@
 package autodiff.nodes;
 
 import static autodiff.computing.Functions.INFIX_OPERATORS;
+import static autodiff.computing.Functions.KRONECKER;
 import static autodiff.computing.Functions.POSTFIX_OPERATORS;
 import static autodiff.computing.Functions.PREFIX_OPERATORS;
 import static autodiff.computing.Functions.SUM;
@@ -12,6 +13,7 @@ import java.util.Arrays;
 import java.util.function.Supplier;
 
 import multij.tools.IllegalInstantiationException;
+import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2016-07-15)
@@ -20,6 +22,48 @@ public final class NodesTools {
 	
 	private NodesTools() {
 		throw new IllegalInstantiationException();
+	}
+	
+	public static final Node<?> selection(final Node<?> vectors, final Node<?> indices) {
+		final int[] vectorsShape = vectors.getShape();
+		final int[] indicesShape = indices.getShape();
+		final int indicesStride = indicesShape[indicesShape.length - 1];
+//		final int vectorsStride = vectorsShape[vectorsShape.length - 1];
+		final int vectorsStride = vectors.getLength() / (indices.getLength() / indicesStride);
+		final int n = vectors.getLength() / vectorsStride;
+		final int[] resultShape = { n, indicesStride };
+		
+		final Node<?> replicationMatrix = new Data().setShape(indicesStride, indicesStride * vectorsStride);
+		
+		for (int i = 0; i < indicesStride; ++i) {
+			for (int j = 0; j < vectorsStride; ++j) {
+				replicationMatrix.set(j + (indicesStride + 1) * vectorsStride * i, 1);
+			}
+		}
+		
+		final Node<?> replicatedIndices = new MatrixMultiplication()
+		.setLeft(shape(indices, indices.getLength() / indicesStride, indicesStride))
+		.setRight(replicationMatrix).autoShape();
+		final Node<?> range = new Data().setShape(vectorsStride);
+		
+		for (int i = 0; i < vectorsStride; ++i) {
+			range.set(i, i);
+		}
+		
+		final Node<?> mask = new Zipping().setFunctionName(KRONECKER).setLeft(replicatedIndices).setRight(range).autoShape();
+		
+		shape(vectors, vectors.getLength() / vectorsStride, vectorsStride);
+		shape(mask, mask.getLength() / vectorsStride, vectorsStride);
+		Tools.debugPrint(vectors.getLength() / vectorsStride, vectorsStride);
+		Tools.debugPrint(vectorsStride, mask.getLength() / vectorsStride);
+		Tools.debugPrint(Arrays.toString(resultShape));
+		
+		return shape(new MatrixMultiplication()
+		.setLeft(shape(vectors, vectors.getLength() / vectorsStride, vectorsStride))
+		.setRight(shape(mask, mask.getLength() / vectorsStride, vectorsStride))
+		.setTransposeRight(true)
+		.autoShape(), resultShape);
+//		return shape(sum(new Zipping().setFunctionName("*").setLeft(vectors).setRight(mask).autoShape(), vectorsStride), resultShape);
 	}
 	
 	public static final Node<?> sum(final Node<?> argument, final int... strides) {
@@ -42,7 +86,7 @@ public final class NodesTools {
 		final int m = argument.getLength();
 		final int n = product(resultShape);
 		final Node<?> right = new Data().setShape(m, n);
-		final int[] argumentShape = argument.getShape();
+		final int[] argumentShape = argument.getLengths(new int[strides.length]);
 		final int[] outerBounds = bounds(resultShape);
 		final int[] innerBounds = bounds(strides);
 		

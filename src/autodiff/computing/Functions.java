@@ -76,6 +76,8 @@ public final class Functions {
 	
 	public static final String STEP = "step";
 	
+	public static final String KRONECKER = "kronecker";
+	
 	public static final double EPSILON = pow(2.0, -14.0);
 	
 	public static final Collection<String> INFIX_OPERATORS = unmodifiableSet(set("+", "-", "*", "/", SQMINUS, "=", "!=", "<", "<=", ">", ">="));
@@ -134,6 +136,13 @@ public final class Functions {
 				$(CASES, $(0, IF, $(x, "<", 0)), $(1, OTHERWISE)));
 		defineDiff(STEP, x,
 				EPSILON);
+		
+		define(KRONECKER, $(x, y),
+				$(CASES, $(1, IF, $(x, "=", y)), $(0, OTHERWISE)));
+		defineDiff(KRONECKER, 0, $(x, y),
+				$(CASES, $(EPSILON, IF, $(x, "<=", y)), $(-EPSILON, OTHERWISE)));
+		defineDiff(KRONECKER, 1, $(x, y),
+				$(CASES, $(EPSILON, IF, $(y, "<=", x)), $(-EPSILON, OTHERWISE)));
 		
 		autodefine(SQRT, x);
 		defineDiff(SQRT, x,

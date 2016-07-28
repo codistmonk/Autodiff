@@ -1,7 +1,9 @@
 package autodiff.ui;
 
+import static multij.swing.SwingTools.scrollable;
 import autodiff.nodes.BinaryNode;
 import autodiff.nodes.Mapping;
+import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
 import autodiff.nodes.NodeVisitor;
 import autodiff.nodes.UnaryNode;
@@ -13,6 +15,8 @@ import com.mxgraph.swing.mxGraphComponent;
 import com.mxgraph.view.mxGraph;
 
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -23,6 +27,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import javax.swing.AbstractAction;
+import javax.swing.JDialog;
+import javax.swing.JPopupMenu;
+import javax.swing.JTable;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableModel;
+
+import multij.swing.MouseHandler;
+import multij.swing.SwingTools;
 import multij.tools.IllegalInstantiationException;
 import multij.tools.Pair;
 
@@ -37,10 +52,15 @@ public final class JGraphXTools {
 	
 	public static final mxGraph newGraph(final Node<?> node, final int componentWidth,
 			final int componentHeight, final int cellWidth, final int cellHeight) {
+		return newGraph(node, componentWidth, componentHeight, cellWidth, cellHeight, new HashMap<>());
+	}
+	
+	public static final mxGraph newGraph(final Node<?> node, final int componentWidth,
+			final int componentHeight, final int cellWidth, final int cellHeight,
+			final Map<Node<?>, Object> vertices) {
 		final mxGraph graph = new mxGraph();
 		final mxIGraphModel graphModel = graph.getModel();
 		final Object parent = graph.getDefaultParent();
-		final Map<Node<?>, Object> vertices = new HashMap<>();
 		final Map<Node<?>, Integer> depths = new LinkedHashMap<>();
 		
 		node.accept(new NodeVisitor<Object>() {
@@ -78,6 +98,16 @@ public final class JGraphXTools {
 				this.connect(node.getRight(), "right", result);
 				
 				return this.end(result);
+			}
+			
+			@Override
+			public final Object visit(final MatrixMultiplication node) {
+				final Object result = this.visit((BinaryNode<?>) node);
+				
+				graphModel.setValue(result, defaultNodeText(node) + "\n"
+				+ (node.isTransposeLeft() ? "T" : "N") + (node.isTransposeRight() ? "T" : "N"));
+				
+				return result;
 			}
 			
 			@Override
@@ -149,12 +179,77 @@ public final class JGraphXTools {
 		return graph;
 	}
 	
+	public static final <K, V> Map<V, K> reverse(final Map<K, V> map, final Map<V, K> result) {
+		map.forEach((k, v) -> result.put(v, k));
+		
+		return result;
+	}
+	
 	public static final mxGraphComponent newGraphComponent(final Node<?> node, final int componentWidth, final int componentHeight) {
 		final int cellWidth = 150;
 		final int cellHeight = 50;
+		final Map<Node<?>, Object> vertices = new HashMap<>();
 		final mxGraph graph = newGraph(node, componentWidth, componentHeight,
-				cellWidth, cellHeight);
+				cellWidth, cellHeight, vertices);
+		final Map<Object, Node<?>> nodes = reverse(vertices, new HashMap<>());
 		final mxGraphComponent result = new mxGraphComponent(graph);
+		
+		new MouseHandler() {
+			
+			private final JPopupMenu nodeMenu = new JPopupMenu();
+			
+			private Object currentCell;
+			
+			{
+				this.nodeMenu.add(new AbstractAction("Show values...") {
+					
+					@Override
+					public final void actionPerformed(final ActionEvent event) {
+						showNodeValues(nodes);
+					}
+					
+					private static final long serialVersionUID = -6081193936361106487L;
+					
+				});
+			}
+			
+			@Override
+			public final void mouseClicked(final MouseEvent event) {
+				this.maybeShowPopup(event);
+			}
+			
+			@Override
+			public final void mousePressed(final MouseEvent event) {
+				this.maybeShowPopup(event);
+			}
+			
+			@Override
+			public final void mouseReleased(final MouseEvent event) {
+				this.maybeShowPopup(event);
+			}
+			
+			final void showNodeValues(final Map<Object, Node<?>> nodes) {
+				final Node<?> node = nodes.get(this.currentCell);
+				
+				final JDialog view = new JDialog(SwingUtilities.getWindowAncestor(result), "Values");
+				
+				view.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+				view.getContentPane().add(scrollable(new JTable(newTableModel(node))));
+				
+				SwingTools.packAndCenter(view).setVisible(true);
+			}
+			
+			private final void maybeShowPopup(final MouseEvent event) {
+				this.currentCell = result.getCellAt(event.getX(), event.getY());
+				
+				if (event.isPopupTrigger()) {
+					this.nodeMenu.show(event.getComponent(), event.getX(), event.getY());
+				}
+			}
+
+			private static final long serialVersionUID = 866265828188334632L;
+			
+		}.addTo(result.getGraphControl());
 		
 		result.setPreferredSize(new Dimension(componentWidth, componentHeight));
 		
@@ -163,6 +258,36 @@ public final class JGraphXTools {
 	
 	public static final String defaultNodeText(final Node<?> node) {
 		return node.getClass().getSimpleName() + Arrays.toString(node.getShape());
+	}
+	
+	public static final TableModel newTableModel(final Node<?> node) {
+		final String[] COLUMN_NAMES = { "Index", "Value" };
+		
+		return new AbstractTableModel() {
+			
+			@Override
+			public final String getColumnName(final int column) {
+				return COLUMN_NAMES[column];
+			}
+			
+			@Override
+			public final Object getValueAt(final int rowIndex, final int columnIndex) {
+				return columnIndex == 0 ? "" + rowIndex : node.get(rowIndex);
+			}
+			
+			@Override
+			public final int getRowCount() {
+				return node.getLength();
+			}
+			
+			@Override
+			public final int getColumnCount() {
+				return 2;
+			}
+			
+			private static final long serialVersionUID = 4478430067103819240L;
+			
+		};
 	}
 	
 }

@@ -1,6 +1,7 @@
 package autodiff.computing.test;
 
 import static autodiff.computing.Functions.EPSILON;
+import static autodiff.nodes.NodesTools.selection;
 import static autodiff.nodes.NodesTools.sum;
 import static java.lang.Math.exp;
 import static org.junit.Assert.*;
@@ -14,6 +15,8 @@ import autodiff.nodes.MaxPooling2D;
 import autodiff.nodes.Node;
 import autodiff.nodes.Selection;
 import autodiff.nodes.Zipping;
+import autodiff.ui.JGraphXTools;
+import multij.swing.SwingTools;
 
 import org.junit.After;
 import org.junit.Test;
@@ -31,7 +34,8 @@ public abstract class ProcessorTest {
 	public final void testSelection1() {
 		final Node<?> x = new Data().set(42F, 33F);
 		final Node<?> i = new Data().set(0F);
-		final Node<?> xi = new Selection().setVectors(x).setIndices(i).autoShape();
+//		final Node<?> xi = new Selection().setVectors(x).setIndices(i).autoShape();
+		final Node<?> xi = selection(x, i);
 		
 		assertArrayEquals(new int[] { 2 }, x.getShape());
 		assertArrayEquals(new int[] { 1 }, i.getShape());
@@ -59,6 +63,7 @@ public abstract class ProcessorTest {
 		
 		i.set(0F);
 		
+		this.getProcessor().fullForward(xi);
 		this.getProcessor().fullBackwardDiff(xi);
 		
 		assertArrayEquals(new float[] { 1F, 0F }, x.getDiffs().get(new float[x.getLength()]), 0F);
@@ -71,13 +76,16 @@ public abstract class ProcessorTest {
 				3F, 4F);
 		final Node<?> i = new Data().set(
 				1F, 1F, 0F);
-		final Node<?> xi = new Selection().setVectors(x).setIndices(i).autoShape();
+//		final Node<?> xi = new Selection().setVectors(x).setIndices(i).autoShape();
+		final Node<?> xi = selection(x, i);
 		
 		assertArrayEquals(new int[] { 2, 2 }, x.getShape());
 		assertArrayEquals(new int[] { 3 }, i.getShape());
 		assertArrayEquals(new int[] { 2, 3 }, xi.getShape());
 		
 		this.getProcessor().fullForward(xi);
+		
+//		SwingTools.show(JGraphXTools.newGraphComponent(xi, 800, 800), "view", true);
 		
 		assertArrayEquals(new float[] {
 				2F, 2F, 1F,
@@ -100,8 +108,9 @@ public abstract class ProcessorTest {
 				1F, 2F,
 				3F, 4F);
 		final Node<?> i = new Data().setShape(2, 1).set(
-				0F, 0F);
-		final Node<?> xi = new Selection().setVectors(x).setIndices(i).autoShape();
+				0F, 1F);
+//		final Node<?> xi = new Selection().setVectors(x).setIndices(i).autoShape();
+		final Node<?> xi = selection(x, i);
 		
 		assertArrayEquals(new int[] { 2, 2 }, x.getShape());
 		assertArrayEquals(new int[] { 2, 1 }, i.getShape());
@@ -111,7 +120,7 @@ public abstract class ProcessorTest {
 		
 		assertArrayEquals(new float[] {
 				1F,
-				3F
+				4F
 		}, xi.get(new float[xi.getLength()]), 0F);
 		
 		x.setupDiffs(true);
@@ -120,7 +129,7 @@ public abstract class ProcessorTest {
 		
 		assertArrayEquals(new float[] {
 				1F, 0F,
-				1F, 0F
+				0F, 1F
 		}, x.getDiffs().get(new float[x.getLength()]), 0F);
 	}
 	

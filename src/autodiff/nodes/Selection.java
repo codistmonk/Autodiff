@@ -3,6 +3,7 @@ package autodiff.nodes;
 /**
  * @author codistmonk (creation 2016-07-11)
  */
+@Deprecated
 public final class Selection extends BinaryNode<Selection> {
 	
 	@Override
