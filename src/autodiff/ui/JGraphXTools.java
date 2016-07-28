@@ -1,6 +1,5 @@
 package autodiff.ui;
 
-import static multij.swing.SwingTools.scrollable;
 import autodiff.nodes.BinaryNode;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
@@ -30,11 +29,8 @@ import java.util.TreeMap;
 import javax.swing.AbstractAction;
 import javax.swing.JDialog;
 import javax.swing.JPopupMenu;
-import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableModel;
 
 import multij.swing.MouseHandler;
 import multij.swing.SwingTools;
@@ -186,7 +182,7 @@ public final class JGraphXTools {
 	}
 	
 	public static final mxGraphComponent newGraphComponent(final Node<?> node, final int componentWidth, final int componentHeight) {
-		final int cellWidth = 150;
+		final int cellWidth = 160;
 		final int cellHeight = 50;
 		final Map<Node<?>, Object> vertices = new HashMap<>();
 		final mxGraph graph = newGraph(node, componentWidth, componentHeight,
@@ -230,11 +226,10 @@ public final class JGraphXTools {
 			
 			final void showNodeValues(final Map<Object, Node<?>> nodes) {
 				final Node<?> node = nodes.get(this.currentCell);
-				
 				final JDialog view = new JDialog(SwingUtilities.getWindowAncestor(result), "Values");
 				
 				view.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-				view.getContentPane().add(scrollable(new JTable(newTableModel(node))));
+				view.getContentPane().add(autodiff.ui.SwingTools.newNodeValuesView(node));
 				
 				SwingTools.packAndCenter(view).setVisible(true);
 			}
@@ -242,11 +237,11 @@ public final class JGraphXTools {
 			private final void maybeShowPopup(final MouseEvent event) {
 				this.currentCell = result.getCellAt(event.getX(), event.getY());
 				
-				if (event.isPopupTrigger()) {
+				if (this.currentCell != null && event.isPopupTrigger()) {
 					this.nodeMenu.show(event.getComponent(), event.getX(), event.getY());
 				}
 			}
-
+			
 			private static final long serialVersionUID = 866265828188334632L;
 			
 		}.addTo(result.getGraphControl());
@@ -258,36 +253,6 @@ public final class JGraphXTools {
 	
 	public static final String defaultNodeText(final Node<?> node) {
 		return node.getClass().getSimpleName() + Arrays.toString(node.getShape());
-	}
-	
-	public static final TableModel newTableModel(final Node<?> node) {
-		final String[] COLUMN_NAMES = { "Index", "Value" };
-		
-		return new AbstractTableModel() {
-			
-			@Override
-			public final String getColumnName(final int column) {
-				return COLUMN_NAMES[column];
-			}
-			
-			@Override
-			public final Object getValueAt(final int rowIndex, final int columnIndex) {
-				return columnIndex == 0 ? "" + rowIndex : node.get(rowIndex);
-			}
-			
-			@Override
-			public final int getRowCount() {
-				return node.getLength();
-			}
-			
-			@Override
-			public final int getColumnCount() {
-				return 2;
-			}
-			
-			private static final long serialVersionUID = 4478430067103819240L;
-			
-		};
 	}
 	
 }
