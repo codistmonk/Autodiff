@@ -5,9 +5,7 @@ import static autodiff.computing.Functions.KRONECKER;
 import static autodiff.computing.Functions.POSTFIX_OPERATORS;
 import static autodiff.computing.Functions.PREFIX_OPERATORS;
 import static autodiff.computing.Functions.SUM;
-import static multij.tools.Tools.cartesian;
-import static multij.tools.Tools.cast;
-import static multij.tools.Tools.ignore;
+import static multij.tools.Tools.*;
 
 import java.util.Arrays;
 import java.util.function.Supplier;
@@ -35,11 +33,48 @@ public final class NodesTools {
 	
 	public static final int VERTICAL_STRIDE = 1;
 	
-//	public static final Node<?> patches(final Node<?> images, final int[] offsets, final int[] strides) {
-//		final int[] shape = images.getShape();
-//		final int imageWidth = shape[shape.length - 1];
-//		final int imageHeight = shape[shape.length - 2];
-//	}
+	/**
+	 * Not an Index.
+	 */
+	public static final float NaI = -Integer.MAX_VALUE;
+	
+	public static final Node<?> patches(final Node<?> inputs, final int[] offsets, final int[] strides, final int[] patchShape) {
+		final int[] inputsShape = inputs.getShape();
+		final int inputWidth = inputsShape[inputsShape.length - 1];
+		final int inputHeight = inputsShape[inputsShape.length - 2];
+		final int inputChannels = inputsShape[inputsShape.length - 3];
+		final int patchWidth = patchShape[patchShape.length - 1];
+		final int patchHeight = patchShape[patchShape.length - 2];
+		final int outputWidth = (inputWidth - offsets[LEFT_OFFSET] - offsets[RIGHT_OFFSET] + strides[HORIZONTAL_STRIDE] - 1) / strides[HORIZONTAL_STRIDE];
+		final int outputHeight = (inputHeight - offsets[TOP_OFFSET] - offsets[BOTTOM_OFFSET] + strides[VERTICAL_STRIDE] - 1) / strides[VERTICAL_STRIDE];
+		final int patchSize = patchWidth * patchHeight;
+		final int outputSize = outputWidth * outputHeight;
+		final int inputSize = inputWidth * inputHeight;
+		final int inputCount = inputs.getLength() / inputSize;
+		final Node<?> indices = new Data().setShape(1, patchSize * outputSize);
+		
+		for (int c = 0; c < inputChannels; ++c) {
+			for (int y = offsets[TOP_OFFSET], o = 0; y < inputHeight - offsets[BOTTOM_OFFSET]; y += strides[VERTICAL_STRIDE]) {
+				for (int x = offsets[LEFT_OFFSET]; x < inputWidth - offsets[RIGHT_OFFSET]; x += strides[HORIZONTAL_STRIDE]) {
+					for (int i = 0; i < patchHeight; ++i) {
+						final int yy = y - (patchHeight - 1) / 2 + i;
+						
+						for (int j = 0; j < patchWidth; ++j, ++o) {
+							final int xx = x - (patchWidth - 1) / 2 + j;
+							
+							if (0 <= yy && yy < inputHeight && 0 <= xx && xx < inputWidth) {
+								indices.set(o, xx + inputWidth * (yy + inputHeight * c));
+							} else {
+								indices.set(o, NaI);
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		return shape(selection(shape(inputs, inputCount, inputSize), indices), inputCount * outputSize, 1, patchHeight, patchWidth);
+	}
 	
 	public static final Node<?> selection(final Node<?> vectors, final Node<?> indices) {
 		final int[] vectorsShape = vectors.getLengths(new int[2]);
