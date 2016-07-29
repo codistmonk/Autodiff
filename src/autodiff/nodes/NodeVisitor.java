@@ -35,10 +35,6 @@ public abstract interface NodeVisitor<V> extends Serializable {
 		return this.visit((AbstractNode<?>) node);
 	}
 	
-//	public default V visit(final Selection node) {
-//		return this.visit((BinaryNode<?>) node);
-//	}
-	
 	public default V visit(final Mapping node) {
 		return this.visit((UnaryNode<?>) node);
 	}
@@ -53,10 +49,6 @@ public abstract interface NodeVisitor<V> extends Serializable {
 		
 	public default V visit(final MaxPooling2D node) {
 		return this.visit((UnaryNode<?>) node);
-	}
-	
-	public default V visit(final Convolution2D node) {
-		return this.visit((BinaryNode<?>) node);
 	}
 	
 }

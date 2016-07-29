@@ -7,7 +7,9 @@ import static autodiff.computing.Functions.PREFIX_OPERATORS;
 import static autodiff.computing.Functions.SUM;
 import static multij.tools.Tools.*;
 
+import java.io.Serializable;
 import java.util.Arrays;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import multij.tools.IllegalInstantiationException;
@@ -21,56 +23,59 @@ public final class NodesTools {
 		throw new IllegalInstantiationException();
 	}
 	
-	public static final int LEFT_OFFSET = 0;
-	
-	public static final int RIGHT_OFFSET = 1;
-	
-	public static final int TOP_OFFSET = 2;
-	
-	public static final int BOTTOM_OFFSET = 3;
-	
-	public static final int HORIZONTAL_STRIDE = 0;
-	
-	public static final int VERTICAL_STRIDE = 1;
-	
 	/**
 	 * Not an Index.
 	 */
 	public static final float NaI = -Integer.MAX_VALUE;
 	
+	public static final Node<?> convolution(final Node<?> inputs, final int[] offsets, final int[] strides, final Node<?> kernel) {
+		final GridSampling grid = new GridSampling().setInputsShape(inputs.getShape()).setOffsets(offsets).setStrides(strides);
+		
+		final Node<?> patches = patches(inputs, new PatchSampling(grid).setPatchShape(kernel.getShape()));
+		
+		return shape(new MatrixMultiplication()
+		.setLeft(shape(patches, patches.getLength() / kernel.getLength(), kernel.getLength()))
+		.setRight(shape(kernel, kernel.getLength(), 1)).autoShape(), grid.getInputCount(), 1, grid.getOutputHeight(), grid.getOutputWidth());
+		
+	}
+	
 	public static final Node<?> patches(final Node<?> inputs, final int[] offsets, final int[] strides, final int[] patchShape) {
-		final int[] inputsShape = inputs.getShape();
-		final int inputWidth = inputsShape[inputsShape.length - 1];
-		final int inputHeight = inputsShape[inputsShape.length - 2];
-		final int inputChannels = inputsShape[inputsShape.length - 3];
-		final int patchWidth = patchShape[patchShape.length - 1];
-		final int patchHeight = patchShape[patchShape.length - 2];
-		final int outputWidth = (inputWidth - offsets[LEFT_OFFSET] - offsets[RIGHT_OFFSET] + strides[HORIZONTAL_STRIDE] - 1) / strides[HORIZONTAL_STRIDE];
-		final int outputHeight = (inputHeight - offsets[TOP_OFFSET] - offsets[BOTTOM_OFFSET] + strides[VERTICAL_STRIDE] - 1) / strides[VERTICAL_STRIDE];
-		final int patchSize = patchWidth * patchHeight * inputChannels;
-		final int outputSize = outputWidth * outputHeight;
-		final int inputSize = inputWidth * inputHeight * inputChannels;
-		final int inputCount = inputs.getLength() / inputSize;
+		final GridSampling grid = new GridSampling().setInputsShape(inputs.getShape()).setOffsets(offsets).setStrides(strides);
+		
+		return patches(inputs, new PatchSampling(grid).setPatchShape(patchShape));
+	}
+	
+	public static final Node<?> patches(final Node<?> inputs, final PatchSampling patch) {
+		final GridSampling grid = patch.getSampling();
+		final int inputWidth = grid.getInputWidth();
+		final int inputHeight = grid.getInputHeight();
+		final int inputChannels = grid.getInputChannels();
+		final int outputSize = grid.getOutputSize();
+		final int inputSize = grid.getInputSize();
+		final int inputCount = grid.getInputCount();
+		final int patchWidth = patch.getPatchWidth();
+		final int patchHeight = patch.getPatchHeight();
+		final int patchSize = patch.getPatchSize();
 		final Node<?> indices = new Data().setShape(1, patchSize * outputSize);
 		
-		for (int y = offsets[TOP_OFFSET], o = 0; y < inputHeight - offsets[BOTTOM_OFFSET]; y += strides[VERTICAL_STRIDE]) {
-			for (int x = offsets[LEFT_OFFSET]; x < inputWidth - offsets[RIGHT_OFFSET]; x += strides[HORIZONTAL_STRIDE]) {
-				for (int c = 0; c < inputChannels; ++c) {
-					for (int i = 0; i < patchHeight; ++i) {
-						final int yy = y - (patchHeight - 1) / 2 + i;
-						
-						for (int j = 0; j < patchWidth; ++j, ++o) {
-							final int xx = x - (patchWidth - 1) / 2 + j;
-							
-							if (0 <= yy && yy < inputHeight && 0 <= xx && xx < inputWidth) {
-								indices.set(o, xx + inputWidth * (yy + inputHeight * c));
-							} else {
-								indices.set(o, NaI);
-							}
-						}
+		{
+			final int[] o = { 0 };
+			
+			grid.forEach(centerPixel -> {
+				patch.forEachPixelAround(centerPixel, p -> {
+					final int c = centerPixel[GridSampling.C];
+					final int yy = p[GridSampling.Y];
+					final int xx = p[GridSampling.X];
+					
+					if (0 <= yy && yy < inputHeight && 0 <= xx && xx < inputWidth) {
+						indices.set(o[0], xx + inputWidth * (yy + inputHeight * c));
+					} else {
+						indices.set(o[0], NaI);
 					}
-				}
-			}
+					
+					++o[0];
+				});
+			});
 		}
 		
 		return shape(selection(shape(inputs, inputCount, inputSize), indices),
@@ -284,6 +289,189 @@ public final class NodesTools {
 		}
 		
 		throw new IllegalArgumentException(Arrays.toString(objects));
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-07-29)
+	 */
+	public static final class GridSampling implements Serializable {
+		
+		private int[] inputsShape;
+		
+		private int[] offsets = { 0, 0, 0, 0 };
+		
+		private int[] strides = { 1, 1 };
+		
+		public final int getInputCount() {
+			return product(this.getInputsShape()) / this.getInputSize();
+		}
+		
+		public final int getInputSize() {
+			return this.getInputWidth() * this.getInputHeight() * this.getInputChannels();
+		}
+		
+		public final int getOutputSize() {
+			return this.getOutputWidth() * this.getOutputHeight();
+		}
+
+		public final int getOutputHeight() {
+			return (this.getInputHeight() - this.getOffsets()[TOP_OFFSET] - this.getOffsets()[BOTTOM_OFFSET] + this.getStrides()[VERTICAL_STRIDE] - 1) / this.getStrides()[VERTICAL_STRIDE];
+		}
+		
+		public final int getOutputWidth() {
+			return (this.getInputWidth() - this.getOffsets()[LEFT_OFFSET] - this.getOffsets()[RIGHT_OFFSET] + this.getStrides()[HORIZONTAL_STRIDE] - 1) / this.getStrides()[HORIZONTAL_STRIDE];
+		}
+		
+		public final int getInputChannels() {
+			return this.getInputsShape()[this.getInputsShape().length - 3];
+		}
+		
+		public final int getInputHeight() {
+			return this.getInputsShape()[this.getInputsShape().length - 2];
+		}
+		
+		public final int getInputWidth() {
+			return this.getInputsShape()[this.getInputsShape().length - 1];
+		}
+		
+		public final int[] getInputsShape() {
+			return this.inputsShape;
+		}
+		
+		public final GridSampling setInputsShape(final int... inputsShape) {
+			this.inputsShape = inputsShape;
+			
+			return this;
+		}
+		
+		public final int[] getOffsets() {
+			return this.offsets;
+		}
+		
+		public final GridSampling setOffsets(final int... offsets) {
+			this.offsets = offsets;
+			
+			return this;
+		}
+		
+		public final int[] getStrides() {
+			return this.strides;
+		}
+		
+		public final GridSampling setStrides(final int... strides) {
+			this.strides = strides;
+			
+			return this;
+		}
+		
+		public final void forEach(final Consumer<int[]> f) {
+			final int inputHeight = this.getInputHeight();
+			final int inputWidth = this.getInputWidth();
+			final int inputChannels = this.getInputChannels();
+			final int topOffset = this.getOffsets()[TOP_OFFSET];
+			final int bottomOffset = this.getOffsets()[BOTTOM_OFFSET];
+			final int verticalStride = this.getStrides()[VERTICAL_STRIDE];
+			final int leftOffset = this.getOffsets()[LEFT_OFFSET];
+			final int rightOffset = this.getOffsets()[RIGHT_OFFSET];
+			final int horizontalStride = this.getStrides()[HORIZONTAL_STRIDE];
+			final int[] var = new int[3];
+			
+			for (var[Y] = topOffset; var[Y] < inputHeight - bottomOffset; var[Y] += verticalStride) {
+				for (var[X] = leftOffset; var[X] < inputWidth - rightOffset; var[X] += horizontalStride) {
+					for (var[C] = 0; var[C] < inputChannels; ++var[C]) {
+						f.accept(var);
+					}
+				}
+			}
+		}
+		
+		private static final long serialVersionUID = 5296906932828451007L;
+		
+		public static final int LEFT_OFFSET = 0;
+		
+		public static final int RIGHT_OFFSET = 1;
+		
+		public static final int TOP_OFFSET = 2;
+		
+		public static final int BOTTOM_OFFSET = 3;
+		
+		public static final int HORIZONTAL_STRIDE = 0;
+		
+		public static final int VERTICAL_STRIDE = 1;
+		
+		public static final int C = 0;
+		
+		public static final int Y = 1;
+		
+		public static final int X = 2;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-07-29)
+	 */
+	public static final class PatchSampling implements Serializable {
+		
+		private final GridSampling sampling;
+		
+		private int[] patchShape;
+		
+		public PatchSampling(final GridSampling sampling) {
+			this.sampling = sampling;
+		}
+		
+		public final int getPatchSize() {
+			return this.getPatchWidth() * this.getPatchHeight() * getPatchChannels();
+		}
+		
+		public final int getPatchChannels() {
+			return this.getSampling().getInputChannels();
+		}
+		
+		public final int getPatchHeight() {
+			return this.getPatchShape()[this.getPatchShape().length - 2];
+		}
+		
+		public final int getPatchWidth() {
+			return this.getPatchShape()[this.getPatchShape().length - 1];
+		}
+		
+		public final GridSampling getSampling() {
+			return this.sampling;
+		}
+		
+		public final int[] getPatchShape() {
+			return this.patchShape;
+		}
+		
+		public final PatchSampling setPatchShape(final int... patchShape) {
+			this.patchShape = patchShape;
+			
+			return this;
+		}
+		
+		public final void forEachPixelAround(final int[] centerPixel, final Consumer<int[]> f) {
+			final int patchHeight = this.getPatchHeight();
+			final int patchWidth = this.getPatchWidth();
+			final int y = centerPixel[GridSampling.Y];
+			final int x = centerPixel[GridSampling.X];
+			final int[] var = new int[3];
+			
+			var[GridSampling.C] = centerPixel[GridSampling.C];
+			
+			for (int i = 0; i < patchHeight; ++i) {
+				var[GridSampling.Y] = y - (patchHeight - 1) / 2 + i;
+				
+				for (int j = 0; j < patchWidth; ++j) {
+					var[GridSampling.X] = x - (patchWidth - 1) / 2 + j;
+					
+					f.accept(var);
+				}
+			}
+		}
+		
+		private static final long serialVersionUID = 7162845996889119853L;
+		
 	}
 	
 }

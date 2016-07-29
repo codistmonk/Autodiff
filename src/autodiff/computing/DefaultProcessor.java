@@ -8,7 +8,6 @@ import static java.util.stream.Collectors.toList;
 import static multij.tools.Tools.cast;
 import static multij.tools.Tools.swap;
 
-import autodiff.nodes.Convolution2D;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.MaxPooling2D;
@@ -172,58 +171,6 @@ public final class DefaultProcessor implements NodeProcessor {
 		}
 		
 		@Override
-		public final Void visit(final Convolution2D node) {
-			final Node<?> inputs = node.getInputs();
-			final Node<?> kernel = node.getKernel();
-			final int[] inputsShape = inputs.getShape();
-			final int[] kernelShape = kernel.getShape();
-			final int inputWidth = inputsShape[inputsShape.length - 1];
-			final int inputHeight = inputsShape[inputsShape.length - 2];
-			final int[] offsets = node.getOffsets();
-			final int leftOffset = offsets[Node2D.LEFT];
-			final int rightOffset = offsets[Node2D.RIGHT];
-			final int topOffset = offsets[Node2D.TOP];
-			final int bottomOffset = offsets[Node2D.BOTTOM];
-			final int[] strides = node.getStrides();
-			final int strideX = strides[Node2D.HORIZONTAL];
-			final int strideY = strides[Node2D.VERTICAL];
-			final int kernelWidth = kernelShape[kernelShape.length - 1];
-			final int kernelHeight = kernelShape[kernelShape.length - 2];
-			final int hh = (kernelHeight - 1) / 2;
-			final int hw = (kernelWidth - 1) / 2;
-			final int inputSize = inputWidth * inputHeight;
-			final int inputCount = inputs.getLength() / inputSize; 
-			
-			for (int i = 0, j = 0; i < inputCount; ++i) {
-				for (int y = topOffset; y < inputHeight - bottomOffset; y += strideY) {
-					final int top = max(0, y - hh);
-					final int bottomEnd = min(top + kernelHeight, inputHeight);
-					final int dky = top - (y - hh);
-					
-					for (int x = leftOffset; x < inputWidth - rightOffset; x += strideX, ++j) {
-						final int left = max(0, x - hw);
-						final int rightEnd = min(left + kernelWidth, inputWidth);
-						final int dkx = left - (x - hw);
-						float value = 0F;
-						
-						for (int yy = top; yy < bottomEnd; ++yy) {
-							for (int xx = left; xx < rightEnd; ++xx) {
-								final float inputValue = inputs.get(xx + inputWidth * yy + inputSize * i);
-								final float kernelValue = kernel.get((dkx + xx - left) + kernelWidth * (dky + yy - top));
-								
-								value += inputValue * kernelValue;
-							}
-						}
-						
-						node.add(j, value);
-					}
-				}
-			}
-			
-			return null;
-		}
-		
-		@Override
 		public final Void visit(final Mapping node) {
 			final Node<?> argument = node.getArgument();
 			final int n = node.getLength();
@@ -371,68 +318,6 @@ public final class DefaultProcessor implements NodeProcessor {
 						}
 						
 						node.getArgument().getDiffs().add(valueIndex, node.getDiffs().get(j));
-					}
-				}
-			}
-			
-			return null;
-		}
-		
-		@Override
-		public final Void visit(final Convolution2D node) {
-			final Node<?> inputs = node.getInputs();
-			final Node<?> kernel = node.getKernel();
-			final int[] inputsShape = inputs.getShape();
-			final int[] kernelShape = kernel.getShape();
-			final int inputWidth = inputsShape[inputsShape.length - 1];
-			final int inputHeight = inputsShape[inputsShape.length - 2];
-			final int[] offsets = node.getOffsets();
-			final int leftOffset = offsets[Node2D.LEFT];
-			final int rightOffset = offsets[Node2D.RIGHT];
-			final int topOffset = offsets[Node2D.TOP];
-			final int bottomOffset = offsets[Node2D.BOTTOM];
-			final int[] strides = node.getStrides();
-			final int strideX = strides[Node2D.HORIZONTAL];
-			final int strideY = strides[Node2D.VERTICAL];
-			final int kernelWidth = kernelShape[kernelShape.length - 1];
-			final int kernelHeight = kernelShape[kernelShape.length - 2];
-			final int hh = (kernelHeight - 1) / 2;
-			final int hw = (kernelWidth - 1) / 2;
-			final int inputSize = inputWidth * inputHeight;
-			final int inputCount = inputs.getLength() / inputSize; 
-			final Node<?> inputsDiffs = inputs.getDiffs();
-			final Node<?> kernelDiffs = kernel.getDiffs();
-			
-			for (int i = 0, j = 0; i < inputCount; ++i) {
-				for (int y = topOffset; y < inputHeight - bottomOffset; y += strideY) {
-					final int top = max(0, y - hh);
-					final int bottomEnd = min(top + kernelHeight, inputHeight);
-					final int dky = top - (y - hh);
-					
-					for (int x = leftOffset; x < inputWidth - rightOffset; x += strideX, ++j) {
-						final int left = max(0, x - hw);
-						final int rightEnd = min(left + kernelWidth, inputWidth);
-						final int dkx = left - (x - hw);
-						final float diff = node.getDiffs().get(j);
-						
-						for (int yy = top; yy < bottomEnd; ++yy) {
-							for (int xx = left; xx < rightEnd; ++xx) {
-								final int inputIndex = xx + inputWidth * yy + inputSize * i;
-								final int kernelIndex = (dkx + xx - left) + kernelWidth * (dky + yy - top);
-								
-								if (inputsDiffs != null) {
-									final float kernelValue = kernel.get(kernelIndex);
-									
-									inputs.getDiffs().add(inputIndex, kernelValue * diff);
-								}
-								
-								if (kernelDiffs != null) {
-									final float inputValue = inputs.get(inputIndex);
-									
-									kernel.getDiffs().add(kernelIndex, inputValue * diff);
-								}
-							}
-						}
 					}
 				}
 			}

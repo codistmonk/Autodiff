@@ -4,11 +4,11 @@ import static autodiff.computing.Functions.EPSILON;
 import static autodiff.nodes.NodesTools.selection;
 import static autodiff.nodes.NodesTools.sum;
 import static java.lang.Math.exp;
+import static multij.tools.Tools.ints;
 import static org.junit.Assert.*;
 
 import autodiff.computing.Functions;
 import autodiff.computing.NodeProcessor;
-import autodiff.nodes.Convolution2D;
 import autodiff.nodes.Data;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
@@ -551,7 +551,7 @@ public abstract class ProcessorTest {
 		final Node<?> kernel = new Data().setShape(2, 2).set(
 				1F, 2F,
 				3F, 4F);
-		final Node<?> y = new Convolution2D().setInputs(inputs).setKernel(kernel).setStrides(2).autoShape();
+		final Node<?> y = NodesTools.convolution(inputs, ints(0, 0, 0, 0), ints(2, 2), kernel);
 		
 		assertArrayEquals(new int[] { 1, 1, 2, 2 }, y.getShape());
 		
