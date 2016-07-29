@@ -1,7 +1,7 @@
 package autodiff.ui;
 
-import static java.lang.Math.max;
 import static multij.swing.SwingTools.scrollable;
+import static multij.tools.Tools.iterable;
 
 import autodiff.nodes.Node;
 import autodiff.nodes.NodesTools;
@@ -15,8 +15,11 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 
 import multij.tools.IllegalInstantiationException;
@@ -38,9 +41,19 @@ public final class SwingTools {
 		final JTable arrayView = new JTable();
 		final int n = node.getShape().length;
 		
-		arrayView.setModel(freeze(newArrayViewTableModel(node), (n + 1) / 2 + 2, n / 2 + 2, arrayView));
+		arrayView.setModel(freeze(newArrayViewTableModel(node), (n + 1) / 2 + 1, n / 2 + 1, arrayView));
 		arrayView.setTableHeader(null);
 		arrayView.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+		
+		centerText(arrayView);
+		
+		final int w = arrayView.getColumnModel().getColumn(0).getPreferredWidth();
+		
+		for (final TableColumn c : iterable(arrayView.getColumnModel().getColumns())) {
+			c.setPreferredWidth(w / 2);
+		}
+		
+		arrayView.setRowHeight(w / 2);
 		
 		final JScrollPane arrayScroll = new JScrollPane(arrayView,
 				ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -66,6 +79,16 @@ public final class SwingTools {
 		result.add("Array", arrayScroll);
 		
 		return result;
+	}
+	
+	public static final JTable centerText(final JTable table) {
+		final DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer();
+		
+		cellRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+		
+		table.setDefaultRenderer(Object.class, cellRenderer);
+		
+		return table;
 	}
 	
 	public static final TableModel newListViewTableModel(final Node<?> node) {
@@ -105,8 +128,13 @@ public final class SwingTools {
 			public final Object getValueAt(final int rowIndex, final int columnIndex) {
 				final Rectangle cellRect = table.getCellRect(rowIndex, columnIndex, false);
 				final Point xy = SwingUtilities.convertPoint(table, new Point(cellRect.x, cellRect.y), table.getParent());
-				final int viewRow = max(0, xy.y / table.getRowHeight());
-				final int viewColumn = max(0, xy.x / table.getColumnModel().getColumn(0).getWidth());
+				final int viewRow = xy.y / table.getRowHeight();
+				final int viewColumn = xy.x / table.getColumnModel().getColumn(0).getWidth();
+				
+				if (xy.x < 0 || xy.y < 0) {
+					return "";
+				}
+				
 				final int sourceRow = viewRow < row ? viewRow : rowIndex;
 				final int sourceColumn = viewColumn < column ? viewColumn : columnIndex;
 				

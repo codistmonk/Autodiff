@@ -499,6 +499,50 @@ public abstract class ProcessorTest {
 	}
 	
 	@Test
+	public final void testPatches2() {
+		final Node<?> inputs = new Data().setShape(1, 2, 3, 3).set(
+				1F, 2F, 3F,
+				4F, 5F, 6F,
+				7F, 8F, 9F,
+				
+				10F, 11F, 12F,
+				13F, 14F, 15F,
+				16F, 17F, 18F);
+		final Node<?> patches = NodesTools.patches(inputs,
+				new int[] { 0, 1, 0, 1 }, new int[] { 1, 1 }, new int[] { 2, 2 });
+		
+		assertArrayEquals(new int[] { 4, 2, 2, 2 }, patches.getShape());
+		
+		this.getProcessor().fullForward(patches);
+		
+		if ("show graph".equals("")) {
+			SwingTools.show(JGraphXTools.newGraphComponent(patches, 800, 800), "view", true);
+		}
+		
+		assertArrayEquals(new float[] {
+				1F, 2F,
+				4F, 5F,
+				10F, 11F,
+				13F, 14F,
+				
+				2F, 3F,
+				5F, 6F,
+				11F, 12F,
+				14F, 15F,
+				
+				4F, 5F,
+				7F, 8F,
+				13F, 14F,
+				16F, 17F,
+				
+				5F, 6F,
+				8F, 9F,
+				14F, 15F,
+				17F, 18F
+		}, patches.get(new float[patches.getLength()]), 0F);
+	}
+	
+	@Test
 	public final void testConvolution1() {
 		final Node<?> inputs = new Data().setShape(1, 1, 3, 3).set(
 				1F, 2F, 3F,

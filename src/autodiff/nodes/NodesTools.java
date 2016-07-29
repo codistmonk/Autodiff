@@ -47,15 +47,15 @@ public final class NodesTools {
 		final int patchHeight = patchShape[patchShape.length - 2];
 		final int outputWidth = (inputWidth - offsets[LEFT_OFFSET] - offsets[RIGHT_OFFSET] + strides[HORIZONTAL_STRIDE] - 1) / strides[HORIZONTAL_STRIDE];
 		final int outputHeight = (inputHeight - offsets[TOP_OFFSET] - offsets[BOTTOM_OFFSET] + strides[VERTICAL_STRIDE] - 1) / strides[VERTICAL_STRIDE];
-		final int patchSize = patchWidth * patchHeight;
+		final int patchSize = patchWidth * patchHeight * inputChannels;
 		final int outputSize = outputWidth * outputHeight;
-		final int inputSize = inputWidth * inputHeight;
+		final int inputSize = inputWidth * inputHeight * inputChannels;
 		final int inputCount = inputs.getLength() / inputSize;
 		final Node<?> indices = new Data().setShape(1, patchSize * outputSize);
 		
-		for (int c = 0; c < inputChannels; ++c) {
-			for (int y = offsets[TOP_OFFSET], o = 0; y < inputHeight - offsets[BOTTOM_OFFSET]; y += strides[VERTICAL_STRIDE]) {
-				for (int x = offsets[LEFT_OFFSET]; x < inputWidth - offsets[RIGHT_OFFSET]; x += strides[HORIZONTAL_STRIDE]) {
+		for (int y = offsets[TOP_OFFSET], o = 0; y < inputHeight - offsets[BOTTOM_OFFSET]; y += strides[VERTICAL_STRIDE]) {
+			for (int x = offsets[LEFT_OFFSET]; x < inputWidth - offsets[RIGHT_OFFSET]; x += strides[HORIZONTAL_STRIDE]) {
+				for (int c = 0; c < inputChannels; ++c) {
 					for (int i = 0; i < patchHeight; ++i) {
 						final int yy = y - (patchHeight - 1) / 2 + i;
 						
@@ -73,7 +73,8 @@ public final class NodesTools {
 			}
 		}
 		
-		return shape(selection(shape(inputs, inputCount, inputSize), indices), inputCount * outputSize, 1, patchHeight, patchWidth);
+		return shape(selection(shape(inputs, inputCount, inputSize), indices),
+				inputCount * outputSize, inputChannels, patchHeight, patchWidth);
 	}
 	
 	public static final Node<?> selection(final Node<?> vectors, final Node<?> indices) {
