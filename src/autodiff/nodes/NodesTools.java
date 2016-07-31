@@ -31,7 +31,7 @@ public final class NodesTools {
 	 */
 	public static final float NaI = -Integer.MAX_VALUE;
 	
-	public static final Node<?> sort(final Node<?> inputs) {
+	public static final Node<?> sortIndices(final Node<?> inputs) {
 		final int[] shape = inputs.getShape();
 		
 		checkLength(2, shape.length);
@@ -71,18 +71,19 @@ public final class NodesTools {
 		return sum(aboveness, 1, n);
 	}
 	
+	public static final Node<?> percentileMask(final Node<?> inputs, final float ratio) {
+		final int n = inputs.getShape()[1];
+		final Node<?> ith = new Data().setShape(n);
+		
+		DefaultProcessor.INSTANCE.fill(ith, round(ratio * (n - 1)));
+		
+		return new Zipping().setFunctionName(KRONECKER).setLeft(sortIndices(inputs)).setRight(ith).autoShape();
+	}
+	
 	public static final Node<?> percentile(final Node<?> inputs, final float ratio) {
-		final int[] shape = inputs.getShape();
+		final int n = inputs.getShape()[1];
 		
-		checkLength(2, shape.length);
-		
-		final int n = shape[1];
-		
-		final Node<?> nth = new Data().setShape(n);
-		
-		DefaultProcessor.INSTANCE.fill(nth, round(ratio * (n - 1)));
-		
-		return new Zipping().setFunctionName(KRONECKER).setLeft(sort(inputs)).setRight(nth).autoShape();
+		return sum(new Zipping().setFunctionName("*").setLeft(inputs).setRight(percentileMask(inputs, ratio)).autoShape(), 1, n);
 	}
 	
 	public static final Node<?> convolution(final Node<?> inputs, final int[] offsets, final int[] strides, final Node<?> kernel) {
