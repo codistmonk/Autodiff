@@ -61,7 +61,7 @@ public abstract class ProcessorTest {
 		
 		this.getProcessor().fullForward(y);
 		
-		if ("show graph".equals("show graph")) {
+		if ("show graph".equals("")) {
 			SwingTools.show(JGraphXTools.newGraphComponent(y, 800, 800), "view", true);
 		}
 		
