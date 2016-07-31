@@ -72,6 +72,69 @@ public abstract class ProcessorTest {
 	}
 	
 	@Test
+	public final void testPercentile1() {
+		final Node<?> x = new Data().setShape(2, 5).set(
+				5F, 4F, 2F, 3F, 1F,
+				7F, 8F, 9F, 6F, 6F);
+		final Node<?> y = NodesTools.percentile(x, 0F);
+		
+		assertArrayEquals(new int[] { 2, 5 }, y.getShape());
+		
+		this.getProcessor().fullForward(y);
+		
+		if ("show graph".equals("")) {
+			SwingTools.show(JGraphXTools.newGraphComponent(y, 800, 800), "view", true);
+		}
+		
+		assertArrayEquals(new float[] {
+				0F, 0F, 0F, 0F, 1F,
+				0F, 0F, 0F, 1F, 0F,
+		}, y.get(new float[y.getLength()]), 0F);
+	}
+	
+	@Test
+	public final void testPercentile2() {
+		final Node<?> x = new Data().setShape(2, 5).set(
+				5F, 4F, 2F, 3F, 1F,
+				7F, 8F, 9F, 6F, 6F);
+		final Node<?> y = NodesTools.percentile(x, 0.5F);
+		
+		assertArrayEquals(new int[] { 2, 5 }, y.getShape());
+		
+		this.getProcessor().fullForward(y);
+		
+		if ("show graph".equals("")) {
+			SwingTools.show(JGraphXTools.newGraphComponent(y, 800, 800), "view", true);
+		}
+		
+		assertArrayEquals(new float[] {
+				0F, 0F, 0F, 1F, 0F,
+				1F, 0F, 0F, 0F, 0F,
+		}, y.get(new float[y.getLength()]), 0F);
+	}
+	
+	@Test
+	public final void testPercentile3() {
+		final Node<?> x = new Data().setShape(2, 5).set(
+				5F, 4F, 2F, 3F, 1F,
+				7F, 8F, 9F, 6F, 6F);
+		final Node<?> y = NodesTools.percentile(x, 1F);
+		
+		assertArrayEquals(new int[] { 2, 5 }, y.getShape());
+		
+		this.getProcessor().fullForward(y);
+		
+		if ("show graph".equals("")) {
+			SwingTools.show(JGraphXTools.newGraphComponent(y, 800, 800), "view", true);
+		}
+		
+		assertArrayEquals(new float[] {
+				1F, 0F, 0F, 0F, 0F,
+				0F, 0F, 1F, 0F, 0F,
+		}, y.get(new float[y.getLength()]), 0F);
+	}
+	
+	@Test
 	public final void testSelection1() {
 		final Node<?> x = new Data().setShape(1, 2).set(42F, 33F);
 		final Node<?> i = new Data().set(0F);

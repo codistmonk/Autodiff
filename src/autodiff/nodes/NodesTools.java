@@ -5,6 +5,7 @@ import static autodiff.computing.Functions.KRONECKER;
 import static autodiff.computing.Functions.POSTFIX_OPERATORS;
 import static autodiff.computing.Functions.PREFIX_OPERATORS;
 import static autodiff.computing.Functions.SUM;
+import static java.lang.Math.round;
 import static multij.tools.Tools.*;
 
 import java.io.Serializable;
@@ -12,6 +13,7 @@ import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import autodiff.computing.DefaultProcessor;
 import autodiff.computing.Functions;
 import multij.tools.IllegalInstantiationException;
 
@@ -67,6 +69,20 @@ public final class NodesTools {
 		final Node<?> aboveness = new Zipping().setFunctionName("+").setLeft(greaterness).setRight(new Zipping().setFunctionName("*").setLeft(equality).setRight(indexGreaterness).autoShape()).autoShape();
 		
 		return sum(aboveness, 1, n);
+	}
+	
+	public static final Node<?> percentile(final Node<?> inputs, final float ratio) {
+		final int[] shape = inputs.getShape();
+		
+		checkLength(2, shape.length);
+		
+		final int n = shape[1];
+		
+		final Node<?> nth = new Data().setShape(n);
+		
+		DefaultProcessor.INSTANCE.fill(nth, round(ratio * (n - 1)));
+		
+		return new Zipping().setFunctionName(KRONECKER).setLeft(sort(inputs)).setRight(nth).autoShape();
 	}
 	
 	public static final Node<?> convolution(final Node<?> inputs, final int[] offsets, final int[] strides, final Node<?> kernel) {
