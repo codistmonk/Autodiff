@@ -12,7 +12,6 @@ import autodiff.computing.NodeProcessor;
 import autodiff.nodes.Data;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
-import autodiff.nodes.MaxPooling2D;
 import autodiff.nodes.Node;
 import autodiff.nodes.NodesTools;
 import autodiff.nodes.Zipping;
@@ -559,7 +558,8 @@ public abstract class ProcessorTest {
 				1F, 2F, 3F,
 				4F, 5F, 6F,
 				7F, 8F, 9F);
-		final Node<?> y = new MaxPooling2D().setArgument(x).setStrides(2).setKernelSide(2).autoShape();
+//		final Node<?> y = new MaxPooling2D().setArgument(x).setStrides(2).setKernelSide(2).autoShape();
+		final Node<?> y = NodesTools.maxPooling(x, ints(0, 0, 0, 0), ints(2, 2), ints(2, 2));
 		
 		assertArrayEquals(new int[] { 1, 1, 2, 2 }, y.getShape());
 		
@@ -574,11 +574,13 @@ public abstract class ProcessorTest {
 		
 		this.getProcessor().fullBackwardDiff(y);
 		
+		final float epsilon = 1E-7F; // TODO zero would be better
+		
 		assertArrayEquals(new float[] {
 				0F, 0F, 0F,
 				0F, 1F, 1F,
 				0F, 1F, 1F
-		}, x.getDiffs().get(new float[x.getLength()]), 0F);
+		}, x.getDiffs().get(new float[x.getLength()]), epsilon);
 	}
 	
 	@Test
@@ -591,7 +593,8 @@ public abstract class ProcessorTest {
 				10F, 11F, 12F,
 				13F, 14F, 15F,
 				16F, 17F, 18F);
-		final Node<?> y = new MaxPooling2D().setInputs(x).setOffsets(1).setStrides(2).setKernelSide(3).autoShape();
+//		final Node<?> y = new MaxPooling2D().setInputs(x).setOffsets(1).setStrides(2).setKernelSide(3).autoShape();
+		final Node<?> y = NodesTools.maxPooling(x, ints(1, 1, 1, 1), ints(2, 2), ints(3, 3));
 		
 		assertArrayEquals(new int[] { 1, 2, 1, 1 }, y.getShape());
 		
@@ -606,6 +609,8 @@ public abstract class ProcessorTest {
 		
 		this.getProcessor().fullBackwardDiff(y);
 		
+		final float epsilon = 1E-6F; // TODO zero would be better
+		
 		assertArrayEquals(new float[] {
 				0F, 0F, 0F,
 				0F, 0F, 0F,
@@ -614,7 +619,7 @@ public abstract class ProcessorTest {
 				0F, 0F, 0F,
 				0F, 0F, 0F,
 				0F, 0F, 1F
-		}, x.getDiffs().get(new float[x.getLength()]), 0F);
+		}, x.getDiffs().get(new float[x.getLength()]), epsilon);
 	}
 	
 	@Test

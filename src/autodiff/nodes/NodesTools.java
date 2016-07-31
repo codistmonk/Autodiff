@@ -86,9 +86,17 @@ public final class NodesTools {
 		return sum(new Zipping().setFunctionName("*").setLeft(inputs).setRight(percentileMask(inputs, ratio)).autoShape(), 1, n);
 	}
 	
+	public static final Node<?> maxPooling(final Node<?> inputs, final int[] offsets, final int[] strides, final int[] kernelShape) {
+		final GridSampling grid = new GridSampling().setInputsShape(inputs.getShape()).setOffsets(offsets).setStrides(strides);
+		final Node<?> patches = patches(inputs, new PatchSampling(grid).setPatchShape(kernelShape));
+		final int[] patchesShape = patches.getShape();
+		
+		return shape(percentile(shape(patches, patchesShape[0] * patchesShape[1], patchesShape[2] * patchesShape[3]), 1F),
+				grid.getInputCount(), grid.getInputChannels(), grid.getOutputHeight(), grid.getOutputWidth());
+	}
+	
 	public static final Node<?> convolution(final Node<?> inputs, final int[] offsets, final int[] strides, final Node<?> kernel) {
 		final GridSampling grid = new GridSampling().setInputsShape(inputs.getShape()).setOffsets(offsets).setStrides(strides);
-		
 		final Node<?> patches = patches(inputs, new PatchSampling(grid).setPatchShape(kernel.getShape()));
 		
 		return shape(new MatrixMultiplication()
