@@ -3,12 +3,13 @@ package autodiff.learning.test;
 import static autodiff.computing.Functions.COS;
 import static autodiff.computing.Functions.SQMINUS;
 import static autodiff.computing.Functions.SQUARED;
-import static autodiff.computing.Functions.SUM;
 import static autodiff.learning.LearningTools.*;
+import static autodiff.nodes.NodesTools.SUM;
 import static autodiff.nodes.NodesTools.$;
 import static multij.tools.Tools.cast;
 import static multij.tools.Tools.debugPrint;
 import static org.junit.Assert.*;
+
 import autodiff.computing.DefaultProcessor;
 import autodiff.computing.NodeProcessor;
 import autodiff.io.Iris;

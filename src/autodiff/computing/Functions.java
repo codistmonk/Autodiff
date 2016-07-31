@@ -59,8 +59,6 @@ public final class Functions {
 	
 	public static final String COS = "cos";
 	
-	public static final String SUM = "sum";
-	
 	/**
 	 * Smoothed half identity.
 	 */

@@ -5,7 +5,6 @@ import static autodiff.computing.Functions.KRONECKER;
 import static autodiff.computing.Functions.POSTFIX_OPERATORS;
 import static autodiff.computing.Functions.PREFIX_OPERATORS;
 import static autodiff.computing.Functions.STEP1;
-import static autodiff.computing.Functions.SUM;
 import static java.lang.Math.round;
 import static multij.tools.Tools.*;
 
@@ -26,6 +25,8 @@ public final class NodesTools {
 	private NodesTools() {
 		throw new IllegalInstantiationException();
 	}
+	
+	public static final String SUM = "sum";
 	
 	public static final String T = "^T";
 	
@@ -286,17 +287,17 @@ public final class NodesTools {
 		return result;
 	}
 	
-	public static void checkLength(final int expectedLength, final int actualLength) {
+	public static final void checkLength(final int expectedLength, final int actualLength) {
 		check(expectedLength == actualLength, () -> "Expected length: " + expectedLength + ", actual: " + actualLength);
 	}
 	
-	public static void check(final boolean b, final Supplier<String> errorMessage) {
+	public static final void check(final boolean b, final Supplier<String> errorMessage) {
 		if (!b) {
 			throw new RuntimeException(errorMessage.get());
 		}
 	}
 	
-	public static int product(final int... values) {
+	public static final int product(final int... values) {
 		return Arrays.stream(values).reduce((x, y) -> x * y).getAsInt();
 	}
 	
