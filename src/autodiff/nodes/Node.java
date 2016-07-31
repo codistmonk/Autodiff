@@ -4,6 +4,7 @@ import static autodiff.nodes.NodesTools.*;
 import static java.lang.Math.min;
 
 import java.io.Serializable;
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.Arrays;
 import java.util.Collection;
@@ -46,6 +47,10 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 	}
 	
 	public abstract List<Node<?>> getArguments();
+	
+	public abstract ByteBuffer getByteBuffer();
+	
+	public abstract int getByteOffset();
 	
 	public abstract FloatBuffer getFloatBuffer();
 	

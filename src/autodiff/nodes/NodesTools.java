@@ -4,27 +4,30 @@ import static autodiff.computing.Functions.INFIX_OPERATORS;
 import static autodiff.computing.Functions.KRONECKER;
 import static autodiff.computing.Functions.POSTFIX_OPERATORS;
 import static autodiff.computing.Functions.PREFIX_OPERATORS;
+import static autodiff.computing.Functions.STEP1;
 import static autodiff.computing.Functions.SUM;
 import static java.lang.Math.round;
 import static multij.tools.Tools.*;
+
+import autodiff.computing.DefaultProcessor;
 
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import autodiff.computing.DefaultProcessor;
-import autodiff.computing.Functions;
 import multij.tools.IllegalInstantiationException;
 
 /**
  * @author codistmonk (creation 2016-07-15)
  */
 public final class NodesTools {
-	
+
 	private NodesTools() {
 		throw new IllegalInstantiationException();
 	}
+	
+	public static final String T = "^T";
 	
 	/**
 	 * Not an Index.
@@ -53,11 +56,11 @@ public final class NodesTools {
 			}
 		}
 		
-		final Node<?> replicated1 = new MatrixMultiplication().setLeft(inputs).setRight(replicationMatrix1).autoShape();
-		final Node<?> replicated2 = new MatrixMultiplication().setLeft(inputs).setRight(replicationMatrix2).autoShape();
-		final Node<?> difference = new Zipping().setFunctionName("-").setLeft(replicated1).setRight(replicated2).autoShape();
-		final Node<?> greaterness = new Mapping().setFunctionName(Functions.STEP1).setArgument(difference).autoShape();
-		final Node<?> equality = new Zipping().setFunctionName(KRONECKER).setLeft(replicated1).setRight(replicated2).autoShape();
+		final Node<?> replicated1 = $(inputs, replicationMatrix1);
+		final Node<?> replicated2 = $(inputs, replicationMatrix2);
+		final Node<?> difference = $(replicated1, "-", replicated2);
+		final Node<?> greaterness = $(STEP1, difference);
+		final Node<?> equality = $(KRONECKER, replicated1, replicated2);
 		final Node<?> indexGreaterness = new Data().setShape(1, n * n);
 		
 		for (int i = 0; i < n; ++i) {
@@ -66,7 +69,7 @@ public final class NodesTools {
 			}
 		}
 		
-		final Node<?> aboveness = new Zipping().setFunctionName("+").setLeft(greaterness).setRight(new Zipping().setFunctionName("*").setLeft(equality).setRight(indexGreaterness).autoShape()).autoShape();
+		final Node<?> aboveness = $(greaterness, "+", $(equality, "*", indexGreaterness));
 		
 		return sum(aboveness, 1, n);
 	}
@@ -77,13 +80,13 @@ public final class NodesTools {
 		
 		DefaultProcessor.INSTANCE.fill(ith, round(ratio * (n - 1)));
 		
-		return new Zipping().setFunctionName(KRONECKER).setLeft(sortIndices(inputs)).setRight(ith).autoShape();
+		return $(KRONECKER, sortIndices(inputs), ith);
 	}
 	
 	public static final Node<?> percentile(final Node<?> inputs, final float ratio) {
 		final int n = inputs.getShape()[1];
 		
-		return sum(new Zipping().setFunctionName("*").setLeft(inputs).setRight(percentileMask(inputs, ratio)).autoShape(), 1, n);
+		return sum($(inputs, "*", percentileMask(inputs, ratio)), 1, n);
 	}
 	
 	public static final Node<?> maxPooling(final Node<?> inputs, final int[] offsets, final int[] strides, final int[] kernelShape) {
@@ -98,10 +101,12 @@ public final class NodesTools {
 	public static final Node<?> convolution(final Node<?> inputs, final int[] offsets, final int[] strides, final Node<?> kernel) {
 		final GridSampling grid = new GridSampling().setInputsShape(inputs.getShape()).setOffsets(offsets).setStrides(strides);
 		final Node<?> patches = patches(inputs, new PatchSampling(grid).setPatchShape(kernel.getShape()));
+		final int kernelLength = kernel.getLength();
 		
-		return shape(new MatrixMultiplication()
-		.setLeft(shape(patches, patches.getLength() / kernel.getLength(), kernel.getLength()))
-		.setRight(shape(kernel, kernel.getLength(), 1)).autoShape(), grid.getInputCount(), 1, grid.getOutputHeight(), grid.getOutputWidth());
+		return shape($(
+				shape(patches, patches.getLength() / kernelLength, kernel.getLength()),
+				shape(kernel, kernel.getLength(), 1)),
+				grid.getInputCount(), 1, grid.getOutputHeight(), grid.getOutputWidth());
 		
 	}
 	
@@ -165,7 +170,7 @@ public final class NodesTools {
 			}
 		}
 		
-		final Node<?> shift = new Zipping().setFunctionName("+").setLeft(indices).setRight(shiftData).autoShape();
+		final Node<?> shift = $(indices, "+", shiftData);
 		final Node<?> replicationMatrix = new Data().setShape(indicesStride, indicesStride * vectorsStride);
 		
 		for (int i = 0; i < indicesStride; ++i) {
@@ -174,18 +179,12 @@ public final class NodesTools {
 			}
 		}
 		
-		final Node<?> replicatedIndices = new MatrixMultiplication()
-		.setLeft(shape(shift, indices.getLength() / indicesStride, indicesStride))
-		.setRight(replicationMatrix).autoShape();
+		final Node<?> replicatedIndices = $(shape(shift, indices.getLength() / indicesStride, indicesStride), replicationMatrix);
 		final Node<?> range = newRange(vectorsStride);
+		final Node<?> mask = $(KRONECKER, replicatedIndices, range);
 		
-		final Node<?> mask = new Zipping().setFunctionName(KRONECKER).setLeft(replicatedIndices).setRight(range).autoShape();
-		
-		return shape(new MatrixMultiplication()
-		.setLeft(shape(vectors, vectors.getLength() / vectorsStride, vectorsStride))
-		.setRight(shape(mask, mask.getLength() / vectorsStride, vectorsStride))
-		.setTransposeRight(true)
-		.autoShape(), resultShape);
+		return shape($(shape(vectors, vectors.getLength() / vectorsStride, vectorsStride),
+				shape(mask, mask.getLength() / vectorsStride, vectorsStride), T), resultShape);
 	}
 	
 	public static final Node<?> newRange(final int n) {
@@ -202,7 +201,7 @@ public final class NodesTools {
 		if (strides.length == 0) {
 			final int n = argument.getLength();
 			
-			return shape(new MatrixMultiplication().setLeft(shape(argument, 1, n)).setRight(ones(n, 1)).autoShape(), 1);
+			return shape($(shape(argument, 1, n), ones(n, 1)), 1);
 		}
 		
 		final int[] resultShape = argument.getLengths(new int[strides.length]);
@@ -237,7 +236,7 @@ public final class NodesTools {
 			}
 		}
 		
-		return shape(new MatrixMultiplication().setLeft(shape(argument, 1, m)).setRight(right).autoShape(), resultShape);
+		return shape($(shape(argument, 1, m), right), resultShape);
 	}
 	
 	public static final int[] indexToCartesian(final int[] lengths, final int index, final int[] result) {
@@ -324,9 +323,27 @@ public final class NodesTools {
 			ignore(exception);
 		}
 		
+		if (n == 4) {
+			if (T.equals(objects[1]) && T.equals(objects[3])) {
+				return new MatrixMultiplication().setLeft($(objects[0])).setTransposeLeft(true).setRight($(objects[2])).setTransposeRight(true).autoShape();
+			}
+		}
+		
 		if (n == 3) {
+			if (T.equals(objects[1])) {
+				return new MatrixMultiplication().setLeft($(objects[0])).setTransposeLeft(true).setRight($(objects[2])).autoShape();
+			}
+			
+			if (T.equals(objects[2])) {
+				return new MatrixMultiplication().setLeft($(objects[0])).setRight($(objects[1])).setTransposeRight(true).autoShape();
+			}
+			
 			if (INFIX_OPERATORS.contains(objects[1])) {
 				return new Zipping().setLeft($(objects[0])).setRight($(objects[2])).setFunctionName(objects[1].toString()).autoShape();
+			}
+			
+			if (PREFIX_OPERATORS.contains(objects[0])) {
+				return new Zipping().setLeft($(objects[1])).setRight($(objects[2])).setFunctionName(objects[0].toString()).autoShape();
 			}
 			
 			if (SUM.equals(objects[0])) {

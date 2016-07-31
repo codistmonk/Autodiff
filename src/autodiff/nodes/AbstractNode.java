@@ -21,6 +21,8 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	
 	private transient ByteBuffer byteBuffer;
 	
+	private transient int byteOffset;
+	
 	private transient FloatBuffer floatBuffer;
 	
 	private int[] shape;
@@ -59,13 +61,20 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	@SuppressWarnings("unchecked")
 	public final N setByteBuffer(final ByteBuffer byteBuffer) {
 		this.byteBuffer = byteBuffer;
+		this.byteOffset = byteBuffer.position();
 		this.floatBuffer = byteBuffer.asFloatBuffer();
 		
 		return (N) this;
 	}
 	
+	@Override
 	public final ByteBuffer getByteBuffer() {
 		return this.byteBuffer;
+	}
+	
+	@Override
+	public final int getByteOffset() {
+		return this.byteOffset;
 	}
 	
 	@Override

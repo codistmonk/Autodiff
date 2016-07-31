@@ -84,7 +84,7 @@ public final class Functions {
 	
 	public static final Collection<String> INFIX_OPERATORS = unmodifiableSet(set("+", "-", "*", "/", SQMINUS, "=", "!=", "<", "<=", ">", ">="));
 	
-	public static final Collection<String> PREFIX_OPERATORS = unmodifiableSet(set("-", ABS, SHI, SIGMOID, BUMP, RELU, EXP, LN, SIN, COS, SQRT, STEP0, STEP1));
+	public static final Collection<String> PREFIX_OPERATORS = unmodifiableSet(set("-", ABS, SHI, SIGMOID, BUMP, RELU, EXP, LN, SIN, COS, SQRT, STEP0, STEP1, KRONECKER));
 	
 	public static final Collection<String> POSTFIX_OPERATORS = unmodifiableSet(set(SQUARED));
 	
