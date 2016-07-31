@@ -74,7 +74,9 @@ public final class Functions {
 	
 	public static final String MAX = "max";
 	
-	public static final String STEP = "step";
+	public static final String STEP0 = "step0";
+	
+	public static final String STEP1 = "step1";
 	
 	public static final String KRONECKER = "kronecker";
 	
@@ -82,7 +84,7 @@ public final class Functions {
 	
 	public static final Collection<String> INFIX_OPERATORS = unmodifiableSet(set("+", "-", "*", "/", SQMINUS, "=", "!=", "<", "<=", ">", ">="));
 	
-	public static final Collection<String> PREFIX_OPERATORS = unmodifiableSet(set("-", ABS, SHI, SIGMOID, BUMP, RELU, EXP, LN, SIN, COS, SQRT, STEP));
+	public static final Collection<String> PREFIX_OPERATORS = unmodifiableSet(set("-", ABS, SHI, SIGMOID, BUMP, RELU, EXP, LN, SIN, COS, SQRT, STEP0, STEP1));
 	
 	public static final Collection<String> POSTFIX_OPERATORS = unmodifiableSet(set(SQUARED));
 	
@@ -132,9 +134,14 @@ public final class Functions {
 		defineDiff(RELU, x,
 				$(SIGMOID, x));
 		
-		define(STEP, x,
+		define(STEP0, x,
 				$(CASES, $(0, IF, $(x, "<", 0)), $(1, OTHERWISE)));
-		defineDiff(STEP, x,
+		defineDiff(STEP0, x,
+				EPSILON);
+		
+		define(STEP1, x,
+				$(CASES, $(0, IF, $(x, "<=", 0)), $(1, OTHERWISE)));
+		defineDiff(STEP1, x,
 				EPSILON);
 		
 		define(KRONECKER, $(x, y),

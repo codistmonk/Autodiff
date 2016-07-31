@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import autodiff.computing.Functions;
 import multij.tools.IllegalInstantiationException;
 
 /**
@@ -27,6 +28,46 @@ public final class NodesTools {
 	 * Not an Index.
 	 */
 	public static final float NaI = -Integer.MAX_VALUE;
+	
+	public static final Node<?> sort(final Node<?> inputs) {
+		final int[] shape = inputs.getShape();
+		
+		checkLength(2, shape.length);
+		
+		final int n = shape[1];
+		
+		final Node<?> replicationMatrix1 = new Data().setShape(n, n * n);
+		final Node<?> replicationMatrix2 = new Data().setShape(n, n * n);
+		
+		for (int i = 0; i < n; ++i) {
+			for (int j = 0; j < n; ++j) {
+				replicationMatrix1.set(j + (n * n + n) * i, 1F);
+			}
+		}
+		
+		for (int i = 0; i < n; ++i) {
+			for (int j = 0; j < n; ++j) {
+				replicationMatrix2.set(i + j * n + n * n * i, 1F);
+			}
+		}
+		
+		final Node<?> replicated1 = new MatrixMultiplication().setLeft(inputs).setRight(replicationMatrix1).autoShape();
+		final Node<?> replicated2 = new MatrixMultiplication().setLeft(inputs).setRight(replicationMatrix2).autoShape();
+		final Node<?> difference = new Zipping().setFunctionName("-").setLeft(replicated1).setRight(replicated2).autoShape();
+		final Node<?> greaterness = new Mapping().setFunctionName(Functions.STEP1).setArgument(difference).autoShape();
+		final Node<?> equality = new Zipping().setFunctionName(KRONECKER).setLeft(replicated1).setRight(replicated2).autoShape();
+		final Node<?> indexGreaterness = new Data().setShape(1, n * n);
+		
+		for (int i = 0; i < n; ++i) {
+			for (int j = 0; j < i; ++j) {
+				indexGreaterness.set(j + n * i, 1F);
+			}
+		}
+		
+		final Node<?> aboveness = new Zipping().setFunctionName("+").setLeft(greaterness).setRight(new Zipping().setFunctionName("*").setLeft(equality).setRight(indexGreaterness).autoShape()).autoShape();
+		
+		return sum(aboveness, 1, n);
+	}
 	
 	public static final Node<?> convolution(final Node<?> inputs, final int[] offsets, final int[] strides, final Node<?> kernel) {
 		final GridSampling grid = new GridSampling().setInputsShape(inputs.getShape()).setOffsets(offsets).setStrides(strides);
@@ -111,11 +152,7 @@ public final class NodesTools {
 		final Node<?> replicatedIndices = new MatrixMultiplication()
 		.setLeft(shape(shift, indices.getLength() / indicesStride, indicesStride))
 		.setRight(replicationMatrix).autoShape();
-		final Node<?> range = new Data().setShape(vectorsStride);
-		
-		for (int i = 0; i < vectorsStride; ++i) {
-			range.set(i, i);
-		}
+		final Node<?> range = newRange(vectorsStride);
 		
 		final Node<?> mask = new Zipping().setFunctionName(KRONECKER).setLeft(replicatedIndices).setRight(range).autoShape();
 		
@@ -124,7 +161,16 @@ public final class NodesTools {
 		.setRight(shape(mask, mask.getLength() / vectorsStride, vectorsStride))
 		.setTransposeRight(true)
 		.autoShape(), resultShape);
-//		return shape(sum(new Zipping().setFunctionName("*").setLeft(vectors).setRight(mask).autoShape(), vectorsStride), resultShape);
+	}
+	
+	public static final Node<?> newRange(final int n) {
+		final Node<?> result = new Data().setShape(n);
+		
+		for (int i = 0; i < n; ++i) {
+			result.set(i, i);
+		}
+		
+		return result;
 	}
 	
 	public static final Node<?> sum(final Node<?> argument, final int... strides) {

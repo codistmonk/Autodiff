@@ -33,6 +33,45 @@ public abstract class ProcessorTest {
 	}
 	
 	@Test
+	public final void testSort1() {
+		final Node<?> x = new Data().setShape(1, 5).set(5F, 4F, 2F, 3F, 1F);
+		final Node<?> y = NodesTools.sort(x);
+		
+		assertArrayEquals(new int[] { 1, 5 }, y.getShape());
+		
+		this.getProcessor().fullForward(y);
+		
+		if ("show graph".equals("")) {
+			SwingTools.show(JGraphXTools.newGraphComponent(y, 800, 800), "view", true);
+		}
+		
+		assertArrayEquals(new float[] {
+				4F, 3F, 1F, 2F, 0F
+		}, y.get(new float[y.getLength()]), 0F);
+	}
+	
+	@Test
+	public final void testSort2() {
+		final Node<?> x = new Data().setShape(2, 5).set(
+				5F, 4F, 2F, 3F, 1F,
+				7F, 8F, 9F, 6F, 6F);
+		final Node<?> y = NodesTools.sort(x);
+		
+		assertArrayEquals(new int[] { 2, 5 }, y.getShape());
+		
+		this.getProcessor().fullForward(y);
+		
+		if ("show graph".equals("show graph")) {
+			SwingTools.show(JGraphXTools.newGraphComponent(y, 800, 800), "view", true);
+		}
+		
+		assertArrayEquals(new float[] {
+				4F, 3F, 1F, 2F, 0F,
+				2F, 3F, 4F, 0F, 1F,
+		}, y.get(new float[y.getLength()]), 0F);
+	}
+	
+	@Test
 	public final void testSelection1() {
 		final Node<?> x = new Data().setShape(1, 2).set(42F, 33F);
 		final Node<?> i = new Data().set(0F);
@@ -654,7 +693,7 @@ public abstract class ProcessorTest {
 	@Test
 	public final void testMapping5() {
 		final Node<?> x = new Data().set(-1F, 0F, 1F);
-		final Node<?> y = new Mapping().setArgument(x).setFunctionName(Functions.STEP).autoShape();
+		final Node<?> y = new Mapping().setArgument(x).setFunctionName(Functions.STEP0).autoShape();
 		
 		assertArrayEquals(x.getShape(), y.getShape());
 		
