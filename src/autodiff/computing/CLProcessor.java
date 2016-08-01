@@ -1,6 +1,6 @@
 package autodiff.computing;
 
-import static java.util.stream.Collectors.toList;
+import static multij.tools.Tools.swap;
 import static org.jocl.CL.CL_MEM_READ_WRITE;
 import static org.jocl.CL.CL_MEM_USE_HOST_PTR;
 import static org.jocl.CL.setExceptionsEnabled;
@@ -9,6 +9,7 @@ import autodiff.cl.CLContext;
 import autodiff.cl.CLKernel;
 import autodiff.nodes.AbstractNode;
 import autodiff.nodes.BinaryNode;
+import autodiff.nodes.Data;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
 import autodiff.nodes.NodeVisitor;
@@ -18,9 +19,8 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 
 import org.jocl.CL;
@@ -41,17 +41,11 @@ public final class CLProcessor implements NodeProcessor {
 	
 	private final Map<Node<?>, CLKernel> forwardKernels;
 	
-	private final Map<Node<?>, CLKernel> backwardDiffKernels;
-	
 	private final Forwarder forwarder;
 	
 	private final ForwardGetter forwardGetter;
 	
 	private final ForwardInitializer forwardInitializer;
-	
-	private final BackwardDiffGetter backwardDiffGetter;
-	
-	private final BackwardDiffInitializer backwardDiffInitializer;
 	
 	public CLProcessor() {
 		this(new CLContext());
@@ -62,12 +56,9 @@ public final class CLProcessor implements NodeProcessor {
 		this.pointers = new IdentityHashMap<>();
 		this.buffers = new IdentityHashMap<>();
 		this.forwardKernels = new IdentityHashMap<>();
-		this.backwardDiffKernels = new IdentityHashMap<>();
 		this.forwarder = this.new Forwarder();
 		this.forwardGetter = this.new ForwardGetter();
 		this.forwardInitializer = this.new ForwardInitializer();
-		this.backwardDiffGetter = this.new BackwardDiffGetter();
-		this.backwardDiffInitializer = this.new BackwardDiffInitializer();
 	}
 	
 	public final CLContext getContext() {
@@ -79,52 +70,79 @@ public final class CLProcessor implements NodeProcessor {
 		return this.forwarder;
 	}
 	
+//	@Override
+//	public final <N extends Node<?>> N fullForward(final N node) {
+//		final Node<?>[] nodes = node.collectTo(new LinkedHashSet<>()).toArray(new Node[0]);
+//		
+//		for (final Node<?> n : nodes) {
+//			if (n.hasArguments()) {
+//				n.accept(this.forwardInitializer).enqueueNDRange(n.getLength());
+//			}
+//		}
+//		
+//		this.readBuffer(node);
+//		
+//		return null;
+//	}
+//	
+//	@Override
+//	public final <N extends Node<?>> N fullBackwardDiff(final N node) {
+//		if (node.setupDiffs()) {
+//			final Collection<Node<?>> nodes = node.collectTo(new LinkedHashSet<>()).stream().filter(Node::hasDiffs).collect(toList());
+//			
+//			nodes.forEach(n -> this.fill(n.getDiffs(), 0F));
+//			
+//			this.fill(node.getDiffs(), 1F);
+//			
+//			for (final Node<?> n : nodes) {
+//				if (n.hasArguments() && n.getDiffs() != null) {
+//					n.accept(this.backwardDiffInitializer).enqueueNDRange(n.getLength());
+//				}
+//			}
+//			
+//			for (final Node<?> n : nodes) {
+//				if (!n.hasArguments() && n.getDiffs() != null) {
+//					this.readBuffer(n.getDiffs());
+//				}
+//			}
+//		}
+//		
+//		return null;
+//	}
+	
 	@Override
 	public final <N extends Node<?>> N fullForward(final N node) {
-		final Node<?>[] nodes = node.collectTo(new LinkedHashSet<>()).toArray(new Node[0]);
+		NodeProcessor.super.fullForward(node);
 		
+		this.readBuffer(node);
+		
+		return node;
+	}
+	
+	@Override
+	public final <N extends Node<?>> N fullBackwardDiff(final N node) {
+		NodeProcessor.super.fullBackwardDiff(node);
+		
+		for (final Node<?> n : node.collectTo(new HashSet<>())) {
+			if (n.hasDiffs() && n instanceof Data) {
+				this.readBuffer(n.getDiffs());
+			}
+		}
+		
+		return node;
+	}
+	
+	@Override
+	public final void forward(final Iterable<Node<?>> nodes) {
 		for (final Node<?> n : nodes) {
 			if (n.hasArguments()) {
 				n.accept(this.forwardInitializer).enqueueNDRange(n.getLength());
 			}
 		}
-		
-		this.readBuffer(node);
-		
-		return null;
 	}
-	
-	@Override
-	public final <N extends Node<?>> N fullBackwardDiff(final N node) {
-		if (node.setupDiffs()) {
-			final Collection<Node<?>> nodes = node.collectTo(new LinkedHashSet<>()).stream().filter(Node::hasDiffs).collect(toList());
-			
-			nodes.forEach(n -> this.fill(n.getDiffs(), 0F));
-			
-			this.fill(node.getDiffs(), 1F);
-			
-			for (final Node<?> n : nodes) {
-				if (n.hasArguments() && n.getDiffs() != null) {
-					n.accept(this.backwardDiffInitializer).enqueueNDRange(n.getLength());
-				}
-			}
-			
-			for (final Node<?> n : nodes) {
-				if (!n.hasArguments() && n.getDiffs() != null) {
-					this.readBuffer(n.getDiffs());
-				}
-			}
-		}
-		
-		return null;
-	}
-	
+
 	public final CLKernel getForwardKernel(final Node<?> node) {
 		return node.accept(this.forwardGetter);
-	}
-	
-	public final CLKernel getBackwardDiffKernel(final Node<?> node) {
-		return node.accept(this.backwardDiffGetter);
 	}
 	
 	@Override
@@ -134,9 +152,6 @@ public final class CLProcessor implements NodeProcessor {
 		
 		this.getForwardKernels().values().forEach(CLKernel::release);
 		this.getForwardKernels().clear();
-		
-		this.getBackwardDiffKernels().values().forEach(CLKernel::release);
-		this.getBackwardDiffKernels().clear();
 	}
 	
 	final void readBuffer(final Node<?> node) {
@@ -148,10 +163,6 @@ public final class CLProcessor implements NodeProcessor {
 	
 	final Map<Node<?>, CLKernel> getForwardKernels() {
 		return this.forwardKernels;
-	}
-	
-	final Map<Node<?>, CLKernel> getBackwardDiffKernels() {
-		return this.backwardDiffKernels;
 	}
 	
 	final cl_mem clBuffer(final AbstractNode<?> node) {
@@ -198,6 +209,18 @@ public final class CLProcessor implements NodeProcessor {
 				final Node<?> right = node.getRight();
 				final int[] leftShape = left.getLengths(new int[2]);
 				final int[] rightShape = right.getLengths(new int[2]);
+				final boolean transposeLeft = node.isTransposeLeft();
+				final boolean transposeRight = node.isTransposeRight();
+				
+				if (transposeLeft) {
+					swap(leftShape, 0, 1);
+				}
+				
+				if (transposeRight) {
+					swap(rightShape, 0, 1);
+				}
+				
+				final int rows = leftShape[0];
 				final int columns = rightShape[1];
 				final int stride = leftShape[1];
 				final String kernelName = node.getClass().getSimpleName() + getForwardKernels().size();
@@ -208,13 +231,16 @@ public final class CLProcessor implements NodeProcessor {
 				programSource += "__global float const * const right, ";
 				programSource += "__global float * const result) {\n";
 				programSource += "	int const gid = get_global_id(0);\n";
+				programSource += "	int const rows = " + rows + ";\n";
 				programSource += "	int const columns = " + columns + ";\n";
 				programSource += "	int const stride = " + stride + ";\n";
 				programSource += "	int const r = gid / columns;\n";
 				programSource += "	int const c = gid % columns;\n";
 				programSource += "	float value = 0.0F;\n";
 				programSource += "	for (int k = 0; k < stride; ++k) {\n";
-				programSource += "		value += left[k + r * stride] * right[c + k * columns];\n";
+				programSource += "		int const leftIndex = " + (transposeLeft ? "r + k * rows" : "k + r * stride") + ";\n";
+				programSource += "		int const rightIndex = " + (transposeRight ? "k + c * stride" : "c + k * columns") + ";\n";
+				programSource += "		value += left[leftIndex] * right[rightIndex];\n";
 				programSource += "	}\n";
 				programSource += "	result[gid] = value;\n";
 				programSource += "}\n";
@@ -224,62 +250,6 @@ public final class CLProcessor implements NodeProcessor {
 		}
 				
 		private static final long serialVersionUID = -41684012969905022L;
-		
-	}
-	
-	/**
-	 * @author codistmonk (creation 2016-07-18)
-	 */
-	final class BackwardDiffGetter implements NodeVisitor<CLKernel> {
-		
-		@Override
-		public final CLKernel visit(final MatrixMultiplication node) {
-			return getBackwardDiffKernels().computeIfAbsent(node, __ -> {
-				final Node<?> left = node.getLeft();
-				final Node<?> right = node.getRight();
-				final int[] leftShape = left.getLengths(new int[2]);
-				final int[] rightShape = right.getLengths(new int[2]);
-				final int columns = rightShape[1];
-				final int stride = leftShape[1];
-				final String kernelName = node.getClass().getSimpleName() + getBackwardDiffKernels().size();
-				String programSource = "";
-				
-				programSource += "__kernel void " + kernelName + "(";
-				programSource += "__global float const * const left, ";
-				programSource += "__global float * const leftDiffs, ";
-				programSource += "__global float const * const right, ";
-				programSource += "__global float * const rightDiffs, ";
-				programSource += "__global float const * const diffs) {\n";
-				programSource += "	int const gid = get_global_id(0);\n";
-				programSource += "	int const columns = " + columns + ";\n";
-				programSource += "	int const stride = " + stride + ";\n";
-				programSource += "	int const r = gid / columns;\n";
-				programSource += "	int const c = gid % columns;\n";
-				programSource += "	printf(\"gid: %i r: %i c: %i\\n\", gid, r, c);\n";
-				programSource += "	float const diff = diffs[gid];\n";
-				programSource += "	for (int k = 0; k < stride; ++k) {\n";
-				programSource += "		int const leftIndex = k + r * stride;\n";
-				programSource += "		int const rightIndex = c + k * columns;\n";
-				programSource += "		printf(\"leftIndex: %i rightIndex: %i\\n\", leftIndex, rightIndex);\n";
-				programSource += "		if (leftDiffs) {\n";
-				programSource += "			printf(\"leftDiffs[leftIndex]: %f\\n\", leftDiffs[leftIndex]);\n";
-				programSource += "			leftDiffs[leftIndex] += right[rightIndex] * diff;\n";
-				programSource += "			printf(\"leftDiffs[leftIndex]: %f\\n\", leftDiffs[leftIndex]);\n";
-				programSource += "		}\n";
-				programSource += "		if (rightDiffs) {\n";
-				programSource += "			printf(\"rightDiffs[rightIndex]: %f\\n\", rightDiffs[rightIndex]);\n";
-				programSource += "			rightDiffs[rightIndex] += left[leftIndex] * diff;\n";
-				programSource += "			printf(\"rightDiffs[rightIndex]: %f\\n\", rightDiffs[rightIndex]);\n";
-				programSource += "		}\n";
-				programSource += "	}\n";
-				programSource += "	printf(\"leftDiffs[0]: %f\\n\", leftDiffs[0]);\n";
-				programSource += "}\n";
-				
-				return getContext().createAndBuildProgram(programSource).createKernel(kernelName);
-			});
-		}
-		
-		private static final long serialVersionUID = 4021444858946691751L;
 		
 	}
 	
@@ -310,28 +280,6 @@ public final class CLProcessor implements NodeProcessor {
 //		}
 		
 		private static final long serialVersionUID = -7362441160666727239L;
-		
-	}
-	
-	/**
-	 * @author codistmonk (creation 2016-07-18)
-	 */
-	final class BackwardDiffInitializer implements NodeVisitor<CLKernel> {
-		
-		@Override
-		public final CLKernel visit(final MatrixMultiplication node) {
-			final CLKernel result = getBackwardDiffKernel(node);
-			
-			result.setArg(0, clBuffer((AbstractNode<?>) node.getLeft()));
-			result.setArg(1, clBuffer((AbstractNode<?>) node.getLeft().getDiffs()));
-			result.setArg(2, clBuffer((AbstractNode<?>) node.getRight()));
-			result.setArg(3, clBuffer((AbstractNode<?>) node.getRight().getDiffs()));
-			result.setArg(4, clBuffer((AbstractNode<?>) node.getDiffs()));
-			
-			return result;
-		}
-		
-		private static final long serialVersionUID = -3703844209531018471L;
 		
 	}
 	

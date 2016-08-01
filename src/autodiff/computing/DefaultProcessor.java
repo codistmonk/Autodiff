@@ -71,7 +71,7 @@ public final class DefaultProcessor implements NodeProcessor {
 					
 					for (int k = 0; k < stride; ++k) {
 						final int leftIndex = transposeLeft ? r + k * rows : k + r * stride;
-						final int rightIndex = transposeRight ? k + c * rightShape[0] : c + k * columns;
+						final int rightIndex = transposeRight ? k + c * stride : c + k * columns;
 						value += left.get(leftIndex) * right.get(rightIndex);
 					}
 					
