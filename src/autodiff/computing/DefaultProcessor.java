@@ -4,7 +4,6 @@ import static autodiff.computing.Functions.*;
 import static autodiff.rules.PatternPredicate.rule;
 import static java.lang.Math.*;
 import static java.util.Collections.reverse;
-import static java.util.stream.Collectors.toList;
 import static multij.tools.Tools.cast;
 import static multij.tools.Tools.swap;
 
@@ -39,11 +38,6 @@ public final class DefaultProcessor implements NodeProcessor {
 	}
 	
 	@Override
-	public final BackwardDiffer getBackwardDiffer() {
-		return BackwardDiffer.INSTANCE;
-	}
-	
-	@Override
 	public final <N extends Node<?>> N fullForward(final N node) {
 		final List<Node<?>> nodes = new ArrayList<>(node.collectTo(new LinkedHashSet<>()));
 		
@@ -59,27 +53,17 @@ public final class DefaultProcessor implements NodeProcessor {
 	public final <N extends Node<?>> N fullBackwardDiff(final N node) {
 		if (node.setupDiffs()) {
 			final Collection<Node<?>> forwardNodes = node.collectTo(new LinkedHashSet<>());
-			final Collection<Node<?>> nodes = forwardNodes.stream().filter(Node::hasDiffs).collect(toList());
+			final List<Node<?>> backwardDiffNodes = new ArrayList<>(node.collectBackwardDiffNodesTo(new LinkedHashSet<>()));
 			
-			if (false) {
-				nodes.forEach(n -> this.fill(n.getDiffs(), 0F));
-				
-				this.fill(node.getDiffs(), 1F);
-				
-				nodes.forEach(n -> n.accept(this.getBackwardDiffer()));
-			} else {
-				final List<Node<?>> backwardDiffNodes = new ArrayList<>(node.collectBackwardDiffNodesTo(new LinkedHashSet<>()));
-				
-				backwardDiffNodes.removeAll(forwardNodes);
-				
-				Collections.reverse(backwardDiffNodes);
-				
-				backwardDiffNodes.forEach(n -> this.fill(n, 0F));
-				
-				this.fill(node.getDiffs(), 1F);
-				
-				backwardDiffNodes.forEach(n -> n.accept(this.getForwarder()));
-			}
+			backwardDiffNodes.removeAll(forwardNodes);
+			
+			Collections.reverse(backwardDiffNodes);
+			
+			backwardDiffNodes.forEach(n -> this.fill(n, 0F));
+			
+			this.fill(node.getDiffs(), 1F);
+			
+			backwardDiffNodes.forEach(n -> n.accept(this.getForwarder()));
 			
 		}
 		
@@ -187,122 +171,6 @@ public final class DefaultProcessor implements NodeProcessor {
 		private static final long serialVersionUID = -8842155630294708599L;
 		
 		public static final Forwarder INSTANCE = new Forwarder();
-		
-	}
-	
-	/**
-	 * @author codistmonk (creation 2016-07-11)
-	 */
-	public static final class BackwardDiffer implements NodeVisitor<Void> {
-		
-		private final Context context = new Context();
-				
-		@Override
-		public final Void visit(final MatrixMultiplication node) {
-			final Node<?> left = node.getLeft();
-			final Node<?> right = node.getRight();
-			final int[] leftShape = left.getLengths(new int[2]);
-			final int[] rightShape = right.getLengths(new int[2]);
-			final boolean transposeLeft = node.isTransposeLeft();
-			final boolean transposeRight = node.isTransposeRight();
-			
-			if (transposeLeft) {
-				swap(leftShape, 0, 1);
-			}
-			
-			if (transposeRight) {
-				swap(rightShape, 0, 1);
-			}
-			
-			final int rows = leftShape[0];
-			final int columns = rightShape[1];
-			final int stride = leftShape[1];
-			final Node<?> leftDiffs = left.getDiffs();
-			final Node<?> rightDiffs = right.getDiffs();
-			
-			for (int r = 0; r < rows; ++r) {
-				for (int c = 0; c < columns; ++c) {
-					final int resultIndex = c + r * columns;
-					final float diff = node.getDiffs().get(resultIndex);
-					
-					for (int k = 0; k < stride; ++k) {
-						final int leftIndex = transposeLeft ? r + k * rows : k + r * stride;
-						final int rightIndex = transposeRight ? k + c * rightShape[0] : c + k * columns;
-						
-						if (leftDiffs != null) {
-							leftDiffs.add(leftIndex, right.get(rightIndex) * diff);
-						}
-						
-						if (rightDiffs != null) {
-							rightDiffs.add(rightIndex, left.get(leftIndex) * diff);
-						}
-					}
-				}
-			}
-			
-			return null;
-		}
-		
-		@Override
-		public final Void visit(final Mapping node) {
-			final Node<?> argument = node.getArgument();
-			final int n = node.getLength();
-			final String functionName = node.getFunctionName();
-			final List<Object> argumentDiffDefinition = Functions.getDiffDefinition(functionName, 1);
-			final FloatSupplier argumentDiff = this.context.newSupplier(argumentDiffDefinition);
-			
-			for (int i = 0; i < n; ++i) {
-				this.context.getInputs().get(0).set(argument.get(i));
-				node.getArgument().getDiffs().add(i, argumentDiff.get() * node.getDiffs().get(i));
-			}
-			
-			return null;
-		}
-		
-		@Override
-		public final Void visit(final Zipping node) {
-			final Node<?> left = node.getLeft();
-			final Node<?> right = node.getRight();
-			final int m = left.getLength();
-			final int n = right.getLength();
-			final String functionName = node.getFunctionName();
-			final Node<?> leftDiffs = left.getDiffs();
-			final Node<?> rightDiffs = right.getDiffs();
-			
-			if (leftDiffs != null) {
-				final List<Object> leftDiffDefinition = Functions.getDiffDefinition(functionName, 2, 0);
-				final FloatSupplier leftDiff = this.context.newSupplier(leftDiffDefinition);
-				
-				for (int i = 0; i < m; ++i) {
-					final float diff = node.getDiffs().get(i);
-					
-					this.context.getInputs().get(0).set(left.get(i));
-					this.context.getInputs().get(1).set(right.get(i % n));
-					
-					leftDiffs.add(i, leftDiff.get() * diff);
-				}
-			}
-			
-			if (rightDiffs != null) {
-				final List<Object> rightDiffDefinition = Functions.getDiffDefinition(functionName, 2, 1);
-				final FloatSupplier rightDiff = this.context.newSupplier(rightDiffDefinition);
-				
-				for (int i = 0; i < m; ++i) {
-					final float diff = node.getDiffs().get(i);
-					
-					this.context.getInputs().get(0).set(left.get(i));
-					this.context.getInputs().get(1).set(right.get(i % n));
-					
-					rightDiffs.add(i % n, rightDiff.get() * diff);
-				}
-			}
-			
-			return null;
-		}
-		
-		private static final long serialVersionUID = -2003909030537706641L;
-		
-		public static final BackwardDiffer INSTANCE = new BackwardDiffer();
 		
 	}
 	

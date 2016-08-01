@@ -12,7 +12,6 @@ import autodiff.nodes.BinaryNode;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
 import autodiff.nodes.NodeVisitor;
-import autodiff.nodes.UnaryNode;
 
 import java.nio.Buffer;
 import java.nio.FloatBuffer;
@@ -46,8 +45,6 @@ public final class CLProcessor implements NodeProcessor {
 	
 	private final Forwarder forwarder;
 	
-	private final BackwardDiffer backwardDiffer;
-	
 	private final ForwardGetter forwardGetter;
 	
 	private final ForwardInitializer forwardInitializer;
@@ -67,7 +64,6 @@ public final class CLProcessor implements NodeProcessor {
 		this.forwardKernels = new IdentityHashMap<>();
 		this.backwardDiffKernels = new IdentityHashMap<>();
 		this.forwarder = this.new Forwarder();
-		this.backwardDiffer = this.new BackwardDiffer();
 		this.forwardGetter = this.new ForwardGetter();
 		this.forwardInitializer = this.new ForwardInitializer();
 		this.backwardDiffGetter = this.new BackwardDiffGetter();
@@ -81,11 +77,6 @@ public final class CLProcessor implements NodeProcessor {
 	@Override
 	public final NodeVisitor<Void> getForwarder() {
 		return this.forwarder;
-	}
-	
-	@Override
-	public final NodeVisitor<Void> getBackwardDiffer() {
-		return this.backwardDiffer;
 	}
 	
 	@Override
@@ -308,15 +299,15 @@ public final class CLProcessor implements NodeProcessor {
 			return result;
 		}
 		
-		@Override
-		public final CLKernel visit(final UnaryNode<?> node) {
-			final CLKernel result = getForwardKernel(node);
-			
-			result.setArg(0, clBuffer((AbstractNode<?>) node.getArgument()));
-			result.setArg(1, clBuffer(node));
-			
-			return result;
-		}
+//		@Override
+//		public final CLKernel visit(final UnaryNode<?> node) {
+//			final CLKernel result = getForwardKernel(node);
+//			
+//			result.setArg(0, clBuffer((AbstractNode<?>) node.getArgument()));
+//			result.setArg(1, clBuffer(node));
+//			
+//			return result;
+//		}
 		
 		private static final long serialVersionUID = -7362441160666727239L;
 		
@@ -354,19 +345,6 @@ public final class CLProcessor implements NodeProcessor {
 		}
 		
 		private static final long serialVersionUID = 8143280110227329187L;
-		
-	}
-	
-	/**
-	 * @author codistmonk (creation 2016-07-17)
-	 */
-	private final class BackwardDiffer implements NodeVisitor<Void> {
-		
-		BackwardDiffer() {
-			// NOP
-		}
-		
-		private static final long serialVersionUID = -2609588837130668886L;
 		
 	}
 	
