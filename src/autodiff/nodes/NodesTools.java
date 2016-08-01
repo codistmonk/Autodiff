@@ -7,11 +7,11 @@ import static autodiff.computing.Functions.PREFIX_OPERATORS;
 import static autodiff.computing.Functions.STEP1;
 import static java.lang.Math.round;
 import static multij.tools.Tools.*;
-
 import autodiff.computing.DefaultProcessor;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -34,6 +34,8 @@ public final class NodesTools {
 	 * Not an Index.
 	 */
 	public static final float NaI = -Integer.MAX_VALUE;
+	
+	static final AtomicLong nextId = new AtomicLong();
 	
 	public static final Node<?> sortIndices(final Node<?> inputs) {
 		final int[] shape = inputs.getShape();

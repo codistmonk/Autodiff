@@ -3,6 +3,9 @@ package autodiff.nodes;
 import static autodiff.nodes.NodesTools.*;
 import static multij.tools.Tools.swap;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author codistmonk (creation 2016-07-11)
  */
@@ -30,6 +33,31 @@ public final class MatrixMultiplication extends BinaryNode<MatrixMultiplication>
 		this.transposeRight = transposeRight;
 		
 		return this;
+	}
+	
+	@Override
+	protected final List<Node<?>> newBackwardDiffNodes() {
+		final Node<?> left = this.getLeft();
+		final Node<?> right = this.getRight();
+		final Node<?> leftDiffs = left.getDiffs();
+		final Node<?> rightDiffs = right.getDiffs();
+		final List<Node<?>> result = new ArrayList<>(2);
+		
+		if (leftDiffs != null) {
+			result.add(new MatrixMultiplication()
+			.setLeft(this.getDiffs())
+			.setRight(this.getRight()).setTransposeRight(!this.isTransposeRight())
+			.setByteBuffer(leftDiffs).autoShape());
+		}
+		
+		if (rightDiffs != null) {
+			result.add(new MatrixMultiplication()
+			.setLeft(this.getLeft()).setTransposeLeft(!this.isTransposeLeft())
+			.setRight(this.getDiffs())
+			.setByteBuffer(rightDiffs).autoShape());
+		}
+		
+		return result;
 	}
 	
 	@Override

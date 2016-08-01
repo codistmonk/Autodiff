@@ -15,10 +15,20 @@ import java.util.List;
  */
 public abstract interface Node<N extends Node<?>> extends Serializable {
 	
+	public abstract long getId();
+	
 	public abstract int[] getShape();
 	
 	public default boolean isComputationNode() {
 		return true;
+	}
+	
+	public default Node<?> shaped(final int... shape) {
+		if (this.getShape() == null) {
+			return this.setShape(shape);
+		}
+		
+		return NodesTools.shape(this, shape);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -75,6 +85,8 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 	}
 	
 	public abstract Node<?> getDiffs();
+	
+	public abstract List<Node<?>> getBackwardDiffNodes();
 	
 	@SuppressWarnings("unchecked")
 	public default N autoShape() {

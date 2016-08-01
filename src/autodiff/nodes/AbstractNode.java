@@ -15,9 +15,13 @@ import java.util.List;
  */
 public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N> {
 	
+	private final long id;
+	
 	private final List<Node<?>> arguments;
 	
 	private Node<?> diffs;
+	
+	private List<Node<?>> backwardDiffNodes;
 	
 	private transient ByteBuffer byteBuffer;
 	
@@ -32,7 +36,13 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	}
 	
 	protected AbstractNode(final List<Node<?>> arguments) {
+		this.id = NodesTools.nextId.getAndIncrement();
 		this.arguments = arguments;
+	}
+	
+	@Override
+	public final long getId() {
+		return this.id;
 	}
 	
 	@Override
@@ -43,12 +53,19 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	@Override
 	@SuppressWarnings("unchecked")
 	public final N setShape(final int... shape) {
-		if (this.getByteBuffer() == null) {
+		if (this.getShape() == null) {
 			this.shape = shape;
-			this.setByteBuffer(ByteBuffer.allocateDirect(Float.BYTES * this.getLength()).order(ByteOrder.nativeOrder()));
 		} else {
+			if (this.getId() == 57L) {
+				throw new RuntimeException();
+			}
+			
 			Node.super.setShape(shape);
 			this.shape = shape;
+		}
+		
+		if (this.getByteBuffer() == null) {
+			this.setByteBuffer(ByteBuffer.allocateDirect(Float.BYTES * this.getLength()).order(ByteOrder.nativeOrder()));
 		}
 		
 		if (this.getDiffs() != null) {
@@ -56,6 +73,10 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 		}
 		
 		return (N) this;
+	}
+	
+	public final N setByteBuffer(final Node<?> node) {
+		return this.setByteBuffer(getPositionedByteBuffer(node));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -92,9 +113,11 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 		if (setupDiffs) {
 			if (!this.hasDiffs()) {
 				this.diffs = new Data().setShape(this.getShape());
+				this.backwardDiffNodes = this.newBackwardDiffNodes();
 			}
 		} else {
 			this.diffs = null;
+			this.backwardDiffNodes = null;
 		}
 	}
 	
@@ -104,9 +127,16 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	}
 	
 	@Override
+	public final List<Node<?>> getBackwardDiffNodes() {
+		return this.backwardDiffNodes;
+	}
+	
+	@Override
 	public final String toString() {
 		return Arrays.toString(this.get(new float[this.getLength()]));
 	}
+	
+	protected abstract List<Node<?>> newBackwardDiffNodes();
 	
 	private final void writeObject(final ObjectOutputStream out) throws IOException {
 		out.defaultWriteObject();
@@ -121,5 +151,9 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	}
 	
 	private static final long serialVersionUID = 8399842389497413524L;
+	
+	public static final ByteBuffer getPositionedByteBuffer(final Node<?> node) {
+		return (ByteBuffer) node.getByteBuffer().position(node.getByteOffset());
+	}
 	
 }

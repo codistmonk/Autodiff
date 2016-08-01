@@ -3,12 +3,15 @@ package autodiff.nodes;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * @author codistmonk (creation 2016-07-21)
  */
 public final class ShapeNode implements Node<ShapeNode> {
+	
+	private final long id;
 	
 	private final List<Node<?>> arguments;
 	
@@ -17,8 +20,14 @@ public final class ShapeNode implements Node<ShapeNode> {
 	private int[] shape;
 	
 	public ShapeNode(final Node<?> source) {
+		this.id = NodesTools.nextId.getAndIncrement();
 		this.arguments = Arrays.asList(source);
 		this.shape = source.getShape().clone();
+	}
+	
+	@Override
+	public final long getId() {
+		return this.id;
 	}
 	
 	public final Node<?> getSource() {
@@ -96,6 +105,11 @@ public final class ShapeNode implements Node<ShapeNode> {
 		}
 		
 		return this.diffs;
+	}
+	
+	@Override
+	public final List<Node<?>> getBackwardDiffNodes() {
+		return Collections.emptyList();
 	}
 	
 	@Override
