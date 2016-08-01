@@ -7,7 +7,9 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -16,6 +18,8 @@ import java.util.List;
 public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N> {
 	
 	private final long id;
+	
+	private final Collection<Node<?>> additionalDependencies;
 	
 	private final List<Node<?>> arguments;
 	
@@ -37,12 +41,18 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	
 	protected AbstractNode(final List<Node<?>> arguments) {
 		this.id = NodesTools.nextId.getAndIncrement();
+		this.additionalDependencies = new HashSet<>();
 		this.arguments = arguments;
 	}
 	
 	@Override
 	public final long getId() {
 		return this.id;
+	}
+	
+	@Override
+	public final Collection<Node<?>> getAdditionalDependencies() {
+		return this.additionalDependencies;
 	}
 	
 	@Override
@@ -77,6 +87,8 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 		} else {
 			NodesTools.checkLength(this.getLength(), node.getLength());
 		}
+		
+		node.getAdditionalDependencies().add(this);
 		
 		return this.setByteBuffer(getPositionedByteBuffer(node));
 	}

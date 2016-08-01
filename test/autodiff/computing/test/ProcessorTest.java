@@ -238,6 +238,10 @@ public abstract class ProcessorTest {
 		this.getProcessor().fullForward(xi);
 		this.getProcessor().fullBackwardDiff(xi);
 		
+		if ("show graph".equals("")) {
+			SwingTools.show(JGraphXTools.newGraphComponent(xi), "view", true);
+		}
+		
 		assertArrayEquals(new float[] { 1F, 0F }, x.getDiffs().get(new float[x.getLength()]), 0F);
 	}
 	
@@ -580,7 +584,7 @@ public abstract class ProcessorTest {
 		
 		this.getProcessor().fullBackwardDiff(y);
 		
-		final float epsilon = 1E-7F; // TODO zero would be better
+		final float epsilon = 1E-6F; // TODO zero would be better
 		
 		assertArrayEquals(new float[] {
 				0F, 0F, 0F,

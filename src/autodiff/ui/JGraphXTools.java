@@ -188,7 +188,6 @@ public final class JGraphXTools {
 		final Map<Integer, List<Node<?>>> nodesByDepth = reverseMulti(depths, new TreeMap<>(), ArrayList::new);
 		final int d = nodesByDepth.size();
 		final int d1 = nodesByDepth.values().stream().mapToInt(Collection::size).max().getAsInt();
-		
 		final int componentWidth = (2 * d1 + 1) * cellWidth / 2;
 		final int componentHeight = (2 * d + 1) * cellHeight;
 		
@@ -298,7 +297,7 @@ public final class JGraphXTools {
 	}
 	
 	public static final String defaultNodeText(final Node<?> node) {
-		return node.getClass().getSimpleName() + Arrays.toString(node.getShape());
+		return node.getId() + ":" + node.getClass().getSimpleName() + Arrays.toString(node.getShape());
 	}
 	
 }

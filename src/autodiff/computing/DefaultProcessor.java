@@ -4,10 +4,10 @@ import static autodiff.computing.Functions.*;
 import static autodiff.rules.PatternPredicate.rule;
 import static java.lang.Math.*;
 import static java.util.Collections.reverse;
-import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static multij.tools.Tools.cast;
 import static multij.tools.Tools.swap;
+
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
@@ -60,7 +60,8 @@ public final class DefaultProcessor implements NodeProcessor {
 	@Override
 	public final <N extends Node<?>> N fullBackwardDiff(final N node) {
 		if (node.setupDiffs()) {
-			final Collection<Node<?>> nodes = node.collectTo(new LinkedHashSet<>()).stream().filter(Node::hasDiffs).collect(toList());
+			final Collection<Node<?>> forwardNodes = node.collectTo(new LinkedHashSet<>());
+			final Collection<Node<?>> nodes = forwardNodes.stream().filter(Node::hasDiffs).collect(toList());
 			
 			nodes.forEach(n -> this.fill(n.getDiffs(), 0F));
 			
@@ -71,13 +72,13 @@ public final class DefaultProcessor implements NodeProcessor {
 			} else {
 				final List<Node<?>> backwardDiffNodes = new ArrayList<>(node.collectBackwardDiffNodesTo(new LinkedHashSet<>()));
 				
+				backwardDiffNodes.removeAll(forwardNodes);
+				
 				Collections.reverse(backwardDiffNodes);
 				
 				backwardDiffNodes.forEach(n -> n.accept(this.getForwarder()));
 				
-				Tools.debugPrint(backwardDiffNodes.size());
-				
-				SwingTools.show(JGraphXTools.newGraphComponent(node), "Forward", true);
+//				SwingTools.show(JGraphXTools.newGraphComponent(backwardDiffNodes, 160, 50), "BD", true);
 			}
 			
 		}
@@ -127,7 +128,7 @@ public final class DefaultProcessor implements NodeProcessor {
 						value += left.get(leftIndex) * right.get(rightIndex);
 					}
 					
-					node.set(c + r * columns, value);
+					node.add(c + r * columns, value);
 				}
 			}
 			
@@ -148,7 +149,7 @@ public final class DefaultProcessor implements NodeProcessor {
 				this.context.getInputs().get(0).set(argument.get(i));
 				
 				try {
-					node.set(i, forward.get());
+					node.add(i, forward.get());
 				} catch (final Exception e) {
 					Tools.debugError(argument.get(i), node.getFunctionName());
 					Tools.debugError(argument);
@@ -166,17 +167,18 @@ public final class DefaultProcessor implements NodeProcessor {
 			final int l = node.getLength();
 			final int m = left.getLength();
 			final int n = right.getLength();
+			final int mm = max(l, max(m, n));
 			final String functionName = node.getFunctionName();
 			final List<Object> forwardDefinition = Functions.getDefinition(functionName, 2);
 			final FloatSupplier forward = this.context.newSupplier(forwardDefinition);
 			
 //			Tools.debugPrint(functionName, forwardDefinition, forward);
 			
-			for (int i = 0; i < l; ++i) {
+			for (int i = 0; i < mm; ++i) {
 				this.context.getInputs().get(0).set(left.get(i % m));
 				this.context.getInputs().get(1).set(right.get(i % n));
 				
-				node.set(i, forward.get());
+				node.add(i % l, forward.get());
 			}
 			
 			return null;

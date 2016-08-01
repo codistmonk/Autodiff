@@ -42,6 +42,8 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 		return visitor.visit(this);
 	}
 	
+	public abstract Collection<Node<?>> getAdditionalDependencies();
+	
 	public default boolean hasArguments() {
 		return !this.getArguments().isEmpty();
 	}
@@ -190,6 +192,7 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 		result.add(this);
 		
 		this.getArguments().forEach(a -> a.collectTo(result));
+		this.getAdditionalDependencies().forEach(a -> a.collectTo(result));
 		
 		return result;
 	}
