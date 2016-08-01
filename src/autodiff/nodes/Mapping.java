@@ -34,7 +34,8 @@ public final class Mapping extends UnaryNode<Mapping> {
 				.setArgument(this.getArgument()).autoShape();
 		
 		return Arrays.asList(new Zipping().setFunctionName("*")
-				.setLeft(this.getDiffs()).setRight(df0).autoShape());
+				.setLeft(this.getDiffs()).setRight(df0)
+				.setByteBuffer(this.getArgument().getDiffs()).autoShape());
 	}
 	
 	@Override

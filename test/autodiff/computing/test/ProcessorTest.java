@@ -1,20 +1,27 @@
 package autodiff.computing.test;
 
 import static autodiff.computing.Functions.EPSILON;
+import static autodiff.computing.Functions.ID;
+import static autodiff.computing.Functions.SIGMOID;
+import static autodiff.computing.Functions.SQRT;
+import static autodiff.computing.Functions.SQUARED;
+import static autodiff.computing.Functions.STEP0;
+import static autodiff.nodes.NodesTools.$;
+import static autodiff.nodes.NodesTools.T;
+import static autodiff.nodes.NodesTools.convolution;
+import static autodiff.nodes.NodesTools.maxPooling;
+import static autodiff.nodes.NodesTools.patches;
 import static autodiff.nodes.NodesTools.selection;
 import static autodiff.nodes.NodesTools.sum;
 import static java.lang.Math.exp;
 import static multij.tools.Tools.ints;
 import static org.junit.Assert.*;
 
-import autodiff.computing.Functions;
 import autodiff.computing.NodeProcessor;
 import autodiff.nodes.Data;
 import autodiff.nodes.Mapping;
-import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
 import autodiff.nodes.NodesTools;
-import autodiff.nodes.Zipping;
 import autodiff.ui.JGraphXTools;
 
 import multij.swing.SwingTools;
@@ -348,7 +355,7 @@ public abstract class ProcessorTest {
 		final Node<?> b = new Data().setShape(2, 1).set(
 				4F,
 				5F);
-		final Node<?> c = new MatrixMultiplication().setLeft(a).setRight(b).autoShape();
+		final Node<?> c = $(a, b);
 		
 		assertArrayEquals(new int[] { 1, 1 }, c.getShape());
 		
@@ -380,7 +387,7 @@ public abstract class ProcessorTest {
 		final Node<?> b = new Data().setShape(2, 1).set(
 				4F,
 				5F);
-		final Node<?> c = new MatrixMultiplication().setLeft(b).setRight(a).autoShape();
+		final Node<?> c = $(b, a);
 		
 		assertArrayEquals(new int[] { 2, 2 }, c.getShape());
 		
@@ -416,7 +423,7 @@ public abstract class ProcessorTest {
 				8F,
 				9F,
 				10F);
-		final Node<?> c = new MatrixMultiplication().setLeft(a).setTransposeLeft(true).setRight(b).autoShape();
+		final Node<?> c = $(a, T, b);
 		
 		assertArrayEquals(new int[] { 2, 1 }, c.getShape());
 		
@@ -453,7 +460,7 @@ public abstract class ProcessorTest {
 				2F, 3F,
 				4F, 5F,
 				6F, 7F);
-		final Node<?> c = new MatrixMultiplication().setLeft(a).setTransposeLeft(true).setRight(b).setTransposeRight(true).autoShape();
+		final Node<?> c = $(a, T, b, T);
 		
 		assertArrayEquals(new int[] { 1, 3 }, c.getShape());
 		
@@ -558,8 +565,7 @@ public abstract class ProcessorTest {
 				1F, 2F, 3F,
 				4F, 5F, 6F,
 				7F, 8F, 9F);
-//		final Node<?> y = new MaxPooling2D().setArgument(x).setStrides(2).setKernelSide(2).autoShape();
-		final Node<?> y = NodesTools.maxPooling(x, ints(0, 0, 0, 0), ints(2, 2), ints(2, 2));
+		final Node<?> y = maxPooling(x, ints(0, 0, 0, 0), ints(2, 2), ints(2, 2));
 		
 		assertArrayEquals(new int[] { 1, 1, 2, 2 }, y.getShape());
 		
@@ -593,8 +599,7 @@ public abstract class ProcessorTest {
 				10F, 11F, 12F,
 				13F, 14F, 15F,
 				16F, 17F, 18F);
-//		final Node<?> y = new MaxPooling2D().setInputs(x).setOffsets(1).setStrides(2).setKernelSide(3).autoShape();
-		final Node<?> y = NodesTools.maxPooling(x, ints(1, 1, 1, 1), ints(2, 2), ints(3, 3));
+		final Node<?> y = maxPooling(x, ints(1, 1, 1, 1), ints(2, 2), ints(3, 3));
 		
 		assertArrayEquals(new int[] { 1, 2, 1, 1 }, y.getShape());
 		
@@ -628,7 +633,7 @@ public abstract class ProcessorTest {
 				1F, 2F, 3F,
 				4F, 5F, 6F,
 				7F, 8F, 9F);
-		final Node<?> patches = NodesTools.patches(inputs, new int[] { 0, 0, 0, 0 }, new int[] { 1, 1 }, new int[] { 2, 2 });
+		final Node<?> patches = patches(inputs, new int[] { 0, 0, 0, 0 }, new int[] { 1, 1 }, new int[] { 2, 2 });
 		
 		assertArrayEquals(new int[] { 9, 1, 2, 2 }, patches.getShape());
 		
@@ -678,7 +683,7 @@ public abstract class ProcessorTest {
 				10F, 11F, 12F,
 				13F, 14F, 15F,
 				16F, 17F, 18F);
-		final Node<?> patches = NodesTools.patches(inputs,
+		final Node<?> patches = patches(inputs,
 				new int[] { 0, 1, 0, 1 }, new int[] { 1, 1 }, new int[] { 2, 2 });
 		
 		assertArrayEquals(new int[] { 4, 2, 2, 2 }, patches.getShape());
@@ -721,7 +726,7 @@ public abstract class ProcessorTest {
 		final Node<?> kernel = new Data().setShape(2, 2).set(
 				1F, 2F,
 				3F, 4F);
-		final Node<?> y = NodesTools.convolution(inputs, ints(0, 0, 0, 0), ints(2, 2), kernel);
+		final Node<?> y = convolution(inputs, ints(0, 0, 0, 0), ints(2, 2), kernel);
 		
 		assertArrayEquals(new int[] { 1, 1, 2, 2 }, y.getShape());
 		
@@ -752,7 +757,7 @@ public abstract class ProcessorTest {
 	@Test
 	public final void testMapping1() {
 		final Node<?> x = new Data().set(-1F, 0F, 1F);
-		final Node<?> y = new Mapping().setArgument(x).setFunctionName(Functions.ID).autoShape();
+		final Node<?> y = new Mapping().setFunctionName(ID).setArgument(x).autoShape();
 		
 		assertArrayEquals(x.getShape(), y.getShape());
 		
@@ -770,7 +775,7 @@ public abstract class ProcessorTest {
 	@Test
 	public final void testMapping2() {
 		final Node<?> x = new Data().set(-1F, 0F, 1F);
-		final Node<?> y = new Mapping().setArgument(x).setFunctionName(Functions.SQUARED).autoShape();
+		final Node<?> y = $(x, SQUARED);
 		
 		assertArrayEquals(x.getShape(), y.getShape());
 		
@@ -788,7 +793,7 @@ public abstract class ProcessorTest {
 	@Test
 	public final void testMapping3() {
 		final Node<?> x = new Data().set(0F, 1F, 4F);
-		final Node<?> y = new Mapping().setArgument(x).setFunctionName(Functions.SQRT).autoShape();
+		final Node<?> y = $(SQRT, x);
 		
 		assertArrayEquals(x.getShape(), y.getShape());
 		
@@ -806,7 +811,7 @@ public abstract class ProcessorTest {
 	@Test
 	public final void testMapping4() {
 		final Node<?> x = new Data().set(-1F, 0F, 1F);
-		final Node<?> y = new Mapping().setArgument(x).setFunctionName(Functions.SIGMOID).autoShape();
+		final Node<?> y = $(SIGMOID, x);
 		
 		assertArrayEquals(x.getShape(), y.getShape());
 		
@@ -824,7 +829,7 @@ public abstract class ProcessorTest {
 	@Test
 	public final void testMapping5() {
 		final Node<?> x = new Data().set(-1F, 0F, 1F);
-		final Node<?> y = new Mapping().setArgument(x).setFunctionName(Functions.STEP0).autoShape();
+		final Node<?> y = $(STEP0, x);
 		
 		assertArrayEquals(x.getShape(), y.getShape());
 		
@@ -843,7 +848,7 @@ public abstract class ProcessorTest {
 	public final void testZipping1() {
 		final Node<?> x = new Data().set(-1F, 0F, 1F);
 		final Node<?> y = new Data().set(-1F, 0F, 1F);
-		final Node<?> z = new Zipping().setLeft(x).setRight(y).setFunctionName("+").autoShape();
+		final Node<?> z = $(x, "+", y);
 		
 		assertArrayEquals(x.getShape(), y.getShape());
 		
@@ -865,8 +870,8 @@ public abstract class ProcessorTest {
 		final Node<?> x = new Data().set(-1F, 0F, 1F);
 		final Node<?> a = new Data().set(2F);
 		final Node<?> b = new Data().set(3F);
-		final Node<?> ax = new Zipping().setLeft(x).setRight(a).setFunctionName("*").autoShape();
-		final Node<?> z = new Zipping().setLeft(ax).setRight(b).setFunctionName("+").autoShape();
+		final Node<?> ax = $(x, "*", a);
+		final Node<?> z = $(ax, "+", b);
 		
 		this.getProcessor().fullForward(z);
 		

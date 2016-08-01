@@ -256,7 +256,7 @@ public final class Functions {
 	public static final void defineDiff(final String functionName, final int variableIndex, final List<Object> variableNames, final Object definition) {
 		final List<Object> notation = application($(D, variableIndex, functionName), variableNames);
 		
-		getDefinitions().put(diffName(fName(functionName, variableNames.size()), variableIndex), $(FORALL, variableNames, IN, R, $(notation, "=", definition)));
+		getDefinitions().put(fName(diffName(functionName, variableIndex), variableNames.size()), $(FORALL, variableNames, IN, R, $(notation, "=", definition)));
 	}
 	
 	public static final List<Object> getDefinition(final String functionName, final int variableCount) {
@@ -264,7 +264,7 @@ public final class Functions {
 	}
 	
 	public static final List<Object> getDiffDefinition(final String functionName, final int variableCount, final int variableIndex) {
-		return getDefinitions().get(diffName(fName(functionName, variableCount), variableIndex));
+		return getDefinitions().get(fName(diffName(functionName, variableIndex), variableCount));
 	}
 	
 	public static final List<Object> getDiffDefinition(final String functionName, final int variableCount) {

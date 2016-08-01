@@ -110,7 +110,6 @@ public final class NodesTools {
 				shape(patches, patches.getLength() / kernelLength, kernel.getLength()),
 				shape(kernel, kernel.getLength(), 1)),
 				grid.getInputCount(), 1, grid.getOutputHeight(), grid.getOutputWidth());
-		
 	}
 	
 	public static final Node<?> patches(final Node<?> inputs, final int[] offsets, final int[] strides, final int[] patchShape) {

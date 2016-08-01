@@ -168,6 +168,22 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 		return this.set(index, this.get(index) + value);
 	}
 	
+	public default <C extends Collection<Node<?>>> C collectBackwardDiffNodesTo(final C result) {
+		final List<Node<?>> backwardDiffNodes = this.getBackwardDiffNodes();
+		
+		if (backwardDiffNodes != null) {
+			for (final Node<?> n : backwardDiffNodes) {
+				n.collectTo(result);
+			}
+		}
+		
+		for (final Node<?> n : this.getArguments()) {
+			n.collectBackwardDiffNodesTo(result);
+		}
+		
+		return result;
+	}
+	
 	public default <C extends Collection<Node<?>>> C collectTo(final C result) {
 		// for ordered collections, make sure this is added after its dependents
 		result.remove(this);

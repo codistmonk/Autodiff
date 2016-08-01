@@ -37,24 +37,67 @@ public final class MatrixMultiplication extends BinaryNode<MatrixMultiplication>
 	
 	@Override
 	protected final List<Node<?>> newBackwardDiffNodes() {
-		final Node<?> left = this.getLeft();
-		final Node<?> right = this.getRight();
-		final Node<?> leftDiffs = left.getDiffs();
-		final Node<?> rightDiffs = right.getDiffs();
+		final Node<?> a = this.getLeft();
+		final Node<?> b = this.getRight();
+		final Node<?> aDiffs = a.getDiffs();
+		final Node<?> bDiffs = b.getDiffs();
+		final Node<?> cDiffs = this.getDiffs();
 		final List<Node<?>> result = new ArrayList<>(2);
 		
-		if (leftDiffs != null) {
-			result.add(new MatrixMultiplication()
-			.setLeft(this.getDiffs())
-			.setRight(this.getRight()).setTransposeRight(!this.isTransposeRight())
-			.setByteBuffer(leftDiffs).autoShape());
+		/*
+		 * C += A B
+		 *   A.diff += C.diff B'
+		 * 
+		 * C += A' B
+		 *   A.diff += B C'.diff
+		 * 
+		 * C += A' B'
+		 *   A.diff += B' C'.diff
+		 * 
+		 * C += A B'
+		 *   A.diff += C.diff B
+		 */
+		
+		if (aDiffs != null) {
+			if (this.isTransposeLeft()) {
+				result.add(new MatrixMultiplication()
+				.setLeft(b).setTransposeLeft(this.isTransposeRight())
+				.setRight(cDiffs).setTransposeRight(true)
+				.setByteBuffer(aDiffs).autoShape());
+			} else {
+				result.add(new MatrixMultiplication()
+				.setLeft(cDiffs)
+				.setRight(b).setTransposeRight(!this.isTransposeRight())
+				.setByteBuffer(aDiffs).autoShape());
+			}
 		}
 		
-		if (rightDiffs != null) {
-			result.add(new MatrixMultiplication()
-			.setLeft(this.getLeft()).setTransposeLeft(!this.isTransposeLeft())
-			.setRight(this.getDiffs())
-			.setByteBuffer(rightDiffs).autoShape());
+		/*
+		 * C += A B
+		 *   B.diff += A' C.diff
+		 * 
+		 * C += A' B
+		 *   B.diff += A C.diff
+		 * 
+		 * C += A' B'
+		 *   B.diff += C'.diff A'
+		 * 
+		 * C += A B'
+		 *   B.diff += C'.diff A
+		 */
+		
+		if (bDiffs != null) {
+			if (this.isTransposeRight()) {
+				result.add(new MatrixMultiplication()
+				.setLeft(cDiffs).setTransposeLeft(true)
+				.setRight(a).setTransposeRight(this.isTransposeRight())
+				.setByteBuffer(bDiffs).autoShape());
+			} else {
+				result.add(new MatrixMultiplication()
+				.setLeft(a).setTransposeLeft(!this.isTransposeLeft())
+				.setRight(cDiffs)
+				.setByteBuffer(bDiffs).autoShape());
+			}
 		}
 		
 		return result;

@@ -45,7 +45,7 @@ public final class Zipping extends BinaryNode<Zipping> {
 			final Zipping df0 = new Zipping().setFunctionName(leftDiffName)
 					.setLeft(left).setRight(right).autoShape();
 			final Zipping dfd0 = new Zipping().setFunctionName("*")
-					.setLeft(this.getDiffs()).setRight(df0).setByteBuffer(leftDiffs).autoShape();
+					.setLeft(this.getDiffs()).setRight(df0).setByteBuffer(leftDiffs).setShape(leftDiffs.getLength());
 			
 			result.add(dfd0);
 		}
@@ -55,7 +55,7 @@ public final class Zipping extends BinaryNode<Zipping> {
 			final Zipping df0 = new Zipping().setFunctionName(rightDiffName)
 					.setLeft(left).setRight(right).autoShape();
 			final Zipping dfd0 = new Zipping().setFunctionName("*")
-					.setLeft(this.getDiffs()).setRight(df0).setByteBuffer(rightDiffs).autoShape();
+					.setLeft(this.getDiffs()).setRight(df0).setByteBuffer(rightDiffs).setShape(rightDiffs.getLength());
 			
 			result.add(dfd0);
 		}

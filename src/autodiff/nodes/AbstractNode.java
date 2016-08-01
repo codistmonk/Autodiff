@@ -72,6 +72,12 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	}
 	
 	public final N setByteBuffer(final Node<?> node) {
+		if (this.getShape() == null) {
+			this.setShape(node.getShape());
+		} else {
+			NodesTools.checkLength(this.getLength(), node.getLength());
+		}
+		
 		return this.setByteBuffer(getPositionedByteBuffer(node));
 	}
 	

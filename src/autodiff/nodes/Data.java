@@ -1,5 +1,6 @@
 package autodiff.nodes;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -19,7 +20,7 @@ public final class Data extends AbstractNode<Data> {
 	
 	@Override
 	protected final List<Node<?>> newBackwardDiffNodes() {
-		return null;
+		return Collections.emptyList();
 	}
 	
 	private static final long serialVersionUID = -8666641173896611664L;
