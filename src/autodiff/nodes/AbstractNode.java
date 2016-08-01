@@ -56,10 +56,6 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 		if (this.getShape() == null) {
 			this.shape = shape;
 		} else {
-			if (this.getId() == 57L) {
-				throw new RuntimeException();
-			}
-			
 			Node.super.setShape(shape);
 			this.shape = shape;
 		}
