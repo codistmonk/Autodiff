@@ -15,7 +15,6 @@ import autodiff.nodes.NodeVisitor;
 import autodiff.nodes.Zipping;
 import autodiff.rules.Disjunction;
 import autodiff.rules.PatternPredicate;
-import autodiff.ui.JGraphXTools;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -26,7 +25,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
-import multij.swing.SwingTools;
 import multij.tools.Pair;
 import multij.tools.Tools;
 
@@ -63,11 +61,11 @@ public final class DefaultProcessor implements NodeProcessor {
 			final Collection<Node<?>> forwardNodes = node.collectTo(new LinkedHashSet<>());
 			final Collection<Node<?>> nodes = forwardNodes.stream().filter(Node::hasDiffs).collect(toList());
 			
-			nodes.forEach(n -> this.fill(n.getDiffs(), 0F));
-			
-			this.fill(node.getDiffs(), 1F);
-			
 			if (false) {
+				nodes.forEach(n -> this.fill(n.getDiffs(), 0F));
+				
+				this.fill(node.getDiffs(), 1F);
+				
 				nodes.forEach(n -> n.accept(this.getBackwardDiffer()));
 			} else {
 				final List<Node<?>> backwardDiffNodes = new ArrayList<>(node.collectBackwardDiffNodesTo(new LinkedHashSet<>()));
@@ -76,9 +74,11 @@ public final class DefaultProcessor implements NodeProcessor {
 				
 				Collections.reverse(backwardDiffNodes);
 				
-				backwardDiffNodes.forEach(n -> n.accept(this.getForwarder()));
+				backwardDiffNodes.forEach(n -> this.fill(n, 0F));
 				
-//				SwingTools.show(JGraphXTools.newGraphComponent(backwardDiffNodes, 160, 50), "BD", true);
+				this.fill(node.getDiffs(), 1F);
+				
+				backwardDiffNodes.forEach(n -> n.accept(this.getForwarder()));
 			}
 			
 		}
