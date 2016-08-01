@@ -1,5 +1,7 @@
 package autodiff.ui;
 
+import static javax.swing.SwingUtilities.getWindowAncestor;
+
 import autodiff.nodes.BinaryNode;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
@@ -13,6 +15,7 @@ import com.mxgraph.model.mxIGraphModel;
 import com.mxgraph.swing.mxGraphComponent;
 import com.mxgraph.view.mxGraph;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
@@ -30,7 +33,7 @@ import java.util.function.Supplier;
 import javax.swing.AbstractAction;
 import javax.swing.JDialog;
 import javax.swing.JPopupMenu;
-import javax.swing.SwingUtilities;
+import javax.swing.JTabbedPane;
 import javax.swing.WindowConstants;
 
 import multij.swing.MouseHandler;
@@ -47,17 +50,20 @@ public final class JGraphXTools {
 		throw new IllegalInstantiationException();
 	}
 	
+	public static final int DEFAULT_CELL_WIDTH = 160;
+	
+	public static final int DEFAULT_CELL_HEIGHT = 50;
+	
 	public static final mxGraph newGraph(final Node<?> node, final int cellWidth, final int cellHeight) {
-		return newGraph(node, cellWidth, cellHeight, new HashMap<>(), new LinkedHashMap<>());
+		return newGraph(Arrays.asList(node), cellWidth, cellHeight, new HashMap<>(), new LinkedHashMap<>());
 	}
 	
-	public static final mxGraph newGraph(final Node<?> node, final int cellWidth, final int cellHeight,
+	public static final mxGraph newGraph(final Iterable<Node<?>> nodes, final int cellWidth, final int cellHeight,
 			final Map<Node<?>, Object> vertices, final Map<Node<?>, Integer> depths) {
 		final mxGraph graph = new mxGraph();
 		final mxIGraphModel graphModel = graph.getModel();
 		final Object parent = graph.getDefaultParent();
-		
-		node.accept(new NodeVisitor<Object>() {
+		final NodeVisitor<Object> visitor = new NodeVisitor<Object>() {
 			
 			private final Collection<Pair<Object, Object>> edges = new HashSet<>();
 			
@@ -99,7 +105,7 @@ public final class JGraphXTools {
 				final Object result = this.visit((BinaryNode<?>) node);
 				
 				graphModel.setValue(result, defaultNodeText(node) + "\n"
-				+ (node.isTransposeLeft() ? "T" : "N") + (node.isTransposeRight() ? "T" : "N"));
+						+ (node.isTransposeLeft() ? "T" : "N") + (node.isTransposeRight() ? "T" : "N"));
 				
 				return result;
 			}
@@ -148,7 +154,11 @@ public final class JGraphXTools {
 			
 			private static final long serialVersionUID = 8210701219373622680L;
 			
-		});
+		};
+		
+		for (final Node<?> node : nodes) {
+			node.accept(visitor);
+		}
 		
 		return graph;
 	}
@@ -167,14 +177,14 @@ public final class JGraphXTools {
 	}
 	
 	public static final mxGraphComponent newGraphComponent(final Node<?> node) {
-		return newGraphComponent(node, 160, 50);
+		return newGraphComponent(Arrays.asList(node), DEFAULT_CELL_WIDTH, DEFAULT_CELL_HEIGHT);
 	}
 	
-	public static final mxGraphComponent newGraphComponent(final Node<?> node, final int cellWidth, final int cellHeight) {
+	public static final mxGraphComponent newGraphComponent(final Iterable<Node<?>> nodes, final int cellWidth, final int cellHeight) {
 		final Map<Node<?>, Object> vertices = new HashMap<>();
 		final Map<Node<?>, Integer> depths = new LinkedHashMap<>();
-		final mxGraph graph = newGraph(node, cellWidth, cellHeight, vertices, depths);
-		final Map<Object, Node<?>> nodes = reverse(vertices, new HashMap<>());
+		final mxGraph graph = newGraph(nodes, cellWidth, cellHeight, vertices, depths);
+		final Map<Object, Node<?>> nodesByCell = reverse(vertices, new HashMap<>());
 		final Map<Integer, List<Node<?>>> nodesByDepth = reverseMulti(depths, new TreeMap<>(), ArrayList::new);
 		final int d = nodesByDepth.size();
 		final int d1 = nodesByDepth.values().stream().mapToInt(Collection::size).max().getAsInt();
@@ -205,11 +215,21 @@ public final class JGraphXTools {
 			private Object currentCell;
 			
 			{
-				this.nodeMenu.add(new AbstractAction("Show values...") {
+				this.nodeMenu.add(new AbstractAction("Values...") {
 					
 					@Override
 					public final void actionPerformed(final ActionEvent event) {
-						showNodeValues(nodes);
+						showValues(nodesByCell);
+					}
+					
+					private static final long serialVersionUID = -6081193936361106487L;
+					
+				});
+				this.nodeMenu.add(new AbstractAction("Backward diff nodes...") {
+					
+					@Override
+					public final void actionPerformed(final ActionEvent event) {
+						showBackwardDiffNodes(nodesByCell);
 					}
 					
 					private static final long serialVersionUID = -6081193936361106487L;
@@ -232,12 +252,30 @@ public final class JGraphXTools {
 				this.maybeShowPopup(event);
 			}
 			
-			final void showNodeValues(final Map<Object, Node<?>> nodes) {
-				final Node<?> node = nodes.get(this.currentCell);
-				final JDialog view = new JDialog(SwingUtilities.getWindowAncestor(result), "Values");
+			final void showBackwardDiffNodes(final Map<Object, Node<?>> nodesByCell) {
+				final Node<?> node = nodesByCell.get(this.currentCell);
+				final List<Node<?>> backwardDiffNodes = node.getBackwardDiffNodes();
+				
+				if (backwardDiffNodes != null && !backwardDiffNodes.isEmpty()) {
+					final mxGraphComponent component = JGraphXTools.newGraphComponent(backwardDiffNodes,
+							DEFAULT_CELL_WIDTH, DEFAULT_CELL_HEIGHT);
+					
+					this.show(component, "Backward diff nodes");
+				}
+			}
+			
+			final void showValues(final Map<Object, Node<?>> nodesByCell) {
+				final Node<?> node = nodesByCell.get(this.currentCell);
+				final JTabbedPane component = autodiff.ui.SwingTools.newNodeValuesView(node);
+				
+				this.show(component, "Values");
+			}
+			
+			private final void show(final Component component, final String title) {
+				final JDialog view = new JDialog(getWindowAncestor(result), title);
 				
 				view.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-				view.getContentPane().add(autodiff.ui.SwingTools.newNodeValuesView(node));
+				view.getContentPane().add(component);
 				
 				SwingTools.packAndCenter(view).setVisible(true);
 			}

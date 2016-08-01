@@ -74,9 +74,12 @@ public final class DefaultProcessor implements NodeProcessor {
 				Collections.reverse(backwardDiffNodes);
 				
 				backwardDiffNodes.forEach(n -> n.accept(this.getForwarder()));
+				
+				Tools.debugPrint(backwardDiffNodes.size());
+				
+				SwingTools.show(JGraphXTools.newGraphComponent(node), "Forward", true);
 			}
 			
-//			SwingTools.show(JGraphXTools.newGraphComponent(backwardDiffNodes.get(3), 800, 800), "view", true);
 		}
 		
 		return node;

@@ -883,6 +883,10 @@ public abstract class ProcessorTest {
 		
 		this.getProcessor().fullBackwardDiff(z);
 		
+		if ("show graph".equals("")) {
+			SwingTools.show(JGraphXTools.newGraphComponent(z), "view", true);
+		}
+		
 		assertArrayEquals(new float[] { 2F, 2F, 2F }, x.getDiffs().get(new float[x.getLength()]), 0F);
 		assertArrayEquals(new float[] { 0F }, a.getDiffs().get(new float[a.getLength()]), 0F);
 		assertArrayEquals(new float[] { 3F }, b.getDiffs().get(new float[b.getLength()]), 0F);
