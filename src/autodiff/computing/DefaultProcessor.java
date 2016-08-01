@@ -3,7 +3,6 @@ package autodiff.computing;
 import static autodiff.computing.Functions.*;
 import static autodiff.rules.PatternPredicate.rule;
 import static java.lang.Math.*;
-import static java.util.Collections.reverse;
 import static multij.tools.Tools.cast;
 import static multij.tools.Tools.swap;
 
@@ -17,10 +16,7 @@ import autodiff.rules.PatternPredicate;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -35,39 +31,6 @@ public final class DefaultProcessor implements NodeProcessor {
 	@Override
 	public final Forwarder getForwarder() {
 		return Forwarder.INSTANCE;
-	}
-	
-	@Override
-	public final <N extends Node<?>> N fullForward(final N node) {
-		final List<Node<?>> nodes = new ArrayList<>(node.collectTo(new LinkedHashSet<>()));
-		
-		reverse(nodes);
-		
-		nodes.stream().filter(Node::isComputationNode).forEach(n -> this.fill(n, 0F));
-		nodes.forEach(n -> n.accept(this.getForwarder()));
-		
-		return node;
-	}
-	
-	@Override
-	public final <N extends Node<?>> N fullBackwardDiff(final N node) {
-		if (node.setupDiffs()) {
-			final Collection<Node<?>> forwardNodes = node.collectTo(new LinkedHashSet<>());
-			final List<Node<?>> backwardDiffNodes = new ArrayList<>(node.collectBackwardDiffNodesTo(new LinkedHashSet<>()));
-			
-			backwardDiffNodes.removeAll(forwardNodes);
-			
-			Collections.reverse(backwardDiffNodes);
-			
-			backwardDiffNodes.forEach(n -> this.fill(n, 0F));
-			
-			this.fill(node.getDiffs(), 1F);
-			
-			backwardDiffNodes.forEach(n -> n.accept(this.getForwarder()));
-			
-		}
-		
-		return node;
 	}
 	
 	private static final long serialVersionUID = -5998082453824765555L;
