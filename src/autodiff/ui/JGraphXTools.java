@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Supplier;
 
 import javax.swing.AbstractAction;
 import javax.swing.JDialog;
@@ -46,18 +47,15 @@ public final class JGraphXTools {
 		throw new IllegalInstantiationException();
 	}
 	
-	public static final mxGraph newGraph(final Node<?> node, final int componentWidth,
-			final int componentHeight, final int cellWidth, final int cellHeight) {
-		return newGraph(node, componentWidth, componentHeight, cellWidth, cellHeight, new HashMap<>());
+	public static final mxGraph newGraph(final Node<?> node, final int cellWidth, final int cellHeight) {
+		return newGraph(node, cellWidth, cellHeight, new HashMap<>(), new LinkedHashMap<>());
 	}
 	
-	public static final mxGraph newGraph(final Node<?> node, final int componentWidth,
-			final int componentHeight, final int cellWidth, final int cellHeight,
-			final Map<Node<?>, Object> vertices) {
+	public static final mxGraph newGraph(final Node<?> node, final int cellWidth, final int cellHeight,
+			final Map<Node<?>, Object> vertices, final Map<Node<?>, Integer> depths) {
 		final mxGraph graph = new mxGraph();
 		final mxIGraphModel graphModel = graph.getModel();
 		final Object parent = graph.getDefaultParent();
-		final Map<Node<?>, Integer> depths = new LinkedHashMap<>();
 		
 		node.accept(new NodeVisitor<Object>() {
 			
@@ -139,7 +137,7 @@ public final class JGraphXTools {
 				
 				return vertices.computeIfAbsent(node,
 						n -> graph.insertVertex(parent, null, defaultNodeText(n),
-								componentWidth / 2, componentHeight / 2, cellWidth, cellHeight));
+								0, 0, cellWidth, cellHeight));
 			}
 			
 			private final Object end(final Object vertex) {
@@ -152,13 +150,39 @@ public final class JGraphXTools {
 			
 		});
 		
-		final Map<Integer, List<Node<?>>> nodes = new TreeMap<>();
+		return graph;
+	}
+	
+	public static final <K, V> Map<V, K> reverse(final Map<K, V> map, final Map<V, K> result) {
+		map.forEach((k, v) -> result.put(v, k));
 		
-		depths.forEach((k, v) -> nodes.computeIfAbsent(v, __ -> new ArrayList<>()).add(k));
+		return result;
+	}
+	
+	public static final <K, V, C extends Collection<K>> Map<V, C> reverseMulti(final Map<K, V> map,
+			final Map<V, C> result, final Supplier<C> collectionSupplier) {
+		map.forEach((k, v) -> result.computeIfAbsent(v, __ -> collectionSupplier.get()).add(k));
 		
-		final int d = nodes.size();
+		return result;
+	}
+	
+	public static final mxGraphComponent newGraphComponent(final Node<?> node) {
+		return newGraphComponent(node, 160, 50);
+	}
+	
+	public static final mxGraphComponent newGraphComponent(final Node<?> node, final int cellWidth, final int cellHeight) {
+		final Map<Node<?>, Object> vertices = new HashMap<>();
+		final Map<Node<?>, Integer> depths = new LinkedHashMap<>();
+		final mxGraph graph = newGraph(node, cellWidth, cellHeight, vertices, depths);
+		final Map<Object, Node<?>> nodes = reverse(vertices, new HashMap<>());
+		final Map<Integer, List<Node<?>>> nodesByDepth = reverseMulti(depths, new TreeMap<>(), ArrayList::new);
+		final int d = nodesByDepth.size();
+		final int d1 = nodesByDepth.values().stream().mapToInt(Collection::size).max().getAsInt();
 		
-		nodes.forEach((k, v) -> {
+		final int componentWidth = (2 * d1 + 1) * cellWidth / 2;
+		final int componentHeight = (2 * d + 1) * cellHeight;
+		
+		nodesByDepth.forEach((k, v) -> {
 			final int m = v.size();
 			
 			for (int i = 0; i < m; ++i) {
@@ -172,22 +196,6 @@ public final class JGraphXTools {
 		
 		graph.refresh();
 		
-		return graph;
-	}
-	
-	public static final <K, V> Map<V, K> reverse(final Map<K, V> map, final Map<V, K> result) {
-		map.forEach((k, v) -> result.put(v, k));
-		
-		return result;
-	}
-	
-	public static final mxGraphComponent newGraphComponent(final Node<?> node, final int componentWidth, final int componentHeight) {
-		final int cellWidth = 160;
-		final int cellHeight = 50;
-		final Map<Node<?>, Object> vertices = new HashMap<>();
-		final mxGraph graph = newGraph(node, componentWidth, componentHeight,
-				cellWidth, cellHeight, vertices);
-		final Map<Object, Node<?>> nodes = reverse(vertices, new HashMap<>());
 		final mxGraphComponent result = new mxGraphComponent(graph);
 		
 		new MouseHandler() {

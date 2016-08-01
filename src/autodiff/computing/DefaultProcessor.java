@@ -66,7 +66,7 @@ public final class DefaultProcessor implements NodeProcessor {
 			
 			this.fill(node.getDiffs(), 1F);
 			
-			if (true) {
+			if (false) {
 				nodes.forEach(n -> n.accept(this.getBackwardDiffer()));
 			} else {
 				final List<Node<?>> backwardDiffNodes = new ArrayList<>(node.collectBackwardDiffNodesTo(new LinkedHashSet<>()));

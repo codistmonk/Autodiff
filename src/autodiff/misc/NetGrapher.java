@@ -50,7 +50,7 @@ public final class NetGrapher {
 			
 			DefaultProcessor.INSTANCE.fullForward(cost);
 			
-			SwingTools.show(JGraphXTools.newGraphComponent(cost, 1_000, 1_000), "NetGrapher.cost");
+			SwingTools.show(JGraphXTools.newGraphComponent(cost), "NetGrapher.cost");
 		} else {
 			final Node<?> md = new Data().setShape(2, 3, 4, 5, 6);
 			
@@ -58,7 +58,7 @@ public final class NetGrapher {
 				md.set(i, i);
 			}
 			
-			SwingTools.show(JGraphXTools.newGraphComponent(md, 200, 200), "tmp");
+			SwingTools.show(JGraphXTools.newGraphComponent(md), "tmp");
 		}
 	}
 

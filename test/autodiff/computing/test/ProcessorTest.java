@@ -48,7 +48,7 @@ public abstract class ProcessorTest {
 		this.getProcessor().fullForward(y);
 		
 		if ("show graph".equals("")) {
-			SwingTools.show(JGraphXTools.newGraphComponent(y, 800, 800), "view", true);
+			SwingTools.show(JGraphXTools.newGraphComponent(y), "view", true);
 		}
 		
 		assertArrayEquals(new float[] {
@@ -68,7 +68,7 @@ public abstract class ProcessorTest {
 		this.getProcessor().fullForward(y);
 		
 		if ("show graph".equals("")) {
-			SwingTools.show(JGraphXTools.newGraphComponent(y, 800, 800), "view", true);
+			SwingTools.show(JGraphXTools.newGraphComponent(y), "view", true);
 		}
 		
 		assertArrayEquals(new float[] {
@@ -89,7 +89,7 @@ public abstract class ProcessorTest {
 		this.getProcessor().fullForward(y);
 		
 		if ("show graph".equals("")) {
-			SwingTools.show(JGraphXTools.newGraphComponent(y, 800, 800), "view", true);
+			SwingTools.show(JGraphXTools.newGraphComponent(y), "view", true);
 		}
 		
 		assertArrayEquals(new float[] {
@@ -110,7 +110,7 @@ public abstract class ProcessorTest {
 		this.getProcessor().fullForward(y);
 		
 		if ("show graph".equals("")) {
-			SwingTools.show(JGraphXTools.newGraphComponent(y, 800, 800), "view", true);
+			SwingTools.show(JGraphXTools.newGraphComponent(y), "view", true);
 		}
 		
 		assertArrayEquals(new float[] {
@@ -131,7 +131,7 @@ public abstract class ProcessorTest {
 		this.getProcessor().fullForward(y);
 		
 		if ("show graph".equals("")) {
-			SwingTools.show(JGraphXTools.newGraphComponent(y, 800, 800), "view", true);
+			SwingTools.show(JGraphXTools.newGraphComponent(y), "view", true);
 		}
 		
 		assertArrayEquals(new float[] {
@@ -152,7 +152,7 @@ public abstract class ProcessorTest {
 		this.getProcessor().fullForward(y);
 		
 		if ("show graph".equals("")) {
-			SwingTools.show(JGraphXTools.newGraphComponent(y, 800, 800), "view", true);
+			SwingTools.show(JGraphXTools.newGraphComponent(y), "view", true);
 		}
 		
 		assertArrayEquals(new float[] {
@@ -173,7 +173,7 @@ public abstract class ProcessorTest {
 		this.getProcessor().fullForward(y);
 		
 		if ("show graph".equals("")) {
-			SwingTools.show(JGraphXTools.newGraphComponent(y, 800, 800), "view", true);
+			SwingTools.show(JGraphXTools.newGraphComponent(y), "view", true);
 		}
 		
 		assertArrayEquals(new float[] {
@@ -194,7 +194,7 @@ public abstract class ProcessorTest {
 		this.getProcessor().fullForward(y);
 		
 		if ("show graph".equals("")) {
-			SwingTools.show(JGraphXTools.newGraphComponent(y, 800, 800), "view", true);
+			SwingTools.show(JGraphXTools.newGraphComponent(y), "view", true);
 		}
 		
 		assertArrayEquals(new float[] {
@@ -257,7 +257,7 @@ public abstract class ProcessorTest {
 		this.getProcessor().fullForward(xi);
 		
 		if ("show graph".equals("")) {
-			SwingTools.show(JGraphXTools.newGraphComponent(xi, 800, 800), "view", true);
+			SwingTools.show(JGraphXTools.newGraphComponent(xi), "view", true);
 		}
 		
 		assertArrayEquals(new float[] {
@@ -292,7 +292,7 @@ public abstract class ProcessorTest {
 		this.getProcessor().fullForward(xi);
 		
 		if ("show graph".equals("")) {
-			SwingTools.show(JGraphXTools.newGraphComponent(xi, 800, 800), "view", true);
+			SwingTools.show(JGraphXTools.newGraphComponent(xi), "view", true);
 		}
 		
 		assertArrayEquals(new float[] {
@@ -328,7 +328,7 @@ public abstract class ProcessorTest {
 		this.getProcessor().fullForward(xi);
 		
 		if ("show graph".equals("")) {
-			SwingTools.show(JGraphXTools.newGraphComponent(xi, 800, 800), "view", true);
+			SwingTools.show(JGraphXTools.newGraphComponent(xi), "view", true);
 		}
 		
 		assertArrayEquals(new float[] {
@@ -640,7 +640,7 @@ public abstract class ProcessorTest {
 		this.getProcessor().fullForward(patches);
 		
 		if ("show graph".equals("")) {
-			SwingTools.show(JGraphXTools.newGraphComponent(patches, 800, 800), "view", true);
+			SwingTools.show(JGraphXTools.newGraphComponent(patches), "view", true);
 		}
 		
 		assertArrayEquals(new float[] {
@@ -691,7 +691,7 @@ public abstract class ProcessorTest {
 		this.getProcessor().fullForward(patches);
 		
 		if ("show graph".equals("")) {
-			SwingTools.show(JGraphXTools.newGraphComponent(patches, 800, 800), "view", true);
+			SwingTools.show(JGraphXTools.newGraphComponent(patches), "view", true);
 		}
 		
 		assertArrayEquals(new float[] {
