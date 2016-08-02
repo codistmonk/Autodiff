@@ -7,6 +7,7 @@ import static autodiff.computing.Functions.PREFIX_OPERATORS;
 import static autodiff.computing.Functions.STEP1;
 import static java.lang.Math.round;
 import static multij.tools.Tools.*;
+
 import autodiff.computing.DefaultProcessor;
 
 import java.io.Serializable;
@@ -182,13 +183,15 @@ public final class NodesTools {
 		}
 		
 		final Node<?> replicatedIndices = $(shape(shift, indices.getLength() / indicesStride, indicesStride), replicationMatrix);
-		final Node<?> range = newRange(vectorsStride);
+//		final Node<?> range = newRange(vectorsStride);
+		final Node<?> range = new Range(vectorsStride);
 		final Node<?> mask = $(KRONECKER, replicatedIndices, range);
 		
 		return shape($(shape(vectors, vectors.getLength() / vectorsStride, vectorsStride),
 				shape(mask, mask.getLength() / vectorsStride, vectorsStride), T), resultShape);
 	}
 	
+	@Deprecated
 	public static final Node<?> newRange(final int n) {
 		final Node<?> result = new Data().setShape(n);
 		
@@ -561,6 +564,33 @@ public final class NodesTools {
 		}
 		
 		private static final long serialVersionUID = 7162845996889119853L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-02)
+	 */
+	public static final class Range extends CustomNode {
+		
+		private final int n;
+		
+		public Range(final int n) {
+			this.n = n;
+			this.setShape(this.n);
+		}
+		
+		@Override
+		protected final Node<?> doUnfold() {
+			final Node<?> result = new Data().setByteBuffer(this);
+			
+			for (int i = 0; i < this.n; ++i) {
+				result.set(i, i);
+			}
+			
+			return result;
+		}
+		
+		private static final long serialVersionUID = 3288108223610832677L;
 		
 	}
 	

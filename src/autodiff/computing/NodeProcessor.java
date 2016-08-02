@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+import autodiff.nodes.CustomNode;
 import autodiff.nodes.Node;
 import autodiff.nodes.NodeVisitor;
 
@@ -29,7 +30,8 @@ public abstract interface NodeProcessor extends Serializable {
 	}
 	
 	public default <N extends Node<?>> List<Node<?>> collectForward(final N node) {
-		final List<Node<?>> result = new ArrayList<>(node.collectTo(new LinkedHashSet<>()));
+//		final List<Node<?>> result = new ArrayList<>(node.collectTo(new LinkedHashSet<>()));
+		final List<Node<?>> result = new ArrayList<>(node.accept(new ForwardCollector()));
 		
 		reverse(result);
 		
@@ -83,6 +85,34 @@ public abstract interface NodeProcessor extends Serializable {
 	
 	public default void forward(final Iterable<Node<?>> nodes) {
 		nodes.forEach(n -> n.accept(this.getForwarder()));
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-02)
+	 */
+	public static final class ForwardCollector implements NodeVisitor<Collection<Node<?>>> {
+		
+		private final Collection<Node<?>> result = new LinkedHashSet<>();
+		
+		@Override
+		public final Collection<Node<?>> visit(final Node<?> node) {
+			// for ordered collections, make sure this is added after its dependents
+			this.result.remove(node);
+			this.result.add(node);
+			
+			node.getArguments().forEach(a -> a.accept(this));
+			node.getAdditionalDependencies().forEach(a -> a.accept(this));
+			
+			return this.result;
+		}
+		
+		@Override
+		public final Collection<Node<?>> visit(final CustomNode node) {
+			return node.unfold().accept(this);
+		}
+		
+		private static final long serialVersionUID = 7381617866288668668L;
+		
 	}
 	
 }
