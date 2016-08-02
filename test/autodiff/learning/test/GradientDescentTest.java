@@ -10,7 +10,6 @@ import static multij.tools.Tools.cast;
 import static multij.tools.Tools.debugPrint;
 import static org.junit.Assert.*;
 
-import autodiff.computing.DefaultProcessor;
 import autodiff.computing.NodeProcessor;
 import autodiff.io.Iris;
 import autodiff.io.LabeledData;
@@ -33,7 +32,11 @@ import org.junit.Test;
 /**
  * @author codistmonk (creation 2016-07-14)
  */
-public final class GradientDescentTest {
+public abstract class GradientDescentTest {
+	
+	protected GradientDescentTest() {
+		// NOP
+	}
 	
 	@Test
 	public final void test1() {
@@ -235,8 +238,6 @@ public final class GradientDescentTest {
 		}
 	}
 	
-	public final NodeProcessor getProcessor() {
-		return DefaultProcessor.INSTANCE;
-	}
+	public abstract NodeProcessor getProcessor();
 	
 }
