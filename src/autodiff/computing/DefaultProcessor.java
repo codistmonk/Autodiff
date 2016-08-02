@@ -392,6 +392,7 @@ public final class DefaultProcessor implements NodeProcessor {
 				
 				return this.rules.applyTo(value, m);
 			});
+			
 			this.rules.add((object, __) -> object instanceof Number, (x, __) -> new Constant(((Number) x).floatValue()));
 		}
 		

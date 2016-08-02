@@ -1,5 +1,20 @@
 package autodiff.computing;
 
+import static autodiff.computing.Functions.$;
+import static autodiff.computing.Functions.ABS;
+import static autodiff.computing.Functions.CASES;
+import static autodiff.computing.Functions.COS;
+import static autodiff.computing.Functions.EXP;
+import static autodiff.computing.Functions.FORALL;
+import static autodiff.computing.Functions.IF;
+import static autodiff.computing.Functions.IN;
+import static autodiff.computing.Functions.LN;
+import static autodiff.computing.Functions.OTHERWISE;
+import static autodiff.computing.Functions.R;
+import static autodiff.computing.Functions.SIN;
+import static autodiff.computing.Functions.SQRT;
+import static autodiff.rules.PatternPredicate.rule;
+import static multij.tools.Tools.cast;
 import static multij.tools.Tools.swap;
 import static org.jocl.CL.CL_MEM_READ_WRITE;
 import static org.jocl.CL.CL_MEM_USE_HOST_PTR;
@@ -10,18 +25,28 @@ import autodiff.cl.CLKernel;
 import autodiff.nodes.AbstractNode;
 import autodiff.nodes.BinaryNode;
 import autodiff.nodes.Data;
+import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
 import autodiff.nodes.NodeVisitor;
+import autodiff.nodes.Zipping;
+import autodiff.rules.Disjunction;
+import autodiff.rules.PatternPredicate;
 
+import java.io.Serializable;
 import java.nio.Buffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
+
+import multij.tools.Pair;
 
 import org.jocl.CL;
 import org.jocl.Pointer;
@@ -135,7 +160,7 @@ public final class CLProcessor implements NodeProcessor {
 	@Override
 	public final void forward(final Iterable<Node<?>> nodes) {
 		for (final Node<?> n : nodes) {
-			if (n.hasArguments()) {
+			if (n.isComputationNode()) {
 				n.accept(this.forwardInitializer).enqueueNDRange(n.getLength());
 			}
 		}
@@ -158,20 +183,20 @@ public final class CLProcessor implements NodeProcessor {
 		final AbstractNode<?> aNode = (AbstractNode<?>) node;
 		
 		this.getContext().getDefaultCommandQueue().enqueueReadBuffer(
-				this.clBuffer(aNode), Sizeof.cl_float * node.getLength(), this.pointer((AbstractNode<?>) node));
+				this.clBuffer(aNode), Sizeof.cl_float * node.getLength(), this.pointer(node));
 	}
 	
 	final Map<Node<?>, CLKernel> getForwardKernels() {
 		return this.forwardKernels;
 	}
 	
-	final cl_mem clBuffer(final AbstractNode<?> node) {
+	final cl_mem clBuffer(final Node<?> node) {
 		return this.buffers.computeIfAbsent(node, __ -> getContext().createBuffer(
 				CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, Float.BYTES, node.getLength(),
 				this.pointer(node)));
 	}
 	
-	final Pointer pointer(final AbstractNode<?> node) {
+	final Pointer pointer(final Node<?> node) {
 		return this.pointers.computeIfAbsent(node, __ -> Pointer.toBuffer(node.getFloatBuffer().position(0)));
 	}
 	
@@ -202,6 +227,57 @@ public final class CLProcessor implements NodeProcessor {
 	 */
 	final class ForwardGetter implements NodeVisitor<CLKernel> {
 		
+		private final Context context = new Context();
+		
+		@Override
+		public final CLKernel visit(final Mapping node) {
+			return getForwardKernels().computeIfAbsent(node, __ -> {
+				final String functionName = node.getFunctionName();
+				final List<Object> forwardDefinition = Functions.getDefinition(functionName, 1);
+				final String expression = this.context.newSupplier(forwardDefinition);
+				final String kernelName = node.getClass().getSimpleName() + node.getId();
+				String programSource = "";
+				
+				programSource += "__kernel void " + kernelName + "(";
+				programSource += "__global float const * const argument, ";
+				programSource += "__global float * const result) {\n";
+				programSource += "	int const gid = get_global_id(0);\n";
+				programSource += "	float const x = argument[gid];\n";
+				programSource += "	result[gid] = " + expression + ";\n";
+				programSource += "}\n";
+				
+				return getContext().createAndBuildProgram(programSource).createKernel(kernelName);
+			});
+		}
+		
+		@Override
+		public final CLKernel visit(final Zipping node) {
+			return getForwardKernels().computeIfAbsent(node, __ -> {
+				final Node<?> left = node.getLeft();
+				final Node<?> right = node.getRight();
+				final int l = node.getLength();
+				final int m = left.getLength();
+				final int n = right.getLength();
+				final String functionName = node.getFunctionName();
+				final List<Object> forwardDefinition = Functions.getDefinition(functionName, 2);
+				final String expression = this.context.newSupplier(forwardDefinition);
+				final String kernelName = node.getClass().getSimpleName() + node.getId();
+				String programSource = "";
+				
+				programSource += "__kernel void " + kernelName + "(";
+				programSource += "__global float const * const left, ";
+				programSource += "__global float const * const right, ";
+				programSource += "__global float * const result) {\n";
+				programSource += "	int const gid = get_global_id(0);\n";
+				programSource += "	float const x = left[gid % " + m + "];\n";
+				programSource += "	float const y = right[gid % " + n + "];\n";
+				programSource += "	result[gid % " + l + "] = " + expression + ";\n";
+				programSource += "}\n";
+				
+				return getContext().createAndBuildProgram(programSource).createKernel(kernelName);
+			});
+		}
+		
 		@Override
 		public final CLKernel visit(final MatrixMultiplication node) {
 			return getForwardKernels().computeIfAbsent(node, __ -> {
@@ -223,7 +299,7 @@ public final class CLProcessor implements NodeProcessor {
 				final int rows = leftShape[0];
 				final int columns = rightShape[1];
 				final int stride = leftShape[1];
-				final String kernelName = node.getClass().getSimpleName() + getForwardKernels().size();
+				final String kernelName = node.getClass().getSimpleName() + node.getId();
 				String programSource = "";
 				
 				programSource += "__kernel void " + kernelName + "(";
@@ -262,22 +338,22 @@ public final class CLProcessor implements NodeProcessor {
 		public final CLKernel visit(final BinaryNode<?> node) {
 			final CLKernel result = getForwardKernel(node);
 			
-			result.setArg(0, clBuffer((AbstractNode<?>) node.getLeft()));
-			result.setArg(1, clBuffer((AbstractNode<?>) node.getRight()));
+			result.setArg(0, clBuffer(node.getLeft()));
+			result.setArg(1, clBuffer(node.getRight()));
 			result.setArg(2, clBuffer(node));
 			
 			return result;
 		}
 		
-//		@Override
-//		public final CLKernel visit(final UnaryNode<?> node) {
-//			final CLKernel result = getForwardKernel(node);
-//			
-//			result.setArg(0, clBuffer((AbstractNode<?>) node.getArgument()));
-//			result.setArg(1, clBuffer(node));
-//			
-//			return result;
-//		}
+		@Override
+		public final CLKernel visit(final Mapping node) {
+			final CLKernel result = getForwardKernel(node);
+			
+			result.setArg(0, clBuffer(node.getArgument()));
+			result.setArg(1, clBuffer(node));
+			
+			return result;
+		}
 		
 		private static final long serialVersionUID = -7362441160666727239L;
 		
@@ -384,6 +460,354 @@ public final class CLProcessor implements NodeProcessor {
 		result += "}\n";
 		
 		return result;
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-02)
+	 */
+	public static final class Context implements Serializable {
+		
+		private final Disjunction<Object, String> rules = new Disjunction<>();
+		
+		{
+			for (final List<Object> definition : Functions.getDefinitions().values()) {
+				{
+					final autodiff.rules.Variable x = new autodiff.rules.Variable();
+					final autodiff.rules.Variable y = new autodiff.rules.Variable();
+					final autodiff.rules.Variable z = new autodiff.rules.Variable();
+					final List<Object> function1DefinitionPattern = $(FORALL, $(x), IN, R, $(y, "=", z));
+					final Map<autodiff.rules.Variable, Object> mapping = new HashMap<>();
+					
+					if (autodiff.rules.Variable.match(function1DefinitionPattern, definition, mapping)
+							&& !mapping.get(y).equals(mapping.get(z))) {
+						final Map<Object, Object> m_ = new HashMap<>();
+						
+						m_.put(mapping.get(x), x);
+						
+						final Object y_ = autodiff.rules.Variable.rewrite(mapping.get(y), m_);
+						final Object z_ = autodiff.rules.Variable.rewrite(mapping.get(z), m_);
+						
+						this.rules.add(new PatternPredicate(y_), (__, m) -> this.rules.applyTo(z_, m));
+					}
+				}
+				
+				{
+					final autodiff.rules.Variable x0 = new autodiff.rules.Variable();
+					final autodiff.rules.Variable x1 = new autodiff.rules.Variable();
+					final autodiff.rules.Variable y = new autodiff.rules.Variable();
+					final autodiff.rules.Variable z = new autodiff.rules.Variable();
+					final List<Object> function2DefinitionPattern = $(FORALL, $(x0, x1), IN, R, $(y, "=", z));
+					final Map<autodiff.rules.Variable, Object> mapping = new HashMap<>();
+					
+					if (autodiff.rules.Variable.match(function2DefinitionPattern, definition, mapping)
+							&& !mapping.get(y).equals(mapping.get(z))) {
+						final Map<Object, Object> m_ = new HashMap<>();
+						
+						m_.put(mapping.get(x0), x0);
+						m_.put(mapping.get(x1), x1);
+						
+						final Object y_ = autodiff.rules.Variable.rewrite(mapping.get(y), m_);
+						final Object z_ = autodiff.rules.Variable.rewrite(mapping.get(z), m_);
+						
+						this.rules.add(new PatternPredicate(y_), (__, m) -> this.rules.applyTo(z_, m));
+					}
+				}
+			}
+			
+			{
+				this.rules.add((expr, __) -> {
+					final List<?> list = cast(List.class, expr);
+					
+					return list != null && 2 <= list.size() && CASES.equals(list.get(0));
+				}, (expr, m) -> {
+					final List<?> list = (List<?>) expr;
+					final List<Pair<String, String>> conditionAndResults = new ArrayList<>();
+					
+					for (int i = 1; i < list.size(); ++i) {
+						final List<?> caseElement = (List<?>) list.get(i);
+						
+						if (caseElement.size() == 3) {
+							if (!IF.equals(caseElement.get(1))) {
+								throw new IllegalArgumentException();
+							}
+							
+							conditionAndResults.add(new Pair<>(
+									this.rules.applyTo(caseElement.get(2), m), this.rules.applyTo(caseElement.get(0), m)));
+						} else {
+							if (caseElement.size() != 2 || !OTHERWISE.equals(caseElement.get(1))) {
+								throw new IllegalArgumentException();
+							}
+							
+							conditionAndResults.add(new Pair<>(null, this.rules.applyTo(caseElement.get(0), m)));
+						}
+					}
+					
+					String result = null;
+					
+					for (int i = conditionAndResults.size() - 1; 0 <= i; --i) {
+						final Pair<String, String> conditionAndResult = conditionAndResults.get(i);
+						
+						if (conditionAndResult.getFirst() == null) {
+							result = conditionAndResult.getSecond();
+						} else {
+							result = "(" + conditionAndResult.getFirst() + " ? " + conditionAndResult.getSecond() + " : " + result + ")";
+						}
+					}
+					
+					return result;
+				});
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(ABS, x), (__, m) -> {
+					return prefix("abs", x, m);
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(SQRT, x), (__, m) -> {
+					return prefix("sqrt", x, m);
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(EXP, x), (__, m) -> {
+					return prefix("exp", x, m);
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($("-", x), (__, m) -> {
+					return prefix("-", x, m);
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(LN, x), (__, m) -> {
+					return prefix("log", x, m);
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(SIN, x), (__, m) -> {
+					return prefix("sin", x, m);
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(COS, x), (__, m) -> {
+					return prefix("cos", x, m);
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(x, "+", y), (__, m) -> {
+					return infix("+", x, y, m);
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(x, "-", y), (__, m) -> {
+					return infix("-", x, y, m);
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(x, "*", y), (__, m) -> {
+					return infix("*", x, y, m);
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(x, "/", y), (__, m) -> {
+					return infix("/", x, y, m);
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(x, "=", y), (__, m) -> {
+					return infix("==", x, y, m);
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(x, "!=", y), (__, m) -> {
+					return infix("!=", x, y, m);
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(x, "<", y), (__, m) -> {
+					return infix("<", x, y, m);
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(x, "<=", y), (__, m) -> {
+					return infix("<=", x, y, m);
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(x, ">", y), (__, m) -> {
+					return infix(">", x, y, m);
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(x, ">=", y), (__, m) -> {
+					return infix(">=", x, y, m);
+				}));
+			}
+			
+			this.rules.add((object, __) -> object instanceof autodiff.rules.Variable, (name, m) -> {
+				final Object value = DefaultProcessor.Context.transitiveGet(m, name);
+				
+				if (value instanceof String) {
+					return (String) value;
+				}
+				
+				return this.rules.applyTo(value, m);
+			});
+			
+			this.rules.add((object, __) -> object instanceof Number, (x, __) -> x.toString());
+		}
+		
+		final String prefix(final String op, final autodiff.rules.Variable x, final Map<autodiff.rules.Variable, Object> m) {
+			return op + "(" + this.rules.applyTo(m.get(x), m) + ")";
+		}
+		
+		final String infix(final String op, final autodiff.rules.Variable x, final autodiff.rules.Variable y, final Map<autodiff.rules.Variable, Object> m) {
+			return "(" + this.rules.applyTo(m.get(x), m) + op + this.rules.applyTo(m.get(y), m) + ")";
+		}
+		
+		public final Disjunction<Object, String> getRules() {
+			return this.rules;
+		}
+		
+		public final Context reset() {
+			// TODO
+			return this;
+		}
+		
+		public final String newSupplier(final Object definition) {
+			this.reset();
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				final autodiff.rules.Variable z = new autodiff.rules.Variable();
+				final List<Object> function1DefinitionPattern = $(FORALL, $(x), IN, R, $(y, "=", z));
+				final Map<autodiff.rules.Variable, Object> mapping = new HashMap<>();
+				
+				if (autodiff.rules.Variable.match(function1DefinitionPattern, definition, mapping)) {
+//					final Variable variable = new Variable();
+					
+//					if (this.variables.put(x, variable) != null) {
+//						throw new IllegalStateException();
+//					}
+//					
+//					if (this.inputs.isEmpty()) {
+//						this.inputs.add(variable);
+//					}
+					
+					final Map<Object, Object> m_ = new HashMap<>();
+					m_.put(mapping.get(x), x);
+					final Object z_ = autodiff.rules.Variable.rewrite(mapping.get(z), m_);
+					
+//					mapping.put(x, variable);
+					
+					return this.rules.applyTo(z_, mapping);
+				}
+			}
+			
+			{
+				final autodiff.rules.Variable x0 = new autodiff.rules.Variable();
+				final autodiff.rules.Variable x1 = new autodiff.rules.Variable();
+				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				final autodiff.rules.Variable z = new autodiff.rules.Variable();
+				final List<Object> function2DefinitionPattern = $(FORALL, $(x0, x1), IN, R, $(y, "=", z));
+				final Map<autodiff.rules.Variable, Object> mapping = new HashMap<>();
+				
+				if (autodiff.rules.Variable.match(function2DefinitionPattern, definition, mapping)) {
+//					final Variable variable0 = new Variable();
+//					
+//					if (this.variables.put(x0, variable0) != null) {
+//						throw new IllegalStateException();
+//					}
+//					
+//					final Variable variable1 = new Variable();
+//					
+//					if (this.variables.put(x1, variable1) != null) {
+//						throw new IllegalStateException();
+//					}
+//					
+//					if (this.inputs.isEmpty()) {
+//						this.inputs.add(variable0);
+//						this.inputs.add(variable1);
+//					}
+					
+					final Map<Object, Object> m_ = new HashMap<>();
+					m_.put(mapping.get(x0), x0);
+					m_.put(mapping.get(x1), x1);
+					final Object z_ = autodiff.rules.Variable.rewrite(mapping.get(z), m_);
+					
+//					mapping.put(x0, variable0);
+//					mapping.put(x1, variable1);
+					
+					return this.rules.applyTo(z_, mapping);
+				}
+			}
+			
+			throw new IllegalArgumentException("" + definition);
+		}
+		
+		private static final long serialVersionUID = -6674979862323358009L;
+		
 	}
 	
 }
