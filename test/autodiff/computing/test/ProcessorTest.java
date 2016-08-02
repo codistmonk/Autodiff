@@ -223,6 +223,10 @@ public abstract class ProcessorTest {
 		
 		this.getProcessor().fullForward(xi);
 		
+		if ("show graph".equals("")) {
+			SwingTools.show(JGraphXTools.newGraphComponent(xi), "view", true);
+		}
+		
 		assertEquals(33.0, xi.get(), 0.0);
 		
 		x.setupDiffs(true);

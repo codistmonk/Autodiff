@@ -14,15 +14,14 @@ import static autodiff.computing.Functions.R;
 import static autodiff.computing.Functions.SIN;
 import static autodiff.computing.Functions.SQRT;
 import static autodiff.rules.PatternPredicate.rule;
+import static java.lang.Math.max;
 import static multij.tools.Tools.cast;
 import static multij.tools.Tools.swap;
 import static org.jocl.CL.CL_MEM_READ_WRITE;
 import static org.jocl.CL.CL_MEM_USE_HOST_PTR;
 import static org.jocl.CL.setExceptionsEnabled;
-
 import autodiff.cl.CLContext;
 import autodiff.cl.CLKernel;
-import autodiff.nodes.AbstractNode;
 import autodiff.nodes.BinaryNode;
 import autodiff.nodes.Data;
 import autodiff.nodes.Mapping;
@@ -95,46 +94,6 @@ public final class CLProcessor implements NodeProcessor {
 		return this.forwarder;
 	}
 	
-//	@Override
-//	public final <N extends Node<?>> N fullForward(final N node) {
-//		final Node<?>[] nodes = node.collectTo(new LinkedHashSet<>()).toArray(new Node[0]);
-//		
-//		for (final Node<?> n : nodes) {
-//			if (n.hasArguments()) {
-//				n.accept(this.forwardInitializer).enqueueNDRange(n.getLength());
-//			}
-//		}
-//		
-//		this.readBuffer(node);
-//		
-//		return null;
-//	}
-//	
-//	@Override
-//	public final <N extends Node<?>> N fullBackwardDiff(final N node) {
-//		if (node.setupDiffs()) {
-//			final Collection<Node<?>> nodes = node.collectTo(new LinkedHashSet<>()).stream().filter(Node::hasDiffs).collect(toList());
-//			
-//			nodes.forEach(n -> this.fill(n.getDiffs(), 0F));
-//			
-//			this.fill(node.getDiffs(), 1F);
-//			
-//			for (final Node<?> n : nodes) {
-//				if (n.hasArguments() && n.getDiffs() != null) {
-//					n.accept(this.backwardDiffInitializer).enqueueNDRange(n.getLength());
-//				}
-//			}
-//			
-//			for (final Node<?> n : nodes) {
-//				if (!n.hasArguments() && n.getDiffs() != null) {
-//					this.readBuffer(n.getDiffs());
-//				}
-//			}
-//		}
-//		
-//		return null;
-//	}
-	
 	@Override
 	public final <N extends Node<?>> N fullForward(final N node) {
 		NodeProcessor.super.fullForward(node);
@@ -159,13 +118,13 @@ public final class CLProcessor implements NodeProcessor {
 	
 	@Override
 	public final void forward(final Iterable<Node<?>> nodes) {
-		for (final Node<?> n : nodes) {
-			if (n.isComputationNode()) {
-				n.accept(this.forwardInitializer).enqueueNDRange(n.getLength());
+		for (final Node<?> node : nodes) {
+			if (node.isComputationNode()) {
+				node.accept(this.forwardInitializer).enqueueNDRange(node.getLength());
 			}
 		}
 	}
-
+	
 	public final CLKernel getForwardKernel(final Node<?> node) {
 		return node.accept(this.forwardGetter);
 	}
@@ -180,7 +139,7 @@ public final class CLProcessor implements NodeProcessor {
 	}
 	
 	final void readBuffer(final Node<?> node) {
-		final AbstractNode<?> aNode = (AbstractNode<?>) node;
+		final Node<?> aNode = node;
 		
 		this.getContext().getDefaultCommandQueue().enqueueReadBuffer(
 				this.clBuffer(aNode), Sizeof.cl_float * node.getLength(), this.pointer(node));
@@ -191,7 +150,7 @@ public final class CLProcessor implements NodeProcessor {
 	}
 	
 	final cl_mem clBuffer(final Node<?> node) {
-		return this.buffers.computeIfAbsent(node, __ -> getContext().createBuffer(
+		return this.buffers.computeIfAbsent(node.getFloatBuffer(), __ -> getContext().createBuffer(
 				CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, Float.BYTES, node.getLength(),
 				this.pointer(node)));
 	}
@@ -243,7 +202,7 @@ public final class CLProcessor implements NodeProcessor {
 				programSource += "__global float * const result) {\n";
 				programSource += "	int const gid = get_global_id(0);\n";
 				programSource += "	float const x = argument[gid];\n";
-				programSource += "	result[gid] = " + expression + ";\n";
+				programSource += "	result[gid] += " + expression + ";\n";
 				programSource += "}\n";
 				
 				return getContext().createAndBuildProgram(programSource).createKernel(kernelName);
@@ -258,6 +217,7 @@ public final class CLProcessor implements NodeProcessor {
 				final int l = node.getLength();
 				final int m = left.getLength();
 				final int n = right.getLength();
+				final int mm = max(l, max(m, n));
 				final String functionName = node.getFunctionName();
 				final List<Object> forwardDefinition = Functions.getDefinition(functionName, 2);
 				final String expression = this.context.newSupplier(forwardDefinition);
@@ -269,9 +229,11 @@ public final class CLProcessor implements NodeProcessor {
 				programSource += "__global float const * const right, ";
 				programSource += "__global float * const result) {\n";
 				programSource += "	int const gid = get_global_id(0);\n";
-				programSource += "	float const x = left[gid % " + m + "];\n";
-				programSource += "	float const y = right[gid % " + n + "];\n";
-				programSource += "	result[gid % " + l + "] = " + expression + ";\n";
+				programSource += "	for (int i = gid; i < " + mm + "; i += " + l + ") {\n";
+				programSource += "		float const x = left[i % " + m + "];\n";
+				programSource += "		float const y = right[i % " + n + "];\n";
+				programSource += "		result[gid] += " + expression + ";\n";
+				programSource += "	}\n";
 				programSource += "}\n";
 				
 				return getContext().createAndBuildProgram(programSource).createKernel(kernelName);
@@ -318,7 +280,7 @@ public final class CLProcessor implements NodeProcessor {
 				programSource += "		int const rightIndex = " + (transposeRight ? "k + c * stride" : "c + k * columns") + ";\n";
 				programSource += "		value += left[leftIndex] * right[rightIndex];\n";
 				programSource += "	}\n";
-				programSource += "	result[gid] = value;\n";
+				programSource += "	result[gid] += value;\n";
 				programSource += "}\n";
 				
 				return getContext().createAndBuildProgram(programSource).createKernel(kernelName);
