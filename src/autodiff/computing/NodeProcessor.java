@@ -133,7 +133,6 @@ public abstract interface NodeProcessor extends Serializable {
 			this.result.add(node);
 			
 			node.getArguments().forEach(a -> a.accept(this));
-			node.getAdditionalDependencies().forEach(a -> a.accept(this));
 			
 			return this.getResult();
 		}
@@ -164,7 +163,6 @@ public abstract interface NodeProcessor extends Serializable {
 		@Override
 		public final Collection<Node<?>> visit(final Node<?> node) {
 			node.getArguments().forEach(a -> a.accept(this));
-			node.getAdditionalDependencies().forEach(a -> a.accept(this));
 			
 			return this.forwardCollector.getResult();
 		}

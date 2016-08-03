@@ -1,9 +1,7 @@
 package autodiff.nodes;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -12,8 +10,6 @@ import java.util.List;
 public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N> {
 	
 	private final long id;
-	
-	private final Collection<Node<?>> additionalDependencies;
 	
 	private final List<Node<?>> arguments;
 	
@@ -25,7 +21,6 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	
 	protected AbstractNode(final List<Node<?>> arguments) {
 		this.id = NodesTools.nextId.getAndIncrement();
-		this.additionalDependencies = new HashSet<>();
 		this.arguments = arguments;
 		this.values = new Data();
 	}
@@ -33,11 +28,6 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	@Override
 	public final long getId() {
 		return this.id;
-	}
-	
-	@Override
-	public final Collection<Node<?>> getAdditionalDependencies() {
-		return this.additionalDependencies;
 	}
 	
 	public final Data getValues() {
@@ -70,7 +60,7 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 			NodesTools.checkLength(this.getLength(), node.getLength());
 		}
 		
-		node.getAdditionalDependencies().add(this);
+		node.getStorage().getContributors().add(this);
 		
 		this.getValues().setStorage(node.getStorage());
 		

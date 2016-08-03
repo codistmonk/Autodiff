@@ -1,7 +1,6 @@
 package autodiff.nodes;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -26,11 +25,6 @@ public final class ShapeNode implements Node<ShapeNode> {
 	@Override
 	public final long getId() {
 		return this.id;
-	}
-	
-	@Override
-	public final Collection<Node<?>> getAdditionalDependencies() {
-		return this.getSource().getAdditionalDependencies();
 	}
 	
 	public final Node<?> getSource() {

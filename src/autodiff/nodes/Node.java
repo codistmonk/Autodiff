@@ -6,7 +6,6 @@ import static java.lang.Math.min;
 import java.io.Serializable;
 import java.nio.FloatBuffer;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -40,8 +39,6 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 	public default <V> V accept(final NodeVisitor<V> visitor) {
 		return visitor.visit(this);
 	}
-	
-	public abstract Collection<Node<?>> getAdditionalDependencies();
 	
 	public default boolean hasArguments() {
 		return !this.getArguments().isEmpty();

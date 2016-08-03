@@ -3,9 +3,8 @@ package autodiff.nodes;
 import static autodiff.nodes.NodesTools.checkLength;
 import static autodiff.nodes.NodesTools.product;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -62,7 +61,7 @@ public final class Data implements Node<Data> {
 			NodesTools.checkLength(this.getLength(), node.getLength());
 		}
 		
-		node.getAdditionalDependencies().add(this);
+		node.getStorage().getContributors().addAll(this.getStorage().getContributors());
 		
 		this.storage = node.getStorage();
 		
@@ -75,8 +74,8 @@ public final class Data implements Node<Data> {
 	}
 	
 	@Override
-	public final Collection<Node<?>> getAdditionalDependencies() {
-		return this.getStorage().getContributors();
+	public final List<Node<?>> getArguments() {
+		return new ArrayList<>(this.getStorage().getContributors());
 	}
 	
 	@Override
@@ -107,11 +106,6 @@ public final class Data implements Node<Data> {
 	@Override
 	public final Node<?> getDiffs() {
 		return this.diffs;
-	}
-	
-	@Override
-	public final List<Node<?>> getArguments() {
-		return Collections.emptyList();
 	}
 	
 	@Override
