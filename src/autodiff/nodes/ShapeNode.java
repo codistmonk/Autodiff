@@ -1,7 +1,5 @@
 package autodiff.nodes;
 
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -76,18 +74,8 @@ public final class ShapeNode implements Node<ShapeNode> {
 	}
 	
 	@Override
-	public final ByteBuffer getByteBuffer() {
-		return this.getSource().getByteBuffer();
-	}
-	
-	@Override
-	public final int getByteOffset() {
-		return this.getSource().getByteOffset();
-	}
-	
-	@Override
-	public final FloatBuffer getFloatBuffer() {
-		return this.getSource().getFloatBuffer();
+	public final Storage getStorage() {
+		return this.getSource().getStorage();
 	}
 	
 	@Override
