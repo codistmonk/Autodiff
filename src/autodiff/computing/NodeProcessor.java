@@ -1,6 +1,7 @@
 package autodiff.computing;
 
 import static java.util.Collections.reverse;
+
 import autodiff.nodes.CustomNode;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
@@ -18,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 
 import multij.swing.SwingTools;
-import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2016-07-11)
@@ -138,7 +138,7 @@ public abstract interface NodeProcessor extends Serializable {
 		}
 		
 		@Override
-		public final Collection<Node<?>> visit(final CustomNode node) {
+		public final Collection<Node<?>> visit(final CustomNode<?> node) {
 			return this.isUnfolding() ? node.unfold().accept(this) : this.visit((Node<?>) node);
 		}
 		
@@ -297,7 +297,7 @@ public abstract interface NodeProcessor extends Serializable {
 		}
 		
 		@Override
-		public final Collection<Node<?>> visit(final CustomNode node) {
+		public final Collection<Node<?>> visit(final CustomNode<?> node) {
 			if (!this.done.add(node)) {
 				return this.forwardCollector.getResult();
 			}

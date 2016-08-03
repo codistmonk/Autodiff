@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * @author codistmonk (creation 2016-08-02)
  */
-public abstract class CustomNode extends AbstractNode<CustomNode> {
+public abstract class CustomNode<N extends CustomNode<?>> extends AbstractNode<N> {
 	
 	private Node<?> unfolded;
 	
@@ -27,10 +27,11 @@ public abstract class CustomNode extends AbstractNode<CustomNode> {
 		return visitor.visit(this);
 	}
 	
-	public final CustomNode reset() {
+	@SuppressWarnings("unchecked")
+	public final N reset() {
 		this.unfolded = null;
 		
-		return this;
+		return (N) this;
 	}
 	
 	public final Node<?> unfold() {

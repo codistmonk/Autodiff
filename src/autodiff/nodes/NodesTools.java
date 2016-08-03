@@ -149,25 +149,7 @@ public final class NodesTools {
 	}
 	
 	public static final Node<?> selection(final Node<?> vectors, final Node<?> indices) {
-		final int[] vectorsShape = vectors.getLengths(new int[2]);
-		final int[] indicesShape = indices.getLengths(new int[2]);
-		final int indicesStride = indicesShape[1];
-		final int vectorCount = vectorsShape[1];
-		final int indicesCount = indicesShape[0];
-		final int vectorsStride = vectorCount * indicesCount;
-		final int m = vectors.getLength() / vectorsStride;
-		final int n = indices.getLength();
-		final int[] resultShape = { m, n };
-		
-		final Node<?> shiftData = newShiftData(vectorCount, indicesCount, indicesStride);
-		final Node<?> shift = $(indices, "+", shiftData);
-		final Node<?> replicationMatrix = newInnerReplicator(indicesStride, vectorsStride);
-		final Node<?> replicatedIndices = $(shape(shift, indices.getLength() / indicesStride, indicesStride), replicationMatrix);
-		final Node<?> range = newRange(vectorsStride);
-		final Node<?> mask = $(KRONECKER, replicatedIndices, range);
-		
-		return shape($(shape(vectors, vectors.getLength() / vectorsStride, vectorsStride),
-				shape(mask, mask.getLength() / vectorsStride, vectorsStride), T), resultShape);
+		return new Selection().setVectors(vectors).setIndices(indices).autoShape();
 	}
 	
 	public static final Node<?> newShiftData(final int vectorCount, final int indicesCount, final int indicesStride) {
@@ -516,13 +498,17 @@ public final class NodesTools {
 	/**
 	 * @author codistmonk (creation 2016-08-02)
 	 */
-	public static final class Range extends CustomNode {
+	public static final class Range extends CustomNode<Range> {
 		
 		private final int n;
 		
 		public Range(final int n) {
 			this.n = n;
-			this.setShape(this.n);
+		}
+		
+		@Override
+		public final Range autoShape() {
+			return this.setShape(this.n);
 		}
 		
 		@Override
@@ -543,7 +529,7 @@ public final class NodesTools {
 	/**
 	 * @author codistmonk (creation 2016-08-03)
 	 */
-	public static final class Sum extends CustomNode {
+	public static final class Sum extends CustomNode<Sum> {
 		
 		private final int[] strides;
 		
@@ -563,7 +549,7 @@ public final class NodesTools {
 		}
 		
 		@Override
-		public final CustomNode autoShape() {
+		public final Sum autoShape() {
 			if (this.strides.length == 0) {
 				return this.setShape(1);
 			}
@@ -632,7 +618,7 @@ public final class NodesTools {
 	/**
 	 * @author codistmonk (creation 2016-08-03)
 	 */
-	public static final class InnerReplicator extends CustomNode {
+	public static final class InnerReplicator extends CustomNode<InnerReplicator> {
 		
 		private final int stride;
 		
@@ -644,7 +630,7 @@ public final class NodesTools {
 		}
 		
 		@Override
-		public final CustomNode autoShape() {
+		public final InnerReplicator autoShape() {
 			return this.setShape(this.stride, this.stride * this.replications);
 		}
 		
@@ -668,7 +654,7 @@ public final class NodesTools {
 	/**
 	 * @author codistmonk (creation 2016-08-03)
 	 */
-	public static final class OuterReplicator extends CustomNode {
+	public static final class OuterReplicator extends CustomNode<OuterReplicator> {
 		
 		private final int stride;
 		
@@ -680,7 +666,7 @@ public final class NodesTools {
 		}
 		
 		@Override
-		public final CustomNode autoShape() {
+		public final OuterReplicator autoShape() {
 			return this.setShape(this.stride, this.stride * this.replications);
 		}
 		
@@ -704,7 +690,7 @@ public final class NodesTools {
 	/**
 	 * @author codistmonk (creation 2016-08-03)
 	 */
-	public static final class ShiftData extends CustomNode {
+	public static final class ShiftData extends CustomNode<ShiftData> {
 		
 		private final int vectorCount;
 		
@@ -719,7 +705,7 @@ public final class NodesTools {
 		}
 		
 		@Override
-		public final CustomNode autoShape() {
+		public final ShiftData autoShape() {
 			return this.setShape(this.indicesCount * this.indicesStride);
 		}
 		
@@ -737,6 +723,78 @@ public final class NodesTools {
 		}
 		
 		private static final long serialVersionUID = 5715035072333159555L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-04)
+	 */
+	public static final class Selection extends CustomNode<Selection> {
+		
+		public Selection() {
+			super(Arrays.asList(new Node[2]));
+		}
+		
+		public final Node<?> getVectors() {
+			return this.getArguments().get(0);
+		}
+		
+		public final Selection setVectors(final Node<?> vectors) {
+			this.getArguments().set(0, vectors);
+			
+			return this;
+		}
+		
+		public final Node<?> getIndices() {
+			return this.getArguments().get(1);
+		}
+		
+		public final Selection setIndices(final Node<?> indices) {
+			this.getArguments().set(1, indices);
+			
+			return this;
+		}
+		
+		@Override
+		public final Selection autoShape() {
+			final Node<?> vectors = this.getArguments().get(0);
+			final Node<?> indices = this.getArguments().get(1);
+			final int[] vectorsShape = vectors.getLengths(new int[2]);
+			final int[] indicesShape = indices.getLengths(new int[2]);
+			final int vectorCount = vectorsShape[1];
+			final int indicesCount = indicesShape[0];
+			final int vectorsStride = vectorCount * indicesCount;
+			final int m = vectors.getLength() / vectorsStride;
+			final int n = indices.getLength();
+			
+			return this.setShape(m, n);
+		}
+		
+		@Override
+		protected final Node<?> doUnfold() {
+			final Node<?> vectors = this.getArguments().get(0);
+			final Node<?> indices = this.getArguments().get(1);
+			final int[] vectorsShape = vectors.getLengths(new int[2]);
+			final int[] indicesShape = indices.getLengths(new int[2]);
+			final int vectorCount = vectorsShape[1];
+			final int indicesCount = indicesShape[0];
+			final int indicesStride = indicesShape[1];
+			final int vectorsStride = vectorCount * indicesCount;
+			final Node<?> shiftData = newShiftData(vectorCount, indicesCount, indicesStride);
+			final Node<?> shift = $(indices, "+", shiftData);
+			final Node<?> replicationMatrix = newInnerReplicator(indicesStride, vectorsStride);
+			final Node<?> replicatedIndices = $(shape(shift, indices.getLength() / indicesStride, indicesStride), replicationMatrix);
+			final Node<?> range = newRange(vectorsStride);
+			final Node<?> mask = $(KRONECKER, replicatedIndices, range);
+			final Node<?> mul = $(shape(vectors, vectors.getLength() / vectorsStride, vectorsStride),
+					shape(mask, mask.getLength() / vectorsStride, vectorsStride), T);
+			
+			mul.setStorage(this);
+			
+			return shape(mul, this.getShape());
+		}
+		
+		private static final long serialVersionUID = 7244337174139272122L;
 		
 	}
 	

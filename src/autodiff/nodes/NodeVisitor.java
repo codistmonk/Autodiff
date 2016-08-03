@@ -31,7 +31,7 @@ public abstract interface NodeVisitor<V> extends Serializable {
 		return this.visit((AbstractNode<?>) node);
 	}
 	
-	public default V visit(final CustomNode node) {
+	public default V visit(final CustomNode<?> node) {
 		return this.visit((AbstractNode<?>) node);
 	}
 	

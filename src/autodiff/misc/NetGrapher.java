@@ -31,10 +31,10 @@ public final class NetGrapher {
 	 * <br>Unused
 	 */
 	public static final void main(final String... commandLineArguments) {
-		final int opt = 1;
+		final int action = 0;
 		final NodeProcessor processor = DefaultProcessor.INSTANCE;
 		
-		if (opt == 0) {
+		if (action == 0) {
 			final Random random = new Random(2L);
 			final LabeledData allData = Iris.getIrisData();
 			final Float[] classIds = packLabels(allData.getLabels());
@@ -61,7 +61,7 @@ public final class NetGrapher {
 			processor.fullBackwardDiff(cost);
 			
 			SwingTools.show(JGraphXTools.newGraphComponent(cost), "NetGrapher.cost");
-		} else if (opt == 1) {
+		} else if (action == 1) {
 			final Node<?> node = NodesTools.sortIndices($(5, 3, 1, 4, 2).shaped(1, 5));
 			
 			processor.fullForward(node);

@@ -51,7 +51,7 @@ public final class JGraphXTools {
 		throw new IllegalInstantiationException();
 	}
 	
-	public static final int DEFAULT_CELL_WIDTH = 160;
+	public static final int DEFAULT_CELL_WIDTH = 180;
 	
 	public static final int DEFAULT_CELL_HEIGHT = 50;
 	
@@ -266,7 +266,7 @@ public final class JGraphXTools {
 			}
 			
 			final void showUnfoldedNodes(final Map<Object, Node<?>> nodesByCell) {
-				final CustomNode node = cast(CustomNode.class, nodesByCell.get(this.currentCell));
+				final CustomNode<?> node = cast(CustomNode.class, nodesByCell.get(this.currentCell));
 				
 				if (node != null) {
 					final mxGraphComponent component = JGraphXTools.newGraphComponent(Arrays.asList(node.unfold()),
