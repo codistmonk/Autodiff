@@ -9,7 +9,6 @@ import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
 import autodiff.nodes.NodeVisitor;
-import autodiff.nodes.ShapeNode;
 import autodiff.nodes.Zipping;
 
 import com.mxgraph.model.mxGeometry;
@@ -119,17 +118,6 @@ public final class JGraphXTools {
 				this.connect(node.getArgument(), "argument", result);
 				
 				graphModel.setValue(result, defaultNodeText(node) + "\n" + node.getFunctionName());
-				
-				return this.end(result);
-			}
-			
-			@Override
-			public final Object visit(final ShapeNode node) {
-				final Object result = this.begin(node);
-				
-				this.connect(node.getSource(), "source", result);
-				
-				graphModel.setValue(result, defaultNodeText(node));
 				
 				return this.end(result);
 			}

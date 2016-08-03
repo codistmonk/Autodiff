@@ -7,7 +7,6 @@ import static autodiff.computing.Functions.PREFIX_OPERATORS;
 import static autodiff.computing.Functions.STEP1;
 import static java.lang.Math.round;
 import static multij.tools.Tools.*;
-
 import autodiff.computing.DefaultProcessor;
 
 import java.io.Serializable;
@@ -36,7 +35,11 @@ public final class NodesTools {
 	 */
 	public static final float NaI = -Integer.MAX_VALUE;
 	
-	static final AtomicLong nextId = new AtomicLong();
+	private static final AtomicLong nextId = new AtomicLong(-1L);
+	
+	public static final long nextId() {
+		return nextId.incrementAndGet();
+	}
 	
 	public static final Node<?> sortIndices(final Node<?> inputs) {
 		final int[] shape = inputs.getShape();
@@ -281,11 +284,7 @@ public final class NodesTools {
 	}
 	
 	public static final Node<?> shape(final Node<?> node, final int... shape) {
-		if (true) {
-			return Arrays.equals(node.getShape(), shape) ? node : new ShapeNode(node).setShape(shape);
-		} else {
-			return Arrays.equals(node.getShape(), shape) ? node : new Data().setStorage(node).setShape(shape);
-		}
+		return Arrays.equals(node.getShape(), shape) ? node : new Data().setStorage(node).setShape(shape);
 	}
 	
 	public static final Node<?> ones(final int... shape) {
@@ -626,19 +625,19 @@ public final class NodesTools {
 		
 		@Override
 		public final CustomNode autoShape() {
-			if (strides.length == 0) {
+			if (this.strides.length == 0) {
 				return this.setShape(1);
 			}
 			
 			final Node<?> argument = this.getArgument();
-			final int[] resultShape = argument.getLengths(new int[strides.length]);
+			final int[] resultShape = argument.getLengths(new int[this.strides.length]);
 			
-			for (int i = 0; i < strides.length; ++i) {
-				if (resultShape[i] % strides[i] != 0) {
-					throw new IllegalArgumentException(resultShape[i] + " not divisible by " + strides[i]);
+			for (int i = 0; i < this.strides.length; ++i) {
+				if (resultShape[i] % this.strides[i] != 0) {
+					throw new IllegalArgumentException(resultShape[i] + " not divisible by " + this.strides[i]);
 				}
 				
-				resultShape[i] /= strides[i];
+				resultShape[i] /= this.strides[i];
 			}
 			
 			return this.setShape(resultShape);
@@ -648,7 +647,7 @@ public final class NodesTools {
 		protected final Node<?> doUnfold() {
 			final Node<?> argument = this.getArgument();
 			
-			if (strides.length == 0) {
+			if (this.strides.length == 0) {
 				final int n = argument.getLength();
 				final Node<?> mul = $(shape(argument, 1, n), ones(n, 1));
 				
@@ -661,14 +660,14 @@ public final class NodesTools {
 			final int m = argument.getLength();
 			final int n = product(resultShape);
 			final Node<?> right = new Data().setShape(m, n);
-			final int[] argumentShape = argument.getLengths(new int[strides.length]);
+			final int[] argumentShape = argument.getLengths(new int[this.strides.length]);
 			final int[] outerBounds = bounds(resultShape);
-			final int[] innerBounds = bounds(strides);
+			final int[] innerBounds = bounds(this.strides);
 			
 			for (final int[] i : cartesian(outerBounds)) {
 				for (int j = 0; j < i.length; ++j) {
-					innerBounds[2 * j + 0] = i[j] * strides[j];
-					innerBounds[2 * j + 1] = i[j] * strides[j] + strides[j] - 1;
+					innerBounds[2 * j + 0] = i[j] * this.strides[j];
+					innerBounds[2 * j + 1] = i[j] * this.strides[j] + this.strides[j] - 1;
 				}
 				
 				final int outputIndex = indexFromCartesian(resultShape, i);

@@ -15,10 +15,6 @@ public abstract interface NodeVisitor<V> extends Serializable {
 		return null;
 	}
 	
-	public default V visit(final ShapeNode node) {
-		return this.visit((Node<?>) node);
-	}
-	
 	public default V visit(final AbstractNode<?> node) {
 		return this.visit((Node<?>) node);
 	}

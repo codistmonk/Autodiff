@@ -4,12 +4,9 @@ import static autodiff.nodes.NodesTools.checkLength;
 import static autodiff.nodes.NodesTools.product;
 import static multij.tools.Tools.cast;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2016-07-11)
@@ -25,7 +22,7 @@ public final class Data implements Node<Data> {
 	private Node<?> diffs;
 	
 	{
-		this.id = NodesTools.nextId.getAndIncrement();
+		this.id = NodesTools.nextId();
 	}
 	
 	@Override
@@ -124,13 +121,43 @@ public final class Data implements Node<Data> {
 		if (setupDiffs) {
 			if (!this.hasDiffs()) {
 				this.diffs = new Data().setShape(this.getShape());
+				
+				for (final Node<?> n : this.getStorage().getContributors()) {
+					n.setupDiffs(setupDiffs);
+					n.getDiffs().setStorage(this.getDiffs());
+				}
 			}
 		} else {
 			this.diffs = null;
 		}
 	}
 	
+	@Override
+	public final boolean setupDiffs() {
+		boolean needSetup = false;
+		
+		for (final Node<?> n : this.getStorage().getContributors()) {
+			if (!(n instanceof Data)) {
+				needSetup |= n.setupDiffs();
+			} else {
+				needSetup |= n.hasDiffs();
+			}
+		}
+		
+		this.setupDiffs(needSetup);
+		
+		return this.hasDiffs();
+	}
+	
 	public final void setStorage(final Storage storage) {
+		if (this.storage != null && storage != null) {
+			final int n = storage.getLength();
+			
+			for (int i = 0; i < n; ++i) {
+				storage.getFloatBuffer().put(i, storage.getFloatBuffer().get(i) + this.storage.getFloatBuffer().get(i));
+			}
+		}
+		
 		this.storage = storage;
 		this.storage.getContributors().add(this);
 	}

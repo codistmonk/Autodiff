@@ -514,6 +514,12 @@ public abstract class ProcessorTest {
 		
 		this.getProcessor().fullBackwardDiff(y);
 		
+		if ("show graph".equals("")) {
+			SwingTools.show(JGraphXTools.newGraphComponent(y), "view", true);
+		}
+		
+		assertTrue(y.setupDiffs());
+		
 		assertArrayEquals(new float[] { 1F, 1F, 1F, 1F, 1F, 1F }, x.getDiffs().get(new float[x.getLength()]), 0F);
 	}
 	

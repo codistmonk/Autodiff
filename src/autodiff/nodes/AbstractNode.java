@@ -20,7 +20,7 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	}
 	
 	protected AbstractNode(final List<Node<?>> arguments) {
-		this.id = NodesTools.nextId.getAndIncrement();
+		this.id = NodesTools.nextId();
 		this.arguments = arguments;
 		this.values = new Data();
 	}

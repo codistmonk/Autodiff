@@ -41,6 +41,11 @@ public abstract class CustomNode extends AbstractNode<CustomNode> {
 		return this.unfolded;
 	}
 	
+	@Override
+	public final boolean setupDiffs() {
+		return this.isUnfolded() ? super.setupDiffs() : this.unfold().setupDiffs();
+	}
+	
 	protected abstract Node<?> doUnfold();
 	
 	private static final long serialVersionUID = 4346086087721017293L;
