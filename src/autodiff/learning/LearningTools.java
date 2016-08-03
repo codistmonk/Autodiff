@@ -4,11 +4,11 @@ import static autodiff.computing.Functions.EXP;
 import static autodiff.computing.Functions.LN;
 import static autodiff.nodes.NodesTools.SUM;
 import static autodiff.nodes.NodesTools.$;
+import static autodiff.nodes.NodesTools.shape;
 
 import autodiff.computing.NodeProcessor;
 import autodiff.io.LabeledData;
 import autodiff.nodes.Node;
-import autodiff.nodes.ShapeNode;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +31,7 @@ public final class LearningTools {
 		final int classCount = y.getLength() / labels.getLength();
 		final Node<?> exp = $(EXP, y);
 		final Node<?> denom = $(SUM, new int[] { classCount }, exp);
-		final Node<?> num = $(exp, "@", new ShapeNode(labels).setShape(labels.getLength(), 1));
+		final Node<?> num = $(exp, "@", shape(labels, labels.getLength(), 1));
 //		final Node<?> num = $(exp, "@", labels.setShape(labels.getLength(), 1));
 		final Node<?> softmax = $(num, "/", denom);
 		
