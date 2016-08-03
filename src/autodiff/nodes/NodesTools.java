@@ -581,7 +581,7 @@ public final class NodesTools {
 		
 		@Override
 		protected final Node<?> doUnfold() {
-			final Node<?> result = new Data().setByteBuffer(this);
+			final Node<?> result = new Data().setStorage(this);
 			
 			for (int i = 0; i < this.n; ++i) {
 				result.set(i, i);

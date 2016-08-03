@@ -55,7 +55,7 @@ public final class Data implements Node<Data> {
 		return this.storage;
 	}
 	
-	public final Data setByteBuffer(final Node<?> node) {
+	public final Data setStorage(final Node<?> node) {
 		if (this.getShape() == null) {
 			this.setShape(node.getShape());
 		} else {
@@ -98,6 +98,10 @@ public final class Data implements Node<Data> {
 		} else {
 			this.diffs = null;
 		}
+	}
+	
+	public final void setStorage(final Storage storage) {
+		this.storage = storage;
 	}
 	
 	@Override

@@ -17,11 +17,7 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	
 	private final List<Node<?>> arguments;
 	
-	private Node<?> diffs;
-	
-	private Storage storage;
-	
-	private int[] shape;
+	private final Data values;
 	
 	protected AbstractNode() {
 		this(Collections.emptyList());
@@ -31,6 +27,7 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 		this.id = NodesTools.nextId.getAndIncrement();
 		this.additionalDependencies = new HashSet<>();
 		this.arguments = arguments;
+		this.values = new Data();
 	}
 	
 	@Override
@@ -43,39 +40,30 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 		return this.additionalDependencies;
 	}
 	
+	public final Data getValues() {
+		return this.values;
+	}
+	
 	@Override
 	public final int[] getShape() {
-		return this.shape;
+		return this.getValues().getShape();
 	}
 	
 	@Override
 	@SuppressWarnings("unchecked")
 	public final N setShape(final int... shape) {
-		if (this.getShape() == null) {
-			this.shape = shape;
-		} else {
-			Node.super.setShape(shape);
-			this.shape = shape;
-		}
-		
-		if (this.getStorage() == null) {
-			this.storage = new Storage(this.getLength());
-		}
-		
-		if (this.getDiffs() != null) {
-			this.getDiffs().setShape(shape);
-		}
+		this.getValues().setShape(shape);
 		
 		return (N) this;
 	}
 	
 	@Override
 	public final Storage getStorage() {
-		return this.storage;
+		return this.getValues().getStorage();
 	}
 	
 	@SuppressWarnings("unchecked")
-	public final N setByteBuffer(final Node<?> node) {
+	public final N setStorage(final Node<?> node) {
 		if (this.getShape() == null) {
 			this.setShape(node.getShape());
 		} else {
@@ -84,7 +72,7 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 		
 		node.getAdditionalDependencies().add(this);
 		
-		this.storage = node.getStorage();
+		this.getValues().setStorage(node.getStorage());
 		
 		return (N) this;
 	}
@@ -96,18 +84,12 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	
 	@Override
 	public final void setupDiffs(final boolean setupDiffs) {
-		if (setupDiffs) {
-			if (!this.hasDiffs()) {
-				this.diffs = new Data().setShape(this.getShape());
-			}
-		} else {
-			this.diffs = null;
-		}
+		this.getValues().setupDiffs(setupDiffs);
 	}
 	
 	@Override
 	public final Node<?> getDiffs() {
-		return this.diffs;
+		return this.getValues().getDiffs();
 	}
 	
 	@Override

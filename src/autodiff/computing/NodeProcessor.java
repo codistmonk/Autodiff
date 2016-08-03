@@ -182,7 +182,7 @@ public abstract interface NodeProcessor extends Serializable {
 				
 				new Zipping().setFunctionName("*")
 				.setLeft(node.getDiffs()).setRight(df0)
-				.setByteBuffer(node.getArgument().getDiffs()).autoShape()
+				.setStorage(node.getArgument().getDiffs()).autoShape()
 				.accept(this.forwardCollector);
 			}
 			
@@ -205,7 +205,7 @@ public abstract interface NodeProcessor extends Serializable {
 				final Zipping df0 = new Zipping().setFunctionName(leftDiffName)
 						.setLeft(left).setRight(right).autoShape();
 				final Zipping dfd0 = new Zipping().setFunctionName("*")
-						.setLeft(node.getDiffs()).setRight(df0).setByteBuffer(leftDiffs).setShape(leftDiffs.getLength());
+						.setLeft(node.getDiffs()).setRight(df0).setStorage(leftDiffs).setShape(leftDiffs.getLength());
 				
 				dfd0.accept(this.forwardCollector);
 			}
@@ -215,7 +215,7 @@ public abstract interface NodeProcessor extends Serializable {
 				final Zipping df1 = new Zipping().setFunctionName(rightDiffName)
 						.setLeft(left).setRight(right).autoShape();
 				final Zipping dfd1 = new Zipping().setFunctionName("*")
-						.setLeft(node.getDiffs()).setRight(df1).setByteBuffer(rightDiffs).setShape(rightDiffs.getLength());
+						.setLeft(node.getDiffs()).setRight(df1).setStorage(rightDiffs).setShape(rightDiffs.getLength());
 				
 				dfd1.accept(this.forwardCollector);
 			}
@@ -254,13 +254,13 @@ public abstract interface NodeProcessor extends Serializable {
 					new MatrixMultiplication()
 					.setLeft(b).setTransposeLeft(node.isTransposeRight())
 					.setRight(cDiffs).setTransposeRight(true)
-					.setByteBuffer(aDiffs).autoShape()
+					.setStorage(aDiffs).autoShape()
 					.accept(this.forwardCollector);
 				} else {
 					new MatrixMultiplication()
 					.setLeft(cDiffs)
 					.setRight(b).setTransposeRight(!node.isTransposeRight())
-					.setByteBuffer(aDiffs).autoShape()
+					.setStorage(aDiffs).autoShape()
 					.accept(this.forwardCollector);
 				}
 			}
@@ -284,13 +284,13 @@ public abstract interface NodeProcessor extends Serializable {
 					new MatrixMultiplication()
 					.setLeft(cDiffs).setTransposeLeft(true)
 					.setRight(a).setTransposeRight(node.isTransposeRight())
-					.setByteBuffer(bDiffs).autoShape()
+					.setStorage(bDiffs).autoShape()
 					.accept(this.forwardCollector);
 				} else {
 					new MatrixMultiplication()
 					.setLeft(a).setTransposeLeft(!node.isTransposeLeft())
 					.setRight(cDiffs)
-					.setByteBuffer(bDiffs).autoShape()
+					.setStorage(bDiffs).autoShape()
 					.accept(this.forwardCollector);
 				}
 			}
