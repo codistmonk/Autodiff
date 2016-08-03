@@ -7,6 +7,7 @@ import static autodiff.computing.Functions.PREFIX_OPERATORS;
 import static autodiff.computing.Functions.STEP1;
 import static java.lang.Math.round;
 import static multij.tools.Tools.*;
+
 import autodiff.computing.DefaultProcessor;
 
 import java.io.Serializable;
@@ -163,34 +164,30 @@ public final class NodesTools {
 		final int[] vectorsShape = vectors.getLengths(new int[2]);
 		final int[] indicesShape = indices.getLengths(new int[2]);
 		final int indicesStride = indicesShape[1];
-		final int vectorsStride = vectorsShape[1] * indicesShape[0];
+		final int vectorCount = vectorsShape[1];
+		final int indicesCount = indicesShape[0];
+		final int vectorsStride = vectorCount * indicesCount;
 		final int m = vectors.getLength() / vectorsStride;
 		final int n = indices.getLength();
 		final int[] resultShape = { m, n };
 		
-		final Node<?> shiftData = new Data().setShape(indices.getLength());
-		
-		for (int i = 1; i < indicesShape[0]; ++i) {
-			for (int j = 0; j < indicesShape[1]; ++j) {
-				shiftData.set(j + indicesShape[1] * i, vectorsShape[1] * i);
-			}
-		}
-		
+		final Node<?> shiftData = newShiftData(vectorCount, indicesCount, indicesStride);
 		final Node<?> shift = $(indices, "+", shiftData);
-		final Node<?> replicationMatrix = new Data().setShape(indicesStride, indicesStride * vectorsStride);
-		
-		for (int i = 0; i < indicesStride; ++i) {
-			for (int j = 0; j < vectorsStride; ++j) {
-				replicationMatrix.set(j + (indicesStride + 1) * vectorsStride * i, 1);
-			}
-		}
-		
+		final Node<?> replicationMatrix = newReplicationMatrix(indicesStride, vectorsStride);
 		final Node<?> replicatedIndices = $(shape(shift, indices.getLength() / indicesStride, indicesStride), replicationMatrix);
 		final Node<?> range = newRange(vectorsStride);
 		final Node<?> mask = $(KRONECKER, replicatedIndices, range);
 		
 		return shape($(shape(vectors, vectors.getLength() / vectorsStride, vectorsStride),
 				shape(mask, mask.getLength() / vectorsStride, vectorsStride), T), resultShape);
+	}
+	
+	public static final Node<?> newShiftData(final int vectorCount, final int indicesCount, final int indicesStride) {
+		return new ShiftData(vectorCount, indicesCount, indicesStride).autoShape();
+	}
+	
+	public static final Node<?> newReplicationMatrix(final int indicesStride, final int vectorsStride) {
+		return new ReplicationMatrix(indicesStride, vectorsStride).autoShape();
 	}
 	
 	public static final Node<?> newRange(final int n) {
@@ -639,5 +636,80 @@ public final class NodesTools {
 		private static final long serialVersionUID = -7076790199639726703L;
 		
 	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-03)
+	 */
+	public static final class ReplicationMatrix extends CustomNode {
 		
+		private final int indicesStride;
+		
+		private final int vectorsStride;
+		
+		public ReplicationMatrix(final int indicesStride, final int vectorsStride) {
+			this.indicesStride = indicesStride;
+			this.vectorsStride = vectorsStride;
+		}
+		
+		@Override
+		public final CustomNode autoShape() {
+			return this.setShape(this.indicesStride, this.indicesStride * this.vectorsStride);
+		}
+		
+		@Override
+		protected final Node<?> doUnfold() {
+			final Node<?> result = new Data().setStorage(this);
+			
+			for (int i = 0; i < this.indicesStride; ++i) {
+				for (int j = 0; j < this.vectorsStride; ++j) {
+					result.set(j + (this.indicesStride + 1) * this.vectorsStride * i, 1);
+				}
+			}
+			
+			return result;
+		}
+		
+		private static final long serialVersionUID = 5973922326300037152L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-03)
+	 */
+	public static final class ShiftData extends CustomNode {
+		
+		private final int vectorCount;
+		
+		private final int indicesCount;
+		
+		private final int indicesStride;
+		
+		public ShiftData(final int vectorCount, final int indicesCount, final int indicesStride) {
+			this.vectorCount = vectorCount;
+			this.indicesCount = indicesCount;
+			this.indicesStride = indicesStride;
+		}
+		
+		@Override
+		public final CustomNode autoShape() {
+			return this.setShape(this.indicesCount * this.indicesStride);
+		}
+		
+		@Override
+		protected final Node<?> doUnfold() {
+			final Node<?> result = new Data().setStorage(this);
+			
+			for (int i = 1; i < this.indicesCount; ++i) {
+				for (int j = 0; j < this.indicesStride; ++j) {
+					result.set(j + this.indicesStride * i, this.vectorCount * i);
+				}
+			}
+			
+			return result;
+		}
+		
+		private static final long serialVersionUID = 5715035072333159555L;
+		
+	}
+	
 }
