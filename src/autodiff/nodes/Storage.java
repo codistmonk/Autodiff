@@ -9,6 +9,8 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 
 /**
  * @author codistmonk (creation 2016-08-03)
@@ -16,6 +18,8 @@ import java.nio.FloatBuffer;
 public final class Storage implements Serializable {
 	
 	private final int length;
+	
+	private final Collection<Node<?>> contributors;
 	
 	private transient ByteBuffer byteBuffer;
 	
@@ -25,12 +29,17 @@ public final class Storage implements Serializable {
 	
 	public Storage(final int length) {
 		this.length = length;
+		this.contributors = new LinkedHashSet<>();
 		
 		this.allocate();
 	}
 	
 	public final int getLength() {
 		return this.length;
+	}
+	
+	public final Collection<Node<?>> getContributors() {
+		return this.contributors;
 	}
 	
 	public final ByteBuffer getByteBuffer() {

@@ -28,7 +28,7 @@ public abstract interface NodeVisitor<V> extends Serializable {
 	}
 	
 	public default V visit(final Data node) {
-		return this.visit((AbstractNode<?>) node);
+		return this.visit((Node<?>) node);
 	}
 	
 	public default V visit(final Mapping node) {
