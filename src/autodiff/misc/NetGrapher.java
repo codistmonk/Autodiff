@@ -4,10 +4,12 @@ import static autodiff.learning.LearningTools.*;
 import static autodiff.nodes.NodesTools.$;
 
 import autodiff.computing.DefaultProcessor;
+import autodiff.computing.NodeProcessor;
 import autodiff.io.Iris;
 import autodiff.io.LabeledData;
 import autodiff.nodes.Data;
 import autodiff.nodes.Node;
+import autodiff.nodes.NodesTools;
 import autodiff.ui.JGraphXTools;
 
 import java.util.Random;
@@ -29,7 +31,10 @@ public final class NetGrapher {
 	 * <br>Unused
 	 */
 	public static final void main(final String... commandLineArguments) {
-		if (true) {
+		final int opt = 1;
+		final NodeProcessor processor = DefaultProcessor.INSTANCE;
+		
+		if (opt == 0) {
 			final Random random = new Random(2L);
 			final LabeledData allData = Iris.getIrisData();
 			final Float[] classIds = packLabels(allData.getLabels());
@@ -48,14 +53,20 @@ public final class NetGrapher {
 			final Node<?> y = $($(x, a), "+", b);
 			final Node<?> cost = newCrossEntropyClassificationLoss(y, trainingData.getLabels());
 			
-			DefaultProcessor.INSTANCE.fullForward(cost);
+			processor.fullForward(cost);
 			
 			a.setupDiffs(true);
 			b.setupDiffs(true);
 			
-			DefaultProcessor.INSTANCE.fullBackwardDiff(cost);
+			processor.fullBackwardDiff(cost);
 			
 			SwingTools.show(JGraphXTools.newGraphComponent(cost), "NetGrapher.cost");
+		} else if (opt == 1) {
+			final Node<?> node = NodesTools.sortIndices($(5, 3, 1, 4, 2).shaped(1, 5));
+			
+			processor.fullForward(node);
+			
+			SwingTools.show(JGraphXTools.newGraphComponent(node), "NetGrapher.sorting");
 		} else {
 			final Node<?> md = new Data().setShape(2, 3, 4, 5, 6);
 			

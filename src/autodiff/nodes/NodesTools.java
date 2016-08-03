@@ -49,20 +49,8 @@ public final class NodesTools {
 		
 		final int n = shape[1];
 		
-		final Node<?> replicationMatrix1 = new Data().setShape(n, n * n);
-		final Node<?> replicationMatrix2 = new Data().setShape(n, n * n);
-		
-		for (int i = 0; i < n; ++i) {
-			for (int j = 0; j < n; ++j) {
-				replicationMatrix1.set(j + (n * n + n) * i, 1F);
-			}
-		}
-		
-		for (int i = 0; i < n; ++i) {
-			for (int j = 0; j < n; ++j) {
-				replicationMatrix2.set(i + j * n + n * n * i, 1F);
-			}
-		}
+		final Node<?> replicationMatrix1 = newInnerReplicator(n, n);
+		final Node<?> replicationMatrix2 = newOuterReplicator(n, n);
 		
 		final Node<?> replicated1 = $(inputs, replicationMatrix1);
 		final Node<?> replicated2 = $(inputs, replicationMatrix2);
@@ -173,7 +161,7 @@ public final class NodesTools {
 		
 		final Node<?> shiftData = newShiftData(vectorCount, indicesCount, indicesStride);
 		final Node<?> shift = $(indices, "+", shiftData);
-		final Node<?> replicationMatrix = newReplicationMatrix(indicesStride, vectorsStride);
+		final Node<?> replicationMatrix = newInnerReplicator(indicesStride, vectorsStride);
 		final Node<?> replicatedIndices = $(shape(shift, indices.getLength() / indicesStride, indicesStride), replicationMatrix);
 		final Node<?> range = newRange(vectorsStride);
 		final Node<?> mask = $(KRONECKER, replicatedIndices, range);
@@ -186,8 +174,12 @@ public final class NodesTools {
 		return new ShiftData(vectorCount, indicesCount, indicesStride).autoShape();
 	}
 	
-	public static final Node<?> newReplicationMatrix(final int indicesStride, final int vectorsStride) {
-		return new ReplicationMatrix(indicesStride, vectorsStride).autoShape();
+	public static final Node<?> newInnerReplicator(final int stride, final int replications) {
+		return new InnerReplicator(stride, replications).autoShape();
+	}
+	
+	public static final Node<?> newOuterReplicator(final int stride, final int replications) {
+		return new OuterReplicator(stride, replications).autoShape();
 	}
 	
 	public static final Node<?> newRange(final int n) {
@@ -640,29 +632,29 @@ public final class NodesTools {
 	/**
 	 * @author codistmonk (creation 2016-08-03)
 	 */
-	public static final class ReplicationMatrix extends CustomNode {
+	public static final class InnerReplicator extends CustomNode {
 		
-		private final int indicesStride;
+		private final int stride;
 		
-		private final int vectorsStride;
+		private final int replications;
 		
-		public ReplicationMatrix(final int indicesStride, final int vectorsStride) {
-			this.indicesStride = indicesStride;
-			this.vectorsStride = vectorsStride;
+		public InnerReplicator(final int stride, final int replications) {
+			this.stride = stride;
+			this.replications = replications;
 		}
 		
 		@Override
 		public final CustomNode autoShape() {
-			return this.setShape(this.indicesStride, this.indicesStride * this.vectorsStride);
+			return this.setShape(this.stride, this.stride * this.replications);
 		}
 		
 		@Override
 		protected final Node<?> doUnfold() {
 			final Node<?> result = new Data().setStorage(this);
 			
-			for (int i = 0; i < this.indicesStride; ++i) {
-				for (int j = 0; j < this.vectorsStride; ++j) {
-					result.set(j + (this.indicesStride + 1) * this.vectorsStride * i, 1);
+			for (int i = 0; i < this.stride; ++i) {
+				for (int j = 0; j < this.replications; ++j) {
+					result.set(j + (this.stride + 1) * this.replications * i, 1);
 				}
 			}
 			
@@ -670,6 +662,42 @@ public final class NodesTools {
 		}
 		
 		private static final long serialVersionUID = 5973922326300037152L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-03)
+	 */
+	public static final class OuterReplicator extends CustomNode {
+		
+		private final int stride;
+		
+		private final int replications;
+		
+		public OuterReplicator(final int stride, final int replications) {
+			this.stride = stride;
+			this.replications = replications;
+		}
+		
+		@Override
+		public final CustomNode autoShape() {
+			return this.setShape(this.stride, this.stride * this.replications);
+		}
+		
+		@Override
+		protected final Node<?> doUnfold() {
+			final Node<?> result = new Data().setStorage(this);
+			
+			for (int i = 0; i < this.stride; ++i) {
+				for (int j = 0; j < this.replications; ++j) {
+					result.set(i + this.stride * j + this.stride * this.replications * i, 1);
+				}
+			}
+			
+			return result;
+		}
+		
+		private static final long serialVersionUID = -3214753210439048412L;
 		
 	}
 	
