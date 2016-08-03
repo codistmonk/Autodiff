@@ -61,9 +61,6 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 		if (this.getStorage() == null) {
 			this.storage = new Storage(this.getLength());
 		}
-//		if (this.getByteBuffer() == null) {
-//			this.setByteBuffer(ByteBuffer.allocateDirect(Float.BYTES * this.getLength()).order(ByteOrder.nativeOrder()));
-//		}
 		
 		if (this.getDiffs() != null) {
 			this.getDiffs().setShape(shape);
@@ -90,7 +87,6 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 		this.storage = node.getStorage();
 		
 		return (N) this;
-//		return this.setByteBuffer(getPositionedByteBuffer(node));
 	}
 	
 	@Override

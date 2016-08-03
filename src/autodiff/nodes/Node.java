@@ -128,12 +128,7 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 	}
 	
 	public default float[] get(final float[] result) {
-		checkLength(this.getLength(), result.length);
-		
-		this.getFloatBuffer().position(0);
-		this.getFloatBuffer().get(result);
-		
-		return result;
+		return this.getStorage().get(result);
 	}
 	
 	public default float get(final int index) {
@@ -148,10 +143,7 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 			this.setShape(n);
 		}
 		
-		checkLength(this.getLength(), n);
-		
-		this.getFloatBuffer().position(0);
-		this.getFloatBuffer().put(values);
+		this.getStorage().set(values);
 		
 		return (N) this;
 	}
@@ -166,17 +158,6 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 	public default N add(final int index, final float value) {
 		return this.set(index, this.get(index) + value);
 	}
-	
-//	public default <C extends Collection<Node<?>>> C collectTo(final C result) {
-//		// for ordered collections, make sure this is added after its dependents
-//		result.remove(this);
-//		result.add(this);
-//		
-//		this.getArguments().forEach(a -> a.collectTo(result));
-//		this.getAdditionalDependencies().forEach(a -> a.collectTo(result));
-//		
-//		return result;
-//	}
 	
 	public default void checkScalar() {
 		checkLength(1, this.getLength());
