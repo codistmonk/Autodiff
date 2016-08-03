@@ -278,6 +278,7 @@ public final class NodesTools {
 	
 	public static final Node<?> shape(final Node<?> node, final int... shape) {
 		return Arrays.equals(node.getShape(), shape) ? node : new ShapeNode(node).setShape(shape);
+//		return Arrays.equals(node.getShape(), shape) ? node : new Data().setStorage(node).setShape(shape);
 	}
 	
 	public static final Node<?> ones(final int... shape) {

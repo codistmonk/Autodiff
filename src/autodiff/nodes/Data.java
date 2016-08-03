@@ -54,16 +54,26 @@ public final class Data implements Node<Data> {
 		return this.storage;
 	}
 	
+	@Override
 	public final Data setStorage(final Node<?> node) {
-		if (this.getShape() == null) {
-			this.setShape(node.getShape());
-		} else {
+		if (this.getShape() != null) {
 			NodesTools.checkLength(this.getLength(), node.getLength());
 		}
 		
-		node.getStorage().getContributors().addAll(this.getStorage().getContributors());
+		final Storage oldStorage = this.getStorage();
+		final Storage newStorage = node.getStorage();
 		
-		this.storage = node.getStorage();
+		if (oldStorage != newStorage) {
+			this.storage = newStorage;
+			
+			if (newStorage != null && oldStorage != null) {
+				newStorage.getContributors().addAll(oldStorage.getContributors());
+			}
+		}
+		
+		if (this.getShape() == null) {
+			this.setShape(node.getShape());
+		}
 		
 		return this;
 	}

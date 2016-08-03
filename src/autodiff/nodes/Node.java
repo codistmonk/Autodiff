@@ -58,6 +58,8 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 	
 	public abstract Storage getStorage();
 	
+	public abstract N setStorage(final Node<?> node);
+	
 	public default FloatBuffer getFloatBuffer() {
 		return this.getStorage() == null ? null : this.getStorage().getFloatBuffer();
 	}

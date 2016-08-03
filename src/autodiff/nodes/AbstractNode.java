@@ -52,14 +52,9 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 		return this.getValues().getStorage();
 	}
 	
+	@Override
 	@SuppressWarnings("unchecked")
 	public final N setStorage(final Node<?> node) {
-		if (this.getShape() == null) {
-			this.setShape(node.getShape());
-		} else {
-			NodesTools.checkLength(this.getLength(), node.getLength());
-		}
-		
 		node.getStorage().getContributors().add(this);
 		
 		this.getValues().setStorage(node.getStorage());

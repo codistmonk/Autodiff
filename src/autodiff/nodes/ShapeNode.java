@@ -3,6 +3,8 @@ package autodiff.nodes;
 import java.util.Arrays;
 import java.util.List;
 
+import multij.tools.Tools;
+
 /**
  * @author codistmonk (creation 2016-07-21)
  */
@@ -69,6 +71,15 @@ public final class ShapeNode implements Node<ShapeNode> {
 	@Override
 	public final Storage getStorage() {
 		return this.getSource().getStorage();
+	}
+	
+	@Override
+	public final ShapeNode setStorage(final Node<?> node) {
+		Tools.debugPrint();
+		
+		this.getSource().setStorage(node);
+		
+		return this;
 	}
 	
 	@Override
