@@ -44,6 +44,8 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	public final N setShape(final int... shape) {
 		this.getValues().setShape(shape);
 		
+		this.getStorage().getContributors().add(this);
+		
 		return (N) this;
 	}
 	

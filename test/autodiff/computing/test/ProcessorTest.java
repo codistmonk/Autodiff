@@ -504,6 +504,10 @@ public abstract class ProcessorTest {
 		
 		this.getProcessor().fullForward(y);
 		
+		if ("show graph".equals("")) {
+			SwingTools.show(JGraphXTools.newGraphComponent(y), "view", true);
+		}
+		
 		assertArrayEquals(new float[] { 6F, 15F }, y.get(new float[y.getLength()]), 0F);
 		
 		x.setupDiffs(true);

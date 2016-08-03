@@ -18,6 +18,10 @@ public abstract class CustomNode extends AbstractNode<CustomNode> {
 		super(arguments);
 	}
 	
+	public final boolean isUnfolded() {
+		return this.unfolded != null;
+	}
+	
 	@Override
 	public final <V> V accept(final NodeVisitor<V> visitor) {
 		return visitor.visit(this);

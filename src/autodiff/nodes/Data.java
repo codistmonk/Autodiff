@@ -2,10 +2,14 @@ package autodiff.nodes;
 
 import static autodiff.nodes.NodesTools.checkLength;
 import static autodiff.nodes.NodesTools.product;
+import static multij.tools.Tools.cast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2016-07-11)
@@ -39,7 +43,7 @@ public final class Data implements Node<Data> {
 		}
 		
 		if (this.getStorage() == null) {
-			this.storage = new Storage(this.getLength());
+			this.setStorage(new Storage(this.getLength()));
 		}
 		
 		if (this.getDiffs() != null) {
@@ -64,9 +68,13 @@ public final class Data implements Node<Data> {
 		final Storage newStorage = node.getStorage();
 		
 		if (oldStorage != newStorage) {
-			this.storage = newStorage;
+			this.setStorage(newStorage);
 			
 			if (newStorage != null && oldStorage != null) {
+				for (final Node<?> n : oldStorage.getContributors()) {
+					n.setStorage(node);
+				}
+				
 				newStorage.getContributors().addAll(oldStorage.getContributors());
 			}
 		}
@@ -85,7 +93,20 @@ public final class Data implements Node<Data> {
 	
 	@Override
 	public final List<Node<?>> getArguments() {
-		return new ArrayList<>(this.getStorage().getContributors());
+//		return new ArrayList<>(this.getStorage().getContributors());
+		return this.getStorage().getContributors().stream().filter(n -> {
+			if (n instanceof Data) {
+				return false;
+			}
+			
+			final CustomNode customNode = cast(CustomNode.class, n);
+			
+			if (customNode != null && customNode.isUnfolded()) {
+				return false;
+			}
+			
+			return true;
+		}).collect(Collectors.toList());
 	}
 	
 	@Override
@@ -111,6 +132,7 @@ public final class Data implements Node<Data> {
 	
 	public final void setStorage(final Storage storage) {
 		this.storage = storage;
+		this.storage.getContributors().add(this);
 	}
 	
 	@Override
