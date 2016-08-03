@@ -1,7 +1,5 @@
 package autodiff.nodes;
 
-import java.util.List;
-
 /**
  * @author codistmonk (creation 2016-08-02)
  */
@@ -29,11 +27,6 @@ public abstract class CustomNode extends AbstractNode<CustomNode> {
 	}
 	
 	protected abstract Node<?> doUnfold();
-	
-	@Override
-	protected final List<Node<?>> newBackwardDiffNodes() {
-		return this.unfold().getBackwardDiffNodes();
-	}
 	
 	private static final long serialVersionUID = 4346086087721017293L;
 	

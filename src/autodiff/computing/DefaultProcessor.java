@@ -5,7 +5,6 @@ import static autodiff.rules.PatternPredicate.rule;
 import static java.lang.Math.*;
 import static multij.tools.Tools.cast;
 import static multij.tools.Tools.swap;
-
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
@@ -27,6 +26,20 @@ import multij.tools.Tools;
  * @author codistmonk (creation 2016-07-11)
  */
 public final class DefaultProcessor implements NodeProcessor {
+	
+	private final Map<Node<?>, List<Node<?>>> forwards = new HashMap<>();
+	
+	private final Map<Node<?>, List<Node<?>>> backwards = new HashMap<>();
+	
+	@Override
+	public final Map<Node<?>, List<Node<?>>> getForwards() {
+		return this.forwards;
+	}
+	
+	@Override
+	public final Map<Node<?>, List<Node<?>>> getBackwards() {
+		return this.backwards;
+	}
 	
 	@Override
 	public final Forwarder getForwarder() {

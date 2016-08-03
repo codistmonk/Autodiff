@@ -19,8 +19,6 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	
 	private Node<?> diffs;
 	
-	private List<Node<?>> backwardDiffNodes;
-	
 	private Storage storage;
 	
 	private int[] shape;
@@ -105,11 +103,9 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 		if (setupDiffs) {
 			if (!this.hasDiffs()) {
 				this.diffs = new Data().setShape(this.getShape());
-				this.backwardDiffNodes = this.newBackwardDiffNodes();
 			}
 		} else {
 			this.diffs = null;
-			this.backwardDiffNodes = null;
 		}
 	}
 	
@@ -119,16 +115,9 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	}
 	
 	@Override
-	public final List<Node<?>> getBackwardDiffNodes() {
-		return this.backwardDiffNodes;
-	}
-	
-	@Override
 	public final String toString() {
 		return Arrays.toString(this.get(new float[this.getLength()]));
 	}
-	
-	protected abstract List<Node<?>> newBackwardDiffNodes();
 	
 	private static final long serialVersionUID = 8399842389497413524L;
 	

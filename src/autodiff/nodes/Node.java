@@ -59,10 +59,6 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 	
 	public abstract List<Node<?>> getArguments();
 	
-//	public abstract ByteBuffer getByteBuffer();
-//	
-//	public abstract int getByteOffset();
-	
 	public abstract Storage getStorage();
 	
 	public default FloatBuffer getFloatBuffer() {
@@ -90,8 +86,6 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 	}
 	
 	public abstract Node<?> getDiffs();
-	
-	public abstract List<Node<?>> getBackwardDiffNodes();
 	
 	@SuppressWarnings("unchecked")
 	public default N autoShape() {
@@ -173,32 +167,16 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 		return this.set(index, this.get(index) + value);
 	}
 	
-	public default <C extends Collection<Node<?>>> C collectBackwardDiffNodesTo(final C result) {
-		final List<Node<?>> backwardDiffNodes = this.getBackwardDiffNodes();
-		
-		if (backwardDiffNodes != null) {
-			for (final Node<?> n : backwardDiffNodes) {
-				n.collectTo(result);
-			}
-		}
-		
-		for (final Node<?> n : this.getArguments()) {
-			n.collectBackwardDiffNodesTo(result);
-		}
-		
-		return result;
-	}
-	
-	public default <C extends Collection<Node<?>>> C collectTo(final C result) {
-		// for ordered collections, make sure this is added after its dependents
-		result.remove(this);
-		result.add(this);
-		
-		this.getArguments().forEach(a -> a.collectTo(result));
-		this.getAdditionalDependencies().forEach(a -> a.collectTo(result));
-		
-		return result;
-	}
+//	public default <C extends Collection<Node<?>>> C collectTo(final C result) {
+//		// for ordered collections, make sure this is added after its dependents
+//		result.remove(this);
+//		result.add(this);
+//		
+//		this.getArguments().forEach(a -> a.collectTo(result));
+//		this.getAdditionalDependencies().forEach(a -> a.collectTo(result));
+//		
+//		return result;
+//	}
 	
 	public default void checkScalar() {
 		checkLength(1, this.getLength());

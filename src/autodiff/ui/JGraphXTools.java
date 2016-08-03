@@ -2,7 +2,7 @@ package autodiff.ui;
 
 import static javax.swing.SwingUtilities.getWindowAncestor;
 import static multij.tools.Tools.cast;
-
+import autodiff.computing.NodeProcessor;
 import autodiff.nodes.BinaryNode;
 import autodiff.nodes.CustomNode;
 import autodiff.nodes.Mapping;
@@ -290,7 +290,7 @@ public final class JGraphXTools {
 			
 			final void showBackwardDiffNodes(final Map<Object, Node<?>> nodesByCell) {
 				final Node<?> node = nodesByCell.get(this.currentCell);
-				final List<Node<?>> backwardDiffNodes = node.getBackwardDiffNodes();
+				final Collection<Node<?>> backwardDiffNodes = node.accept(new NodeProcessor.BackwardDiffCollector(false));
 				
 				if (backwardDiffNodes != null && !backwardDiffNodes.isEmpty()) {
 					final mxGraphComponent component = JGraphXTools.newGraphComponent(backwardDiffNodes,

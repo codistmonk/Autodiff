@@ -20,6 +20,7 @@ import static multij.tools.Tools.swap;
 import static org.jocl.CL.CL_MEM_READ_WRITE;
 import static org.jocl.CL.CL_MEM_USE_HOST_PTR;
 import static org.jocl.CL.setExceptionsEnabled;
+
 import autodiff.cl.CLContext;
 import autodiff.cl.CLKernel;
 import autodiff.nodes.BinaryNode;
@@ -40,7 +41,6 @@ import java.nio.LongBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +56,10 @@ import org.jocl.cl_mem;
  * @author codistmonk (creation 2016-07-17)
  */
 public final class CLProcessor implements NodeProcessor {
+	
+	private final Map<Node<?>, List<Node<?>>> forwards;
+	
+	private final Map<Node<?>, List<Node<?>>> backwards;
 	
 	private final CLContext context;
 	
@@ -76,6 +80,8 @@ public final class CLProcessor implements NodeProcessor {
 	}
 	
 	public CLProcessor(final CLContext context) {
+		this.forwards = new HashMap<>();
+		this.backwards = new HashMap<>();
 		this.context = context;
 		this.pointers = new IdentityHashMap<>();
 		this.buffers = new IdentityHashMap<>();
@@ -83,6 +89,16 @@ public final class CLProcessor implements NodeProcessor {
 		this.forwarder = this.new Forwarder();
 		this.forwardGetter = this.new ForwardGetter();
 		this.forwardInitializer = this.new ForwardInitializer();
+	}
+	
+	@Override
+	public final Map<Node<?>, List<Node<?>>> getForwards() {
+		return this.forwards;
+	}
+	
+	@Override
+	public final Map<Node<?>, List<Node<?>>> getBackwards() {
+		return this.backwards;
 	}
 	
 	public final CLContext getContext() {
@@ -107,7 +123,7 @@ public final class CLProcessor implements NodeProcessor {
 	public final <N extends Node<?>> N fullBackwardDiff(final N node) {
 		NodeProcessor.super.fullBackwardDiff(node);
 		
-		for (final Node<?> n : node.collectTo(new HashSet<>())) {
+		for (final Node<?> n : node.accept(new ForwardCollector(true))) {
 			if (n.hasDiffs() && n instanceof Data) {
 				this.readBuffer(n.getDiffs());
 			}

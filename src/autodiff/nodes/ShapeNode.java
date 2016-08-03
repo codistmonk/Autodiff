@@ -2,7 +2,6 @@ package autodiff.nodes;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -99,11 +98,6 @@ public final class ShapeNode implements Node<ShapeNode> {
 		}
 		
 		return this.diffs;
-	}
-	
-	@Override
-	public final List<Node<?>> getBackwardDiffNodes() {
-		return Collections.emptyList();
 	}
 	
 	@Override

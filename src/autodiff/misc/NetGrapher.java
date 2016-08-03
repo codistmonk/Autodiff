@@ -50,6 +50,11 @@ public final class NetGrapher {
 			
 			DefaultProcessor.INSTANCE.fullForward(cost);
 			
+			a.setupDiffs(true);
+			b.setupDiffs(true);
+			
+			DefaultProcessor.INSTANCE.fullBackwardDiff(cost);
+			
 			SwingTools.show(JGraphXTools.newGraphComponent(cost), "NetGrapher.cost");
 		} else {
 			final Node<?> md = new Data().setShape(2, 3, 4, 5, 6);
