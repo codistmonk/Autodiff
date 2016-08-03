@@ -186,69 +186,19 @@ public final class NodesTools {
 		}
 		
 		final Node<?> replicatedIndices = $(shape(shift, indices.getLength() / indicesStride, indicesStride), replicationMatrix);
-//		final Node<?> range = newRange(vectorsStride);
-		final Node<?> range = new Range(vectorsStride);
+		final Node<?> range = newRange(vectorsStride);
 		final Node<?> mask = $(KRONECKER, replicatedIndices, range);
 		
 		return shape($(shape(vectors, vectors.getLength() / vectorsStride, vectorsStride),
 				shape(mask, mask.getLength() / vectorsStride, vectorsStride), T), resultShape);
 	}
 	
-	@Deprecated
 	public static final Node<?> newRange(final int n) {
-		final Node<?> result = new Data().setShape(n);
-		
-		for (int i = 0; i < n; ++i) {
-			result.set(i, i);
-		}
-		
-		return result;
+		return new Range(n).autoShape();
 	}
 	
 	public static final Node<?> sum(final Node<?> argument, final int... strides) {
-		if (false) {
-			return new Sum(strides).setArgument(argument).autoShape();
-		}
-		
-		if (strides.length == 0) {
-			final int n = argument.getLength();
-			
-			return shape($(shape(argument, 1, n), ones(n, 1)), 1);
-		}
-		
-		final int[] resultShape = argument.getLengths(new int[strides.length]);
-		
-		for (int i = 0; i < strides.length; ++i) {
-			if (resultShape[i] % strides[i] != 0) {
-				throw new IllegalArgumentException(resultShape[i] + " not divisible by " + strides[i]);
-			}
-			
-			resultShape[i] /= strides[i];
-		}
-		
-		final int m = argument.getLength();
-		final int n = product(resultShape);
-		final Node<?> right = new Data().setShape(m, n);
-		final int[] argumentShape = argument.getLengths(new int[strides.length]);
-		final int[] outerBounds = bounds(resultShape);
-		final int[] innerBounds = bounds(strides);
-		
-		for (final int[] i : cartesian(outerBounds)) {
-			for (int j = 0; j < i.length; ++j) {
-				innerBounds[2 * j + 0] = i[j] * strides[j];
-				innerBounds[2 * j + 1] = i[j] * strides[j] + strides[j] - 1;
-			}
-			
-			final int outputIndex = indexFromCartesian(resultShape, i);
-			
-			for (final int[] j : cartesian(innerBounds)) {
-				final int k = indexFromCartesian(argumentShape, j);
-				
-				right.set(outputIndex + n * k, 1F);
-			}
-		}
-		
-		return shape($(shape(argument, 1, m), right), resultShape);
+		return new Sum(strides).setArgument(argument).autoShape();
 	}
 	
 	public static final int[] indexToCartesian(final int[] lengths, final int index, final int[] result) {
