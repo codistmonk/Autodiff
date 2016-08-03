@@ -1,8 +1,10 @@
 package autodiff.ui;
 
 import static javax.swing.SwingUtilities.getWindowAncestor;
+import static multij.tools.Tools.cast;
 
 import autodiff.nodes.BinaryNode;
+import autodiff.nodes.CustomNode;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
@@ -228,6 +230,26 @@ public final class JGraphXTools {
 					private static final long serialVersionUID = -6081193936361106487L;
 					
 				});
+				this.nodeMenu.add(new AbstractAction("Diff values...") {
+					
+					@Override
+					public final void actionPerformed(final ActionEvent event) {
+						showDiffValues(nodesByCell);
+					}
+					
+					private static final long serialVersionUID = -6081193936361106487L;
+					
+				});
+				this.nodeMenu.add(new AbstractAction("Unfold...") {
+					
+					@Override
+					public final void actionPerformed(final ActionEvent event) {
+						showUnfoldedNodes(nodesByCell);
+					}
+					
+					private static final long serialVersionUID = -6081193936361106487L;
+					
+				});
 				this.nodeMenu.add(new AbstractAction("Backward diff nodes...") {
 					
 					@Override
@@ -255,6 +277,17 @@ public final class JGraphXTools {
 				this.maybeShowPopup(event);
 			}
 			
+			final void showUnfoldedNodes(final Map<Object, Node<?>> nodesByCell) {
+				final CustomNode node = cast(CustomNode.class, nodesByCell.get(this.currentCell));
+				
+				if (node != null) {
+					final mxGraphComponent component = JGraphXTools.newGraphComponent(Arrays.asList(node.unfold()),
+							DEFAULT_CELL_WIDTH, DEFAULT_CELL_HEIGHT);
+					
+					this.show(component, "Unfolded");
+				}
+			}
+			
 			final void showBackwardDiffNodes(final Map<Object, Node<?>> nodesByCell) {
 				final Node<?> node = nodesByCell.get(this.currentCell);
 				final List<Node<?>> backwardDiffNodes = node.getBackwardDiffNodes();
@@ -272,6 +305,16 @@ public final class JGraphXTools {
 				final JTabbedPane component = autodiff.ui.SwingTools.newNodeValuesView(node);
 				
 				this.show(component, "Values");
+			}
+			
+			final void showDiffValues(final Map<Object, Node<?>> nodesByCell) {
+				final Node<?> node = nodesByCell.get(this.currentCell).getDiffs();
+				
+				if (node != null) {
+					final JTabbedPane component = autodiff.ui.SwingTools.newNodeValuesView(node);
+					
+					this.show(component, "Diff values");
+				}
 			}
 			
 			private final void show(final Component component, final String title) {
