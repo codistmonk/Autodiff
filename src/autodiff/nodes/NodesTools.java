@@ -203,6 +203,10 @@ public final class NodesTools {
 	}
 	
 	public static final Node<?> sum(final Node<?> argument, final int... strides) {
+		if (false) {
+			return new Sum(strides).setArgument(argument).autoShape();
+		}
+		
 		if (strides.length == 0) {
 			final int n = argument.getLength();
 			
@@ -594,5 +598,94 @@ public final class NodesTools {
 		private static final long serialVersionUID = 3288108223610832677L;
 		
 	}
-	
+
+	/**
+	 * @author codistmonk (creation 2016-08-03)
+	 */
+	public static final class Sum extends CustomNode {
+		
+		private final int[] strides;
+		
+		public Sum(final int... strides) {
+			super(Arrays.asList((Node<?>) null));
+			this.strides = strides;
+		}
+		
+		public final Node<?> getArgument() {
+			return this.getArguments().get(0);
+		}
+		
+		public final Sum setArgument(final Node<?> argument) {
+			this.getArguments().set(0, argument);
+			
+			return this;
+		}
+		
+		@Override
+		public final CustomNode autoShape() {
+			if (strides.length == 0) {
+				return this.setShape(1);
+			}
+			
+			final Node<?> argument = this.getArgument();
+			final int[] resultShape = argument.getLengths(new int[strides.length]);
+			
+			for (int i = 0; i < strides.length; ++i) {
+				if (resultShape[i] % strides[i] != 0) {
+					throw new IllegalArgumentException(resultShape[i] + " not divisible by " + strides[i]);
+				}
+				
+				resultShape[i] /= strides[i];
+			}
+			
+			return this.setShape(resultShape);
+		}
+		
+		@Override
+		protected final Node<?> doUnfold() {
+			final Node<?> argument = this.getArgument();
+			
+			if (strides.length == 0) {
+				final int n = argument.getLength();
+				final Node<?> mul = $(shape(argument, 1, n), ones(n, 1));
+				
+				mul.setStorage(this);
+				
+				return shape(mul, 1);
+			}
+			
+			final int[] resultShape = this.getShape();
+			final int m = argument.getLength();
+			final int n = product(resultShape);
+			final Node<?> right = new Data().setShape(m, n);
+			final int[] argumentShape = argument.getLengths(new int[strides.length]);
+			final int[] outerBounds = bounds(resultShape);
+			final int[] innerBounds = bounds(strides);
+			
+			for (final int[] i : cartesian(outerBounds)) {
+				for (int j = 0; j < i.length; ++j) {
+					innerBounds[2 * j + 0] = i[j] * strides[j];
+					innerBounds[2 * j + 1] = i[j] * strides[j] + strides[j] - 1;
+				}
+				
+				final int outputIndex = indexFromCartesian(resultShape, i);
+				
+				for (final int[] j : cartesian(innerBounds)) {
+					final int k = indexFromCartesian(argumentShape, j);
+					
+					right.set(outputIndex + n * k, 1F);
+				}
+			}
+			
+			final Node<?> mul = $(shape(argument, 1, m), right);
+			
+			mul.setStorage(this);
+			
+			return shape(mul, resultShape);
+		}
+		
+		private static final long serialVersionUID = -7076790199639726703L;
+		
+	}
+		
 }

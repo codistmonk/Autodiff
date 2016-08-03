@@ -1,11 +1,22 @@
 package autodiff.nodes;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * @author codistmonk (creation 2016-08-02)
  */
 public abstract class CustomNode extends AbstractNode<CustomNode> {
 	
 	private Node<?> unfolded;
+	
+	protected CustomNode() {
+		this(Collections.emptyList());
+	}
+	
+	protected CustomNode(final List<Node<?>> arguments) {
+		super(arguments);
+	}
 	
 	@Override
 	public final <V> V accept(final NodeVisitor<V> visitor) {
