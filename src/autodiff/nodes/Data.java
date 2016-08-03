@@ -90,13 +90,12 @@ public final class Data implements Node<Data> {
 	
 	@Override
 	public final List<Node<?>> getArguments() {
-//		return new ArrayList<>(this.getStorage().getContributors());
 		return this.getStorage().getContributors().stream().filter(n -> {
 			if (n instanceof Data) {
 				return false;
 			}
 			
-			final CustomNode customNode = cast(CustomNode.class, n);
+			final CustomNode<?> customNode = cast(CustomNode.class, n);
 			
 			if (customNode != null && customNode.isUnfolded()) {
 				return false;

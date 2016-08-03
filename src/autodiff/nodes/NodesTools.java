@@ -43,31 +43,29 @@ public final class NodesTools {
 	}
 	
 	public static final Node<?> sortIndices(final Node<?> inputs) {
-		final int[] shape = inputs.getShape();
-		
-		checkLength(2, shape.length);
-		
-		final int n = shape[1];
-		
-		final Node<?> replicationMatrix1 = newInnerReplicator(n, n);
-		final Node<?> replicationMatrix2 = newOuterReplicator(n, n);
-		
-		final Node<?> replicated1 = $(inputs, replicationMatrix1);
-		final Node<?> replicated2 = $(inputs, replicationMatrix2);
-		final Node<?> difference = $(replicated1, "-", replicated2);
-		final Node<?> greaterness = $(STEP1, difference);
-		final Node<?> equality = $(KRONECKER, replicated1, replicated2);
-		final Node<?> indexGreaterness = new Data().setShape(1, n * n);
-		
-		for (int i = 0; i < n; ++i) {
-			for (int j = 0; j < i; ++j) {
-				indexGreaterness.set(j + n * i, 1F);
-			}
+		if (false) {
+			return new SortIndices().setInputs(inputs).autoShape();
 		}
+		final int[] inputsShape = inputs.getShape();
 		
+		checkLength(2, inputsShape.length);
+		
+		final int n = inputsShape[1];
+		final Node<?> innerReplicator = newInnerReplicator(n, n);
+		final Node<?> outerReplicator = newOuterReplicator(n, n);
+		final Node<?> inrep = $(inputs, innerReplicator);
+		final Node<?> outrep = $(inputs, outerReplicator);
+		final Node<?> difference = $(inrep, "-", outrep);
+		final Node<?> greaterness = $(STEP1, difference);
+		final Node<?> equality = $(KRONECKER, inrep, outrep);
+		final Node<?> indexGreaterness = newIndexGreaterness(n);
 		final Node<?> aboveness = $(greaterness, "+", $(equality, "*", indexGreaterness));
 		
 		return sum(aboveness, 1, n);
+	}
+	
+	public static final Node<?> newIndexGreaterness(final int n) {
+		return new IndexGreaterness(n).autoShape();
 	}
 	
 	public static final Node<?> percentileMask(final Node<?> inputs, final float ratio) {
@@ -795,6 +793,89 @@ public final class NodesTools {
 		}
 		
 		private static final long serialVersionUID = 7244337174139272122L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-03)
+	 */
+	public static final class SortIndices extends CustomNode<SortIndices> {
+		
+		public SortIndices() {
+			super(Arrays.asList(new Node[1]));
+		}
+		
+		public final Node<?> getInputs() {
+			return this.getArguments().get(0);
+		}
+		
+		public final SortIndices setInputs(final Node<?> inputs) {
+			this.getArguments().set(0, inputs);
+			
+			return this;
+		}
+		
+		@Override
+		public final SortIndices autoShape() {
+			final int[] inputsShape = this.getInputs().getShape();
+			
+			checkLength(2, inputsShape.length);
+			
+			return this.setShape(inputsShape);
+		}
+		
+		@Override
+		protected final Node<?> doUnfold() {
+			final Node<?> inputs = this.getInputs();
+			final int[] inputsShape = inputs.getShape();
+			final int n = inputsShape[1];
+			final Node<?> innerReplicator = newInnerReplicator(n, n);
+			final Node<?> outerReplicator = newOuterReplicator(n, n);
+			final Node<?> inrep = $(inputs, innerReplicator);
+			final Node<?> outrep = $(inputs, outerReplicator);
+			final Node<?> difference = $(inrep, "-", outrep);
+			final Node<?> greaterness = $(STEP1, difference);
+			final Node<?> equality = $(KRONECKER, inrep, outrep);
+			final Node<?> indexGreaterness = newIndexGreaterness(n);
+			final Node<?> aboveness = $(greaterness, "+", $(equality, "*", indexGreaterness));
+			
+			return sum(aboveness, 1, n).setStorage(this);
+		}
+		
+		private static final long serialVersionUID = 2694700094496290472L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-04)
+	 */
+	public static final class IndexGreaterness extends CustomNode<IndexGreaterness> {
+		
+		private final int n;
+		
+		public IndexGreaterness(final int n) {
+			this.n = n;
+		}
+		
+		@Override
+		public final IndexGreaterness autoShape() {
+			return this.setShape(1, this.n * this.n);
+		}
+		
+		@Override
+		protected final Node<?> doUnfold() {
+			final Node<?> result = new Data().setStorage(this);
+			
+			for (int i = 0; i < this.n; ++i) {
+				for (int j = 0; j < i; ++j) {
+					result.set(j + this.n * i, 1F);
+				}
+			}
+			
+			return result;
+		}
+		
+		private static final long serialVersionUID = 4622261733770952111L;
 		
 	}
 	
