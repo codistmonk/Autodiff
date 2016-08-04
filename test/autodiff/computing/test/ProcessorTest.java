@@ -25,6 +25,7 @@ import autodiff.nodes.NodesTools;
 import autodiff.ui.JGraphXTools;
 
 import multij.swing.SwingTools;
+import multij.tools.Tools;
 
 import org.junit.After;
 import org.junit.Test;
@@ -224,6 +225,7 @@ public abstract class ProcessorTest {
 		this.getProcessor().fullForward(xi);
 		
 		if ("show graph".equals("")) {
+			Tools.debugPrint();
 			SwingTools.show(JGraphXTools.newGraphComponent(xi), "view", true);
 		}
 		
@@ -243,6 +245,7 @@ public abstract class ProcessorTest {
 		this.getProcessor().fullBackwardDiff(xi);
 		
 		if ("show graph".equals("")) {
+			Tools.debugPrint();
 			SwingTools.show(JGraphXTools.newGraphComponent(xi), "view", true);
 		}
 		

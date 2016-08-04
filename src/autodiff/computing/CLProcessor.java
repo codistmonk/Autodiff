@@ -114,7 +114,7 @@ public final class CLProcessor implements NodeProcessor {
 	public final <N extends Node<?>> N fullForward(final N node) {
 		NodeProcessor.super.fullForward(node);
 		
-		this.readBuffer(node);
+		this.readBufferNow(node);
 		
 		return node;
 	}
@@ -125,7 +125,7 @@ public final class CLProcessor implements NodeProcessor {
 		
 		for (final Node<?> n : node.accept(new ForwardCollector(true))) {
 			if (n.hasDiffs() && n instanceof Data) {
-				this.readBuffer(n.getDiffs());
+				this.readBufferNow(n.getDiffs());
 			}
 		}
 		
@@ -135,8 +135,12 @@ public final class CLProcessor implements NodeProcessor {
 	@Override
 	public final void forward(final Iterable<Node<?>> nodes) {
 		for (final Node<?> node : nodes) {
+			this.writeBuffer(node);
+			
 			if (node.isComputationNode()) {
 				node.accept(this.forwardInitializer).enqueueNDRange(node.getLength());
+				
+				this.readBuffer(node);
 			}
 		}
 	}
@@ -154,11 +158,19 @@ public final class CLProcessor implements NodeProcessor {
 		this.getForwardKernels().clear();
 	}
 	
+	final void readBufferNow(final Node<?> node) {
+		this.getContext().getDefaultCommandQueue().enqueueReadBuffer(true,
+				this.clBuffer(node), Sizeof.cl_float * node.getLength(), this.pointer(node));
+	}
+	
 	final void readBuffer(final Node<?> node) {
-		final Node<?> aNode = node;
-		
-		this.getContext().getDefaultCommandQueue().enqueueReadBuffer(
-				this.clBuffer(aNode), Sizeof.cl_float * node.getLength(), this.pointer(node));
+		this.getContext().getDefaultCommandQueue().enqueueReadBuffer(false,
+				this.clBuffer(node), Sizeof.cl_float * node.getLength(), this.pointer(node));
+	}
+	
+	final void writeBuffer(final Node<?> node) {
+		this.getContext().getDefaultCommandQueue().enqueueWriteBuffer(false,
+				this.clBuffer(node), Sizeof.cl_float * node.getLength(), this.pointer(node));
 	}
 	
 	final Map<Node<?>, CLKernel> getForwardKernels() {

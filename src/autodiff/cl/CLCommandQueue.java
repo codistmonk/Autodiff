@@ -1,6 +1,5 @@
 package autodiff.cl;
 
-import static org.jocl.CL.CL_TRUE;
 import static org.jocl.CL.clCreateCommandQueue;
 import static org.jocl.CL.clEnqueueNDRangeKernel;
 import static org.jocl.CL.clEnqueueReadBuffer;
@@ -8,6 +7,7 @@ import static org.jocl.CL.clReleaseCommandQueue;
 
 import java.io.Serializable;
 
+import org.jocl.CL;
 import org.jocl.Pointer;
 import org.jocl.Sizeof;
 import org.jocl.cl_command_queue;
@@ -34,12 +34,21 @@ public final class CLCommandQueue implements Serializable {
 				globalWorkSize, localWorkSize, 0, null, null);
 	}
 	
-	public final void enqueueReadBuffer(final cl_mem buffer, final float[] result) {
-		this.enqueueReadBuffer(buffer, Sizeof.cl_float * result.length, Pointer.to(result));
+	public final void enqueueReadBuffer(final boolean blocking, final cl_mem buffer, final float[] result) {
+		this.enqueueReadBuffer(blocking, buffer, Sizeof.cl_float * result.length, Pointer.to(result));
 	}
 	
-	public final void enqueueReadBuffer(final cl_mem buffer, final long bytes, final Pointer result) {
-		clEnqueueReadBuffer(this.getCommandQueue(), buffer, CL_TRUE, 0,
+	public final void enqueueWriteBuffer(final boolean blocking, final cl_mem buffer, final float[] values) {
+		this.enqueueWriteBuffer(blocking, buffer, Sizeof.cl_float * values.length, Pointer.to(values));
+	}
+	
+	public final void enqueueWriteBuffer(final boolean blocking, final cl_mem buffer, final long bytes, final Pointer result) {
+		CL.clEnqueueWriteBuffer(this.getCommandQueue(), buffer, blocking, 0,
+				bytes, result, 0, null, null);
+	}
+	
+	public final void enqueueReadBuffer(final boolean blocking, final cl_mem buffer, final long bytes, final Pointer result) {
+		clEnqueueReadBuffer(this.getCommandQueue(), buffer, blocking, 0,
 				bytes, result, 0, null, null);
 	}
 	

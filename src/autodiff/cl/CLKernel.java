@@ -68,7 +68,7 @@ public final class CLKernel implements Serializable {
 	}
 	
 	public final void enqueueReadArg(final int argIndex, final float[] result) {
-		this.getDefaultCommandQueue().enqueueReadBuffer(
+		this.getDefaultCommandQueue().enqueueReadBuffer(true,
 				this.getArg(argIndex), result);
 	}
 	
