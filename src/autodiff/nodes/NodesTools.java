@@ -67,11 +67,13 @@ public final class NodesTools {
 	
 	public static final Node<?> maxPooling(final Node<?> inputs, final int[] offsets, final int[] strides, final int[] kernelShape) {
 		final GridSampling grid = new GridSampling().setInputsShape(inputs.getShape()).setOffsets(offsets).setStrides(strides);
-		final Node<?> patches = patches(inputs, new PatchSampling(grid).setPatchShape(kernelShape));
-		final int[] patchesShape = patches.getShape();
+		final PatchSampling patch = new PatchSampling(grid).setPatchShape(kernelShape);
 		
-		return shape(percentile(shape(patches, patchesShape[0] * patchesShape[1], patchesShape[2] * patchesShape[3]), 1F),
-				grid.getInputCount(), grid.getInputChannels(), grid.getOutputHeight(), grid.getOutputWidth());
+		return maxPooling(inputs, patch);
+	}
+	
+	public static final Node<?> maxPooling(final Node<?> inputs, final PatchSampling sampling) {
+		return new MaxPooling(sampling).setInputs(inputs).autoShape();
 	}
 	
 	public static final Node<?> convolution(final Node<?> inputs, final int[] offsets, final int[] strides, final Node<?> kernel) {
@@ -956,6 +958,50 @@ public final class NodesTools {
 		}
 		
 		private static final long serialVersionUID = -9102153974630246500L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-04)
+	 */
+	public static final class MaxPooling extends CustomNode<MaxPooling> {
+		
+		private final PatchSampling sampling;
+		
+		public MaxPooling(final PatchSampling sampling) {
+			super(Arrays.asList(new Node[1]));
+			this.sampling = sampling;
+		}
+		
+		public final Node<?> getInputs() {
+			return this.getArguments().get(0);
+		}
+		
+		public final MaxPooling setInputs(final Node<?> inputs) {
+			this.getArguments().set(0, inputs);
+			
+			return this;
+		}
+		
+		@Override
+		public final MaxPooling autoShape() {
+			final GridSampling grid = this.sampling.getSampling();
+			
+			return this.setShape(grid.getInputCount(), grid.getInputChannels(), grid.getOutputHeight(), grid.getOutputWidth());
+		}
+		
+		@Override
+		protected final Node<?> doUnfold() {
+			final Node<?> patches = patches(this.getInputs(), this.sampling);
+			final int[] patchesShape = patches.getShape();
+			final Node<?> percentile = percentile(shape(patches, patchesShape[0] * patchesShape[1], patchesShape[2] * patchesShape[3]), 1F);
+			
+			percentile.setStorage(this);
+			
+			return shape(percentile, this.getShape());
+		}
+		
+		private static final long serialVersionUID = -24236175911223991L;
 		
 	}
 	
