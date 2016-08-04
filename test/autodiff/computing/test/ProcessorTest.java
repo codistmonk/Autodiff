@@ -518,8 +518,6 @@ public abstract class ProcessorTest {
 			SwingTools.show(JGraphXTools.newGraphComponent(y), "view", true);
 		}
 		
-		assertTrue(y.setupDiffs());
-		
 		assertArrayEquals(new float[] { 1F, 1F, 1F, 1F, 1F, 1F }, x.getDiffs().get(new float[x.getLength()]), 0F);
 	}
 	

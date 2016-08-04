@@ -75,14 +75,13 @@ public final class NodesTools {
 	}
 	
 	public static final Node<?> convolution(final Node<?> inputs, final int[] offsets, final int[] strides, final Node<?> kernel) {
-		final GridSampling grid = new GridSampling().setInputsShape(inputs.getShape()).setOffsets(offsets).setStrides(strides);
-		final Node<?> patches = patches(inputs, new PatchSampling(grid).setPatchShape(kernel.getShape()));
-		final int kernelLength = kernel.getLength();
+		final GridSampling sampling = new GridSampling().setInputsShape(inputs.getShape()).setOffsets(offsets).setStrides(strides);
 		
-		return shape($(
-				shape(patches, patches.getLength() / kernelLength, kernel.getLength()),
-				shape(kernel, kernel.getLength(), 1)),
-				grid.getInputCount(), 1, grid.getOutputHeight(), grid.getOutputWidth());
+		return convolution(inputs, sampling, kernel);
+	}
+	
+	public static final Node<?> convolution(final Node<?> inputs, final GridSampling sampling, final Node<?> kernel) {
+		return new Convolution(sampling).setInputs(inputs).setKernel(kernel).autoShape();
 	}
 	
 	public static final Node<?> patches(final Node<?> inputs, final int[] offsets, final int[] strides, final int[] patchShape) {
@@ -99,19 +98,19 @@ public final class NodesTools {
 		return new Selection().setVectors(vectors).setIndices(indices).autoShape();
 	}
 	
-	public static final Node<?> newShiftData(final int vectorCount, final int indicesCount, final int indicesStride) {
+	public static final Node<?> shiftData(final int vectorCount, final int indicesCount, final int indicesStride) {
 		return new ShiftData(vectorCount, indicesCount, indicesStride).autoShape();
 	}
 	
-	public static final Node<?> newInnerReplicator(final int stride, final int replications) {
+	public static final Node<?> innerReplicator(final int stride, final int replications) {
 		return new InnerReplicator(stride, replications).autoShape();
 	}
 	
-	public static final Node<?> newOuterReplicator(final int stride, final int replications) {
+	public static final Node<?> outerReplicator(final int stride, final int replications) {
 		return new OuterReplicator(stride, replications).autoShape();
 	}
 	
-	public static final Node<?> newRange(final int n) {
+	public static final Node<?> range(final int n) {
 		return new Range(n).autoShape();
 	}
 	
@@ -727,11 +726,11 @@ public final class NodesTools {
 			final int indicesCount = indicesShape[0];
 			final int indicesStride = indicesShape[1];
 			final int vectorsStride = vectorCount * indicesCount;
-			final Node<?> shiftData = newShiftData(vectorCount, indicesCount, indicesStride);
+			final Node<?> shiftData = shiftData(vectorCount, indicesCount, indicesStride);
 			final Node<?> shift = $(indices, "+", shiftData);
-			final Node<?> replicationMatrix = newInnerReplicator(indicesStride, vectorsStride);
+			final Node<?> replicationMatrix = innerReplicator(indicesStride, vectorsStride);
 			final Node<?> replicatedIndices = $(shape(shift, indices.getLength() / indicesStride, indicesStride), replicationMatrix);
-			final Node<?> range = newRange(vectorsStride);
+			final Node<?> range = range(vectorsStride);
 			final Node<?> mask = $(KRONECKER, replicatedIndices, range);
 			final Node<?> mul = $(shape(vectors, vectors.getLength() / vectorsStride, vectorsStride),
 					shape(mask, mask.getLength() / vectorsStride, vectorsStride), T);
@@ -778,8 +777,8 @@ public final class NodesTools {
 			final Node<?> inputs = this.getInputs();
 			final int[] inputsShape = inputs.getShape();
 			final int n = inputsShape[1];
-			final Node<?> innerReplicator = newInnerReplicator(n, n);
-			final Node<?> outerReplicator = newOuterReplicator(n, n);
+			final Node<?> innerReplicator = innerReplicator(n, n);
+			final Node<?> outerReplicator = outerReplicator(n, n);
 			final Node<?> inrep = $(inputs, innerReplicator);
 			final Node<?> outrep = $(inputs, outerReplicator);
 			final Node<?> difference = $(inrep, "-", outrep);
@@ -901,6 +900,62 @@ public final class NodesTools {
 		}
 		
 		private static final long serialVersionUID = -4980999950245486248L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-04)
+	 */
+	public static final class Convolution extends CustomNode<Convolution> {
+		
+		private final GridSampling sampling;
+		
+		public Convolution(final GridSampling sampling) {
+			super(Arrays.asList(new Node[2]));
+			this.sampling = sampling;
+		}
+		
+		public final Node<?> getInputs() {
+			return this.getArguments().get(0);
+		}
+		
+		public final Convolution setInputs(final Node<?> inputs) {
+			this.getArguments().set(0, inputs);
+			
+			return this;
+		}
+		
+		public final Node<?> getKernel() {
+			return this.getArguments().get(1);
+		}
+		
+		public final Convolution setKernel(final Node<?> kernel) {
+			this.getArguments().set(1, kernel);
+			
+			return this;
+		}
+		
+		@Override
+		public final Convolution autoShape() {
+			return this.setShape(this.sampling.getInputCount(), 1, this.sampling.getOutputHeight(), this.sampling.getOutputWidth());
+		}
+		
+		@Override
+		protected final Node<?> doUnfold() {
+			final Node<?> inputs = this.getInputs();
+			final Node<?> kernel = this.getKernel();
+			final Node<?> patches = patches(inputs, new PatchSampling(this.sampling).setPatchShape(kernel.getShape()));
+			final int kernelLength = kernel.getLength();
+			final Node<?> mul = $(
+					shape(patches, patches.getLength() / kernelLength, kernel.getLength()),
+					shape(kernel, kernel.getLength(), 1));
+			
+			mul.setStorage(this);
+			
+			return shape(mul, this.getShape());
+		}
+		
+		private static final long serialVersionUID = -9102153974630246500L;
 		
 	}
 	

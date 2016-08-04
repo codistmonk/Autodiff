@@ -174,6 +174,10 @@ public final class JGraphXTools {
 		return newGraphComponent(Arrays.asList(node), DEFAULT_CELL_WIDTH, DEFAULT_CELL_HEIGHT);
 	}
 	
+	public static final mxGraphComponent newGraphComponent(final Iterable<Node<?>> nodes) {
+		return newGraphComponent(nodes, DEFAULT_CELL_WIDTH, DEFAULT_CELL_HEIGHT);
+	}
+	
 	public static final mxGraphComponent newGraphComponent(final Iterable<Node<?>> nodes, final int cellWidth, final int cellHeight) {
 		final Map<Node<?>, Object> vertices = new HashMap<>();
 		final Map<Node<?>, Integer> depths = new LinkedHashMap<>();

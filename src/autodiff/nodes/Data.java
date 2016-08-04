@@ -131,23 +131,6 @@ public final class Data implements Node<Data> {
 		}
 	}
 	
-	@Override
-	public final boolean setupDiffs() {
-		boolean needSetup = false;
-		
-		for (final Node<?> n : this.getStorage().getContributors()) {
-			if (!(n instanceof Data)) {
-				needSetup |= n.setupDiffs();
-			} else {
-				needSetup |= n.hasDiffs();
-			}
-		}
-		
-		this.setupDiffs(needSetup);
-		
-		return this.hasDiffs();
-	}
-	
 	public final void setStorage(final Storage storage) {
 		if (this.storage != null && storage != null) {
 			final int n = storage.getLength();

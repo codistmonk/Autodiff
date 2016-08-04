@@ -66,20 +66,6 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 	
 	public abstract void setupDiffs(boolean setupDiffs);
 	
-	public default boolean setupDiffs() {
-		if (this.hasArguments()) {
-			boolean needSetup = false;
-			
-			for (final Node<?> argument : this.getArguments()) {
-				needSetup |= argument.setupDiffs();
-			}
-			
-			this.setupDiffs(needSetup);
-		}
-		
-		return this.getDiffs() != null;
-	}
-	
 	public default boolean hasDiffs() {
 		return this.getDiffs() != null;
 	}

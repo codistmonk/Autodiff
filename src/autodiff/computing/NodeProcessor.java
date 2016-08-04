@@ -3,6 +3,7 @@ package autodiff.computing;
 import static java.util.Collections.reverse;
 
 import autodiff.nodes.CustomNode;
+import autodiff.nodes.Data;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
@@ -85,7 +86,7 @@ public abstract interface NodeProcessor extends Serializable {
 	}
 	
 	public default <N extends Node<?>> N fullBackwardDiff(final N node) {
-		if (node.setupDiffs()) {
+		if (node.accept(new SetupDiffs())) {
 			if ("show graph".equals("")) {
 				Tools.debugPrint();
 				SwingTools.show(JGraphXTools.newGraphComponent(node), "view", true);
@@ -98,6 +99,11 @@ public abstract interface NodeProcessor extends Serializable {
 			this.fill(node.getDiffs(), 1F);
 			
 			this.forward(nodes);
+			
+			if ("show graph".equals("")) {
+				Tools.debugPrint();
+				SwingTools.show(JGraphXTools.newGraphComponent(node), "view", true);
+			}
 		}
 		
 		return node;
@@ -109,6 +115,61 @@ public abstract interface NodeProcessor extends Serializable {
 	
 	public default void forward(final Iterable<Node<?>> nodes) {
 		nodes.forEach(n -> n.accept(this.getForwarder()));
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-04)
+	 */
+	public static final class SetupDiffs implements NodeVisitor<Boolean> {
+		
+		private final Collection<Node<?>> done = new HashSet<>();
+		
+		@Override
+		public Boolean visit(Node<?> node) {
+			if (this.done.add(node)) {
+				if (node.hasArguments()) {
+					boolean needSetup = false;
+					
+					for (final Node<?> argument : node.getArguments()) {
+						needSetup |= argument.accept(this);
+					}
+					
+					node.setupDiffs(needSetup);
+				}
+			}
+			
+			return node.hasDiffs();
+		}
+
+		@Override
+		public final Boolean visit(final Data node) {
+			if (this.done.add(node)) {
+				
+				boolean needSetup = false;
+				
+				for (final Node<?> n : node.getStorage().getContributors()) {
+					needSetup |= n.accept(this);
+				}
+				
+				node.setupDiffs(needSetup);
+				
+				for (final Node<?> n : node.getStorage().getContributors()) {
+					n.accept(this);
+				}
+			}
+			
+			return node.hasDiffs();
+		}
+
+		@Override
+		public final Boolean visit(final CustomNode<?> node) {
+			this.visit((Node<?>) node);
+			
+			return node.unfold().accept(this);
+		}
+
+		private static final long serialVersionUID = 7786521481312571459L;
+		
 	}
 	
 	/**
@@ -172,6 +233,17 @@ public abstract interface NodeProcessor extends Serializable {
 			if (node.hasDiffs()) {
 				node.getArguments().forEach(a -> a.accept(this));
 			}
+			
+			return this.forwardCollector.getResult();
+		}
+		
+		@Override
+		public final Collection<Node<?>> visit(final Data node) {
+			if (!this.done.add(node) || !node.hasDiffs()) {
+				return this.forwardCollector.getResult();
+			}
+			
+			node.getStorage().getContributors().forEach(n -> n.accept(this));
 			
 			return this.forwardCollector.getResult();
 		}
