@@ -46,7 +46,7 @@ public final class NodesTools {
 		return new SortIndices().setInputs(inputs).autoShape();
 	}
 	
-	public static final Node<?> newIndexGreaterness(final int n) {
+	public static final Node<?> indexGreaterness(final int n) {
 		return new IndexGreaterness(n).autoShape();
 	}
 	
@@ -55,9 +55,7 @@ public final class NodesTools {
 	}
 	
 	public static final Node<?> percentile(final Node<?> inputs, final float ratio) {
-		final int n = inputs.getShape()[1];
-		
-		return sum($(inputs, "*", percentileMask(inputs, ratio)), 1, n);
+		return new Percentile(ratio).setInputs(inputs).autoShape();
 	}
 	
 	public static final Node<?> maxPooling(final Node<?> inputs, final int[] offsets, final int[] strides, final int[] kernelShape) {
@@ -781,7 +779,7 @@ public final class NodesTools {
 			final Node<?> difference = $(inrep, "-", outrep);
 			final Node<?> greaterness = $(STEP1, difference);
 			final Node<?> equality = $(KRONECKER, inrep, outrep);
-			final Node<?> indexGreaterness = newIndexGreaterness(n);
+			final Node<?> indexGreaterness = indexGreaterness(n);
 			final Node<?> aboveness = $(greaterness, "+", $(equality, "*", indexGreaterness));
 			
 			return sum(aboveness, 1, n).setStorage(this);
@@ -1040,6 +1038,49 @@ public final class NodesTools {
 			DefaultProcessor.INSTANCE.fill(ith, round(this.ratio * (n - 1)));
 			
 			return $(KRONECKER, sortIndices(inputs), ith).setStorage(this);
+		}
+		
+		private static final long serialVersionUID = -3725650903059947346L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-04)
+	 */
+	public static final class Percentile extends CustomNode<Percentile> {
+		
+		private final float ratio;
+		
+		public Percentile(final float ratio) {
+			super(Arrays.asList(new Node[1]));
+			this.ratio = ratio;
+		}
+		
+		public final Node<?> getInputs() {
+			return this.getArguments().get(0);
+		}
+		
+		public final Percentile setInputs(final Node<?> inputs) {
+			this.getArguments().set(0, inputs);
+			
+			return this;
+		}
+		
+		@Override
+		public final Percentile autoShape() {
+			final int[] inputsShape = this.getInputs().getShape();
+			
+			checkLength(2, inputsShape.length);
+			
+			return this.setShape(inputsShape[0], 1);
+		}
+		
+		@Override
+		protected final Node<?> doUnfold() {
+			final Node<?> inputs = this.getInputs();
+			final int n = inputs.getShape()[1];
+			
+			return sum($(inputs, "*", percentileMask(inputs, this.ratio)), 1, n).setStorage(this);
 		}
 		
 		private static final long serialVersionUID = -3725650903059947346L;
