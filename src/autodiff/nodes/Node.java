@@ -162,4 +162,8 @@ public abstract interface Node<N extends Node<?>> extends Serializable {
 		checkLength(1, this.getLength());
 	}
 	
+	public default String getName() {
+		return this.getId() + ":" + this.getClass().getSimpleName();
+	}
+	
 }

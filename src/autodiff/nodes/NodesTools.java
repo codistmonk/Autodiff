@@ -43,25 +43,7 @@ public final class NodesTools {
 	}
 	
 	public static final Node<?> sortIndices(final Node<?> inputs) {
-		if (false) {
-			return new SortIndices().setInputs(inputs).autoShape();
-		}
-		final int[] inputsShape = inputs.getShape();
-		
-		checkLength(2, inputsShape.length);
-		
-		final int n = inputsShape[1];
-		final Node<?> innerReplicator = newInnerReplicator(n, n);
-		final Node<?> outerReplicator = newOuterReplicator(n, n);
-		final Node<?> inrep = $(inputs, innerReplicator);
-		final Node<?> outrep = $(inputs, outerReplicator);
-		final Node<?> difference = $(inrep, "-", outrep);
-		final Node<?> greaterness = $(STEP1, difference);
-		final Node<?> equality = $(KRONECKER, inrep, outrep);
-		final Node<?> indexGreaterness = newIndexGreaterness(n);
-		final Node<?> aboveness = $(greaterness, "+", $(equality, "*", indexGreaterness));
-		
-		return sum(aboveness, 1, n);
+		return new SortIndices().setInputs(inputs).autoShape();
 	}
 	
 	public static final Node<?> newIndexGreaterness(final int n) {

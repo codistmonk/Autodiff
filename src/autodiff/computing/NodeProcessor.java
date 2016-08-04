@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import multij.swing.SwingTools;
+import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2016-07-11)
@@ -61,6 +62,7 @@ public abstract interface NodeProcessor extends Serializable {
 			reverse(result);
 			
 			if ("show graph".equals("")) {
+				Tools.debugPrint();
 				SwingTools.show(JGraphXTools.newGraphComponent(result, 160, 50), "view", false);
 			}
 			
@@ -84,6 +86,11 @@ public abstract interface NodeProcessor extends Serializable {
 	
 	public default <N extends Node<?>> N fullBackwardDiff(final N node) {
 		if (node.setupDiffs()) {
+			if ("show graph".equals("")) {
+				Tools.debugPrint();
+				SwingTools.show(JGraphXTools.newGraphComponent(node), "view", true);
+			}
+			
 			final List<Node<?>> nodes = collectBackwardDiff(node);
 			
 			this.zeroComputationNodes(nodes);
@@ -162,14 +169,16 @@ public abstract interface NodeProcessor extends Serializable {
 		
 		@Override
 		public final Collection<Node<?>> visit(final Node<?> node) {
-			node.getArguments().forEach(a -> a.accept(this));
+			if (node.hasDiffs()) {
+				node.getArguments().forEach(a -> a.accept(this));
+			}
 			
 			return this.forwardCollector.getResult();
 		}
 		
 		@Override
 		public final Collection<Node<?>> visit(final Mapping node) {
-			if (!this.done.add(node)) {
+			if (!this.done.add(node) || !node.hasDiffs()) {
 				return this.forwardCollector.getResult();
 			}
 			
@@ -189,7 +198,7 @@ public abstract interface NodeProcessor extends Serializable {
 		
 		@Override
 		public final Collection<Node<?>> visit(final Zipping node) {
-			if (!this.done.add(node)) {
+			if (!this.done.add(node) || !node.hasDiffs()) {
 				return this.forwardCollector.getResult();
 			}
 			
@@ -223,7 +232,7 @@ public abstract interface NodeProcessor extends Serializable {
 		
 		@Override
 		public final Collection<Node<?>> visit(final MatrixMultiplication node) {
-			if (!this.done.add(node)) {
+			if (!this.done.add(node) || !node.hasDiffs()) {
 				return this.forwardCollector.getResult();
 			}
 			
@@ -232,6 +241,11 @@ public abstract interface NodeProcessor extends Serializable {
 			final Node<?> aDiffs = a.getDiffs();
 			final Node<?> bDiffs = b.getDiffs();
 			final Node<?> cDiffs = node.getDiffs();
+			
+			if (cDiffs == null) {
+				Tools.debugPrint(node.getName(), a.getName(), b.getName());
+				throw new IllegalStateException();
+			}
 			
 			/*
 			 * C += A B
@@ -298,7 +312,7 @@ public abstract interface NodeProcessor extends Serializable {
 		
 		@Override
 		public final Collection<Node<?>> visit(final CustomNode<?> node) {
-			if (!this.done.add(node)) {
+			if (!this.done.add(node) || !node.hasDiffs()) {
 				return this.forwardCollector.getResult();
 			}
 			
