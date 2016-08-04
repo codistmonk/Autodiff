@@ -91,41 +91,8 @@ public final class NodesTools {
 		return patches(inputs, new PatchSampling(grid).setPatchShape(patchShape));
 	}
 	
-	public static final Node<?> patches(final Node<?> inputs, final PatchSampling patch) {
-		final GridSampling grid = patch.getSampling();
-		final int inputWidth = grid.getInputWidth();
-		final int inputHeight = grid.getInputHeight();
-		final int inputChannels = grid.getInputChannels();
-		final int outputSize = grid.getOutputSize();
-		final int inputSize = grid.getInputSize();
-		final int inputCount = grid.getInputCount();
-		final int patchWidth = patch.getPatchWidth();
-		final int patchHeight = patch.getPatchHeight();
-		final int patchSize = patch.getPatchSize();
-		final Node<?> indices = new Data().setShape(1, patchSize * outputSize);
-		
-		{
-			final int[] o = { 0 };
-			
-			grid.forEach(centerPixel -> {
-				patch.forEachPixelAround(centerPixel, p -> {
-					final int c = centerPixel[GridSampling.C];
-					final int yy = p[GridSampling.Y];
-					final int xx = p[GridSampling.X];
-					
-					if (0 <= yy && yy < inputHeight && 0 <= xx && xx < inputWidth) {
-						indices.set(o[0], xx + inputWidth * (yy + inputHeight * c));
-					} else {
-						indices.set(o[0], NaI);
-					}
-					
-					++o[0];
-				});
-			});
-		}
-		
-		return shape(selection(shape(inputs, inputCount, inputSize), indices),
-				inputCount * outputSize, inputChannels, patchHeight, patchWidth);
+	public static final Node<?> patches(final Node<?> inputs, final PatchSampling sampling) {
+		return new Patches(sampling).setInputs(inputs).autoShape();
 	}
 	
 	public static final Node<?> selection(final Node<?> vectors, final Node<?> indices) {
@@ -858,6 +825,82 @@ public final class NodesTools {
 		}
 		
 		private static final long serialVersionUID = 4622261733770952111L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-04)
+	 */
+	public static final class Patches extends CustomNode<Patches> {
+		
+		private final PatchSampling sampling;
+		
+		public Patches(final PatchSampling sampling) {
+			super(Arrays.asList(new Node[1]));
+			this.sampling = sampling;
+		}
+		
+		public final Node<?> getInputs() {
+			return this.getArguments().get(0);
+		}
+		
+		public final Patches setInputs(final Node<?> inputs) {
+			this.getArguments().set(0, inputs);
+			
+			return this;
+		}
+		
+		@Override
+		public final Patches autoShape() {
+			final GridSampling grid = this.sampling.getSampling();
+			final int inputCount = grid.getInputCount();
+			final int outputSize = grid.getOutputSize();
+			final int inputChannels = grid.getInputChannels();
+			final int patchWidth = this.sampling.getPatchWidth();
+			final int patchHeight = this.sampling.getPatchHeight();
+			
+			return this.setShape(inputCount * outputSize, inputChannels, patchHeight, patchWidth);
+		}
+		
+		@Override
+		protected final Node<?> doUnfold() {
+			final GridSampling grid = this.sampling.getSampling();
+			final int inputWidth = grid.getInputWidth();
+			final int inputHeight = grid.getInputHeight();
+			final int outputSize = grid.getOutputSize();
+			final int inputSize = grid.getInputSize();
+			final int inputCount = grid.getInputCount();
+			final int patchSize = this.sampling.getPatchSize();
+			final Node<?> indices = new Data().setShape(1, patchSize * outputSize);
+			
+			{
+				final int[] o = { 0 };
+				
+				grid.forEach(centerPixel -> {
+					this.sampling.forEachPixelAround(centerPixel, p -> {
+						final int c = centerPixel[GridSampling.C];
+						final int yy = p[GridSampling.Y];
+						final int xx = p[GridSampling.X];
+						
+						if (0 <= yy && yy < inputHeight && 0 <= xx && xx < inputWidth) {
+							indices.set(o[0], xx + inputWidth * (yy + inputHeight * c));
+						} else {
+							indices.set(o[0], NaI);
+						}
+						
+						++o[0];
+					});
+				});
+			}
+			
+			final Node<?> selection = selection(shape(this.getInputs(), inputCount, inputSize), indices);
+			
+			selection.setStorage(this);
+			
+			return shape(selection, this.getShape());
+		}
+		
+		private static final long serialVersionUID = -4980999950245486248L;
 		
 	}
 	
