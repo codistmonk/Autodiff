@@ -69,14 +69,14 @@ public final class NodesTools {
 		return new MaxPooling(sampling).setInputs(inputs).autoShape();
 	}
 	
-	public static final Node<?> convolution(final Node<?> inputs, final int[] offsets, final int[] strides, final Node<?> kernel) {
+	public static final Node<?> convolutions(final Node<?> inputs, final int[] offsets, final int[] strides, final Node<?> kernel) {
 		final GridSampling sampling = new GridSampling().setInputsShape(inputs.getShape()).setOffsets(offsets).setStrides(strides);
 		
-		return convolution(inputs, sampling, kernel);
+		return convolutions(inputs, sampling, kernel);
 	}
 	
-	public static final Node<?> convolution(final Node<?> inputs, final GridSampling sampling, final Node<?> kernel) {
-		return new Convolution(sampling).setInputs(inputs).setKernel(kernel).autoShape();
+	public static final Node<?> convolutions(final Node<?> inputs, final GridSampling sampling, final Node<?> kernel) {
+		return new Convolutions(sampling).setInputs(inputs).setKernels(kernel).autoShape();
 	}
 	
 	public static final Node<?> patches(final Node<?> inputs, final int[] offsets, final int[] strides, final int[] patchShape) {
@@ -901,11 +901,11 @@ public final class NodesTools {
 	/**
 	 * @author codistmonk (creation 2016-08-04)
 	 */
-	public static final class Convolution extends CustomNode<Convolution> {
+	public static final class Convolutions extends CustomNode<Convolutions> {
 		
 		private final GridSampling sampling;
 		
-		public Convolution(final GridSampling sampling) {
+		public Convolutions(final GridSampling sampling) {
 			super(Arrays.asList(new Node[2]));
 			this.sampling = sampling;
 		}
@@ -914,36 +914,45 @@ public final class NodesTools {
 			return this.getArguments().get(0);
 		}
 		
-		public final Convolution setInputs(final Node<?> inputs) {
+		public final Convolutions setInputs(final Node<?> inputs) {
 			this.getArguments().set(0, inputs);
 			
 			return this;
 		}
 		
-		public final Node<?> getKernel() {
+		public final Node<?> getKernels() {
 			return this.getArguments().get(1);
 		}
 		
-		public final Convolution setKernel(final Node<?> kernel) {
-			this.getArguments().set(1, kernel);
+		public final Convolutions setKernels(final Node<?> kernels) {
+			this.getArguments().set(1, kernels);
 			
 			return this;
 		}
 		
 		@Override
-		public final Convolution autoShape() {
-			return this.setShape(this.sampling.getInputCount(), 1, this.sampling.getOutputHeight(), this.sampling.getOutputWidth());
+		public final Convolutions autoShape() {
+			final int[] inputsShape = this.getInputs().getShape();
+			final int[] kernelsShape = this.getKernels().getShape();
+			
+			checkLength(4, inputsShape.length);
+			checkLength(4, kernelsShape.length);
+			checkLength(inputsShape[1], kernelsShape[1]);
+			
+			return this.setShape(this.sampling.getInputCount(), kernelsShape[0], this.sampling.getOutputHeight(), this.sampling.getOutputWidth());
 		}
 		
 		@Override
 		protected final Node<?> doUnfold() {
 			final Node<?> inputs = this.getInputs();
-			final Node<?> kernel = this.getKernel();
-			final Node<?> patches = patches(inputs, new PatchSampling(this.sampling).setPatchShape(kernel.getShape()));
-			final int kernelLength = kernel.getLength();
+			final Node<?> kernels = this.getKernels();
+			final Node<?> patches = patches(inputs, new PatchSampling(this.sampling).setPatchShape(kernels.getShape()));
+			final int[] kernelsShape = kernels.getLengths(new int[3]);
+			final int kernelLength = kernelsShape[2];
+			
 			final Node<?> mul = $(
-					shape(patches, patches.getLength() / kernelLength, kernel.getLength()),
-					shape(kernel, kernel.getLength(), 1));
+					shape(kernels, kernels.getLength() / kernelLength, kernelLength), 
+					shape(patches, patches.getLength() / kernelLength, kernelLength), T);
 			
 			mul.setStorage(this);
 			

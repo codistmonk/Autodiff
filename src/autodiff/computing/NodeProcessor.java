@@ -367,7 +367,7 @@ public abstract interface NodeProcessor extends Serializable {
 				if (node.isTransposeRight()) {
 					new MatrixMultiplication()
 					.setLeft(cDiffs).setTransposeLeft(true)
-					.setRight(a).setTransposeRight(node.isTransposeRight())
+					.setRight(a).setTransposeRight(node.isTransposeLeft())
 					.setStorage(bDiffs).autoShape()
 					.accept(this.forwardCollector);
 				} else {

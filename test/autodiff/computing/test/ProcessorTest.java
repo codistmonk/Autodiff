@@ -8,7 +8,7 @@ import static autodiff.computing.Functions.SQUARED;
 import static autodiff.computing.Functions.STEP0;
 import static autodiff.nodes.NodesTools.$;
 import static autodiff.nodes.NodesTools.T;
-import static autodiff.nodes.NodesTools.convolution;
+import static autodiff.nodes.NodesTools.convolutions;
 import static autodiff.nodes.NodesTools.maxPooling;
 import static autodiff.nodes.NodesTools.patches;
 import static autodiff.nodes.NodesTools.selection;
@@ -737,15 +737,15 @@ public abstract class ProcessorTest {
 	}
 	
 	@Test
-	public final void testConvolution1() {
+	public final void testConvolutions1() {
 		final Node<?> inputs = new Data().setShape(1, 1, 3, 3).set(
 				1F, 2F, 3F,
 				4F, 5F, 6F,
 				7F, 8F, 9F);
-		final Node<?> kernel = new Data().setShape(2, 2).set(
+		final Node<?> kernels = new Data().setShape(1, 1, 2, 2).set(
 				1F, 2F,
 				3F, 4F);
-		final Node<?> y = convolution(inputs, ints(0, 0, 0, 0), ints(2, 2), kernel);
+		final Node<?> y = convolutions(inputs, ints(0, 0, 0, 0), ints(2, 2), kernels);
 		
 		assertArrayEquals(new int[] { 1, 1, 2, 2 }, y.getShape());
 		
@@ -757,7 +757,7 @@ public abstract class ProcessorTest {
 		}, y.get(new float[y.getLength()]), 0F);
 		
 		inputs.setupDiffs(true);
-		kernel.setupDiffs(true);
+		kernels.setupDiffs(true);
 		
 		this.getProcessor().fullBackwardDiff(y);
 		
@@ -767,7 +767,54 @@ public abstract class ProcessorTest {
 				1F, 2F, 1F
 		}, inputs.getDiffs().get(new float[inputs.getLength()]), 0F);
 		
+		Tools.debugPrint(kernels.getDiffs());
+		
 		assertArrayEquals(new float[] {
+				20F, 10F,
+				10F, 5F
+		}, kernels.getDiffs().get(new float[kernels.getLength()]), 0F);
+	}
+	
+	@Test
+	public final void testConvolutions2() {
+		final Node<?> inputs = new Data().setShape(1, 1, 3, 3).set(
+				1F, 2F, 3F,
+				4F, 5F, 6F,
+				7F, 8F, 9F);
+		final Node<?> kernel = new Data().setShape(2, 1, 2, 2).set(
+				1F, 2F,
+				3F, 4F,
+				
+				5F, 6F,
+				7F, 8F);
+		final Node<?> y = convolutions(inputs, ints(0, 0, 0, 0), ints(2, 2), kernel);
+		
+		assertArrayEquals(new int[] { 1, 2, 2, 2 }, y.getShape());
+		
+		this.getProcessor().fullForward(y);
+		
+		assertArrayEquals(new float[] {
+				37F, 21F,
+				23F, 9F,
+				
+				85F, 57F,
+				83F, 45F
+		}, y.get(new float[y.getLength()]), 0F);
+		
+		inputs.setupDiffs(true);
+		kernel.setupDiffs(true);
+		
+		this.getProcessor().fullBackwardDiff(y);
+		
+		assertArrayEquals(new float[] {
+				6F, 8F, 6F,
+				10F, 12F, 10F,
+				6F, 8F, 6F
+		}, inputs.getDiffs().get(new float[inputs.getLength()]), 0F);
+		
+		assertArrayEquals(new float[] {
+				20F, 10F,
+				10F, 5F,
 				20F, 10F,
 				10F, 5F
 		}, kernel.getDiffs().get(new float[kernel.getLength()]), 0F);
