@@ -821,6 +821,47 @@ public abstract class ProcessorTest {
 	}
 	
 	@Test
+	public final void testConvolutions3() {
+		final Node<?> inputs = new Data().setShape(1, 2, 2, 2).set(
+				1F, 2F,
+				3F, 4F,
+				
+				5F, 6F,
+				7F, 8F);
+		final Node<?> kernel = new Data().setShape(1, 2, 1, 1).set(
+				1F,
+				2F);
+		final Node<?> y = convolutions(inputs, ints(0, 0, 0, 0), ints(1, 1), kernel);
+		
+		assertArrayEquals(new int[] { 1, 1, 2, 2 }, y.getShape());
+		
+		this.getProcessor().fullForward(y);
+		
+		assertArrayEquals(new float[] {
+				11F, 14F,
+				17F, 20F
+		}, y.get(new float[y.getLength()]), 0F);
+		
+		inputs.setupDiffs(true);
+		kernel.setupDiffs(true);
+		
+		this.getProcessor().fullBackwardDiff(y);
+		
+		assertArrayEquals(new float[] {
+				1F, 1F,
+				1F, 1F,
+				
+				2F, 2F,
+				2F, 2F
+		}, inputs.getDiffs().get(new float[inputs.getLength()]), 0F);
+		
+		assertArrayEquals(new float[] {
+				10F,
+				26F
+		}, kernel.getDiffs().get(new float[kernel.getLength()]), 0F);
+	}
+	
+	@Test
 	public final void testMapping1() {
 		final Node<?> x = new Data().set(-1F, 0F, 1F);
 		final Node<?> y = new Mapping().setFunctionName(ID).setArgument(x).autoShape();

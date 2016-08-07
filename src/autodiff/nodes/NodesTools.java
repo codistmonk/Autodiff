@@ -947,8 +947,8 @@ public final class NodesTools {
 			final Node<?> inputs = this.getInputs();
 			final Node<?> kernels = this.getKernels();
 			final Node<?> patches = patches(inputs, new PatchSampling(this.sampling).setPatchShape(kernels.getShape()));
-			final int[] kernelsShape = kernels.getLengths(new int[3]);
-			final int kernelLength = kernelsShape[2];
+			final int[] kernelsShape = kernels.getLengths(new int[2]);
+			final int kernelLength = kernelsShape[kernelsShape.length - 1];
 			
 			final Node<?> mul = $(
 					shape(kernels, kernels.getLength() / kernelLength, kernelLength), 
