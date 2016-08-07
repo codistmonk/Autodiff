@@ -10,6 +10,7 @@ import static autodiff.nodes.NodesTools.$;
 import static autodiff.nodes.NodesTools.T;
 import static autodiff.nodes.NodesTools.convolutions;
 import static autodiff.nodes.NodesTools.maxPooling;
+import static autodiff.nodes.NodesTools.merge;
 import static autodiff.nodes.NodesTools.patches;
 import static autodiff.nodes.NodesTools.selection;
 import static autodiff.nodes.NodesTools.sum;
@@ -579,6 +580,61 @@ public abstract class ProcessorTest {
 	}
 	
 	@Test
+	public final void testMerge1() {
+		final Node<?> x = new Data().setShape(2).set(1F, 2F);
+		final Node<?> y = new Data().setShape(3).set(3F, 4F, 5F);
+		final Node<?> z = merge(0, x, y);
+		
+		assertArrayEquals(new int[] { 5 }, z.getShape());
+		
+		this.getProcessor().fullForward(z);
+		
+		assertArrayEquals(new float[] { 1F, 2F, 3F, 4F, 5F }, z.get(new float[z.getLength()]), 0F);
+		
+		x.setupDiffs(true);
+		y.setupDiffs(true);
+		
+		this.getProcessor().fullBackwardDiff(z);
+		
+		assertArrayEquals(new float[] { 1F, 1F }, x.getDiffs().get(new float[x.getLength()]), 0F);
+		assertArrayEquals(new float[] { 1F, 1F, 1F }, y.getDiffs().get(new float[y.getLength()]), 0F);
+	}
+	
+	@Test
+	public final void testMerge2() {
+		final Node<?> x = new Data().setShape(2, 2).set(
+				1F, 2F,
+				3F, 4F);
+		final Node<?> y = new Data().setShape(2, 3).set(
+				5F, 6F, 7F,
+				8F, 9F, 10F);
+		final Node<?> z = merge(1, x, y);
+		
+		assertArrayEquals(new int[] { 2, 5 }, z.getShape());
+		
+		this.getProcessor().fullForward(z);
+		
+		assertArrayEquals(new float[] {
+				1F, 2F, 5F, 6F, 7F,
+				3F, 4F, 8F, 9F, 10F,
+		}, z.get(new float[z.getLength()]), 0F);
+		
+		x.setupDiffs(true);
+		y.setupDiffs(true);
+		
+		this.getProcessor().fullBackwardDiff(z);
+		
+		assertArrayEquals(new float[] {
+				1F, 1F,
+				1F, 1F
+		}, x.getDiffs().get(new float[x.getLength()]), 0F);
+		assertArrayEquals(new float[] {
+				1F, 1F, 1F,
+				1F, 1F, 1F
+		}, y.getDiffs().get(new float[y.getLength()]), 0F);
+	}
+	
+	@Test
 	public final void testMaxPooling1() {
 		final Node<?> x = new Data().setShape(1, 1, 3, 3).set(
 				1F, 2F, 3F,
@@ -766,8 +822,6 @@ public abstract class ProcessorTest {
 				3F, 4F, 3F,
 				1F, 2F, 1F
 		}, inputs.getDiffs().get(new float[inputs.getLength()]), 0F);
-		
-		Tools.debugPrint(kernels.getDiffs());
 		
 		assertArrayEquals(new float[] {
 				20F, 10F,

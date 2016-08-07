@@ -11,6 +11,7 @@ import static multij.tools.Tools.*;
 import autodiff.computing.DefaultProcessor;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -113,6 +114,10 @@ public final class NodesTools {
 		return new Sum(strides).setArgument(argument).autoShape();
 	}
 	
+	public static final Node<?> merge(final int dimensionIndex, final Node<?>... arguments) {
+		return new Merge(dimensionIndex).setArguments(arguments).autoShape();
+	}
+	
 	public static final int[] indexToCartesian(final int[] lengths, final int index, final int[] result) {
 		final int n = lengths.length;
 		
@@ -171,7 +176,21 @@ public final class NodesTools {
 	}
 	
 	public static final int product(final int... values) {
-		return Arrays.stream(values).reduce((x, y) -> x * y).getAsInt();
+		return subproduct(values, 0);
+	}
+	
+	public static final int subproduct(final int[] values, final int begin) {
+		return subproduct(values, begin, values.length);
+	}
+	
+	public static final int subproduct(final int[] values, final int begin, final int end) {
+		int result = 1;
+		
+		for (int i = begin; i < end; ++i) {
+			result *= values[i];
+		}
+		
+		return result;
 	}
 	
 	public static final Node<?> $(final Object... objects) {
@@ -466,7 +485,7 @@ public final class NodesTools {
 		private static final long serialVersionUID = 3288108223610832677L;
 		
 	}
-
+	
 	/**
 	 * @author codistmonk (creation 2016-08-03)
 	 */
@@ -553,6 +572,92 @@ public final class NodesTools {
 		}
 		
 		private static final long serialVersionUID = -7076790199639726703L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-07)
+	 */
+	public static final class Merge extends CustomNode<Merge> {
+		
+		private final int dimensionIndex;
+		
+		public Merge(final int dimensionIndex) {
+			super(new ArrayList<>());
+			this.dimensionIndex = dimensionIndex;
+		}
+		
+		public final Merge setArguments(final Node<?>... arguments) {
+			this.getArguments().clear();
+			
+			for (final Node<?> argument : arguments) {
+				this.getArguments().add(argument);
+			}
+			
+			return this;
+		}
+		
+		@Override
+		public final Merge autoShape() {
+			final int[] shape = this.getArguments().get(0).getShape().clone();
+			final int n = this.getArguments().size();
+			
+			for (int i = 1; i < n; ++i) {
+				final int[] argumentShape = this.getArguments().get(i).getShape();
+				
+				checkLength(shape.length, argumentShape.length);
+				
+				for (int j = 0; j < shape.length; ++j) {
+					check(j == this.dimensionIndex || shape[j] == argumentShape[j], () ->
+					"Incompatible dimensions: " + Arrays.toString(shape)
+					+ " cannot be merged with " + Arrays.toString(argumentShape) + " at index " + this.dimensionIndex);
+				}
+				
+				shape[this.dimensionIndex] += argumentShape[this.dimensionIndex];
+			}
+			
+			debugPrint(Arrays.toString(shape));
+			
+			return this.setShape(shape);
+		}
+		
+		@Override
+		protected final Node<?> doUnfold() {
+			final int chunkCount = subproduct(this.getShape(), 0, this.dimensionIndex);
+			final int n = this.getLength();
+			final int stride = n / chunkCount;
+			int offset = 0;
+			Node<?> sum = null;
+			
+			for (final Node<?> argument : this.getArguments()) {
+				final Node<?> indices = new Data().setShape(1, n);
+				final int chunkSize = subproduct(argument.getShape(), this.dimensionIndex);
+				
+				DefaultProcessor.INSTANCE.fill(indices, NaI);
+				
+				for (int i = offset, k = 0; i < n; i += stride) {
+					for (int j = 0; j < chunkSize; ++j, ++k) {
+						indices.set(i + j, k);
+					}
+				}
+				
+				final Node<?> selection = selection(shape(argument, 1, argument.getLength()), indices);
+				
+				if (sum == null) {
+					sum = selection;
+				} else {
+					sum = $(sum, "+", selection);
+				}
+				
+				offset += chunkSize;
+			}
+			
+			sum.setStorage(this);
+			
+			return shape(sum, this.getShape());
+		}
+		
+		private static final long serialVersionUID = -2218885137190293263L;
 		
 	}
 	
