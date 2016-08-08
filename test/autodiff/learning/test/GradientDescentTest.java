@@ -9,7 +9,6 @@ import static autodiff.nodes.NodesTools.$;
 import static multij.tools.Tools.cast;
 import static multij.tools.Tools.debugPrint;
 import static org.junit.Assert.*;
-
 import autodiff.computing.NodeProcessor;
 import autodiff.io.Iris;
 import autodiff.io.LabeledData;
@@ -23,6 +22,7 @@ import autodiff.nodes.Zipping;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import multij.tools.Tools;
@@ -110,7 +110,9 @@ public abstract class GradientDescentTest {
 	public final void testIris1() {
 		final Random random = new Random(2L);
 		final LabeledData allData = Iris.getIrisData();
-		final Float[] classIds = packLabels(allData.getLabels());
+		final Map<Float, Integer> classIds = toIndexMap(allData.getLabels());
+		
+		packLabels(allData.getLabels(), classIds);
 		
 		allData.shuffle(random);
 		
@@ -118,7 +120,7 @@ public abstract class GradientDescentTest {
 		final LabeledData trainingData = split[0];
 		final LabeledData testData = split[1];
 		final int inputLength = trainingData.getInputLength();
-		final int classCount = classIds.length;
+		final int classCount = classIds.size();
 		
 		final Node<?> x = trainingData.getInputs();
 		final Node<?> a = new Data().setShape(inputLength, classCount);
@@ -165,33 +167,13 @@ public abstract class GradientDescentTest {
 		}
 	}
 	
-	public static final List<?> toTree(final Node<?> node) {
-		final List<Object> result = new ArrayList<>();
-		
-		result.add(node.getClass().getSimpleName());
-		
-		final Mapping mapping = cast(Mapping.class, node);
-		
-		if (mapping != null) {
-			result.add(mapping.getFunctionName());
-		}
-		
-		final Zipping zipping = cast(Zipping.class, node);
-		
-		if (zipping != null) {
-			result.add(zipping.getFunctionName());
-		}
-		
-		node.getArguments().forEach(n -> result.add(toTree(n)));
-		
-		return result;
-	}
-	
 	@Test
 	public final void testIris2() {
 		final Random random = new Random(2L);
 		final LabeledData allData = Iris.getIrisData();
-		final Float[] classIds = packLabels(allData.getLabels());
+		final Map<Float, Integer> classIds = toIndexMap(allData.getLabels());
+		
+		packLabels(allData.getLabels(), classIds);
 		
 		allData.shuffle(random);
 		
@@ -199,7 +181,7 @@ public abstract class GradientDescentTest {
 		final LabeledData trainingData = split[0];
 		final LabeledData testData = split[1];
 		final int inputLength = trainingData.getInputLength();
-		final int classCount = classIds.length;
+		final int classCount = classIds.size();
 //		final int minibatchSize = trainingData.getItemCount();
 		final int minibatchSize = 40;
 		final LabeledData minibatchData = new LabeledData(minibatchSize, inputLength);
@@ -239,5 +221,27 @@ public abstract class GradientDescentTest {
 	}
 	
 	public abstract NodeProcessor getProcessor();
+	
+	public static final List<?> toTree(final Node<?> node) {
+		final List<Object> result = new ArrayList<>();
+		
+		result.add(node.getClass().getSimpleName());
+		
+		final Mapping mapping = cast(Mapping.class, node);
+		
+		if (mapping != null) {
+			result.add(mapping.getFunctionName());
+		}
+		
+		final Zipping zipping = cast(Zipping.class, node);
+		
+		if (zipping != null) {
+			result.add(zipping.getFunctionName());
+		}
+		
+		node.getArguments().forEach(n -> result.add(toTree(n)));
+		
+		return result;
+	}
 	
 }

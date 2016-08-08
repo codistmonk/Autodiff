@@ -5,7 +5,6 @@ import static autodiff.computing.Functions.LN;
 import static autodiff.nodes.NodesTools.SUM;
 import static autodiff.nodes.NodesTools.$;
 import static autodiff.nodes.NodesTools.shape;
-
 import autodiff.computing.NodeProcessor;
 import autodiff.io.LabeledData;
 import autodiff.nodes.Node;
@@ -82,23 +81,32 @@ public final class LearningTools {
 		}
 	}
 	
-	public static final Float[] packLabels(final Node<?> labels) {
-		final Float[] result = toSortedSet(labels).toArray(new Float[0]);
-		final Map<Float, Integer> map = new HashMap<>();
-		
-		for (int i = 0; i < result.length; ++i) {
-			map.put(result[i], i);
-		}
-		
+	public static final void packLabels(final Node<?> labels, final Map<Float, Integer> map) {
 		final int n = labels.getLength();
 		
 		for (int i = 0; i < n; ++i) {
 			labels.set(i, map.get(labels.get(i)));
 		}
-		
-		return result;
 	}
-
+	
+	public static final void packLabels(final Node<?> labels) {
+		packLabels(labels, toIndexMap(labels));
+	}
+	
+	public static final Map<Float, Integer> toIndexMap(final Node<?> labels) {
+		return toIndexMap(toSortedSet(labels).toArray(new Float[0]));
+	}
+	
+	public static final <K> Map<K, Integer> toIndexMap(@SuppressWarnings("unchecked") final K... values) {
+		final Map<K, Integer> map = new HashMap<>();
+		
+		for (int i = 0; i < values.length; ++i) {
+			map.put(values[i], i);
+		}
+		
+		return map;
+	}
+	
 	public static final SortedSet<Float> toSortedSet(final Node<?> labels) {
 		final SortedSet<Float> values = new TreeSet<>();
 		final int n = labels.getLength();

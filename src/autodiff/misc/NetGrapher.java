@@ -2,7 +2,6 @@ package autodiff.misc;
 
 import static autodiff.learning.LearningTools.*;
 import static autodiff.nodes.NodesTools.$;
-
 import autodiff.computing.DefaultProcessor;
 import autodiff.computing.NodeProcessor;
 import autodiff.io.Iris;
@@ -12,6 +11,7 @@ import autodiff.nodes.Node;
 import autodiff.nodes.NodesTools;
 import autodiff.ui.JGraphXTools;
 
+import java.util.Map;
 import java.util.Random;
 
 import multij.swing.SwingTools;
@@ -31,13 +31,15 @@ public final class NetGrapher {
 	 * <br>Unused
 	 */
 	public static final void main(final String... commandLineArguments) {
-		final int action = 0;
+		final String net = "cost";
 		final NodeProcessor processor = DefaultProcessor.INSTANCE;
 		
-		if (action == 0) {
+		if ("cost".equals(net)) {
 			final Random random = new Random(2L);
 			final LabeledData allData = Iris.getIrisData();
-			final Float[] classIds = packLabels(allData.getLabels());
+			final Map<Float, Integer> classIds = toIndexMap(allData.getLabels());
+			
+			packLabels(allData.getLabels(), classIds);
 			
 			allData.shuffle(random);
 			
@@ -45,7 +47,7 @@ public final class NetGrapher {
 			final LabeledData trainingData = split[0];
 //			final LabeledData testData = split[1];
 			final int inputLength = trainingData.getInputLength();
-			final int classCount = classIds.length;
+			final int classCount = classIds.size();
 			
 			final Node<?> x = trainingData.getInputs();
 			final Node<?> a = new Data().setShape(inputLength, classCount);
@@ -60,13 +62,13 @@ public final class NetGrapher {
 			
 			processor.fullBackwardDiff(cost);
 			
-			SwingTools.show(JGraphXTools.newGraphComponent(cost), "NetGrapher.cost");
-		} else if (action == 1) {
+			SwingTools.show(JGraphXTools.newGraphComponent(cost), "NetGrapher." + net);
+		} else if ("sorting".equals(net)) {
 			final Node<?> node = NodesTools.sortIndices($(5, 3, 1, 4, 2).shaped(1, 5));
 			
 			processor.fullForward(node);
 			
-			SwingTools.show(JGraphXTools.newGraphComponent(node), "NetGrapher.sorting");
+			SwingTools.show(JGraphXTools.newGraphComponent(node), "NetGrapher." + net);
 		} else {
 			final Node<?> md = new Data().setShape(2, 3, 4, 5, 6);
 			
@@ -74,7 +76,7 @@ public final class NetGrapher {
 				md.set(i, i);
 			}
 			
-			SwingTools.show(JGraphXTools.newGraphComponent(md), "tmp");
+			SwingTools.show(JGraphXTools.newGraphComponent(md), "NetGrapher." + net);
 		}
 	}
 
