@@ -76,7 +76,12 @@ public abstract interface NodeProcessor extends Serializable {
 	}
 	
 	public default <N extends Node<?>> N fullForward(final N node) {
-		final List<Node<?>> nodes = collectForward(node);
+		if ("show graph".equals("")) {
+			Tools.debugPrint();
+			SwingTools.show(JGraphXTools.newGraphComponent(node), "view", true);
+		}
+		
+		final List<Node<?>> nodes = this.collectForward(node);
 		
 		this.zeroComputationNodes(nodes);
 		

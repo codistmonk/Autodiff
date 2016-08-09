@@ -73,25 +73,31 @@ public final class MinibatchMinimizer extends AbstractMinimizer<MinibatchMinimiz
 	
 	@Override
 	public final float updateCost(final float previousBestCost) {
-		this.beforeUpdateCost();
+		this.beforeUpdateCost(previousBestCost);
 		
 		final float[] cost = { 0F };
+		final int[] count = { 0 };
 		
 		this.getMinibatchContext().forEachMinibatch(() -> {
 			cost[0] += this.getProcessor().fullForward(this.getCost()).get();
+			++count[0];
 		});
+		
+		if (0 < count[0]) {
+			cost[0] /= count[0];
+		}
+		
+		float result = previousBestCost;
 		
 		if (cost[0] < previousBestCost) {
 			this.saveBestParameters();
 			
-			this.afterUpdateCost();
-			
-			return cost[0];
+			result = cost[0];
 		}
 		
-		this.afterUpdateCost();
+		this.afterUpdateCost(cost[0], result);
 		
-		return previousBestCost;
+		return result;
 	}
 	
 	private static final long serialVersionUID = 1342716574795573640L;

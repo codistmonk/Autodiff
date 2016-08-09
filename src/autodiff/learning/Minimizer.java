@@ -71,23 +71,22 @@ public abstract interface Minimizer<M extends Minimizer<?>> extends Runnable, Se
 	}
 	
 	public default float updateCost(final float previousBestCost) {
-		this.beforeUpdateCost();
+		this.beforeUpdateCost(previousBestCost);
 		
 		this.getProcessor().fullForward(this.getCost());
 		
 		final float cost = this.getCost().get();
+		float result = previousBestCost;
 		
 		if (cost < previousBestCost) {
 			this.saveBestParameters();
 			
-			this.afterUpdateCost();
-			
-			return cost;
+			result = cost;
 		}
 		
-		this.afterUpdateCost();
+		this.afterUpdateCost(cost, result);
 		
-		return previousBestCost;
+		return result;
 	}
 	
 	public default boolean isDone() {
@@ -124,12 +123,12 @@ public abstract interface Minimizer<M extends Minimizer<?>> extends Runnable, Se
 		this.getListeners().forEach(Listener::afterUpdateParameters);
 	}
 	
-	public default void beforeUpdateCost() {
-		this.getListeners().forEach(Listener::beforeUpdateCost);
+	public default void beforeUpdateCost(final float previousBestCost) {
+		this.getListeners().forEach(l -> l.beforeUpdateCost(previousBestCost));
 	}
 	
-	public default void afterUpdateCost() {
-		this.getListeners().forEach(Listener::afterUpdateCost);
+	public default void afterUpdateCost(final float cost, final float newBestCost) {
+		this.getListeners().forEach(l -> l.afterUpdateCost(cost, newBestCost));
 	}
 	
 	public default void beforeSaveBestParameters() {
@@ -169,11 +168,11 @@ public abstract interface Minimizer<M extends Minimizer<?>> extends Runnable, Se
 			// NOP
 		}
 		
-		public default void beforeUpdateCost() {
+		public default void beforeUpdateCost(final float previousBestCost) {
 			// NOP
 		}
 		
-		public default void afterUpdateCost() {
+		public default void afterUpdateCost(final float cost, final float nexBestCost) {
 			// NOP
 		}
 		

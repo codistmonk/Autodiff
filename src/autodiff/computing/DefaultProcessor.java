@@ -5,6 +5,7 @@ import static autodiff.rules.PatternPredicate.rule;
 import static java.lang.Math.*;
 import static multij.tools.Tools.cast;
 import static multij.tools.Tools.swap;
+
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
@@ -20,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 
 import multij.tools.Pair;
-import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2016-07-11)
@@ -85,7 +85,10 @@ public final class DefaultProcessor implements NodeProcessor {
 					for (int k = 0; k < stride; ++k) {
 						final int leftIndex = transposeLeft ? r + k * rows : k + r * stride;
 						final int rightIndex = transposeRight ? k + c * stride : c + k * columns;
-						value += left.get(leftIndex) * right.get(rightIndex);
+						final float leftValue = left.get(leftIndex);
+						final float rightValue = right.get(rightIndex);
+						
+						value += leftValue * rightValue;
 					}
 					
 					node.add(c + r * columns, value);
@@ -103,18 +106,12 @@ public final class DefaultProcessor implements NodeProcessor {
 			final List<Object> forwardDefinition = Functions.getDefinition(functionName, 1);
 			final FloatSupplier forward = this.context.newSupplier(forwardDefinition);
 			
-//			Tools.debugPrint(functionName, forwardDefinition, forward);
-			
 			for (int i = 0; i < n; ++i) {
 				this.context.getInputs().get(0).set(argument.get(i));
 				
-				try {
-					node.add(i, forward.get());
-				} catch (final Exception e) {
-					Tools.debugError(argument.get(i), node.getFunctionName());
-					Tools.debugError(argument);
-					throw e;
-				}
+				final float value = forward.get();
+				
+				node.add(i, value);
 			}
 			
 			return null;
@@ -132,13 +129,16 @@ public final class DefaultProcessor implements NodeProcessor {
 			final List<Object> forwardDefinition = Functions.getDefinition(functionName, 2);
 			final FloatSupplier forward = this.context.newSupplier(forwardDefinition);
 			
-//			Tools.debugPrint(functionName, forwardDefinition, forward);
-			
 			for (int i = 0; i < mm; ++i) {
-				this.context.getInputs().get(0).set(left.get(i % m));
-				this.context.getInputs().get(1).set(right.get(i % n));
+				final float leftValue = left.get(i % m);
+				final float rightValue = right.get(i % n);
 				
-				node.add(i % l, forward.get());
+				this.context.getInputs().get(0).set(leftValue);
+				this.context.getInputs().get(1).set(rightValue);
+				
+				final float value = forward.get();
+				
+				node.add(i % l, value);
 			}
 			
 			return null;
@@ -911,6 +911,10 @@ public final class DefaultProcessor implements NodeProcessor {
 		}
 		
 		public static final float forward(final float x, final float y) {
+//			if (x == y) {
+//				return 1F;
+//			}
+			
 			return x / y;
 		}
 		

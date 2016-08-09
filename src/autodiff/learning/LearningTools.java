@@ -31,7 +31,6 @@ public final class LearningTools {
 		final Node<?> exp = $(EXP, y);
 		final Node<?> denom = $(SUM, new int[] { classCount }, exp);
 		final Node<?> num = $(exp, "@", shape(labels, labels.getLength(), 1));
-//		final Node<?> num = $(exp, "@", labels.setShape(labels.getLength(), 1));
 		final Node<?> softmax = $(num, "/", denom);
 		
 		return $("-", $($(SUM, $(LN, softmax)), "/", softmax.getLength()));
@@ -72,11 +71,15 @@ public final class LearningTools {
 	}
 	
 	public static final void initialize(final DoubleSupplier f, final Node<?>... nodes) {
+		initialize(f, 1.0, nodes);
+	}
+	
+	public static final void initialize(final DoubleSupplier f, final double scale, final Node<?>... nodes) {
 		for (final Node<?> node : nodes) {
 			final int n = node.getLength();
 			
 			for (int i = 0; i < n; ++i) {
-				node.set(i, (float) f.getAsDouble());
+				node.set(i, (float) (f.getAsDouble() * scale));
 			}
 		}
 	}

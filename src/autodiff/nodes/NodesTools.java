@@ -616,8 +616,6 @@ public final class NodesTools {
 				shape[this.dimensionIndex] += argumentShape[this.dimensionIndex];
 			}
 			
-			debugPrint(Arrays.toString(shape));
-			
 			return this.setShape(shape);
 		}
 		

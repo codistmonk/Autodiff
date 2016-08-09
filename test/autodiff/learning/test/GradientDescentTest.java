@@ -203,8 +203,8 @@ public abstract class GradientDescentTest {
 			final ConfusionMatrix<Integer> trainingResult = evaluate(y, trainingData, minibatchData, this.getProcessor());
 			final ConfusionMatrix<Integer> testResult = evaluate(y, testData, minibatchData, this.getProcessor());
 			
-			debugPrint(trainingData.getItemCount(), trainingResult.getCounts(), trainingResult.computeMacroF1(), trainingResult.computeAccuracy());
-			debugPrint(testData.getItemCount(), testResult.getCounts(), testResult.computeMacroF1(), testResult.computeAccuracy());
+			debugPrint(trainingData.getItemCount(), trainingResult.computeMacroF1(), trainingResult.computeAccuracy(), trainingResult.getCounts());
+			debugPrint(testData.getItemCount(), testResult.computeMacroF1(), testResult.computeAccuracy(), trainingResult.getCounts());
 		}
 		
 		minibatchMinimizer.run();
@@ -213,8 +213,8 @@ public abstract class GradientDescentTest {
 			final ConfusionMatrix<Integer> trainingResult = evaluate(y, trainingData, minibatchData, this.getProcessor());
 			final ConfusionMatrix<Integer> testResult = evaluate(y, testData, minibatchData, this.getProcessor());
 			
-			debugPrint(trainingData.getItemCount(), trainingResult.getCounts(), trainingResult.computeMacroF1(), trainingResult.computeAccuracy());
-			debugPrint(testData.getItemCount(), testResult.getCounts(), testResult.computeMacroF1(), testResult.computeAccuracy());
+			debugPrint(trainingData.getItemCount(), trainingResult.computeMacroF1(), trainingResult.computeAccuracy(), trainingResult.getCounts());
+			debugPrint(testData.getItemCount(), testResult.computeMacroF1(), testResult.computeAccuracy(), trainingResult.getCounts());
 			
 			assertTrue(0.98 <= testResult.computeAccuracy());
 		}
