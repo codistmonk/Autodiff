@@ -6,14 +6,7 @@ import static autodiff.computing.Functions.SIGMOID;
 import static autodiff.computing.Functions.SQRT;
 import static autodiff.computing.Functions.SQUARED;
 import static autodiff.computing.Functions.STEP0;
-import static autodiff.nodes.NodesTools.$;
-import static autodiff.nodes.NodesTools.T;
-import static autodiff.nodes.NodesTools.convolutions;
-import static autodiff.nodes.NodesTools.maxPooling;
-import static autodiff.nodes.NodesTools.merge;
-import static autodiff.nodes.NodesTools.patches;
-import static autodiff.nodes.NodesTools.selection;
-import static autodiff.nodes.NodesTools.sum;
+import static autodiff.nodes.NodesTools.*;
 import static java.lang.Math.exp;
 import static multij.tools.Tools.ints;
 import static org.junit.Assert.*;
@@ -84,7 +77,7 @@ public abstract class ProcessorTest {
 		final Node<?> x = new Data().setShape(2, 5).set(
 				5F, 4F, 2F, 3F, 1F,
 				7F, 8F, 9F, 6F, 6F);
-		final Node<?> y = NodesTools.percentileMask(x, 0F);
+		final Node<?> y = percentileMask(x, $(0F));
 		
 		assertArrayEquals(new int[] { 2, 5 }, y.getShape());
 		
@@ -105,7 +98,7 @@ public abstract class ProcessorTest {
 		final Node<?> x = new Data().setShape(2, 5).set(
 				5F, 4F, 2F, 3F, 1F,
 				7F, 8F, 9F, 6F, 6F);
-		final Node<?> y = NodesTools.percentileMask(x, 0.5F);
+		final Node<?> y = percentileMask(x, $(0.5F));
 		
 		assertArrayEquals(new int[] { 2, 5 }, y.getShape());
 		
@@ -126,7 +119,7 @@ public abstract class ProcessorTest {
 		final Node<?> x = new Data().setShape(2, 5).set(
 				5F, 4F, 2F, 3F, 1F,
 				7F, 8F, 9F, 6F, 6F);
-		final Node<?> y = NodesTools.percentileMask(x, 1F);
+		final Node<?> y = percentileMask(x, $(1F));
 		
 		assertArrayEquals(new int[] { 2, 5 }, y.getShape());
 		
@@ -147,7 +140,7 @@ public abstract class ProcessorTest {
 		final Node<?> x = new Data().setShape(2, 5).set(
 				5F, 4F, 2F, 3F, 1F,
 				7F, 8F, 9F, 6F, 6F);
-		final Node<?> y = NodesTools.percentile(x, 0F);
+		final Node<?> y = percentile(x, $(0F));
 		
 		assertArrayEquals(new int[] { 2, 1 }, y.getShape());
 		
@@ -168,7 +161,7 @@ public abstract class ProcessorTest {
 		final Node<?> x = new Data().setShape(2, 5).set(
 				5F, 4F, 2F, 3F, 1F,
 				7F, 8F, 9F, 6F, 6F);
-		final Node<?> y = NodesTools.percentile(x, 0.5F);
+		final Node<?> y = percentile(x, $(0.5F));
 		
 		assertArrayEquals(new int[] { 2, 1 }, y.getShape());
 		
@@ -189,7 +182,7 @@ public abstract class ProcessorTest {
 		final Node<?> x = new Data().setShape(2, 5).set(
 				5F, 4F, 2F, 3F, 1F,
 				7F, 8F, 9F, 6F, 6F);
-		final Node<?> y = NodesTools.percentile(x, 1F);
+		final Node<?> y = percentile(x, $(1F));
 		
 		assertArrayEquals(new int[] { 2, 1 }, y.getShape());
 		

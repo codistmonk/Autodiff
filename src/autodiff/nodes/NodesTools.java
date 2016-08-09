@@ -51,12 +51,12 @@ public final class NodesTools {
 		return new IndexGreaterness(n).autoShape();
 	}
 	
-	public static final Node<?> percentileMask(final Node<?> inputs, final float ratio) {
-		return new PercentileMask(ratio).setInputs(inputs).autoShape();
+	public static final Node<?> percentileMask(final Node<?> inputs, final Node<?> ratio) {
+		return new PercentileMask().setInputs(inputs).setRatio(ratio).autoShape();
 	}
 	
-	public static final Node<?> percentile(final Node<?> inputs, final float ratio) {
-		return new Percentile(ratio).setInputs(inputs).autoShape();
+	public static final Node<?> percentile(final Node<?> inputs, final Node<?> ratio) {
+		return new Percentile().setInputs(inputs).setRatio(ratio).autoShape();
 	}
 	
 	public static final Node<?> maxPooling(final Node<?> inputs, final int[] offsets, final int[] strides, final int[] kernelShape) {
@@ -1099,7 +1099,8 @@ public final class NodesTools {
 		protected final Node<?> doUnfold() {
 			final Node<?> patches = patches(this.getInputs(), this.sampling);
 			final int[] patchesShape = patches.getShape();
-			final Node<?> percentile = percentile(shape(patches, patchesShape[0] * patchesShape[1], patchesShape[2] * patchesShape[3]), 1F);
+			final Node<?> percentile = percentile(shape(
+					patches, patchesShape[0] * patchesShape[1], patchesShape[2] * patchesShape[3]), $(1F));
 			
 			percentile.setStorage(this);
 			
@@ -1115,11 +1116,8 @@ public final class NodesTools {
 	 */
 	public static final class PercentileMask extends CustomNode<PercentileMask> {
 		
-		private final float ratio;
-		
-		public PercentileMask(final float ratio) {
-			super(Arrays.asList(new Node[1]));
-			this.ratio = ratio;
+		public PercentileMask() {
+			super(Arrays.asList(new Node[2]));
 		}
 		
 		public final Node<?> getInputs() {
@@ -1128,6 +1126,16 @@ public final class NodesTools {
 		
 		public final PercentileMask setInputs(final Node<?> inputs) {
 			this.getArguments().set(0, inputs);
+			
+			return this;
+		}
+		
+		public final Node<?> getRatio() {
+			return this.getArguments().get(1);
+		}
+		
+		public final PercentileMask setRatio(final Node<?> ratio) {
+			this.getArguments().set(1, ratio);
 			
 			return this;
 		}
@@ -1144,8 +1152,8 @@ public final class NodesTools {
 		@Override
 		protected final Node<?> doUnfold() {
 			final Node<?> inputs = this.getInputs();
+			final Node<?> ratio = this.getRatio();
 			final int n = inputs.getShape()[1];
-			final Node<?> ratio = new Data().set(this.ratio);
 			final Node<?> ith = $(ROUND, $(ratio, "*", n - 1));
 			
 			return $(KRONECKER, sortIndices(inputs), ith).setStorage(this);
@@ -1160,11 +1168,8 @@ public final class NodesTools {
 	 */
 	public static final class Percentile extends CustomNode<Percentile> {
 		
-		private final float ratio;
-		
-		public Percentile(final float ratio) {
-			super(Arrays.asList(new Node[1]));
-			this.ratio = ratio;
+		public Percentile() {
+			super(Arrays.asList(new Node[2]));
 		}
 		
 		public final Node<?> getInputs() {
@@ -1173,6 +1178,16 @@ public final class NodesTools {
 		
 		public final Percentile setInputs(final Node<?> inputs) {
 			this.getArguments().set(0, inputs);
+			
+			return this;
+		}
+		
+		public final Node<?> getRatio() {
+			return this.getArguments().get(1);
+		}
+		
+		public final Percentile setRatio(final Node<?> ratio) {
+			this.getArguments().set(1, ratio);
 			
 			return this;
 		}
@@ -1189,9 +1204,10 @@ public final class NodesTools {
 		@Override
 		protected final Node<?> doUnfold() {
 			final Node<?> inputs = this.getInputs();
+			final Node<?> ratio = this.getRatio();
 			final int n = inputs.getShape()[1];
 			
-			return sum($(inputs, "*", percentileMask(inputs, this.ratio)), 1, n).setStorage(this);
+			return sum($(inputs, "*", percentileMask(inputs, ratio)), 1, n).setStorage(this);
 		}
 		
 		private static final long serialVersionUID = -3725650903059947346L;
