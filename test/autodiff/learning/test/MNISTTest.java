@@ -3,7 +3,6 @@ package autodiff.learning.test;
 import static autodiff.learning.LearningTools.*;
 import static autodiff.nodes.NodesTools.$;
 import static multij.tools.Tools.debugPrint;
-import static org.junit.Assert.assertTrue;
 
 import autodiff.computing.NodeProcessor;
 import autodiff.io.LabeledData;
@@ -20,6 +19,7 @@ import java.util.Random;
 
 import multij.tools.Tools;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -92,9 +92,11 @@ public abstract class MNISTTest {
 			
 			debugPrint(trainingData.getItemCount(), trainingResult.computeMacroF1(), trainingResult.computeAccuracy(), trainingResult.getCounts());
 			debugPrint(testData.getItemCount(), testResult.computeMacroF1(), testResult.computeAccuracy(), trainingResult.getCounts());
-			
-			assertTrue(0.98 <= testResult.computeAccuracy());
 		}
+		
+		GradientDescentTest.printTimers(this.getProcessor().getTimers());
+		
+		Assert.fail("TODO");
 	}
 	
 	public abstract NodeProcessor getProcessor();

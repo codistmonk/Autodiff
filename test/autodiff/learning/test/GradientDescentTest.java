@@ -6,7 +6,9 @@ import static autodiff.computing.Functions.SQUARED;
 import static autodiff.learning.LearningTools.*;
 import static autodiff.nodes.NodesTools.SUM;
 import static autodiff.nodes.NodesTools.$;
+import static multij.tools.Tools.DEBUG_STACK_OFFSET;
 import static multij.tools.Tools.cast;
+import static multij.tools.Tools.debug;
 import static multij.tools.Tools.debugPrint;
 import static org.junit.Assert.*;
 import autodiff.computing.NodeProcessor;
@@ -24,7 +26,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.stream.Collectors;
 
+import multij.tools.TicToc;
 import multij.tools.Tools;
 
 import org.junit.Test;
@@ -165,6 +169,8 @@ public abstract class GradientDescentTest {
 			
 			assertTrue(0.98 <= testResult.computeAccuracy());
 		}
+		
+		printTimers(this.getProcessor().getTimers());
 	}
 	
 	@Test
@@ -242,6 +248,11 @@ public abstract class GradientDescentTest {
 		node.getArguments().forEach(n -> result.add(toTree(n)));
 		
 		return result;
+	}
+	
+	public static final void printTimers(final Map<Object, TicToc> timers) {
+		System.out.println(debug(DEBUG_STACK_OFFSET + 1, timers.entrySet().stream()
+				.map(e -> e.getKey() + ":" + e.getValue().getTotalTime()).collect(Collectors.toList())));
 	}
 	
 }

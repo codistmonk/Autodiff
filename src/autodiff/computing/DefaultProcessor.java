@@ -3,9 +3,7 @@ package autodiff.computing;
 import static autodiff.computing.Functions.*;
 import static autodiff.rules.PatternPredicate.rule;
 import static java.lang.Math.*;
-import static multij.tools.Tools.cast;
-import static multij.tools.Tools.swap;
-
+import static multij.tools.Tools.*;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
@@ -21,15 +19,25 @@ import java.util.List;
 import java.util.Map;
 
 import multij.tools.Pair;
+import multij.tools.TicToc;
 
 /**
  * @author codistmonk (creation 2016-07-11)
  */
 public final class DefaultProcessor implements NodeProcessor {
 	
+	private final Map<Object, TicToc> timers = new HashMap<>();
+	
 	private final Map<Node<?>, List<Node<?>>> forwards = new HashMap<>();
 	
 	private final Map<Node<?>, List<Node<?>>> backwards = new HashMap<>();
+	
+	private final Forwarder forwarder = this.new Forwarder();
+	
+	@Override
+	public final Map<Object, TicToc> getTimers() {
+		return this.timers;
+	}
 	
 	@Override
 	public final Map<Node<?>, List<Node<?>>> getForwards() {
@@ -43,7 +51,7 @@ public final class DefaultProcessor implements NodeProcessor {
 	
 	@Override
 	public final Forwarder getForwarder() {
-		return Forwarder.INSTANCE;
+		return this.forwarder;
 	}
 	
 	private static final long serialVersionUID = -5998082453824765555L;
@@ -53,12 +61,16 @@ public final class DefaultProcessor implements NodeProcessor {
 	/**
 	 * @author codistmonk (creation 2016-07-11)
 	 */
-	public static final class Forwarder implements NodeVisitor<Void> {
+	public final class Forwarder implements NodeVisitor<Void> {
 		
 		private final Context context = new Context();
 		
 		@Override
 		public final Void visit(final MatrixMultiplication node) {
+			final TicToc timer = getOrCreateTimer("MatrixMultiplication");
+			
+			timer.tic();
+			
 			final Node<?> left = node.getLeft();
 			final Node<?> right = node.getRight();
 			final int[] leftShape = left.getLengths(new int[2]);
@@ -95,11 +107,17 @@ public final class DefaultProcessor implements NodeProcessor {
 				}
 			}
 			
+			timer.toc();
+			
 			return null;
 		}
 		
 		@Override
 		public final Void visit(final Mapping node) {
+			final TicToc timer = getOrCreateTimer("Mapping");
+			
+			timer.tic();
+			
 			final Node<?> argument = node.getArgument();
 			final int n = node.getLength();
 			final String functionName = node.getFunctionName();
@@ -114,11 +132,17 @@ public final class DefaultProcessor implements NodeProcessor {
 				node.add(i, value);
 			}
 			
+			timer.toc();
+			
 			return null;
 		}
 		
 		@Override
 		public final Void visit(final Zipping node) {
+			final TicToc timer = getOrCreateTimer("Zipping");
+			
+			timer.tic();
+			
 			final Node<?> left = node.getLeft();
 			final Node<?> right = node.getRight();
 			final int l = node.getLength();
@@ -141,12 +165,12 @@ public final class DefaultProcessor implements NodeProcessor {
 				node.add(i % l, value);
 			}
 			
+			timer.toc();
+			
 			return null;
 		}
 		
 		private static final long serialVersionUID = -8842155630294708599L;
-		
-		public static final Forwarder INSTANCE = new Forwarder();
 		
 	}
 	

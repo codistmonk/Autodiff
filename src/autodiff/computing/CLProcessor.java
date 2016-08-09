@@ -24,7 +24,6 @@ import static org.jocl.CL.setExceptionsEnabled;
 import autodiff.cl.CLContext;
 import autodiff.cl.CLKernel;
 import autodiff.nodes.BinaryNode;
-import autodiff.nodes.Data;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
@@ -46,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 
 import multij.tools.Pair;
+import multij.tools.TicToc;
 
 import org.jocl.CL;
 import org.jocl.Pointer;
@@ -56,6 +56,8 @@ import org.jocl.cl_mem;
  * @author codistmonk (creation 2016-07-17)
  */
 public final class CLProcessor implements NodeProcessor {
+	
+	private final Map<Object, TicToc> timers;
 	
 	private final Map<Node<?>, List<Node<?>>> forwards;
 	
@@ -80,6 +82,7 @@ public final class CLProcessor implements NodeProcessor {
 	}
 	
 	public CLProcessor(final CLContext context) {
+		this.timers = new HashMap<>();
 		this.forwards = new HashMap<>();
 		this.backwards = new HashMap<>();
 		this.context = context;
@@ -89,6 +92,11 @@ public final class CLProcessor implements NodeProcessor {
 		this.forwarder = this.new Forwarder();
 		this.forwardGetter = this.new ForwardGetter();
 		this.forwardInitializer = this.new ForwardInitializer();
+	}
+	
+	@Override
+	public final Map<Object, TicToc> getTimers() {
+		return this.timers;
 	}
 	
 	@Override
@@ -123,10 +131,8 @@ public final class CLProcessor implements NodeProcessor {
 	public final <N extends Node<?>> N fullBackwardDiff(final N node) {
 		NodeProcessor.super.fullBackwardDiff(node);
 		
-		for (final Node<?> n : node.accept(new ForwardCollector(true))) {
-			if (n.hasDiffs() && n instanceof Data) {
-				this.readBufferNow(n.getDiffs());
-			}
+		if (node.hasDiffs()) {
+			this.readBufferNow(node.getDiffs());
 		}
 		
 		return node;
@@ -135,6 +141,10 @@ public final class CLProcessor implements NodeProcessor {
 	@Override
 	public final void forward(final Iterable<Node<?>> nodes) {
 		for (final Node<?> node : nodes) {
+			final TicToc timer = getOrCreateTimer(node.getClass().getSimpleName());
+			
+			timer.tic();
+			
 			this.writeBuffer(node);
 			
 			if (node.isComputationNode()) {
@@ -142,6 +152,8 @@ public final class CLProcessor implements NodeProcessor {
 				
 				this.readBuffer(node);
 			}
+			
+			timer.toc();
 		}
 	}
 	

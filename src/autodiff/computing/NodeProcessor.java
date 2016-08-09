@@ -1,7 +1,6 @@
 package autodiff.computing;
 
 import static java.util.Collections.reverse;
-
 import autodiff.nodes.CustomNode;
 import autodiff.nodes.Data;
 import autodiff.nodes.Mapping;
@@ -20,12 +19,19 @@ import java.util.List;
 import java.util.Map;
 
 import multij.swing.SwingTools;
+import multij.tools.TicToc;
 import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2016-07-11)
  */
 public abstract interface NodeProcessor extends Serializable {
+	
+	public abstract Map<Object, TicToc> getTimers();
+	
+	public default TicToc getOrCreateTimer(final Object key) {
+		return this.getTimers().computeIfAbsent(key, __ -> new TicToc());
+	}
 	
 	public abstract Map<Node<?>, List<Node<?>>> getForwards();
 	
