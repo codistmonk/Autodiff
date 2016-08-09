@@ -1,5 +1,9 @@
 package autodiff.nodes;
 
+import static autodiff.nodes.NodesTools.newId;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -9,7 +13,7 @@ import java.util.List;
  */
 public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N> {
 	
-	private final long id;
+	private long id;
 	
 	private final List<Node<?>> arguments;
 	
@@ -20,7 +24,7 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	}
 	
 	protected AbstractNode(final List<Node<?>> arguments) {
-		this.id = NodesTools.nextId();
+		this.id = newId();
 		this.arguments = arguments;
 		this.values = new Data();
 	}
@@ -82,6 +86,11 @@ public abstract class AbstractNode<N extends AbstractNode<?>> implements Node<N>
 	@Override
 	public final String toString() {
 		return Arrays.toString(this.get(new float[this.getLength()]));
+	}
+	
+	private final void readObject(final ObjectInputStream in) throws ClassNotFoundException, IOException {
+		in.defaultReadObject();
+		this.id = newId();
 	}
 	
 	private static final long serialVersionUID = 8399842389497413524L;

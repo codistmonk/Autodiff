@@ -37,10 +37,10 @@ public final class NodesTools {
 	 */
 	public static final float NaI = -Integer.MAX_VALUE;
 	
-	private static final AtomicLong nextId = new AtomicLong(-1L);
+	private static final AtomicLong lastId = new AtomicLong(-1L);
 	
-	public static final long nextId() {
-		return nextId.incrementAndGet();
+	public static final long newId() {
+		return lastId.incrementAndGet();
 	}
 	
 	public static final Node<?> sortIndices(final Node<?> inputs) {

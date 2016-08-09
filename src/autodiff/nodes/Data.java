@@ -1,9 +1,12 @@
 package autodiff.nodes;
 
 import static autodiff.nodes.NodesTools.checkLength;
+import static autodiff.nodes.NodesTools.newId;
 import static autodiff.nodes.NodesTools.product;
 import static multij.tools.Tools.cast;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -13,7 +16,7 @@ import java.util.stream.Collectors;
  */
 public final class Data implements Node<Data> {
 	
-	private final long id;
+	private long id;
 	
 	private Storage storage;
 	
@@ -22,7 +25,7 @@ public final class Data implements Node<Data> {
 	private Node<?> diffs;
 	
 	{
-		this.id = NodesTools.nextId();
+		this.id = newId();
 	}
 	
 	@Override
@@ -152,6 +155,11 @@ public final class Data implements Node<Data> {
 	@Override
 	public final String toString() {
 		return Arrays.toString(this.get(new float[this.getLength()]));
+	}
+	
+	private final void readObject(final ObjectInputStream in) throws ClassNotFoundException, IOException {
+		in.defaultReadObject();
+		this.id = newId();
 	}
 	
 	private static final long serialVersionUID = -8666641173896611664L;
