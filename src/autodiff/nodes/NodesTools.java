@@ -4,8 +4,8 @@ import static autodiff.computing.Functions.INFIX_OPERATORS;
 import static autodiff.computing.Functions.KRONECKER;
 import static autodiff.computing.Functions.POSTFIX_OPERATORS;
 import static autodiff.computing.Functions.PREFIX_OPERATORS;
+import static autodiff.computing.Functions.ROUND;
 import static autodiff.computing.Functions.STEP1;
-import static java.lang.Math.round;
 import static multij.tools.Tools.*;
 
 import autodiff.computing.DefaultProcessor;
@@ -1145,9 +1145,8 @@ public final class NodesTools {
 		protected final Node<?> doUnfold() {
 			final Node<?> inputs = this.getInputs();
 			final int n = inputs.getShape()[1];
-			final Node<?> ith = new Data().setShape(n);
-			
-			DefaultProcessor.INSTANCE.fill(ith, round(this.ratio * (n - 1)));
+			final Node<?> ratio = new Data().set(this.ratio);
+			final Node<?> ith = $(ROUND, $(ratio, "*", n - 1));
 			
 			return $(KRONECKER, sortIndices(inputs), ith).setStorage(this);
 		}

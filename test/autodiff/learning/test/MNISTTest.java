@@ -3,7 +3,6 @@ package autodiff.learning.test;
 import static autodiff.learning.LearningTools.*;
 import static autodiff.nodes.NodesTools.$;
 import static multij.tools.Tools.debugPrint;
-
 import autodiff.computing.NodeProcessor;
 import autodiff.io.LabeledData;
 import autodiff.io.MNIST;
@@ -20,6 +19,7 @@ import java.util.Random;
 import multij.tools.Tools;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -32,6 +32,7 @@ public abstract class MNISTTest {
 	}
 	
 	@Test
+	@Ignore
 	public final void test1() {
 		final Random random = new Random(2L);
 		final LabeledData trainingData = MNIST.getMNISTTrainingData();

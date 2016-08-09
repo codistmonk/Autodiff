@@ -332,6 +332,14 @@ public final class DefaultProcessor implements NodeProcessor {
 			
 			{
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(ROUND, x), (__, m) -> {
+					return new Round(this.rules.applyTo(m.get(x), m));
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				final autodiff.rules.Variable y = new autodiff.rules.Variable();
 				
 				this.rules.add(rule($(x, "+", y), (__, m) -> {
@@ -848,6 +856,28 @@ public final class DefaultProcessor implements NodeProcessor {
 		
 		public static final float forward(final float x) {
 			return (float) cos(x);
+		}
+		
+		private static final long serialVersionUID = 1097749855046748151L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-09)
+	 */
+	public static final class Round extends Unary {
+		
+		public Round(final FloatSupplier source) {
+			super(source);
+		}
+		
+		@Override
+		public final float get() {
+			return forward(this.getArgument().get());
+		}
+		
+		public static final float forward(final float x) {
+			return round(x);
 		}
 		
 		private static final long serialVersionUID = 1097749855046748151L;

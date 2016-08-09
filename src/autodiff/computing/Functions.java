@@ -78,11 +78,13 @@ public final class Functions {
 	
 	public static final String KRONECKER = "kronecker";
 	
+	public static final String ROUND = "round";
+	
 	public static final double EPSILON = pow(2.0, -14.0);
 	
 	public static final Collection<String> INFIX_OPERATORS = unmodifiableSet(set("+", "-", "*", "/", SQMINUS, "=", "!=", "<", "<=", ">", ">="));
 	
-	public static final Collection<String> PREFIX_OPERATORS = unmodifiableSet(set("-", ABS, SHI, SIGMOID, BUMP, RELU, EXP, LN, SIN, COS, SQRT, STEP0, STEP1, KRONECKER));
+	public static final Collection<String> PREFIX_OPERATORS = unmodifiableSet(set("-", ABS, SHI, SIGMOID, BUMP, RELU, EXP, LN, SIN, COS, SQRT, STEP0, STEP1, KRONECKER, ROUND));
 	
 	public static final Collection<String> POSTFIX_OPERATORS = unmodifiableSet(set(SQUARED));
 	
@@ -168,6 +170,10 @@ public final class Functions {
 		autodefine(COS, x);
 		defineDiff(COS, x,
 				$("-", $(SIN, x)));
+		
+		autodefine(ROUND, x);
+		defineDiff(ROUND, x,
+				EPSILON);
 		
 		autodefineInfix("+", $(x, y));
 		defineDiff("+", 0, $(x, y),

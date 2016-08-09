@@ -1,18 +1,6 @@
 package autodiff.computing;
 
-import static autodiff.computing.Functions.$;
-import static autodiff.computing.Functions.ABS;
-import static autodiff.computing.Functions.CASES;
-import static autodiff.computing.Functions.COS;
-import static autodiff.computing.Functions.EXP;
-import static autodiff.computing.Functions.FORALL;
-import static autodiff.computing.Functions.IF;
-import static autodiff.computing.Functions.IN;
-import static autodiff.computing.Functions.LN;
-import static autodiff.computing.Functions.OTHERWISE;
-import static autodiff.computing.Functions.R;
-import static autodiff.computing.Functions.SIN;
-import static autodiff.computing.Functions.SQRT;
+import static autodiff.computing.Functions.*;
 import static autodiff.rules.PatternPredicate.rule;
 import static java.lang.Math.max;
 import static multij.tools.Tools.cast;
@@ -613,6 +601,14 @@ public final class CLProcessor implements NodeProcessor {
 				
 				this.rules.add(rule($(COS, x), (__, m) -> {
 					return prefix("cos", x, m);
+				}));
+			}
+			
+			{
+				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				
+				this.rules.add(rule($(ROUND, x), (__, m) -> {
+					return prefix("round", x, m);
 				}));
 			}
 			
