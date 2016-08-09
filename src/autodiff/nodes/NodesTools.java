@@ -155,14 +155,7 @@ public final class NodesTools {
 	}
 	
 	public static final Node<?> ones(final int... shape) {
-		final Node<?> result = new Data().setShape(shape);
-		final int n = result.getLength();
-		
-		for (int i = 0; i < n; ++i) {
-			result.set(i, 1F);
-		}
-		
-		return result;
+		return new Ones(shape).autoShape();
 	}
 	
 	public static final void checkLength(final int expectedLength, final int actualLength) {
@@ -1211,6 +1204,38 @@ public final class NodesTools {
 		}
 		
 		private static final long serialVersionUID = -3725650903059947346L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-10)
+	 */
+	public static final class Ones extends CustomNode<Ones> {
+		
+		private final int[] shape;
+		
+		public Ones(final int... shape) {
+			this.shape = shape;
+		}
+		
+		@Override
+		public final Ones autoShape() {
+			return this.setShape(this.shape);
+		}
+		
+		@Override
+		protected final Node<?> doUnfold() {
+			final Node<?> result = new Data().setStorage(this);
+			final int n = result.getLength();
+			
+			for (int i = 0; i < n; ++i) {
+				result.set(i, 1F);
+			}
+			
+			return result;
+		}
+		
+		private static final long serialVersionUID = 4095941223149887763L;
 		
 	}
 	
