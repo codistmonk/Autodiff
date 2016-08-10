@@ -2,10 +2,13 @@ package autodiff.nodes.test;
 
 import static org.junit.Assert.*;
 
-import org.junit.Test;
-
+import autodiff.nodes.ComputationNode;
 import autodiff.nodes.Data;
 import autodiff.nodes.Node;
+
+import multij.tools.Tools;
+
+import org.junit.Test;
 
 /**
  * @author codistmonk (creation 2016-07-11)
@@ -51,6 +54,17 @@ public final class NodeTest {
 		
 		assertEquals(42.0, x.get(0), 0.0);
 		assertEquals(33.0, x.get(1), 0.0);
+	}
+	
+	@Test
+	public final void testComputationNode1() {
+		final ComputationNode node = ComputationNode.ones();
+		
+		node.bind("s", new int[] { 2 });
+		
+		Tools.debugPrint(node.getBindings());
+		
+		fail("TODO");
 	}
 	
 }
