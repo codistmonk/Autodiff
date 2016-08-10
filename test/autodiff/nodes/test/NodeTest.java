@@ -60,9 +60,11 @@ public final class NodeTest {
 	public final void testComputationNode1() {
 		final ComputationNode node = ComputationNode.ones();
 		
-		node.bind("s", new int[] { 2 });
+		node.set("s", new int[] { 2 });
 		
 		Tools.debugPrint(node.getBindings());
+		
+		node.autoShape();
 		
 		fail("TODO");
 	}
