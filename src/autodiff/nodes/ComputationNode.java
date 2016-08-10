@@ -6,16 +6,18 @@ import static autodiff.reasoning.proofs.BasicNumericVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
 import static multij.tools.Tools.*;
 
+import autodiff.reasoning.deductions.Standard;
+import autodiff.reasoning.expressions.Expressions;
+import autodiff.reasoning.proofs.Deduction;
+
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import multij.tools.Tools;
-import autodiff.reasoning.deductions.Standard;
-import autodiff.reasoning.proofs.Deduction;
-import autodiff.reasoning.proofs.Stack;
 
 /**
  * @author codistmonk (creation 2016-08-09)
@@ -99,6 +101,45 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				bind("definition_of_forall_in", getDefinition().get(1), POS, getDefinition().get(4));
 				rewrite(name(-2), name(-1));
 				bind(name(-1), get("n"));
+				debugPrint(list(proposition("definition_of_positives")).get(1));
+				
+				{
+					subdeduction();
+					
+					{
+						subdeduction();
+						
+						final Object n = list(proposition("definition_of_positives")).get(1);
+						
+						bind("definition_of_forall_in", n, N, $rule($(0, "<", n), $(n, IN, POS)));
+						rewrite("definition_of_positives", name(-1));
+						
+						conclude();
+					}
+					
+					bind(name(-1), get("n"));
+					verifyBasicNumericProposition($(get("n"), IN, N));
+					apply(name(-2), name(-1));
+					verifyBasicNumericProposition($(0, "<", get("n")));
+					apply(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				apply(name(-2), name(-1));
+				
+				{
+					subdeduction();
+					
+					bind("definition_of_forall_in", list(proposition(-1)).get(1), list(proposition(-1)).get(3), list(proposition(-1)).get(4));
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				final Object s = $("[", Expressions.join(",", Arrays.asList(Arrays.stream((int[]) get("s")).mapToObj(Integer::new).toArray())), "]");
+				
+				bind(name(-1), s);
 				
 				abort();
 			}
@@ -130,6 +171,13 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				
 				suppose("definition_of_forall_in", $forall(_x, _X, _P,
 						$($(FORALL, _x, IN, _X, _P), "=", $forall(_x, $rule($(_x, IN, _X), _P)))));
+			}
+			
+			{
+				final Object _n = $new("n");
+				
+				suppose("definition_of_positives", $(FORALL, _n, IN, N,
+						$rule($(0, "<", _n), $(_n, IN, POS))));
 			}
 			
 			{
