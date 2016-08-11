@@ -150,6 +150,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	
 	private static final long serialVersionUID = 2834011599617369367L;
 	
+	public static final Object U = $("℧");
+	
 	public static final Object IN = $("∈");
 	
 	public static final Object CROSS = $("×");
@@ -165,12 +167,38 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			Standard.setup();
 			
 			{
+				suppose("type_of_R", $(R, IN, U));
+			}
+			
+			{
 				final Object _x = $new("x");
 				final Object _X = $new("X");
 				final Object _P = $new("P");
 				
 				suppose("definition_of_forall_in", $forall(_x, _X, _P,
 						$($(FORALL, _x, IN, _X, _P), "=", $forall(_x, $rule($(_x, IN, _X), _P)))));
+			}
+			
+			{
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				final Object _X = $new("X");
+				final Object _P = $new("P");
+				
+				suppose("definition_of_forall_in_2", $forall(_x, _y, _X, _P,
+						$($(FORALL, _x, ",", _y, IN, _X, _P), "=", $forall(_x, $rule($(_x, IN, _X), $forall(_y, $rule($(_y, IN, _X), _P)))))));
+			}
+			
+			{
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				final Object _z = $new("z");
+				final Object _X = $new("X");
+				final Object _P = $new("P");
+				
+				suppose("definition_of_forall_in_3", $forall(_x, _y, _X, _P,
+						$($(FORALL, _x, ",", _y, ",", _z, IN, _X, _P),
+								"=", $forall(_x, $rule($(_x, IN, _X), $forall(_y, $rule($(_y, IN, _X), $forall(_z, $rule($(_z, IN, _X), _P)))))))));
 			}
 			
 			{
@@ -213,6 +241,16 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			
 			{
 				final Object _X = $new("X");
+				final Object _x = $new("x");
+				
+				suppose("type_of_single",
+						$forall(_X,
+								$(FORALL, _x, IN, _X,
+												$(p(_x), IN, _X))));
+			}
+			
+			{
+				final Object _X = $new("X");
 				final Object _Y = $new("Y");
 				final Object _x = $new("x");
 				final Object _y = $new("y");
@@ -222,6 +260,44 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 								$(FORALL, _x, IN, _X,
 										$(FORALL, _y, IN, _Y,
 												$(p(_x, ",", _y), IN, $(_X, CROSS, _Y))))));
+			}
+			
+			{
+				final Object _X = $new("X");
+				
+				suppose("cartesian_1",
+						$(FORALL, _X, IN, U,
+								$(_X, "=", $(_X, "^", 1))));
+			}
+			
+			{
+				final Object _X = $new("X");
+				final Object _Y = $new("Y");
+				
+				suppose("type_of_cartesian",
+						$(FORALL, _X, ",", _Y, IN, U,
+								$($(_X, CROSS, _Y), IN, U)));
+			}
+			
+			{
+				final Object _X = $new("X");
+				final Object _m = $new("m");
+				final Object _n = $new("n");
+				
+				suppose("cartesian_m_n",
+						$(FORALL, _X, IN, U,
+								$(FORALL, _m, ",", _n, IN, POS,
+										$($($(_X, "^", _m), CROSS, $(_X, "^", _n)), "=", $(_X, "^", $(_m, "+", _n))))));
+			}
+			
+			{
+				final Object _X = $new("X");
+				final Object _Y = $new("Y");
+				final Object _Z = $new("Z");
+				
+				suppose("cartesian_associativity",
+						$(FORALL, _X, ",", _Y, ",", _Z, IN, U,
+										$($($(_X, CROSS, _Y), CROSS, _Z), "=", $(_X, CROSS, $(_Y, CROSS, _Z)))));
 			}
 		}
 		
