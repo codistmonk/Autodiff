@@ -126,6 +126,16 @@ public final class Expressions {
 		return result;
 	}
 	
+	public static final Object joinOr1(final Object separator, final Iterable<Object> objects) {
+		final Collection<?> collection = cast(Collection.class, objects);
+		
+		if (collection != null && collection.size() == 1) {
+			return objects.iterator().next();
+		}
+		
+		return join(separator, objects);
+	}
+	
 	@SuppressWarnings("unchecked")
 	public static final <K, V> Map<K, V> map(final Object... keyAndValues) {
 		final Map<K, V> result = new LinkedHashMap<>();

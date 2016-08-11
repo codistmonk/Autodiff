@@ -60,11 +60,11 @@ public final class NodeTest {
 	public final void testComputationNode1() {
 		final ComputationNode node = ComputationNode.ones();
 		
-		node.set("s", new int[] { 2 });
-		
-		Tools.debugPrint(node.getBindings());
+		node.set("s", new int[] { 2, 1, 3 });
 		
 		node.autoShape();
+		
+		assertArrayEquals(new int[] { 2, 1, 3 }, node.getShape());
 		
 		fail("TODO");
 	}

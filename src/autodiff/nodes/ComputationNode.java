@@ -92,20 +92,18 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			public final void run() {
 				suppose(getDefinition());
 				
-				Tools.debugPrint(getDefinition().get(0));
-				Tools.debugPrint(getDefinition().get(1));
-				Tools.debugPrint(getDefinition().get(2));
-				Tools.debugPrint(getDefinition().get(3));
-				Tools.debugPrint(getDefinition().get(4));
+				Tools.debugPrint(getDefinition());
 				
 				canonicalizeForallIn(name(-1));
 				
 				{
 					subdeduction();
 					
-					bind(name(-1), get("n"));
+					final Object n = $(get("n"));
 					
-					deducePositivity(get("n"));
+					bind(name(-1), n);
+					
+					deducePositivity(n);
 					
 					apply(name(-2), name(-1));
 					
@@ -114,25 +112,74 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				
 				canonicalizeForallIn(name(-1));
 				
-				final Object s = p(Expressions.join(",", Arrays.asList(Arrays.stream((int[]) get("s")).mapToObj(Integer::new).toArray())));
+				final List<Object> s = Arrays.asList(Arrays.stream((int[]) get("s")).mapToObj(Integer::new).toArray());
 				
-				bind(name(-1), s);
+				bind(name(-1), p(Expressions.joinOr1(",", s)));
 				
-				{
+				for (final Object value : s) {
 					subdeduction();
 					
-					deducePositivity(2);
+					{
+						subdeduction();
+						
+						deducePositivity(value);
+						
+						bind("definition_of_parentheses", value);
+						rewriteRight(name(-2), name(-1));
+						
+						conclude();
+					}
 					
-					bind("definition_of_parentheses", 2);
-					rewriteRight(name(-2), name(-1));
+					{
+						subdeduction();
+						
+						canonicalizeForallIn("cartesian_1");
+						bind(name(-1), POS);
+						
+						{
+							subdeduction();
+							
+							{
+								subdeduction();
+								
+								bind("transitivity_of_subset", POS, N, R);
+								apply(name(-1), "positives_subset_naturals");
+								apply(name(-1), "naturals_subset_reals");
+								
+								conclude();
+							}
+							
+							bind("definition_of_powerset", POS, R);
+							rewriteRight(name(-2), name(-1));
+							
+							{
+								subdeduction();
+								
+								bind("definition_of_subset", pp(R), U);
+								rewrite("type_of_P_R", name(-1));
+								bind(name(-1), POS);
+								
+								conclude();
+							}
+							
+							apply(name(-1), name(-2));
+							
+							conclude();
+						}
+						
+						apply(name(-2), name(-1));
+						
+						conclude();
+					}
 					
-					canonicalizeForallIn("cartesian_1");
-					bind(name(-1), POS);
-					
-					// TODO
+					rewrite(name(-2), name(-1));
 					
 					conclude();
 				}
+				
+//				apply(name(-2), name(-1));
+				
+				// TODO
 				
 				abort();
 			}
@@ -186,6 +233,61 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			{
 				suppose("naturals_subset_reals",
 						$(N, SUBSET, R));
+			}
+			
+			{
+				subdeduction("transitivity_of_subset");
+				
+				final Object _X = forall("X");
+				final Object _Y = forall("Y");
+				final Object _Z = forall("Z");
+				
+				suppose($(_X, SUBSET, _Y));
+				suppose($(_Y, SUBSET, _Z));
+				
+				final String h1 = name(-2);
+				final String h2 = name(-1);
+				
+				{
+					subdeduction();
+					
+					final Object _x = forall("x");
+					
+					suppose($(_x, IN, _X));
+					
+					final String h3 = name(-1);
+					
+					{
+						subdeduction();
+						
+						bind("definition_of_subset", _X, _Y);
+						rewrite(h1, name(-1));
+						bind(name(-1), _x);
+						
+						conclude();
+					}
+					
+					apply(name(-1), h3);
+					
+					{
+						subdeduction();
+						
+						bind("definition_of_subset", _Y, _Z);
+						rewrite(h2, name(-1));
+						bind(name(-1), _x);
+						
+						conclude();
+					}
+					
+					apply(name(-1), name(-2));
+					
+					conclude();
+				}
+				
+				bind("definition_of_subset", _X, _Z);
+				rewriteRight(name(-2), name(-1));
+				
+				conclude();
 			}
 			
 			{
