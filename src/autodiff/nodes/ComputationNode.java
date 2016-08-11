@@ -1,11 +1,11 @@
 package autodiff.nodes;
 
 import static autodiff.reasoning.deductions.Standard.rewrite;
+import static autodiff.reasoning.deductions.Standard.rewriteRight;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.BasicNumericVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
 import static multij.tools.Tools.*;
-
 import autodiff.reasoning.deductions.Standard;
 import autodiff.reasoning.expressions.Expressions;
 import autodiff.reasoning.proofs.Deduction;
@@ -98,48 +98,41 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				Tools.debugPrint(getDefinition().get(3));
 				Tools.debugPrint(getDefinition().get(4));
 				
-				bind("definition_of_forall_in", getDefinition().get(1), POS, getDefinition().get(4));
-				rewrite(name(-2), name(-1));
-				bind(name(-1), get("n"));
-				debugPrint(list(proposition("definition_of_positives")).get(1));
+				canonicalizeForallIn(name(-1));
 				
 				{
 					subdeduction();
-					
-					{
-						subdeduction();
-						
-						final Object n = list(proposition("definition_of_positives")).get(1);
-						
-						bind("definition_of_forall_in", n, N, $rule($(0, "<", n), $(n, IN, POS)));
-						rewrite("definition_of_positives", name(-1));
-						
-						conclude();
-					}
 					
 					bind(name(-1), get("n"));
-					verifyBasicNumericProposition($(get("n"), IN, N));
-					apply(name(-2), name(-1));
-					verifyBasicNumericProposition($(0, "<", get("n")));
+					
+					deducePositivity(get("n"));
+					
 					apply(name(-2), name(-1));
 					
 					conclude();
 				}
 				
-				apply(name(-2), name(-1));
+				canonicalizeForallIn(name(-1));
+				
+				final Object s = p(Expressions.join(",", Arrays.asList(Arrays.stream((int[]) get("s")).mapToObj(Integer::new).toArray())));
+				
+				bind(name(-1), s);
 				
 				{
 					subdeduction();
 					
-					bind("definition_of_forall_in", list(proposition(-1)).get(1), list(proposition(-1)).get(3), list(proposition(-1)).get(4));
-					rewrite(name(-2), name(-1));
+					deducePositivity(2);
+					
+					bind("definition_of_parentheses", 2);
+					rewriteRight(name(-2), name(-1));
+					
+					canonicalizeForallIn("cartesian_1");
+					bind(name(-1), POS);
+					
+					// TODO
 					
 					conclude();
 				}
-				
-				final Object s = $("[", Expressions.join(",", Arrays.asList(Arrays.stream((int[]) get("s")).mapToObj(Integer::new).toArray())), "]");
-				
-				bind(name(-1), s);
 				
 				abort();
 			}
@@ -154,6 +147,10 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	
 	public static final Object IN = $("∈");
 	
+	public static final Object SUBSET = $("⊂");
+	
+	public static final Object P = $("ℙ");
+	
 	public static final Object CROSS = $("×");
 
 	public static final Object PI = $("Π");
@@ -167,7 +164,31 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			Standard.setup();
 			
 			{
-				suppose("type_of_R", $(R, IN, U));
+				final Object _X = $new("X");
+				
+				suppose("definition_of_parentheses", $forall(_X,
+						$(p(_X), "=", _X)));
+			}
+			
+			{
+				final Object _x = $new("x");
+				final Object _X = $new("X");
+				final Object _Y = $new("Y");
+				
+				suppose("definition_of_subset", $forall(_X, _Y,
+						$($(_X, SUBSET, _Y), "=", $forall(_x, $rule($(_x, IN, _X), $(_x, IN, _Y))))));
+			}
+			
+			{
+				final Object _X = $new("X");
+				final Object _Y = $new("Y");
+				
+				suppose("definition_of_powerset", $forall(_X, _Y,
+						$($(_X, IN, pp(_Y)), "=", $(_X, SUBSET, _Y))));
+			}
+			
+			{
+				suppose("type_of_P_R", $(pp(R), SUBSET, U));
 			}
 			
 			{
@@ -276,7 +297,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				
 				suppose("type_of_cartesian",
 						$(FORALL, _X, ",", _Y, IN, U,
-								$($(_X, CROSS, _Y), IN, U)));
+								$(pp(_X, CROSS, _Y), SUBSET, U)));
 			}
 			
 			{
@@ -297,7 +318,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				
 				suppose("cartesian_associativity",
 						$(FORALL, _X, ",", _Y, ",", _Z, IN, U,
-										$($($(_X, CROSS, _Y), CROSS, _Z), "=", $(_X, CROSS, $(_Y, CROSS, _Z)))));
+										$($(p(_X, CROSS, _Y), CROSS, _Z), "=", $(_X, CROSS, p(_Y, CROSS, _Z)))));
 			}
 		}
 		
@@ -348,6 +369,40 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		return $("{", $(objects), "}");
 	}
 	
+	public static final void deducePositivity(final Object target) {
+		subdeduction();
+		
+		{
+			subdeduction();
+			
+			final Object n = list(proposition("definition_of_positives")).get(1);
+			
+			bind("definition_of_forall_in", n, N, $rule($(0, "<", n), $(n, IN, POS)));
+			rewrite("definition_of_positives", name(-1));
+			
+			conclude();
+		}
+		
+		bind(name(-1), target);
+		verifyBasicNumericProposition($(target, IN, N));
+		apply(name(-2), name(-1));
+		verifyBasicNumericProposition($(0, "<", target));
+		apply(name(-2), name(-1));
+		
+		conclude();
+	}
+	
+	public static final void canonicalizeForallIn(final String target) {
+		final Object proposition = proposition(target);
+		
+		subdeduction();
+		
+		bind("definition_of_forall_in", list(proposition).get(1), list(proposition).get(3), list(proposition).get(4));
+		rewrite(target, name(-1));
+		
+		conclude();
+	}
+	
 	public static final String deepJoin(final String separator, final Iterable<?> objects) {
 		final StringBuilder resultBuilder = new StringBuilder();
 		boolean first = true;
@@ -369,6 +424,10 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	
 	public static final Object cartesian(final Object _s, final Object _j, final Object _n) {
 		return $(CROSS, "_", $(_j, "<", _n), $(N, "_", $("<", $(_s, "_", _j))));
+	}
+	
+	public static final Object pp(final Object... set) {
+		return $(P, p(set));
 	}
 	
 	/**
