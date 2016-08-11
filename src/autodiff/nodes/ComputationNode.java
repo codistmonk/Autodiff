@@ -6,13 +6,12 @@ import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.BasicNumericVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
 import static multij.tools.Tools.*;
+
 import autodiff.reasoning.deductions.Standard;
-import autodiff.reasoning.expressions.Expressions;
 import autodiff.reasoning.proofs.Deduction;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -112,72 +111,95 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				
 				canonicalizeForallIn(name(-1));
 				
-				final List<Object> s = Arrays.asList(Arrays.stream((int[]) get("s")).mapToObj(Integer::new).toArray());
+				final Object[] s = toObjects((int[]) get("s"));
 				
-				bind(name(-1), p(Expressions.joinOr1(",", s)));
+				bind(name(-1), p(toBinaryTree(",", s)));
 				
-				for (final Object value : s) {
+				{
 					subdeduction();
 					
-					{
-						subdeduction();
-						
-						deducePositivity(value);
-						
-						bind("definition_of_parentheses", value);
-						rewriteRight(name(-2), name(-1));
-						
-						conclude();
-					}
+					boolean first = true;
 					
-					{
-						subdeduction();
+					for (final Object value : s) {
+						deduceCartesianPositivity(value);
 						
-						canonicalizeForallIn("cartesian_1");
-						bind(name(-1), POS);
-						
-						{
-							subdeduction();
+						if (first) {
+							first = false;
+						} else {
+							final Object x = left(proposition(-2));
+							final Object y = left(proposition(-1));
+							final Object m = right(right(proposition(-2)));
+							final Object n = right(right(proposition(-1)));
+							
+							final String type1 = name(-2);
+							final String type2 = name(-1);
+							
+							debugPrint(m, n);
 							
 							{
 								subdeduction();
 								
-								bind("transitivity_of_subset", POS, N, R);
-								apply(name(-1), "positives_subset_naturals");
-								apply(name(-1), "naturals_subset_reals");
+								{
+									subdeduction();
+									
+									bind("type_of_pair", (Object) $(POS, "^", m), $(POS, "^", n));
+									
+									canonicalizeForallIn(name(-1));
+									bind(name(-1), x);
+									apply(name(-1), type1);
+									
+									canonicalizeForallIn(name(-1));
+									bind(name(-1), y);
+									apply(name(-1), type2);
+									
+									bind("definition_of_parentheses", list(left(proposition(-1))).get(1));
+									rewrite(name(-2), name(-1));
+									
+									conclude();
+								}
+								
+								{
+									subdeduction();
+									
+									canonicalizeForallIn("cartesian_m_n");
+									
+									bind(name(-1), POS);
+									
+									apply(name(-1), "positives_in_Uhm");
+									
+									canonicalizeForallIn2(name(-1));
+									
+									bind(name(-1), m);
+									deducePositivity(m);
+									apply(name(-2), name(-1));
+									
+									bind(name(-1), n);
+									deducePositivity(n);
+									apply(name(-2), name(-1));
+									
+									final Integer mn = (Integer) m + (Integer) n;
+									
+									verifyBasicNumericProposition($($(m, "+", n), "=", mn));
+									
+									rewrite(name(-2), name(-1));
+									
+									conclude();
+								}
+								
+								rewrite(name(-2), name(-1));
 								
 								conclude();
 							}
-							
-							bind("definition_of_powerset", POS, R);
-							rewriteRight(name(-2), name(-1));
-							
-							{
-								subdeduction();
-								
-								bind("definition_of_subset", pp(R), U);
-								rewrite("type_of_P_R", name(-1));
-								bind(name(-1), POS);
-								
-								conclude();
-							}
-							
-							apply(name(-1), name(-2));
-							
-							conclude();
 						}
-						
-						apply(name(-2), name(-1));
-						
-						conclude();
 					}
 					
-					rewrite(name(-2), name(-1));
+					bind("definition_of_parentheses", left(proposition(-1)));
+					rewriteRight(name(-2), name(-1));
 					
 					conclude();
 				}
 				
-//				apply(name(-2), name(-1));
+				apply(name(-2), name(-1));
 				
 				// TODO
 				
@@ -557,9 +579,42 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 						$(FORALL, _X, ",", _Y, ",", _Z, IN, U,
 										$($(p(_X, CROSS, _Y), CROSS, _Z), "=", $(_X, CROSS, p(_Y, CROSS, _Z)))));
 			}
+			
+			deducePositivesInUhm();
 		}
 		
 	}, 1);
+	
+	public static final void deducePositivesInUhm() {
+		subdeduction("positives_in_Uhm");
+		
+		{
+			subdeduction();
+			
+			bind("transitivity_of_subset", POS, N, R);
+			apply(name(-1), "positives_subset_naturals");
+			apply(name(-1), "naturals_subset_reals");
+			
+			conclude();
+		}
+		
+		bind("definition_of_powerset", POS, R);
+		rewriteRight(name(-2), name(-1));
+		
+		{
+			subdeduction();
+			
+			bind("definition_of_subset", pp(R), U);
+			rewrite("type_of_P_R", name(-1));
+			bind(name(-1), POS);
+			
+			conclude();
+		}
+		
+		apply(name(-1), name(-2));
+		
+		conclude();
+	}
 	
 	public static final ComputationNode ones() {
 		final ComputationNode result = new ComputationNode().setTypeName("ones");
@@ -598,6 +653,32 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		return result;
 	}
 	
+	public static final Integer[] toObjects(final int... values) {
+		final Integer[] result = new Integer[values.length];
+		
+		for (int i = 0; i < values.length; ++i) {
+			result[i] = values[i];
+		}
+		
+		return result;
+	}
+	
+	public static final Object toBinaryTree(final String operator, final Object... objects) {
+		final int n = objects.length;
+		
+		if (n == 0) {
+			return $();
+		}
+		
+		Object result = $(objects[0]);
+		
+		for (int i = 1; i < n; ++i) {
+			result = $(result, operator, objects[i]);
+		}
+		
+		return result;
+	}
+	
 	public static final List<Object> p(final Object... objects) {
 		return $("(", $(objects), ")");
 	}
@@ -629,12 +710,43 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		conclude();
 	}
 	
+	public static final void deduceCartesianPositivity(final Object value) {
+		subdeduction();
+		
+		deducePositivity(value);
+		
+		{
+			subdeduction();
+			
+			canonicalizeForallIn("cartesian_1");
+			bind(name(-1), POS);
+			apply(name(-1), "positives_in_Uhm");
+			
+			conclude();
+		}
+		
+		rewrite(name(-2), name(-1));
+		
+		conclude();
+	}
+	
 	public static final void canonicalizeForallIn(final String targetName) {
 		final Object proposition = proposition(targetName);
 		
 		subdeduction();
 		
 		bind("definition_of_forall_in", list(proposition).get(1), list(proposition).get(3), list(proposition).get(4));
+		rewrite(targetName, name(-1));
+		
+		conclude();
+	}
+	
+	public static final void canonicalizeForallIn2(final String targetName) {
+		final Object proposition = proposition(targetName);
+		
+		subdeduction();
+		
+		bind("definition_of_forall_in_2", list(proposition).get(1), list(proposition).get(3), list(proposition).get(5), list(proposition).get(6));
 		rewrite(targetName, name(-1));
 		
 		conclude();
