@@ -39,7 +39,7 @@ public final class ModusPonens extends Proof.Abstract {
 		final Object expectedCondition = condition(rule);
 		final Object condition = checkProposition(this.getConditionName(), context);
 		
-		checkArgument(expectedCondition.equals(condition), "Expected condition: " + expectedCondition + " but was: " + condition);
+		checkArgument(new Substitution.ExpressionEquality().apply(expectedCondition, condition), "Expected condition: " + expectedCondition + " but was: " + condition);
 		
 		return rule.get(2);
 	}

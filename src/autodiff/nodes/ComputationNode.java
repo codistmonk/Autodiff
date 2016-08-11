@@ -149,6 +149,10 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	
 	public static final Object SUBSET = $("⊂");
 	
+	public static final Object EQUIV = $("⇔");
+	
+	public static final Object LAND = $("∧");
+	
 	public static final Object P = $("ℙ");
 	
 	public static final Object CROSS = $("×");
@@ -177,6 +181,11 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				
 				suppose("definition_of_subset", $forall(_X, _Y,
 						$($(_X, SUBSET, _Y), "=", $forall(_x, $rule($(_x, IN, _X), $(_x, IN, _Y))))));
+			}
+			
+			{
+				suppose("naturals_subset_reals",
+						$(N, SUBSET, R));
 			}
 			
 			{
@@ -225,8 +234,134 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			{
 				final Object _n = $new("n");
 				
-				suppose("definition_of_positives", $(FORALL, _n, IN, N,
-						$rule($(0, "<", _n), $(_n, IN, POS))));
+				suppose("definition_of_positives", $forall(_n,
+						$($(_n, IN, POS), "=", $($(_n, IN, N), LAND, $(0, "<", _n)))));
+			}
+			
+			{
+				final Object _X = $new("X");
+				final Object _Y = $new("Y");
+				
+				suppose("introduction_of_conjunction",
+						$forall(_X, _Y,
+								$rule(_X, _Y, $(_X, LAND, _Y))));
+			}
+			
+			{
+				final Object _X = $new("X");
+				final Object _Y = $new("Y");
+				
+				suppose("left_elimination_of_conjunction",
+						$forall(_X, _Y,
+								$rule($(_X, LAND, _Y), _X)));
+			}
+			
+			{
+				final Object _X = $new("X");
+				final Object _Y = $new("Y");
+				
+				suppose("right_elimination_of_conjunction",
+						$forall(_X, _Y,
+								$rule($(_X, LAND, _Y), _Y)));
+			}
+			
+			{
+				final Object _X = $new("X");
+				final Object _Y = $new("Y");
+				
+				suppose("definition_of_logical_equivalence",
+						$forall(_X, _Y,
+								$($(_X, EQUIV, _Y), "=", $($rule(_X, _Y), LAND, $rule(_Y, _X)))));
+			}
+			
+			{
+				final Object _X = $new("X");
+				final Object _Y = $new("Y");
+				
+				suppose("logical_equality",
+						$forall(_X, _Y,
+								$rule($rule(_X, _Y), $($rule(_Y, _X)), $(_X, "=", _Y))));
+			}
+			
+			{
+				subdeduction("logical_equivalence_implies_logical_equality");
+				
+				final Object _X = forall("X");
+				final Object _Y = forall("Y");
+				
+				suppose($(_X, EQUIV, _Y));
+				bind("definition_of_logical_equivalence", _X, _Y);
+				rewrite(name(-2), name(-1));
+				
+				breakConjunction(name(-1));
+				
+				bind("logical_equality", _X, _Y);
+				apply(name(-1), name(-3));
+				apply(name(-1), name(-3));
+				
+				conclude();
+			}
+			
+			{
+				subdeduction("commutativity_of_conjunction");
+				
+				final Object _X = forall("X");
+				final Object _Y = forall("Y");
+				
+				{
+					subdeduction();
+					
+					suppose($(_X, LAND, _Y));
+					breakConjunction(name(-1));
+					
+					bind("introduction_of_conjunction", _Y, _X);
+					apply(name(-1), name(-2));
+					apply(name(-1), name(-4));
+					
+					conclude();
+				}
+				
+				{
+					subdeduction();
+					
+					suppose($(_Y, LAND, _X));
+					breakConjunction(name(-1));
+					
+					bind("introduction_of_conjunction", _X, _Y);
+					apply(name(-1), name(-2));
+					apply(name(-1), name(-4));
+					
+					conclude();
+				}
+				
+				bind("logical_equality", (Object) $(_X, LAND, _Y), $(_Y, LAND, _X));
+				apply(name(-1), name(-3));
+				apply(name(-1), name(-3));
+				
+				conclude();
+			}
+			
+			{
+				subdeduction("positives_subset_naturals");
+				
+				bind("definition_of_subset", POS, N);
+				
+				{
+					subdeduction();
+					
+					final Object _x = forall("y");
+					
+					suppose($(_x, IN, POS));
+					bind("definition_of_positives", _x);
+					rewrite(name(-2), name(-1));
+					deduceConjunctionLeft(name(-1));
+					
+					conclude();
+				}
+				
+				rewriteRight(name(-1), name(-2));
+				
+				conclude();
 			}
 			
 			{
@@ -372,33 +507,33 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	public static final void deducePositivity(final Object target) {
 		subdeduction();
 		
+		bind("definition_of_positives", target);
+		
 		{
 			subdeduction();
 			
-			final Object n = list(proposition("definition_of_positives")).get(1);
+			verifyBasicNumericProposition($(target, IN, N));
+			verifyBasicNumericProposition($(0, "<", target));
 			
-			bind("definition_of_forall_in", n, N, $rule($(0, "<", n), $(n, IN, POS)));
-			rewrite("definition_of_positives", name(-1));
+			bind("introduction_of_conjunction", proposition(-2), proposition(-1));
+			apply(name(-1), name(-3));
+			apply(name(-1), name(-3));
 			
 			conclude();
 		}
 		
-		bind(name(-1), target);
-		verifyBasicNumericProposition($(target, IN, N));
-		apply(name(-2), name(-1));
-		verifyBasicNumericProposition($(0, "<", target));
-		apply(name(-2), name(-1));
+		rewriteRight(name(-1), name(-2));
 		
 		conclude();
 	}
 	
-	public static final void canonicalizeForallIn(final String target) {
-		final Object proposition = proposition(target);
+	public static final void canonicalizeForallIn(final String targetName) {
+		final Object proposition = proposition(targetName);
 		
 		subdeduction();
 		
 		bind("definition_of_forall_in", list(proposition).get(1), list(proposition).get(3), list(proposition).get(4));
-		rewrite(target, name(-1));
+		rewrite(targetName, name(-1));
 		
 		conclude();
 	}
@@ -428,6 +563,37 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	
 	public static final Object pp(final Object... set) {
 		return $(P, p(set));
+	}
+	
+	public static final void breakConjunction(final String targetName) {
+		deduceConjunctionLeft(targetName);
+		deduceConjunctionRight(targetName);
+	}
+	
+	public static final void deduceConjunctionLeft(final String targetName) {
+		final Object proposition = proposition(targetName);
+		final Object left = left(proposition);
+		final Object right = right(proposition);
+		
+		subdeduction();
+		
+		bind("left_elimination_of_conjunction", left, right);
+		apply(name(-1), targetName);
+		
+		conclude();
+	}
+	
+	public static final void deduceConjunctionRight(final String targetName) {
+		final Object proposition = proposition(targetName);
+		final Object left = left(proposition);
+		final Object right = right(proposition);
+		
+		subdeduction();
+		
+		bind("right_elimination_of_conjunction", left, right);
+		apply(name(-1), targetName);
+		
+		conclude();
 	}
 	
 	/**
