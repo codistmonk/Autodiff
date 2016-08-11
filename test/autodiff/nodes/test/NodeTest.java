@@ -60,6 +60,19 @@ public final class NodeTest {
 	public final void testComputationNode1() {
 		final ComputationNode node = ComputationNode.ones();
 		
+		node.set("s", new int[] { 2 });
+		
+		node.autoShape();
+		
+		assertArrayEquals(new int[] { 2 }, node.getShape());
+		
+		fail("TODO");
+	}
+	
+	@Test
+	public final void testComputationNode2() {
+		final ComputationNode node = ComputationNode.ones();
+		
 		node.set("s", new int[] { 2, 1, 3 });
 		
 		node.autoShape();

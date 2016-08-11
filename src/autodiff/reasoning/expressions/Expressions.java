@@ -198,6 +198,14 @@ public final class Expressions {
 		return list(binaryOperation).get(0);
 	}
 	
+	public static final Object middle(final Object binaryOperation) {
+		return list(binaryOperation).get(1);
+	}
+	
+	public static final Object operator(final Object binaryOperation) {
+		return middle(binaryOperation);
+	}
+	
 	public static final Object right(final Object binaryOperation) {
 		return list(binaryOperation).get(2);
 	}

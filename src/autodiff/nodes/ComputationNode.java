@@ -8,6 +8,7 @@ import static autodiff.reasoning.proofs.Stack.*;
 import static multij.tools.Tools.*;
 
 import autodiff.reasoning.deductions.Standard;
+import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.proofs.Deduction;
 
 import java.io.Serializable;
@@ -85,7 +86,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	
 	@Override
 	public final ComputationNode autoShape() {
-		Standard.build(new Deduction(AUTODIFF, this.getName() + "_type"), new Runnable() {
+		Standard.build(new Deduction(AUTODIFF, this.getName() + "_bind"), new Runnable() {
 			
 			@Override
 			public final void run() {
@@ -93,121 +94,125 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				
 				Tools.debugPrint(getDefinition());
 				
-				canonicalizeForallIn(name(-1));
-				
 				{
 					subdeduction();
 					
-					final Object n = $(get("n"));
+					canonicalizeForallIn(name(-1));
 					
-					bind(name(-1), n);
+					{
+						subdeduction();
+						
+						final Object n = $(get("n"));
+						
+						bind(name(-1), n);
+						
+						deducePositivity(n);
+						
+						apply(name(-2), name(-1));
+						
+						conclude();
+					}
 					
-					deducePositivity(n);
+					canonicalizeForallIn(name(-1));
+					
+					final Object[] s = toObjects((int[]) get("s"));
+					
+					bind(name(-1), p(toBinaryTree(",", s)));
+					
+					{
+						subdeduction();
+						
+						boolean first = true;
+						
+						for (final Object value : s) {
+							deduceCartesianPositivity(value);
+							
+							if (first) {
+								first = false;
+							} else {
+								final Object x = left(proposition(-2));
+								final Object y = left(proposition(-1));
+								final Object m = right(right(proposition(-2)));
+								final Object n = right(right(proposition(-1)));
+								
+								final String type1 = name(-2);
+								final String type2 = name(-1);
+								
+								{
+									subdeduction();
+									
+									{
+										subdeduction();
+										
+										bind("type_of_pair", (Object) $(POS, "^", m), $(POS, "^", n));
+										
+										canonicalizeForallIn(name(-1));
+										bind(name(-1), x);
+										apply(name(-1), type1);
+										
+										canonicalizeForallIn(name(-1));
+										bind(name(-1), y);
+										apply(name(-1), type2);
+										
+										bind("definition_of_parentheses", middle(left(proposition(-1))));
+										rewrite(name(-2), name(-1));
+										
+										conclude();
+									}
+									
+									{
+										subdeduction();
+										
+										canonicalizeForallIn("cartesian_m_n");
+										
+										bind(name(-1), POS);
+										
+										apply(name(-1), "positives_in_Uhm");
+										
+										canonicalizeForallIn2(name(-1));
+										
+										bind(name(-1), m);
+										deducePositivity(m);
+										apply(name(-2), name(-1));
+										
+										bind(name(-1), n);
+										deducePositivity(n);
+										apply(name(-2), name(-1));
+										
+										final Integer mn = (Integer) m + (Integer) n;
+										
+										verifyBasicNumericProposition($($(m, "+", n), "=", mn));
+										
+										rewrite(name(-2), name(-1));
+										
+										conclude();
+									}
+									
+									rewrite(name(-2), name(-1));
+									
+									conclude();
+								}
+							}
+						}
+						
+						bind("definition_of_parentheses", left(proposition(-1)));
+						rewriteRight(name(-2), name(-1));
+						
+						conclude();
+					}
 					
 					apply(name(-2), name(-1));
 					
 					conclude();
 				}
 				
-				canonicalizeForallIn(name(-1));
+				final Object shapeExpression = middle(right(middle(right(proposition(-1)))));
 				
-				final Object[] s = toObjects((int[]) get("s"));
-				
-				bind(name(-1), p(toBinaryTree(",", s)));
-				
-				{
-					subdeduction();
-					
-					boolean first = true;
-					
-					for (final Object value : s) {
-						deduceCartesianPositivity(value);
-						
-						if (first) {
-							first = false;
-						} else {
-							final Object x = left(proposition(-2));
-							final Object y = left(proposition(-1));
-							final Object m = right(right(proposition(-2)));
-							final Object n = right(right(proposition(-1)));
-							
-							final String type1 = name(-2);
-							final String type2 = name(-1);
-							
-							debugPrint(m, n);
-							
-							{
-								subdeduction();
-								
-								{
-									subdeduction();
-									
-									bind("type_of_pair", (Object) $(POS, "^", m), $(POS, "^", n));
-									
-									canonicalizeForallIn(name(-1));
-									bind(name(-1), x);
-									apply(name(-1), type1);
-									
-									canonicalizeForallIn(name(-1));
-									bind(name(-1), y);
-									apply(name(-1), type2);
-									
-									bind("definition_of_parentheses", list(left(proposition(-1))).get(1));
-									rewrite(name(-2), name(-1));
-									
-									conclude();
-								}
-								
-								{
-									subdeduction();
-									
-									canonicalizeForallIn("cartesian_m_n");
-									
-									bind(name(-1), POS);
-									
-									apply(name(-1), "positives_in_Uhm");
-									
-									canonicalizeForallIn2(name(-1));
-									
-									bind(name(-1), m);
-									deducePositivity(m);
-									apply(name(-2), name(-1));
-									
-									bind(name(-1), n);
-									deducePositivity(n);
-									apply(name(-2), name(-1));
-									
-									final Integer mn = (Integer) m + (Integer) n;
-									
-									verifyBasicNumericProposition($($(m, "+", n), "=", mn));
-									
-									rewrite(name(-2), name(-1));
-									
-									conclude();
-								}
-								
-								rewrite(name(-2), name(-1));
-								
-								conclude();
-							}
-						}
-					}
-					
-					bind("definition_of_parentheses", left(proposition(-1)));
-					rewriteRight(name(-2), name(-1));
-					
-					conclude();
-				}
-				
-				apply(name(-2), name(-1));
-				
-				// TODO
-				
-				abort();
+				setShape(flattenBinaryTree(shapeExpression).stream().mapToInt(o -> ((Number) o).intValue()).toArray());
 			}
 		}, 1);
 		
-		return super.autoShape();
+		return this;
 	}
 	
 	private static final long serialVersionUID = 2834011599617369367L;
@@ -679,6 +684,40 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		return result;
 	}
 	
+	public static final List<Object> flattenBinaryTree(final Object binaryTree) {
+		return new FlattenBinaryTree().apply(binaryTree);
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-11)
+	 */
+	public static final class FlattenBinaryTree implements ExpressionVisitor<List<Object>> {
+		
+		private final List<Object> result = new ArrayList<>();
+		
+		@Override
+		public final List<Object> visit(final Object expression) {
+			this.getResult().add(expression);
+			
+			return this.getResult();
+		}
+		
+		@Override
+		public final List<Object> visit(final List<?> expression) {
+			this.apply(left(expression));
+			this.apply(right(expression));
+			
+			return this.getResult();
+		}
+		
+		public final List<Object> getResult() {
+			return this.result;
+		}
+		
+		private static final long serialVersionUID = 9145572614566666571L;
+		
+	}
+	
 	public static final List<Object> p(final Object... objects) {
 		return $("(", $(objects), ")");
 	}
@@ -731,22 +770,22 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	}
 	
 	public static final void canonicalizeForallIn(final String targetName) {
-		final Object proposition = proposition(targetName);
+		final List<Object> list = list(proposition(targetName));
 		
 		subdeduction();
 		
-		bind("definition_of_forall_in", list(proposition).get(1), list(proposition).get(3), list(proposition).get(4));
+		bind("definition_of_forall_in", list.get(1), list.get(3), list.get(4));
 		rewrite(targetName, name(-1));
 		
 		conclude();
 	}
 	
 	public static final void canonicalizeForallIn2(final String targetName) {
-		final Object proposition = proposition(targetName);
+		final List<Object> list = list(proposition(targetName));
 		
 		subdeduction();
 		
-		bind("definition_of_forall_in_2", list(proposition).get(1), list(proposition).get(3), list(proposition).get(5), list(proposition).get(6));
+		bind("definition_of_forall_in_2", list.get(1), list.get(3), list.get(5), list.get(6));
 		rewrite(targetName, name(-1));
 		
 		conclude();
