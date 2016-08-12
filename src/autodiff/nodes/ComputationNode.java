@@ -122,7 +122,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 								final Object y = left(proposition(-1));
 								final Object m = right(right(proposition(-2)));
 								final Object n = right(right(proposition(-1)));
-								
 								final String type1 = name(-2);
 								final String type2 = name(-1);
 								
@@ -146,20 +145,15 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 									{
 										subdeduction();
 										
-										canonicalizeForallIn("cartesian_m_n");
-										
-										bind(name(-1), POS);
-										
-										apply(name(-1), "positives_in_Uhm");
+										eapply("cartesian_m_n", POS, "positives_in_Uhm");
 										
 										canonicalizeForallIn2(name(-1));
 										
 										eapplyLastOnPositive(m);
 										eapplyLastOnPositive(n);
 										
-										final Integer mn = (Integer) m + (Integer) n;
-										
-										verifyBasicNumericProposition($($(m, "+", n), "=", mn));
+										verifyBasicNumericProposition(
+												$($(m, "+", n), "=", (Integer) m + (Integer) n));
 										
 										rewrite(name(-2), name(-1));
 										
@@ -205,9 +199,13 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	}
 	
 	public static final void eapplyLast(final Object value, final String type) {
+		eapply(name(-1), value, type);
+	}
+	
+	public static final void eapply(final String target, final Object value, final String type) {
 		subdeduction();
 		
-		canonicalizeForallIn(name(-1));
+		canonicalizeForallIn(target);
 		bind(name(-1), value);
 		apply(name(-1), type);
 		
