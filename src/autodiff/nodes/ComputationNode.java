@@ -99,7 +99,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					
 					canonicalizeForallIn(name(-1));
 					
-					eapplyLastOnPositive($(get("n")));
+					eapplyLast($(get("n")));
 					
 					canonicalizeForallIn(name(-1));
 					
@@ -147,8 +147,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 										
 										canonicalizeForallIn2(name(-1));
 										
-										eapplyLastOnPositive(m);
-										eapplyLastOnPositive(n);
+										eapplyLast(m);
+										eapplyLast(n);
 										
 										verifyBasicNumericProposition(
 												$($(m, "+", n), "=", (Integer) m + (Integer) n));
@@ -186,15 +186,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		return this;
 	}
 	
-	public static final void eapplyLastOnPositive(final Object value) {
-		subdeduction();
-		
-		deducePositivity(value);
-		eapply(name(-2), value);
-		
-		conclude();
-	}
-	
 	public static final void eapplyLast(final Object value) {
 		eapply(name(-1), value);
 	}
@@ -202,14 +193,14 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	public static final void eapply(final String target, final Object value) {
 		subdeduction();
 		
-		String last = target;
+		String newTarget = target;
 		
 		if (isForallIn(proposition(target))) {
 			canonicalizeForallIn(target);
-			last = name(-1);
+			newTarget = name(-1);
 		}
 		
-		bind(last, value);
+		bind(newTarget, value);
 		
 		final Object condition = condition(proposition(-1));
 		
@@ -222,9 +213,26 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			}
 		}
 		
-		apply(name(-1), justification.getName());
+		newTarget = name(-1);
+		final String justificationName;
+		
+		if (justification == null && isPositivity(condition)) {
+			deducePositivity(value);
+			justificationName = name(-1);
+		} else {
+			justificationName = justification.getName();
+		}
+		
+		apply(newTarget, justificationName);
 		
 		conclude();
+	}
+	
+	public static final boolean isPositivity(final Object proposition) {
+		final List<?> list = cast(List.class, proposition);
+		
+		return list != null && 3 == list.size()
+				&& IN.equals(middle(list)) && POS.equals(right(list));
 	}
 	
 	public static final boolean isForallIn(final Object proposition) {
@@ -523,19 +531,9 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	public static final void deduceCartesianPositivity(final Object value) {
 		subdeduction();
 		
+		eapply("cartesian_1", POS);
 		deducePositivity(value);
-		
-		{
-			subdeduction();
-			
-			canonicalizeForallIn("cartesian_1");
-			bind(name(-1), POS);
-			apply(name(-1), "positives_in_Uhm");
-			
-			conclude();
-		}
-		
-		rewrite(name(-2), name(-1));
+		rewrite(name(-1), name(-2));
 		
 		conclude();
 	}
