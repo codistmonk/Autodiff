@@ -201,22 +201,23 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	}
 	
 	public static final void eapply(final String target, final Object value) {
-		String foundType = null;
-		
-		for (final PropositionDescription description : iterateBackward(deduction())) {
-			final List<?> list = cast(List.class, description.getProposition());
-			
-			if (list != null && 3 == list.size() && value.equals(list.get(0)) && IN.equals(list.get(1))) {
-				foundType = description.getName();
-				break;
-			}
-		}
-		
 		subdeduction();
 		
 		canonicalizeForallIn(target);
 		bind(name(-1), value);
-		apply(name(-1), foundType);
+		
+		final Object condition = condition(proposition(-1));
+		
+		PropositionDescription justification = null;
+		
+		for (final PropositionDescription description : iterateBackward(deduction())) {
+			if (condition.equals(description.getProposition())) {
+				justification = description;
+				break;
+			}
+		}
+		
+		apply(name(-1), justification.getName());
 		
 		conclude();
 	}
