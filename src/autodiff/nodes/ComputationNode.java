@@ -189,9 +189,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	public static final void eapplyLastOnPositive(final Object value) {
 		subdeduction();
 		
-		bind(name(-1), value);
 		deducePositivity(value);
-		apply(name(-2), name(-1));
+		eapply(name(-2), value);
 		
 		conclude();
 	}
@@ -203,8 +202,14 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	public static final void eapply(final String target, final Object value) {
 		subdeduction();
 		
-		canonicalizeForallIn(target);
-		bind(name(-1), value);
+		String last = target;
+		
+		if (isForallIn(proposition(target))) {
+			canonicalizeForallIn(target);
+			last = name(-1);
+		}
+		
+		bind(last, value);
 		
 		final Object condition = condition(proposition(-1));
 		
@@ -220,6 +225,13 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		apply(name(-1), justification.getName());
 		
 		conclude();
+	}
+	
+	public static final boolean isForallIn(final Object proposition) {
+		final List<?> list = cast(List.class, proposition);
+		
+		return list != null && 5 == list.size()
+				&& FORALL.equals(list.get(0)) && IN.equals(list.get(2));
 	}
 	
 	public static final Iterable<PropositionDescription> iterateBackward(final Deduction deduction) {
