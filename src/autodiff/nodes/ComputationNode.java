@@ -97,7 +97,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				{
 					subdeduction();
 					
-					eapplyLast($(get("n")));
+					ebindLast($(get("n")));
+					eapplyLast();
 					
 					canonicalizeForallIn(name(-1));
 					
@@ -127,9 +128,9 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 									{
 										subdeduction();
 										
-										bind("type_of_pair", (Object) $(POS, "^", m), $(POS, "^", n));
-										eapplyLast(x);
-										eapplyLast(y);
+										ebind("type_of_pair",
+												(Object) $(POS, "^", m), $(POS, "^", n), x, y);
+										eapplyLast();
 										
 										bind("definition_of_parentheses", middle(left(proposition(-1))));
 										rewrite(name(-2), name(-1));
@@ -140,9 +141,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 									{
 										subdeduction();
 										
-										eapply("cartesian_m_n", POS);
-										eapplyLast(m);
-										eapplyLast(n);
+										ebind("cartesian_m_n", POS, m, n);
+										eapplyLast();
 										
 										verifyBasicNumericProposition(
 												$($(m, "+", n), "=", (Integer) m + (Integer) n));
@@ -181,30 +181,11 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	}
 	
 	public static final void eapplyLast() {
-		eapplyLast(null);
+		eapply(name(-1));
 	}
 	
-	public static final void eapplyLast(final Object value) {
-		eapply(name(-1), value);
-	}
-	
-	public static final void eapply(final String target, final Object value) {
+	public static final void eapply(final String target) {
 		subdeduction();
-		
-		String newTarget = target;
-		
-		if (isForallIn(proposition(target))) {
-			canonicalizeForallIn(target);
-			newTarget = name(-1);
-		} else if (isForallIn2(proposition(target))) {
-			canonicalizeForallIn2(target);
-			newTarget = name(-1);
-		}
-		
-		if (isBlock(proposition(newTarget))) {
-			bind(newTarget, value);
-			newTarget = name(-1);
-		}
 		
 		final Object condition = condition(proposition(-1));
 		
@@ -220,15 +201,74 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		final String justificationName;
 		
 		if (justification == null && isPositivity(condition)) {
-			deducePositivity(value);
+			deducePositivity(left(condition));
 			justificationName = name(-1);
 		} else {
 			justificationName = justification.getName();
 		}
 		
-		apply(newTarget, justificationName);
+		apply(target, justificationName);
 		
 		conclude();
+	}
+	
+	public static final void ebindLast(final Object... values) {
+		ebind(name(-1), values);
+	}
+	
+	public static final void ebind(final String target, final Object... values) {
+		subdeduction();
+		
+		String newTarget = target;
+		
+		for (final Object value : values) {
+			ebind1(newTarget, value);
+			newTarget = name(-1);
+		}
+		
+		conclude();
+	}
+	
+	public static final void ebind1(final String target, final Object value) {
+		subdeduction();
+		
+		String newTarget = target;
+		
+		while (!isBlock(proposition(newTarget))) {
+			if (isForallIn(proposition(newTarget))) {
+				canonicalizeForallIn(newTarget);
+				newTarget = name(-1);
+			} else if (isForallIn2(proposition(newTarget))) {
+				canonicalizeForallIn2(newTarget);
+				newTarget = name(-1);
+			} else {
+				trim(newTarget);
+				newTarget = name(-1);
+			}
+		}
+		
+		bind(newTarget, value);
+		
+		conclude();
+	}
+	
+	public static final void trimLast() {
+		trim(name(-1));
+	}
+	
+	public static final void trim(final String target) {
+		if (isRule(proposition(target))) {
+			String newTarget = target;
+			
+			subdeduction();
+			
+			while (isRule(proposition(newTarget))) {
+				eapply(newTarget);
+				newTarget = name(-1);
+			}
+			
+			conclude();
+		}
 	}
 	
 	public static final boolean isPositivity(final Object proposition) {
@@ -300,56 +340,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		return deduction == null
 				|| (deduction.getPropositionNames().isEmpty()
 						&& (deduction.getParent() == null || isEmpty(deduction.getParent())));
-	}
-	
-	/**
-	 * @author codistmonk (creation 2016-08-12)
-	 */
-	public static final class PropositionDescription implements Serializable {
-		
-		private int index;
-		
-		private String name;
-		
-		private Object proposition;
-		
-		public final int getIndex() {
-			return this.index;
-		}
-		
-		public final PropositionDescription setIndex(final int index) {
-			this.index = index;
-			
-			return this;
-		}
-		
-		public final String getName() {
-			return this.name;
-		}
-		
-		public final PropositionDescription setName(final String name) {
-			this.name = name;
-			
-			return this;
-		}
-		
-		public final Object getProposition() {
-			return this.proposition;
-		}
-		
-		public final PropositionDescription setProposition(final Object proposition) {
-			this.proposition = proposition;
-			
-			return this;
-		}
-		
-		@Override
-		public final String toString() {
-			return this.getIndex() + ": " + this.getName() + ": " + this.getProposition();
-		}
-		
-		private static final long serialVersionUID = -3590873676651429520L;
-		
 	}
 	
 	private static final long serialVersionUID = 2834011599617369367L;
@@ -541,7 +531,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	public static final void deduceCartesianPositivity(final Object value) {
 		subdeduction();
 		
-		eapply("cartesian_1", POS);
+		ebind("cartesian_1", POS);
+		eapplyLast();
 		deducePositivity(value);
 		rewrite(name(-1), name(-2));
 		
@@ -813,8 +804,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		breakConjunction(name(-1));
 		
 		bind("logical_equality", _X, _Y);
-		eapplyLast();
-		eapplyLast();
+		trimLast();
 		
 		conclude();
 	}
@@ -832,8 +822,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			breakConjunction(name(-1));
 			
 			bind("introduction_of_conjunction", _Y, _X);
-			eapplyLast();
-			eapplyLast();
+			trimLast();
 			
 			conclude();
 		}
@@ -845,15 +834,13 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			breakConjunction(name(-1));
 			
 			bind("introduction_of_conjunction", _X, _Y);
-			eapplyLast();
-			eapplyLast();
+			trimLast();
 			
 			conclude();
 		}
 		
 		bind("logical_equality", (Object) $(_X, LAND, _Y), $(_Y, LAND, _X));
-		eapplyLast();
-		eapplyLast();
+		trimLast();
 		
 		conclude();
 	}
@@ -1016,6 +1003,56 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		public default void afterBind(final String key, final Object value) {
 			// NOP
 		}
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-12)
+	 */
+	public static final class PropositionDescription implements Serializable {
+		
+		private int index;
+		
+		private String name;
+		
+		private Object proposition;
+		
+		public final int getIndex() {
+			return this.index;
+		}
+		
+		public final PropositionDescription setIndex(final int index) {
+			this.index = index;
+			
+			return this;
+		}
+		
+		public final String getName() {
+			return this.name;
+		}
+		
+		public final PropositionDescription setName(final String name) {
+			this.name = name;
+			
+			return this;
+		}
+		
+		public final Object getProposition() {
+			return this.proposition;
+		}
+		
+		public final PropositionDescription setProposition(final Object proposition) {
+			this.proposition = proposition;
+			
+			return this;
+		}
+		
+		@Override
+		public final String toString() {
+			return this.getIndex() + ": " + this.getName() + ": " + this.getProposition();
+		}
+		
+		private static final long serialVersionUID = -3590873676651429520L;
 		
 	}
 	
