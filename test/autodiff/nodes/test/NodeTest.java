@@ -1,10 +1,13 @@
 package autodiff.nodes.test;
 
+import static autodiff.reasoning.expressions.Expressions.*;
+import static autodiff.reasoning.proofs.Stack.*;
 import static org.junit.Assert.*;
 
 import autodiff.nodes.ComputationNode;
 import autodiff.nodes.Data;
 import autodiff.nodes.Node;
+import autodiff.reasoning.deductions.Standard;
 
 import multij.tools.Tools;
 
@@ -65,6 +68,22 @@ public final class NodeTest {
 		node.autoShape();
 		
 		assertArrayEquals(new int[] { 2 }, node.getShape());
+		
+		Standard.build(node.getBoundForm(), new Runnable() {
+			
+			@Override
+			public final void run() {
+				final Object boundForm = proposition(-1);
+				final Object valuesExpression = left(middle(right(boundForm)));
+				
+				
+				Tools.debugPrint(valuesExpression);
+				
+				// TODO Auto-generated method stub
+				abort();
+			}
+			
+		}, 1);
 		
 		fail("TODO");
 	}

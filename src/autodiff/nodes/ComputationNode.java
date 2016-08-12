@@ -33,6 +33,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	
 	private Runnable binder;
 	
+	private Deduction boundForm;
+	
 	public ComputationNode() {
 		super(new ArrayList<>());
 		this.bindings = new LinkedHashMap<>();
@@ -97,7 +99,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	
 	@Override
 	public final ComputationNode autoShape() {
-		final Deduction deduction = this.deduceBoundForm();
+		final Deduction deduction = this.getBoundForm();
 		final Object proposition = deduction.getProposition(deduction.getPropositionName(-1));
 		final Object shapeExpression = middle(right(middle(right(proposition))));
 		
@@ -107,8 +109,13 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		return this;
 	}
 	
-	public final Deduction deduceBoundForm() {
-		return Standard.build(new Deduction(AUTODIFF, this.getName() + "_bind"), this.getBinder(), 1);
+	public final Deduction getBoundForm() {
+		if (this.boundForm == null) {
+			this.boundForm = Standard.build(new Deduction(
+					AUTODIFF, this.getName() + "_bind"), this.getBinder(), 1);
+		}
+		
+		return this.boundForm;
 	}
 	
 	public static final void eapplyLast() {
@@ -327,6 +334,9 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			supposeCartesianMN();
 			supposeCartesianAssociativity();
 			deducePositivesInUhm();
+			supposeDefinitionOfProductLoop0();
+			supposeDefinitionOfProductLoopN();
+			supposeDefinitionOfProductReduction();
 		}
 		
 	}, 1);
@@ -1001,6 +1011,39 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		apply(name(-1), name(-2));
 		
 		conclude();
+	}
+	
+	public static final void supposeDefinitionOfProductLoop0() {
+		final Object _X = $new("X");
+		final Object _i = $new("i");
+		
+		suppose("definition_of_product_loop_0",
+				$forall(_i, _X,
+						$($(PI, "_", $(_i, "<", 0), _X), "=", 1)));
+	}
+	
+	public static final void supposeDefinitionOfProductLoopN() {
+		final Object _n = $new("n");
+		final Object _X = $new("X");
+		final Object _i = $new("i");
+		
+		suppose("definition_of_product_loop_n",
+				$(FORALL, _n, IN, POS,
+						$forall(_i, _X,
+								$rule($rule($(_i, IN, $(N, "_", $("<", _n))), $(_X, IN, R)),
+										$($(PI, "_", $(_i, "<", _n), _X),
+												"=", $($(PI, "_", $(_i, "<", $(_n, "-", 1)), _X), $(_X, "|", $(_i, "=", $(_n, "-", 1)))))))));
+	}
+	
+	public static final void supposeDefinitionOfProductReduction() {
+		final Object _n = $new("n");
+		final Object _v = $new("v");
+		final Object _i = $new("i");
+		
+		suppose("definition_of_product_reduction",
+				$(FORALL, _n, IN, POS,
+						$(FORALL, _v, IN, $(R, "^", _n),
+								$($(PI, _v), "=", $(PI, "_", $(_i, "<", _n), $(_v, "_", _i))))));
 	}
 	
 	/**
