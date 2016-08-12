@@ -97,8 +97,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				{
 					subdeduction();
 					
-					canonicalizeForallIn(name(-1));
-					
 					eapplyLast($(get("n")));
 					
 					canonicalizeForallIn(name(-1));
@@ -130,7 +128,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 										subdeduction();
 										
 										bind("type_of_pair", (Object) $(POS, "^", m), $(POS, "^", n));
-										
 										eapplyLast(x);
 										eapplyLast(y);
 										
@@ -146,7 +143,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 										eapply("cartesian_m_n", POS);
 										
 										canonicalizeForallIn2(name(-1));
-										
 										eapplyLast(m);
 										eapplyLast(n);
 										
@@ -186,6 +182,10 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		return this;
 	}
 	
+	public static final void eapplyLast() {
+		eapplyLast(null);
+	}
+	
 	public static final void eapplyLast(final Object value) {
 		eapply(name(-1), value);
 	}
@@ -200,7 +200,10 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			newTarget = name(-1);
 		}
 		
-		bind(newTarget, value);
+		if (isBlock(proposition(newTarget))) {
+			bind(newTarget, value);
+			newTarget = name(-1);
+		}
 		
 		final Object condition = condition(proposition(-1));
 		
@@ -213,7 +216,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			}
 		}
 		
-		newTarget = name(-1);
 		final String justificationName;
 		
 		if (justification == null && isPositivity(condition)) {
@@ -517,8 +519,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			verifyBasicNumericProposition($(0, "<", target));
 			
 			bind("introduction_of_conjunction", proposition(-2), proposition(-1));
-			apply(name(-1), name(-3));
-			apply(name(-1), name(-3));
+			eapplyLast();
+			eapplyLast();
 			
 			conclude();
 		}
@@ -600,7 +602,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		subdeduction();
 		
 		bind("left_elimination_of_conjunction", left, right);
-		apply(name(-1), targetName);
+		eapplyLast();
 		
 		conclude();
 	}
@@ -613,7 +615,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		subdeduction();
 		
 		bind("right_elimination_of_conjunction", left, right);
-		apply(name(-1), targetName);
+		eapplyLast();
 		
 		conclude();
 	}
@@ -803,8 +805,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		breakConjunction(name(-1));
 		
 		bind("logical_equality", _X, _Y);
-		apply(name(-1), name(-3));
-		apply(name(-1), name(-3));
+		eapplyLast();
+		eapplyLast();
 		
 		conclude();
 	}
@@ -822,8 +824,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			breakConjunction(name(-1));
 			
 			bind("introduction_of_conjunction", _Y, _X);
-			apply(name(-1), name(-2));
-			apply(name(-1), name(-4));
+			eapplyLast();
+			eapplyLast();
 			
 			conclude();
 		}
@@ -835,15 +837,15 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			breakConjunction(name(-1));
 			
 			bind("introduction_of_conjunction", _X, _Y);
-			apply(name(-1), name(-2));
-			apply(name(-1), name(-4));
+			eapplyLast();
+			eapplyLast();
 			
 			conclude();
 		}
 		
 		bind("logical_equality", (Object) $(_X, LAND, _Y), $(_Y, LAND, _X));
-		apply(name(-1), name(-3));
-		apply(name(-1), name(-3));
+		eapplyLast();
+		eapplyLast();
 		
 		conclude();
 	}
@@ -970,8 +972,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			subdeduction();
 			
 			bind("transitivity_of_subset", POS, N, R);
-			apply(name(-1), "positives_subset_naturals");
-			apply(name(-1), "naturals_subset_reals");
+			eapplyLast();
+			eapplyLast();
 			
 			conclude();
 		}
