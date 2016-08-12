@@ -1,5 +1,6 @@
 package autodiff.nodes.test;
 
+import static autodiff.nodes.ComputationNode.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.Stack.*;
 import static org.junit.Assert.*;
@@ -75,12 +76,25 @@ public final class NodeTest {
 			public final void run() {
 				final Object boundForm = proposition(-1);
 				final Object valuesExpression = left(middle(right(boundForm)));
-				
+				final Object nExpression = right(right(valuesExpression));
+				final Object v = list(nExpression).get(1);
 				
 				Tools.debugPrint(valuesExpression);
+				Tools.debugPrint(nExpression);
 				
-				// TODO Auto-generated method stub
+				{
+					subdeduction();
+					
+					ebind("definition_of_product_reduction", 1, v);
+					deduceCartesianType(new Object[] { 2 }, "realness");
+					eapply(name(-2));
+					
+					conclude();
+				}
+				
 				abort();
+				
+				// TODO
 			}
 			
 		}, 1);

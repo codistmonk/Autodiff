@@ -6,7 +6,6 @@ import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.BasicNumericVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
 import static multij.tools.Tools.*;
-
 import autodiff.reasoning.deductions.Standard;
 import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.proofs.Deduction;
@@ -125,7 +124,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	public static final void eapply(final String target) {
 		subdeduction();
 		
-		final Object condition = condition(proposition(-1));
+		final Object condition = condition(proposition(target));
 		
 		PropositionDescription justification = null;
 		
@@ -307,14 +306,17 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			Standard.setup();
 			
 			supposeDefinitionOfParentheses();
-			supposeDefinitionOfSubset();
-			supposeNaturalsSubsetReals();
-			supposeTransitivityOfSubset();
-			supposeDefinitionOfPowerset();
-			supposeTypeOfPowersetOfReals();
 			supposeDefinitionOfForallIn();
 			supposeDefinitionOfForallIn2();
 			supposeDefinitionOfForallIn3();
+			supposeDefinitionOfSubset();
+			supposeDefinitionOfPowerset();
+			supposeSubsetInUhm();
+			supposeTypeOfPowersetOfReals();
+			supposeRealsInUhm();
+			supposeNaturalsSubsetReals();
+			deduceNaturalsInUhm();
+			supposeTransitivityOfSubset();
 			supposeDefinitionOfPositives();
 			supposeIntroductionOfConjunction();
 			supposeLeftEliminationOfConjunction();
@@ -324,6 +326,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			deduceLogicalEquivalenceImpliesLogicalEquality();
 			deduceCommutativityOfConjunction();
 			deducePositivesSubsetNaturals();
+			deducePositivesInUhm();
 			supposeDefinitionOfMs();
 			supposeTypeOfFlat();
 			supposeDefinitionOfSingleton();
@@ -333,7 +336,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			supposeTypeOfCartesian();
 			supposeCartesianMN();
 			supposeCartesianAssociativity();
-			deducePositivesInUhm();
 			supposeDefinitionOfProductLoop0();
 			supposeDefinitionOfProductLoopN();
 			supposeDefinitionOfProductReduction();
@@ -390,64 +392,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					
 					bind(name(-1), p(toBinaryTree(",", s)));
 					
-					{
-						subdeduction();
-						
-						boolean first = true;
-						
-						for (final Object value : s) {
-							deduceCartesianPositivity(value);
-							
-							if (first) {
-								first = false;
-							} else {
-								final Object x = left(proposition(-2));
-								final Object y = left(proposition(-1));
-								final Object m = right(right(proposition(-2)));
-								final Object n = right(right(proposition(-1)));
-								
-								{
-									subdeduction();
-									
-									{
-										subdeduction();
-										
-										ebind("type_of_pair",
-												(Object) $(POS, "^", m), $(POS, "^", n), x, y);
-										eapplyLast();
-										
-										bind("definition_of_parentheses", middle(left(proposition(-1))));
-										rewrite(name(-2), name(-1));
-										
-										conclude();
-									}
-									
-									{
-										subdeduction();
-										
-										ebind("cartesian_m_n", POS, m, n);
-										eapplyLast();
-										
-										verifyBasicNumericProposition(
-												$($(m, "+", n), "=", (Integer) m + (Integer) n));
-										
-										rewrite(name(-2), name(-1));
-										
-										conclude();
-									}
-									
-									rewrite(name(-2), name(-1));
-									
-									conclude();
-								}
-							}
-						}
-						
-						bind("definition_of_parentheses", left(proposition(-1)));
-						rewriteRight(name(-2), name(-1));
-						
-						conclude();
-					}
+					deduceCartesianType(s, "positivity");
 					
 					apply(name(-2), name(-1));
 					
@@ -561,6 +506,17 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		conclude();
 	}
 	
+	public static final void deduceCartesianRealness(final Object value) {
+		subdeduction();
+		
+		ebind("cartesian_1", R);
+		eapplyLast();
+		verifyBasicNumericProposition($(value, IN, R));
+		rewrite(name(-1), name(-2));
+		
+		conclude();
+	}
+	
 	public static final void canonicalizeForallIn(final String targetName) {
 		final List<Object> list = list(proposition(targetName));
 		
@@ -653,8 +609,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		final Object _X = $new("X");
 		final Object _Y = $new("Y");
 		
-		suppose("definition_of_subset", $forall(_X, _Y,
-				$($(_X, SUBSET, _Y), "=", $forall(_x, $rule($(_x, IN, _X), $(_x, IN, _Y))))));
+		suppose("definition_of_subset", $forall(_X, $(FORALL, _Y, IN, U,
+				$($(_X, SUBSET, _Y), "=", $forall(_x, $rule($(_x, IN, _X), $(_x, IN, _Y)))))));
 	}
 	
 	public static final void supposeNaturalsSubsetReals() {
@@ -669,6 +625,9 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		final Object _Y = forall("Y");
 		final Object _Z = forall("Z");
 		
+		suppose($(_X, IN, U));
+		suppose($(_Y, IN, U));
+		suppose($(_Z, IN, U));
 		suppose($(_X, SUBSET, _Y));
 		suppose($(_Y, SUBSET, _Z));
 		
@@ -687,7 +646,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			{
 				subdeduction();
 				
-				bind("definition_of_subset", _X, _Y);
+				ebind("definition_of_subset", _X, _Y);
+				trimLast();
 				rewrite(h1, name(-1));
 				bind(name(-1), _x);
 				
@@ -699,7 +659,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			{
 				subdeduction();
 				
-				bind("definition_of_subset", _Y, _Z);
+				ebind("definition_of_subset", _Y, _Z);
+				trimLast();
 				rewrite(h2, name(-1));
 				bind(name(-1), _x);
 				
@@ -711,7 +672,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			conclude();
 		}
 		
-		bind("definition_of_subset", _X, _Z);
+		ebind("definition_of_subset", _X, _Z);
+		trimLast();
 		rewriteRight(name(-2), name(-1));
 		
 		conclude();
@@ -728,6 +690,11 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	public static final void supposeTypeOfPowersetOfReals() {
 		suppose("type_of_P_R",
 				$(pp(R), SUBSET, U));
+	}
+	
+	public static final void supposeRealsInUhm() {
+		suppose("reals_in_Uhm",
+				$(R, IN, U));
 	}
 	
 	public static final void supposeDefinitionOfForallIn() {
@@ -870,7 +837,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	public static final void deducePositivesSubsetNaturals() {
 		subdeduction("positives_subset_naturals");
 		
-		bind("definition_of_subset", POS, N);
+		ebind("definition_of_subset", POS, N);
+		trimLast();
 		
 		{
 			subdeduction();
@@ -985,30 +953,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	public static final void deducePositivesInUhm() {
 		subdeduction("positives_in_Uhm");
 		
-		{
-			subdeduction();
-			
-			bind("transitivity_of_subset", POS, N, R);
-			eapplyLast();
-			eapplyLast();
-			
-			conclude();
-		}
-		
-		bind("definition_of_powerset", POS, R);
-		rewriteRight(name(-2), name(-1));
-		
-		{
-			subdeduction();
-			
-			bind("definition_of_subset", pp(R), U);
-			rewrite("type_of_P_R", name(-1));
-			bind(name(-1), POS);
-			
-			conclude();
-		}
-		
-		apply(name(-1), name(-2));
+		ebind("subset_in_Uhm", POS, N);
+		trimLast();
 		
 		conclude();
 	}
@@ -1044,6 +990,88 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				$(FORALL, _n, IN, POS,
 						$(FORALL, _v, IN, $(R, "^", _n),
 								$($(PI, _v), "=", $(PI, "_", $(_i, "<", _n), $(_v, "_", _i))))));
+	}
+	
+	public static final void deduceCartesianType(final Object[] s, final String type) {
+		subdeduction();
+		
+		boolean first = true;
+		
+		for (final Object value : s) {
+			if ("positivity".equals(type)) {
+				deduceCartesianPositivity(value);
+			} else {
+				deduceCartesianRealness(value);
+			}
+			
+			if (first) {
+				first = false;
+			} else {
+				final Object x = left(proposition(-2));
+				final Object y = left(proposition(-1));
+				final Object m = right(right(proposition(-2)));
+				final Object n = right(right(proposition(-1)));
+				
+				{
+					subdeduction();
+					
+					{
+						subdeduction();
+						
+						ebind("type_of_pair",
+								(Object) $(POS, "^", m), $(POS, "^", n), x, y);
+						eapplyLast();
+						
+						bind("definition_of_parentheses", middle(left(proposition(-1))));
+						rewrite(name(-2), name(-1));
+						
+						conclude();
+					}
+					
+					{
+						subdeduction();
+						
+						ebind("cartesian_m_n", POS, m, n);
+						eapplyLast();
+						
+						verifyBasicNumericProposition(
+								$($(m, "+", n), "=", (Integer) m + (Integer) n));
+						
+						rewrite(name(-2), name(-1));
+						
+						conclude();
+					}
+					
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+			}
+		}
+		
+		bind("definition_of_parentheses", left(proposition(-1)));
+		rewriteRight(name(-2), name(-1));
+		
+		conclude();
+	}
+	
+	public static final void supposeSubsetInUhm() {
+		final Object _X = $new("X");
+		final Object _Y = $new("Y");
+		
+		suppose("subset_in_Uhm",
+				$forall(_X,
+						$(FORALL, _Y, IN, U,
+								$rule($(_X, SUBSET, _Y), $(_X, IN, U)))));
+	}
+	
+	public static final void deduceNaturalsInUhm() {
+		subdeduction("naturals_in_Uhm");
+		
+		ebind("subset_in_Uhm", N, R);
+		trimLast();
+		
+		conclude();
 	}
 	
 	/**
