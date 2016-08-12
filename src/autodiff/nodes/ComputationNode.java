@@ -141,8 +141,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 										subdeduction();
 										
 										eapply("cartesian_m_n", POS);
-										
-										canonicalizeForallIn2(name(-1));
 										eapplyLast(m);
 										eapplyLast(n);
 										
@@ -198,6 +196,9 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		if (isForallIn(proposition(target))) {
 			canonicalizeForallIn(target);
 			newTarget = name(-1);
+		} else if (isForallIn2(proposition(target))) {
+			canonicalizeForallIn2(target);
+			newTarget = name(-1);
 		}
 		
 		if (isBlock(proposition(newTarget))) {
@@ -242,6 +243,13 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		
 		return list != null && 5 == list.size()
 				&& FORALL.equals(list.get(0)) && IN.equals(list.get(2));
+	}
+	
+	public static final boolean isForallIn2(final Object proposition) {
+		final List<?> list = cast(List.class, proposition);
+		
+		return list != null && 7 == list.size()
+				&& FORALL.equals(list.get(0)) && ",".equals(list.get(2)) && IN.equals(list.get(4));
 	}
 	
 	public static final Iterable<PropositionDescription> iterateBackward(final Deduction deduction) {
