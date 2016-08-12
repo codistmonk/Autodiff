@@ -6,13 +6,13 @@ import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.BasicNumericVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
 import static multij.tools.Tools.*;
-
 import autodiff.reasoning.deductions.Standard;
 import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.proofs.Deduction;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -122,8 +122,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 								final Object y = left(proposition(-1));
 								final Object m = right(right(proposition(-2)));
 								final Object n = right(right(proposition(-1)));
-								final String type1 = name(-2);
-								final String type2 = name(-1);
 								
 								{
 									subdeduction();
@@ -133,8 +131,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 										
 										bind("type_of_pair", (Object) $(POS, "^", m), $(POS, "^", n));
 										
-										eapplyLast(x, type1);
-										eapplyLast(y, type2);
+										eapplyLast(x);
+										eapplyLast(y);
 										
 										bind("definition_of_parentheses", middle(left(proposition(-1))));
 										rewrite(name(-2), name(-1));
@@ -145,7 +143,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 									{
 										subdeduction();
 										
-										eapply("cartesian_m_n", POS, "positives_in_Uhm");
+										eapply("cartesian_m_n", POS);
 										
 										canonicalizeForallIn2(name(-1));
 										
@@ -198,18 +196,129 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		conclude();
 	}
 	
-	public static final void eapplyLast(final Object value, final String type) {
-		eapply(name(-1), value, type);
+	public static final void eapplyLast(final Object value) {
+		eapply(name(-1), value);
 	}
 	
-	public static final void eapply(final String target, final Object value, final String type) {
+	public static final void eapply(final String target, final Object value) {
+		String foundType = null;
+		
+		for (final PropositionDescription description : iterateBackward(deduction())) {
+			final List<?> list = cast(List.class, description.getProposition());
+			
+			if (list != null && 3 == list.size() && value.equals(list.get(0)) && IN.equals(list.get(1))) {
+				foundType = description.getName();
+				break;
+			}
+		}
+		
 		subdeduction();
 		
 		canonicalizeForallIn(target);
 		bind(name(-1), value);
-		apply(name(-1), type);
+		apply(name(-1), foundType);
 		
 		conclude();
+	}
+	
+	public static final Iterable<PropositionDescription> iterateBackward(final Deduction deduction) {
+		return new Iterable<ComputationNode.PropositionDescription>() {
+			
+			@Override
+			public final Iterator<PropositionDescription> iterator() {
+				return new Iterator<ComputationNode.PropositionDescription>() {
+					
+					private final PropositionDescription result = new PropositionDescription();
+					
+					private Deduction currentDeduction = deduction;
+					
+					private int i = this.currentDeduction.getPropositionNames().size();
+					
+					@Override
+					public final boolean hasNext() {
+						return 0 < this.i || !isEmpty(this.currentDeduction.getParent());
+					}
+					
+					@Override
+					public final PropositionDescription next() {
+						if (--this.i < 0) {
+							this.currentDeduction = this.currentDeduction.getParent();
+							
+							while (this.currentDeduction.getPropositionNames().isEmpty()) {
+								this.currentDeduction = this.currentDeduction.getParent();
+							}
+							
+							this.i = this.currentDeduction.getPropositionNames().size() - 1;
+						}
+						
+						final String name = this.currentDeduction.getPropositionNames().get(this.i);
+						
+						return this.result
+								.setIndex(this.result.getIndex() - 1)
+								.setName(name)
+								.setProposition(this.currentDeduction.getPropositions().get(name));
+					}
+					
+				};
+			}
+			
+		};
+	}
+	
+	public static final boolean isEmpty(final Deduction deduction) {
+		return deduction == null
+				|| (deduction.getPropositionNames().isEmpty()
+						&& (deduction.getParent() == null || isEmpty(deduction.getParent())));
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-12)
+	 */
+	public static final class PropositionDescription implements Serializable {
+		
+		private int index;
+		
+		private String name;
+		
+		private Object proposition;
+		
+		public final int getIndex() {
+			return this.index;
+		}
+		
+		public final PropositionDescription setIndex(final int index) {
+			this.index = index;
+			
+			return this;
+		}
+		
+		public final String getName() {
+			return this.name;
+		}
+		
+		public final PropositionDescription setName(final String name) {
+			this.name = name;
+			
+			return this;
+		}
+		
+		public final Object getProposition() {
+			return this.proposition;
+		}
+		
+		public final PropositionDescription setProposition(final Object proposition) {
+			this.proposition = proposition;
+			
+			return this;
+		}
+		
+		@Override
+		public final String toString() {
+			return this.getIndex() + ": " + this.getName() + ": " + this.getProposition();
+		}
+		
+		private static final long serialVersionUID = -3590873676651429520L;
+		
 	}
 	
 	private static final long serialVersionUID = 2834011599617369367L;
