@@ -6,6 +6,7 @@ import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.BasicNumericVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
 import static multij.tools.Tools.*;
+
 import autodiff.reasoning.deductions.Standard;
 import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.proofs.Deduction;
@@ -16,8 +17,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2016-08-09)
@@ -31,6 +30,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	private final List<BindListener> bindListeners;
 	
 	private String typeName;
+	
+	private Runnable binder;
 	
 	public ComputationNode() {
 		super(new ArrayList<>());
@@ -79,6 +80,16 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		return this;
 	}
 	
+	public final Runnable getBinder() {
+		return this.binder;
+	}
+	
+	public final ComputationNode setBinder(final Runnable binder) {
+		this.binder = binder;
+		
+		return this;
+	}
+	
 	@Override
 	public final String getName() {
 		return "[" + this.getId() + "]" + this.getTypeName();
@@ -86,98 +97,18 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	
 	@Override
 	public final ComputationNode autoShape() {
-		Standard.build(new Deduction(AUTODIFF, this.getName() + "_bind"), new Runnable() {
-			
-			@Override
-			public final void run() {
-				suppose(getDefinition());
-				
-				Tools.debugPrint(getDefinition());
-				
-				{
-					subdeduction();
-					
-					ebindLast($(get("n")));
-					eapplyLast();
-					
-					canonicalizeForallIn(name(-1));
-					
-					final Object[] s = toObjects((int[]) get("s"));
-					
-					bind(name(-1), p(toBinaryTree(",", s)));
-					
-					{
-						subdeduction();
-						
-						boolean first = true;
-						
-						for (final Object value : s) {
-							deduceCartesianPositivity(value);
-							
-							if (first) {
-								first = false;
-							} else {
-								final Object x = left(proposition(-2));
-								final Object y = left(proposition(-1));
-								final Object m = right(right(proposition(-2)));
-								final Object n = right(right(proposition(-1)));
-								
-								{
-									subdeduction();
-									
-									{
-										subdeduction();
-										
-										ebind("type_of_pair",
-												(Object) $(POS, "^", m), $(POS, "^", n), x, y);
-										eapplyLast();
-										
-										bind("definition_of_parentheses", middle(left(proposition(-1))));
-										rewrite(name(-2), name(-1));
-										
-										conclude();
-									}
-									
-									{
-										subdeduction();
-										
-										ebind("cartesian_m_n", POS, m, n);
-										eapplyLast();
-										
-										verifyBasicNumericProposition(
-												$($(m, "+", n), "=", (Integer) m + (Integer) n));
-										
-										rewrite(name(-2), name(-1));
-										
-										conclude();
-									}
-									
-									rewrite(name(-2), name(-1));
-									
-									conclude();
-								}
-							}
-						}
-						
-						bind("definition_of_parentheses", left(proposition(-1)));
-						rewriteRight(name(-2), name(-1));
-						
-						conclude();
-					}
-					
-					apply(name(-2), name(-1));
-					
-					conclude();
-				}
-				
-				final Object shapeExpression = middle(right(middle(right(proposition(-1)))));
-				
-				setShape(flattenBinaryTree(shapeExpression).stream().mapToInt(
-						o -> ((Number) o).intValue()).toArray());
-			}
-		}, 1);
+		final Deduction deduction = this.deduceBoundForm();
+		final Object proposition = deduction.getProposition(deduction.getPropositionName(-1));
+		final Object shapeExpression = middle(right(middle(right(proposition))));
+		
+		setShape(flattenBinaryTree(shapeExpression).stream().mapToInt(
+				o -> ((Number) o).intValue()).toArray());
 		
 		return this;
+	}
+	
+	public final Deduction deduceBoundForm() {
+		return Standard.build(new Deduction(AUTODIFF, this.getName() + "_bind"), this.getBinder(), 1);
 	}
 	
 	public static final void eapplyLast() {
@@ -431,8 +362,89 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			
 		});
 		
-		debugPrint(deepJoin(" ", result.getDefinition()));
-		debugPrint(result.getBindings().keySet());
+		result.setBinder(new Runnable() {
+			
+			@Override
+			public final void run() {
+				suppose(result.getDefinition());
+				
+				{
+					subdeduction();
+					
+					ebindLast($(result.get("n")));
+					eapplyLast();
+					
+					canonicalizeForallIn(name(-1));
+					
+					final Object[] s = toObjects((int[]) result.get("s"));
+					
+					bind(name(-1), p(toBinaryTree(",", s)));
+					
+					{
+						subdeduction();
+						
+						boolean first = true;
+						
+						for (final Object value : s) {
+							deduceCartesianPositivity(value);
+							
+							if (first) {
+								first = false;
+							} else {
+								final Object x = left(proposition(-2));
+								final Object y = left(proposition(-1));
+								final Object m = right(right(proposition(-2)));
+								final Object n = right(right(proposition(-1)));
+								
+								{
+									subdeduction();
+									
+									{
+										subdeduction();
+										
+										ebind("type_of_pair",
+												(Object) $(POS, "^", m), $(POS, "^", n), x, y);
+										eapplyLast();
+										
+										bind("definition_of_parentheses", middle(left(proposition(-1))));
+										rewrite(name(-2), name(-1));
+										
+										conclude();
+									}
+									
+									{
+										subdeduction();
+										
+										ebind("cartesian_m_n", POS, m, n);
+										eapplyLast();
+										
+										verifyBasicNumericProposition(
+												$($(m, "+", n), "=", (Integer) m + (Integer) n));
+										
+										rewrite(name(-2), name(-1));
+										
+										conclude();
+									}
+									
+									rewrite(name(-2), name(-1));
+									
+									conclude();
+								}
+							}
+						}
+						
+						bind("definition_of_parentheses", left(proposition(-1)));
+						rewriteRight(name(-2), name(-1));
+						
+						conclude();
+					}
+					
+					apply(name(-2), name(-1));
+					
+					conclude();
+				}
+			}
+		});
 		
 		return result;
 	}
