@@ -303,6 +303,16 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	
 	public static final Object POS = $(N, "_", $(">", 0));
 	
+	public static final SequenceBuilder PAR = new SequenceBuilder("(", ",", ")");
+	
+	public static final SequenceBuilder CART = new SequenceBuilder("(", CROSS, ")");
+	
+	public static final SequenceBuilder SQBR = new SequenceBuilder("[", ",", "]");
+	
+	public static final SequenceBuilder ANGL = new SequenceBuilder("<", ",", ">");
+	
+	public static final SequenceBuilder CURL = new SequenceBuilder("{", ",", "}");
+	
 	public static final Deduction AUTODIFF = Standard.build("autodiff", new Runnable() {
 		
 		@Override
@@ -364,46 +374,16 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			supposeCartesianMN();
 			
 			{
-				suppose("definition_of_empty_list",
-								$($("{", "[]", "}"), IN, U));
-			}
-			
-			{
-				final Object _X = $new("X");
-				
-				suppose("nul_vectors_in_Uhm",
-						$(FORALL, _X, IN, U,
-								$($(_X, "^", 0), IN, U)));
-			}
-			
-			{
-				final Object _X = $new("X");
-				final Object _Y = $new("Y");
-				
-				suppose("type_of_list_in_Uhm",
-						$(FORALL, _X, ",", _Y, IN, U,
-								$($(_X, "¤", _Y), IN, U)));
-			}
-			
-			{
 				final Object _X = $new("X");
 				final Object _Y = $new("Y");
 				final Object _x = $new("x");
 				final Object _y = $new("y");
 				
-				suppose("definition_of_list",
+				suppose("definition_of_cartesian_product",
 						$(FORALL, _X, ",", _Y, IN, U,
 								$(FORALL, _x, IN, _X,
 										$(FORALL, _y, IN, _Y,
-												$($(_x, "¨", _y), IN, $(_X, "¤", _Y))))));
-			}
-			{
-				final Object _X = $new("X");
-				final Object _Y = $new("Y");
-				
-				suppose("definition_of_cartesian_product",
-						$(FORALL, _X, ",", _Y, IN, U,
-								$($(_X, CROSS, _Y), "=", $($(_X, "¤", _Y), "¤", $("{", "[]", "}")))));
+												$(PAR.build(_x, _y), IN, CART.build(_X, _Y))))));
 			}
 			
 			{
@@ -413,7 +393,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				suppose("type_augmentation_of_monotype_list",
 						$(FORALL, _X, IN, U,
 								$(FORALL, _n, IN, N,
-										$($(_X, "¤", $(_X, "^", _n)), "=", $(_X, "^", $(_n, "+", 1))))));
+										$(CART.build(_X, $(_X, "^", _n)), "=", CART.build((Object) $(_X, "^", $(_n, "+", 1)))))));
 			}
 			
 			supposeDefinitionOfProductLoop0();
@@ -463,7 +443,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				{
 					subdeduction();
 					
-					ebindLast($(result.get("n")));
+					ebindLast((Object) $(result.get("n")));
 					eapplyLast();
 					
 					canonicalizeForallIn(name(-1));
@@ -1206,6 +1186,64 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		}
 		
 		private static final long serialVersionUID = -3590873676651429520L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-13)
+	 */
+	public static final class SequenceBuilder implements Serializable {
+		
+		private final Object begin;
+		
+		private final Object separator;
+		
+		private final Object end;
+		
+		public SequenceBuilder(final Object begin, final Object separator, final Object end) {
+			this.begin = begin;
+			this.separator = separator;
+			this.end = end;
+		}
+		
+		public final Object getBegin() {
+			return this.begin;
+		}
+		
+		public final Object getSeparator() {
+			return this.separator;
+		}
+		
+		public final Object getEnd() {
+			return this.end;
+		}
+		
+		public final List<Object> build(final Object... elements) {
+			final List<Object> result = new ArrayList<>();
+			List<Object> tmp = result;
+			
+			tmp.add(this.getBegin());
+			
+			if (0 < elements.length) {
+				tmp.add(elements[0]);
+				
+				for (int i = 1; i < elements.length; ++i) {
+					final List<Object> next = new ArrayList<>();
+					
+					tmp.add(next);
+					tmp = next;
+					
+					tmp.add(this.getSeparator());
+					tmp.add(elements[i]);
+				}
+			}
+			
+			tmp.add(this.getEnd());
+			
+			return result;
+		}
+		
+		private static final long serialVersionUID = 4750503376771325114L;
 		
 	}
 	
