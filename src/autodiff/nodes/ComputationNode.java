@@ -423,16 +423,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			}
 			
 			{
-				final Object _n = $new("n");
-				final Object _X = $new("X");
-				
-				suppose("vector_type_augmentation",
-						$(FORALL, _X, IN, U,
-								$(FORALL, _n, IN, N,
-										$(SB_CROSS.build(_X, $(_X, "^", _n)), "=", SB_CROSS.build((Object) $(_X, "^", $(_n, "+", 1)))))));
-			}
-			
-			{
 				final Object _X = $new("X");
 				final Object _n = $new("n");
 				
@@ -465,14 +455,31 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			}
 			
 			{
+				final Object _x = $new("x");
+				
+				suppose("definition_of_repetition_0",
+						$forall(_x,
+								$($("repeat", 0, _x), "=", _x)));
+			}
+			
+			{
+				final Object _x = $new("x");
+				final Object _n = $new("n");
+				
+				suppose("definition_of_repetition_n",
+						$forall(_x,
+								$(FORALL, _n, IN, POS,
+										$($("repeat", _n, _x), "=", $(_x, $("repeat", $(_n, "-", 1), _x))))));
+			}
+			
+			{
 				final Object _X = $new("X");
-				final Object _m = $new("m");
 				final Object _n = $new("n");
 				
 				suppose("simplification_of_cross_sequence",
-						$(FORALL, _X, IN, U,
-								$(FORALL, _m, ",", _n, IN, N,
-										$($($(_X, "^", _m), $(CROSS, $(_X, "^", _n))), "=", $(_X, "^", $(_m, "+", _n))))));
+						$forall(_X,
+								$(FORALL, _n, IN, N,
+										$($(_X, $("repeat", _n, $(CROSS, _X))), "=", $(_X, "^", $(_n, "+", 2))))));
 			}
 			
 			supposeDefinitionOfProductLoop0();
