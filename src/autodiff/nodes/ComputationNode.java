@@ -294,6 +294,10 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	public static final Object P = $("ℙ");
 	
 	public static final Object CROSS = $("×");
+	
+	public static final Object TCROSS = $("¤");
+	
+	public static final Object UML = $("¨");
 
 	public static final Object PI = $("Π");
 	
@@ -309,15 +313,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			supposeDefinitionOfForallIn();
 			supposeDefinitionOfForallIn2();
 			supposeDefinitionOfForallIn3();
-			supposeDefinitionOfSubset();
-			supposeDefinitionOfPowerset();
-			supposeSubsetInUhm();
-			supposeTypeOfPowersetOfReals();
-			supposeRealsInUhm();
-			supposeNaturalsSubsetReals();
-			deduceNaturalsInUhm();
-			supposeTransitivityOfSubset();
-			supposeDefinitionOfPositives();
+			
 			supposeIntroductionOfConjunction();
 			supposeLeftEliminationOfConjunction();
 			supposeRightEliminationOfConjunction();
@@ -325,6 +321,37 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			supposeLogicalEquality();
 			deduceLogicalEquivalenceImpliesLogicalEquality();
 			deduceCommutativityOfConjunction();
+			
+			supposeDefinitionOfSubset();
+			supposeDefinitionOfPowerset();
+			supposeSubsetInUhm();
+			supposeTypeOfPowersetOfReals();
+			supposeRealsInUhm();
+			supposeNaturalsSubsetReals();
+			deduceNaturalsInUhm();
+			supposeDefinitionOfPositives();
+			{
+				final Object _i = $new("i");
+				final Object _n = $new("n");
+				
+				suppose("definition_of_range",
+						$(FORALL, _n, IN, N,
+								$forall(_i,
+										$($(_i, IN, $(N, "_", $("<", _n))),
+												"=", $($(_i, IN, N), LAND, $(_i, "<", _n))))));
+			}
+			{
+				final Object _i = $new("i");
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				final Object _X = $new("X");
+				
+				suppose("definition_of_indexing_i",
+						$(FORALL, _i, IN, POS,
+									$rule($(p(_x, ",", _y), IN, $($(_X, "^", _i), CROSS, _X)),
+											$($(p(_x, ",", _y), "_", _i), "=", _y))));
+			}
+			supposeTransitivityOfSubset();
 			deducePositivesSubsetNaturals();
 			deducePositivesInUhm();
 			supposeDefinitionOfMs();
@@ -335,7 +362,60 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			supposeCartesian1();
 			supposeTypeOfCartesian();
 			supposeCartesianMN();
-			supposeCartesianAssociativity();
+			
+			{
+				suppose("definition_of_empty_list",
+								$($("{", "[]", "}"), IN, U));
+			}
+			
+			{
+				final Object _X = $new("X");
+				
+				suppose("nul_vectors_in_Uhm",
+						$(FORALL, _X, IN, U,
+								$($(_X, "^", 0), IN, U)));
+			}
+			
+			{
+				final Object _X = $new("X");
+				final Object _Y = $new("Y");
+				
+				suppose("type_of_list_in_Uhm",
+						$(FORALL, _X, ",", _Y, IN, U,
+								$($(_X, "¤", _Y), IN, U)));
+			}
+			
+			{
+				final Object _X = $new("X");
+				final Object _Y = $new("Y");
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				
+				suppose("definition_of_list",
+						$(FORALL, _X, ",", _Y, IN, U,
+								$(FORALL, _x, IN, _X,
+										$(FORALL, _y, IN, _Y,
+												$($(_x, "¨", _y), IN, $(_X, "¤", _Y))))));
+			}
+			{
+				final Object _X = $new("X");
+				final Object _Y = $new("Y");
+				
+				suppose("definition_of_cartesian_product",
+						$(FORALL, _X, ",", _Y, IN, U,
+								$($(_X, CROSS, _Y), "=", $($(_X, "¤", _Y), "¤", $("{", "[]", "}")))));
+			}
+			
+			{
+				final Object _n = $new("n");
+				final Object _X = $new("X");
+				
+				suppose("type_augmentation_of_monotype_list",
+						$(FORALL, _X, IN, U,
+								$(FORALL, _n, IN, N,
+										$($(_X, "¤", $(_X, "^", _n)), "=", $(_X, "^", $(_n, "+", 1))))));
+			}
+			
 			supposeDefinitionOfProductLoop0();
 			supposeDefinitionOfProductLoopN();
 			supposeDefinitionOfProductReduction();
@@ -938,16 +1018,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				$(FORALL, _X, IN, U,
 						$(FORALL, _m, ",", _n, IN, POS,
 								$($($(_X, "^", _m), CROSS, $(_X, "^", _n)), "=", $(_X, "^", $(_m, "+", _n))))));
-	}
-	
-	public static final void supposeCartesianAssociativity() {
-		final Object _X = $new("X");
-		final Object _Y = $new("Y");
-		final Object _Z = $new("Z");
-		
-		suppose("cartesian_associativity",
-				$(FORALL, _X, ",", _Y, ",", _Z, IN, U,
-								$($(p(_X, CROSS, _Y), CROSS, _Z), "=", $(_X, CROSS, p(_Y, CROSS, _Z)))));
 	}
 	
 	public static final void deducePositivesInUhm() {

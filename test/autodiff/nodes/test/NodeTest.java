@@ -3,13 +3,15 @@ package autodiff.nodes.test;
 import static autodiff.nodes.ComputationNode.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.Stack.*;
+import static multij.tools.Tools.debugPrint;
 import static org.junit.Assert.*;
+
+import java.util.List;
 
 import autodiff.nodes.ComputationNode;
 import autodiff.nodes.Data;
 import autodiff.nodes.Node;
 import autodiff.reasoning.deductions.Standard;
-
 import multij.tools.Tools;
 
 import org.junit.Test;
@@ -79,8 +81,8 @@ public final class NodeTest {
 				final Object nExpression = right(right(valuesExpression));
 				final Object v = list(nExpression).get(1);
 				
-				Tools.debugPrint(valuesExpression);
-				Tools.debugPrint(nExpression);
+				debugPrint(valuesExpression);
+				debugPrint(nExpression);
 				
 				{
 					subdeduction();
@@ -90,6 +92,17 @@ public final class NodeTest {
 					eapply(name(-2));
 					
 					conclude();
+				}
+				
+				{
+					final List<?> product = list(right(proposition(-1)));
+					final Object i = left(product.get(2));
+					final Object operand = product.get(3);
+					
+					debugPrint(product);
+					debugPrint(i, operand);
+					
+					ebind("definition_of_product_loop_n", 1, i, operand);
 				}
 				
 				abort();
