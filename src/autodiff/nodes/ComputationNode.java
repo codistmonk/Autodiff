@@ -9,9 +9,11 @@ import static multij.tools.Tools.*;
 import autodiff.reasoning.deductions.Standard;
 import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.proofs.Deduction;
+import multij.tools.Tools;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -100,7 +102,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	public final ComputationNode autoShape() {
 		final Deduction deduction = this.getBoundForm();
 		final Object proposition = deduction.getProposition(deduction.getPropositionName(-1));
-		final Object shapeExpression = middle(right(middle(right(proposition))));
+//		final Object shapeExpression = middle(right(middle(right(proposition))));
+		final Object shapeExpression = right(middle(right(proposition)));
 		
 		setShape(flattenBinaryTree(shapeExpression).stream().mapToInt(
 				o -> ((Number) o).intValue()).toArray());
@@ -137,8 +140,14 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		
 		final String justificationName;
 		
-		if (justification == null && isPositivity(condition)) {
-			deducePositivity(left(condition));
+		if (justification == null) {
+			if (isPositivity(condition)) {
+				deducePositivity(left(condition));
+			} else if(isNaturality(condition) || isReality(condition)) {
+				verifyBasicNumericProposition(condition);
+			} else {
+				throw new IllegalStateException();
+			}
 			justificationName = name(-1);
 		} else {
 			justificationName = justification.getName();
@@ -170,17 +179,25 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		subdeduction();
 		
 		String newTarget = target;
+		boolean done = false;
 		
-		while (!isBlock(proposition(newTarget))) {
+		while (!done) {
+//		while (!isBlock(proposition(newTarget))) {
+//			debugPrint(proposition(newTarget));
+			
+			done = true;
+			
 			if (isForallIn(proposition(newTarget))) {
 				canonicalizeForallIn(newTarget);
 				newTarget = name(-1);
+				done = false;
 			} else if (isForallIn2(proposition(newTarget))) {
 				canonicalizeForallIn2(newTarget);
 				newTarget = name(-1);
-			} else {
-				trim(newTarget);
+				done = false;
+			} else if (trim(newTarget)) {
 				newTarget = name(-1);
+				done = false;
 			}
 		}
 		
@@ -193,7 +210,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		trim(name(-1));
 	}
 	
-	public static final void trim(final String target) {
+	public static final boolean trim(final String target) {
 		if (isRule(proposition(target))) {
 			String newTarget = target;
 			
@@ -205,7 +222,11 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			}
 			
 			conclude();
+			
+			return true;
 		}
+		
+		return false;
 	}
 	
 	public static final boolean isPositivity(final Object proposition) {
@@ -213,6 +234,20 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		
 		return list != null && 3 == list.size()
 				&& IN.equals(middle(list)) && POS.equals(right(list));
+	}
+	
+	public static final boolean isNaturality(final Object proposition) {
+		final List<?> list = cast(List.class, proposition);
+		
+		return list != null && 3 == list.size()
+				&& IN.equals(middle(list)) && N.equals(right(list));
+	}
+	
+	public static final boolean isReality(final Object proposition) {
+		final List<?> list = cast(List.class, proposition);
+		
+		return list != null && 3 == list.size()
+				&& IN.equals(middle(list)) && R.equals(right(list));
 	}
 	
 	public static final boolean isForallIn(final Object proposition) {
@@ -303,21 +338,22 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	
 	public static final Object POS = $(N, "_", $(">", 0));
 	
-	public static final SequenceBuilder PAR = new SequenceBuilder("(", ",", ")");
+	public static final SequenceBuilder SB_COMMA = new SequenceBuilder(",");
 	
-	public static final SequenceBuilder CART = new SequenceBuilder("(", CROSS, ")");
-	
-	public static final SequenceBuilder SQBR = new SequenceBuilder("[", ",", "]");
-	
-	public static final SequenceBuilder ANGL = new SequenceBuilder("<", ",", ">");
-	
-	public static final SequenceBuilder CURL = new SequenceBuilder("{", ",", "}");
+	public static final SequenceBuilder SB_CROSS = new SequenceBuilder(CROSS);
 	
 	public static final Deduction AUTODIFF = Standard.build("autodiff", new Runnable() {
 		
 		@Override
 		public final void run() {
 			Standard.setup();
+			
+			debugPrint(SB_COMMA.build((Object) $("a", "b", "c")));
+			debugPrint(SB_COMMA.build(1));
+			debugPrint(SB_COMMA.build(1, 2));
+			debugPrint(SB_COMMA.build(1, 2, 3));
+			debugPrint(SB_COMMA.build(1, SB_COMMA.build(2, 3)));
+			debugPrint(SB_COMMA.build(SB_COMMA.build(1, 2), 3));
 			
 			supposeDefinitionOfParentheses();
 			supposeDefinitionOfForallIn();
@@ -368,7 +404,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			supposeTypeOfFlat();
 			supposeDefinitionOfSingleton();
 			supposeTypeOfSingle();
-			supposeTypeOfPair();
+//			supposeTypeOfPair();
 			supposeCartesian1();
 			supposeTypeOfCartesian();
 			supposeCartesianMN();
@@ -379,21 +415,64 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				final Object _x = $new("x");
 				final Object _y = $new("y");
 				
-				suppose("definition_of_cartesian_product",
+				suppose("type_of_tuple",
 						$(FORALL, _X, ",", _Y, IN, U,
 								$(FORALL, _x, IN, _X,
 										$(FORALL, _y, IN, _Y,
-												$(PAR.build(_x, _y), IN, CART.build(_X, _Y))))));
+												$(SB_COMMA.build(_x, _y), IN, SB_CROSS.build(_X, _Y))))));
 			}
 			
 			{
 				final Object _n = $new("n");
 				final Object _X = $new("X");
 				
-				suppose("type_augmentation_of_monotype_list",
+				suppose("vector_type_augmentation",
 						$(FORALL, _X, IN, U,
 								$(FORALL, _n, IN, N,
-										$(CART.build(_X, $(_X, "^", _n)), "=", CART.build((Object) $(_X, "^", $(_n, "+", 1)))))));
+										$(SB_CROSS.build(_X, $(_X, "^", _n)), "=", SB_CROSS.build((Object) $(_X, "^", $(_n, "+", 1)))))));
+			}
+			
+			{
+				final Object _X = $new("X");
+				final Object _n = $new("n");
+				
+				suppose("vector_type_in_Uhm",
+						
+						$(FORALL, _X, IN, U,
+								$(FORALL, _n, IN, N,
+										$($(_X, "^", _n), IN, U))));
+			}
+			
+			{
+				final Object _s = $new("s");
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				
+				suppose("definition_of_sequence_new",
+						$forall(_s, _x, _y,
+								$($("sequence_new", _s, _x, _y), "=", $(_x, $(_s, _y)))));
+			}
+			
+			{
+				final Object _s = $new("s");
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				final Object _z = $new("z");
+				
+				suppose("definition_of_sequence_append",
+						$forall(_s, _x, _y, _z,
+								$($("sequence_append", _s, $(_x, $(_s, _y)), _z), "=", $(_x, $(_s, _y, $(_s, _z))))));
+			}
+			
+			{
+				final Object _X = $new("X");
+				final Object _m = $new("m");
+				final Object _n = $new("n");
+				
+				suppose("simplification_of_cross_sequence",
+						$(FORALL, _X, IN, U,
+								$(FORALL, _m, ",", _n, IN, N,
+										$($($(_X, "^", _m), $(CROSS, $(_X, "^", _n))), "=", $(_X, "^", $(_m, "+", _n))))));
 			}
 			
 			supposeDefinitionOfProductLoop0();
@@ -450,7 +529,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					
 					final Object[] s = toObjects((int[]) result.get("s"));
 					
-					bind(name(-1), p(toBinaryTree(",", s)));
+//					bind(name(-1), p(toBinaryTree(",", s)));
+					bind(name(-1), SB_COMMA.build(s));
 					
 					deduceCartesianType(s, "positivity");
 					
@@ -997,7 +1077,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		suppose("cartesian_m_n",
 				$(FORALL, _X, IN, U,
 						$(FORALL, _m, ",", _n, IN, POS,
-								$($($(_X, "^", _m), CROSS, $(_X, "^", _n)), "=", $(_X, "^", $(_m, "+", _n))))));
+								$(SB_CROSS.build($(_X, "^", _m), $(_X, "^", _n)), "=", SB_CROSS.build((Object) $(_X, "^", $(_m, "+", _n)))))));
 	}
 	
 	public static final void deducePositivesInUhm() {
@@ -1059,6 +1139,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			} else {
 				final Object x = left(proposition(-2));
 				final Object y = left(proposition(-1));
+				
 				final Object m = right(right(proposition(-2)));
 				final Object n = right(right(proposition(-1)));
 				
@@ -1068,12 +1149,19 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					{
 						subdeduction();
 						
-						ebind("type_of_pair",
+						ebind("vector_type_in_Uhm", POS, m);
+						trimLast();
+						
+						ebind("vector_type_in_Uhm", POS, n);
+						trimLast();
+						
+						ebind("type_of_tuple",
 								(Object) $(POS, "^", m), $(POS, "^", n), x, y);
+						
 						eapplyLast();
 						
-						bind("definition_of_parentheses", middle(left(proposition(-1))));
-						rewrite(name(-2), name(-1));
+//						bind("definition_of_parentheses", middle(left(proposition(-1))));
+//						rewrite(name(-2), name(-1));
 						
 						conclude();
 					}
@@ -1099,8 +1187,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			}
 		}
 		
-		bind("definition_of_parentheses", left(proposition(-1)));
-		rewriteRight(name(-2), name(-1));
+//		bind("definition_of_parentheses", left(proposition(-1)));
+//		rewriteRight(name(-2), name(-1));
 		
 		conclude();
 	}
@@ -1194,53 +1282,66 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	 */
 	public static final class SequenceBuilder implements Serializable {
 		
-		private final Object begin;
-		
 		private final Object separator;
 		
-		private final Object end;
-		
-		public SequenceBuilder(final Object begin, final Object separator, final Object end) {
-			this.begin = begin;
+		public SequenceBuilder(final Object separator) {
 			this.separator = separator;
-			this.end = end;
-		}
-		
-		public final Object getBegin() {
-			return this.begin;
 		}
 		
 		public final Object getSeparator() {
 			return this.separator;
 		}
 		
-		public final Object getEnd() {
-			return this.end;
-		}
-		
-		public final List<Object> build(final Object... elements) {
-			final List<Object> result = new ArrayList<>();
-			List<Object> tmp = result;
-			
-			tmp.add(this.getBegin());
-			
-			if (0 < elements.length) {
-				tmp.add(elements[0]);
+		public final Object build(final Object... elements) {
+			if (false) {
+				Object result = elements[0];
 				
 				for (int i = 1; i < elements.length; ++i) {
-					final List<Object> next = new ArrayList<>();
-					
-					tmp.add(next);
-					tmp = next;
-					
-					tmp.add(this.getSeparator());
-					tmp.add(elements[i]);
+					result = Arrays.asList(result, this.getSeparator(), elements[i]);
 				}
+				
+				return result;
 			}
 			
-			tmp.add(this.getEnd());
+			if (elements.length == 1) {
+				return elements[0];
+			}
+			
+			List<Object> result = Arrays.asList(this.getSeparator(), elements[elements.length - 1]);
+			
+			for (int i = elements.length - 2; 0 < i; --i) {
+				result = Arrays.asList(this.getSeparator(), elements[i], result);
+			}
+			
+			result = Arrays.asList(elements[0], result);
 			
 			return result;
+			
+			/*
+			 * 
+			 * 1
+			 * [( 1 )]
+			 * [1]
+			 * 
+			 * 1,2
+			 * [( 1 [, 2 )]
+			 * [1 [, 2]]
+			 * 
+			 * 1,2,3
+			 * [( 1 [, 2 [, 3 )]]]
+			 * [1 [, 2 [, 3]]]
+			 * 
+			 * 		
+			 * 
+			 * 1,(2,3)
+			 * [( 1 [, [( 2 [, 3 )]] )]]
+			 * [1 [, [2 [, 3]]]]
+			 * 
+			 * (1,2),3
+			 * [( [( 1 [, 2 )]] [, 3 )]]
+			 * [[1 [, 2]] [, 3]]
+			 * 
+			 */
 		}
 		
 		private static final long serialVersionUID = 4750503376771325114L;
