@@ -482,6 +482,32 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 										$($(_X, $("repeat", _n, $(CROSS, _X))), "=", $(_X, "^", $(_n, "+", 2))))));
 			}
 			
+			{
+				final Object _f = $new("f");
+				final Object _x = $new("x0");
+				final Object _sx = $new("sx");
+				final Object _y = $new("y0");
+				final Object _sy = $new("sy");
+				
+				suppose("definition_of_zip_0",
+						$forall(_x, _sx, _y, _sy,
+								$($("zip", _f, _sx, _sy, $(_sx, _x), $(_sy, _y)), "=", $(_f, _x, _y))));
+			}
+			
+			{
+				final Object _f = $new("f");
+				final Object _x0 = $new("x0");
+				final Object _x1 = $new("x1");
+				final Object _sx = $new("sx");
+				final Object _y0 = $new("y0");
+				final Object _y1 = $new("y1");
+				final Object _sy = $new("sy");
+				
+				suppose("definition_of_zip_n",
+						$forall(_x0, _x1, _sx, _y0, _y1, _sy,
+								$($("zip", _f, _sx, _sy, $(_sx, _x0, _x1), $(_sy, _y0, _y1)), "=", $($(_f, _x0, _y0), $("zip", _f, _sx, _sy, _x1, _y1)))));
+			}
+			
 			supposeDefinitionOfProductLoop0();
 			supposeDefinitionOfProductLoopN();
 			supposeDefinitionOfProductReduction();
