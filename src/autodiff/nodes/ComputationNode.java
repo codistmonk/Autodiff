@@ -604,90 +604,27 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			}
 			
 			{
-				subdeduction("sequence_append.test1");
-				
 				final Object _s = ",";
 				final Object _x = 1;
 				final Object _y = 2;
 				
-				new SequenceAppendHelper(_s, _x, _y).compute(3);
-				
-				conclude();
+				new SequenceAppendHelper(_s, _x, _y).compute("sequence_append.test1");
 			}
 			
 			{
-				subdeduction("sequence_append.test2");
-				
 				final Object _s = ",";
+				final Object _x = SB_COMMA.build(1, 2);
+				final Object _y = 3;
 				
-				{
-					final Object _x = SB_COMMA.build(1, 2);
-					final Object _y = 3;
-					
-					new SequenceAppendHelper(_s, _x, _y).compute();
-				}
-				
-				{
-					final Object _x = $(",", 2);
-					final Object _x0 = 2;
-					final Object _x1 = "()";
-					final Object _y = 3;
-					
-					new SequenceAppendHelper(_s, _x, _x0, _x1, _y).compute();
-				}
-				
-				rewrite(name(-2), name(-1));
-				
-				conclude();
+				new SequenceAppendHelper(_s, _x, _y).compute("sequence_append.test2");
 			}
 			
 			{
-				subdeduction("sequence_append.test3");
-				
 				final Object _s = ",";
+				final Object _x = SB_COMMA.build(1, 2, 3);
+				final Object _y = 4;
 				
-				{
-					final Object _x = SB_COMMA.build(1, 2, 3);
-					final Object _y = 4;
-					
-					new SequenceAppendHelper(_s, _x, _y).compute();
-				}
-				
-				{
-					subdeduction();
-					
-					{
-						final Object _x = $(",", 2, $(",", 3));
-						final Object _x0 = 2;
-						final Object _x1 = $(",", 3);
-						final Object _y = 4;
-						
-						new SequenceAppendHelper(_s, _x, _x0, _x1, _y).compute();
-					}
-					
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-				}
-				
-				{
-					subdeduction();
-					
-					{
-						final Object _x = $(",", 3);
-						final Object _x0 = 3;
-						final Object _x1 = "()";
-						final Object _y = 4;
-						
-						new SequenceAppendHelper(_s, _x, _x0, _x1, _y).compute();
-					}
-					
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-				}
-				
-				conclude();
+				new SequenceAppendHelper(_s, _x, _y).compute("sequence_append.test3");
 			}
 			
 			abort();
@@ -1814,7 +1751,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		
 		private Object x1;
 		
-		private Object y;
+		private final Object y;
 		
 		private Object condition0;
 		
@@ -1830,8 +1767,10 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		
 		private Object value3;
 		
+		private boolean first;
+		
 		public SequenceAppendHelper(final Object s, final Object x, final Object y) {
-			this(s, x, x0(x), x1(x), y);
+			this(s, x, x0(s, x), x1(s, x), y);
 		}
 		
 		public SequenceAppendHelper(final Object s, final Object x, final Object x0,
@@ -1841,30 +1780,40 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			this.x0 = x0;
 			this.x1 = x1;
 			this.y = y;
+			this.first = true;
 			
-			this.setConditionsAndValues(s, x, x0, x1, y);
+			this.setConditionsAndValues();
 		}
 		
 		public final void compute() {
-			final List<?> list = cast(List.class, this.x);
+			this.compute(newName());
+		}
+		
+		public final void compute(final String name) {
+			subdeduction(name);
 			
-			if (list != null) {
-				if (2 == list.size()) {
-					if (this.s.equals(first(list))) {
-						this.compute(1);
-					} else {
-						this.compute(0);
+			int caseIndex;
+			
+			do {
+				caseIndex = 3;
+				final List<?> list = cast(List.class, this.x);
+				
+				if (list != null) {
+					if (2 == list.size()) {
+						if (this.s.equals(first(list))) {
+							caseIndex = 1;
+						} else {
+							caseIndex = 0;
+						}
+					} else if (3 == list.size() && this.s.equals(first(list))) {
+						caseIndex = 2;
 					}
-					
-					return;
-				} else if (3 == list.size() && this.s.equals(first(list))) {
-					this.compute(2);
-					
-					return;
 				}
-			}
+				
+				this.compute(caseIndex);
+			} while (caseIndex != 1 && caseIndex != 3);
 			
-			this.compute(3);
+			conclude();
 		}
 		
 		public final void compute(final int caseIndex) {
@@ -1889,25 +1838,41 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			}
 			
 			conclude();
+			
+			if (this.first) {
+				this.first = false;
+			} else {
+				rewrite(name(-2), name(-1));
+			}
+			
+			if (caseIndex == 0 || caseIndex == 2) {
+				this.x = this.x1;
+				this.setX0X1();
+				this.setConditionsAndValues();
+			}
 		}
 		
-		private final void setConditionsAndValues(final Object s, final Object x,
-				final Object x0, final Object x1, final Object y) {
-			this.condition0 = $(x, ":=:", $(x0, x1));
-			this.value0 = $(x0, $("sequence_append", s, x1, y));
+		private final void setX0X1() {
+			this.x0 = x0(this.s, this.x);
+			this.x1 = x1(this.s, this.x);
+		}
+		
+		private final void setConditionsAndValues() {
+			this.condition0 = $(this.x, ":=:", $(this.x0, this.x1));
+			this.value0 = $(this.x0, $("sequence_append", this.s, this.x1, this.y));
 			
-			this.condition1 = $(x, ":=:", $(s, x0));
-			this.value1 = $(s, x0, $(s, y));
+			this.condition1 = $(this.x, ":=:", $(this.s, this.x0));
+			this.value1 = $(this.s, this.x0, $(this.s, this.y));
 			
-			this.condition2 = $(x, ":=:", $(s, x0, x1));
-			this.value2 = $(s, x0, $("sequence_append", s, x1, y));
+			this.condition2 = $(this.x, ":=:", $(this.s, this.x0, this.x1));
+			this.value2 = $(this.s, this.x0, $("sequence_append", this.s, this.x1, this.y));
 			
-			this.value3 = $("sequence_new", s, x, y);
+			this.value3 = $("sequence_new", this.s, this.x, this.y);
 		}
 		
 		private static final long serialVersionUID = 1480975513598301733L;
 		
-		public static final Object x0(final Object x) {
+		public static final Object x0(final Object s, final Object x) {
 			final List<?> list = cast(List.class, x);
 			
 			if (list == null) {
@@ -1915,13 +1880,21 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			}
 			
 			if (2 == list.size()) {
+				if (s.equals(first(list))) {
+					return second(list);
+				}
+				
 				return first(list);
+			}
+			
+			if (3 == list.size() && s.equals(first(list))) {
+				return second(list);
 			}
 			
 			throw new IllegalArgumentException();
 		}
 		
-		public static final Object x1(final Object x) {
+		public static final Object x1(final Object s, final Object x) {
 			final List<?> list = cast(List.class, x);
 			
 			if (list == null) {
@@ -1930,6 +1903,10 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			
 			if (2 == list.size()) {
 				return second(list);
+			}
+			
+			if (3 == list.size() && s.equals(first(x))) {
+				return list.get(2);
 			}
 			
 			throw new IllegalArgumentException();
