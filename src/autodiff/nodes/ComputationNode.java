@@ -5,7 +5,6 @@ import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.BasicNumericVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
 import static multij.tools.Tools.*;
-
 import autodiff.reasoning.deductions.Standard;
 import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.proofs.Deduction;
@@ -17,6 +16,8 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import multij.tools.Pair;
 
 /**
  * @author codistmonk (creation 2016-08-09)
@@ -622,16 +623,14 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				
 				final Object value3 = $("sequence_new", _s, _x, _y);
 				
-				final Object _y2 = $("", $(value3, "otherwise"));
-				final Object _y1 = $("", $(value2, "if", condition2), _y2);
-				final Object _y0 = $("", $(value1, "if", condition1), _y1);
-				
 				bind("definition_of_sequence_append", ",", _x, _x0, _x1, _y);
 				
-				tryCasesIfNot(condition0, value0, _y0);
-				tryCasesIfNot(condition1, value1, _y1);
-				tryCasesIfNot(condition2, value2, _y2);
-				tryCasesOtherwise(value3);
+				new CasesHelper()
+				.addCase(value0, condition0)
+				.addCase(value1, condition1)
+				.addCase(value2, condition2)
+				.addCase(value3)
+				.selectCase(3);
 				
 				{
 					subdeduction();
@@ -668,13 +667,14 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					
 					final Object value3 = $("sequence_new", _s, _x, _y);
 					
-					final Object _y2 = $("", $(value3, "otherwise"));
-					final Object _y1 = $("", $(value2, "if", condition2), _y2);
-					final Object _y0 = $("", $(value1, "if", condition1), _y1);
-					
 					bind("definition_of_sequence_append", ",", _x, _x0, _x1, _y);
 					
-					tryCasesIfStop(condition0, value0, _y0);
+					new CasesHelper()
+					.addCase(value0, condition0)
+					.addCase(value1, condition1)
+					.addCase(value2, condition2)
+					.addCase(value3)
+					.selectCase(0);
 					
 					conclude();
 				}
@@ -699,14 +699,14 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					
 					final Object value3 = $("sequence_new", _s, _x, _y);
 					
-					final Object _y2 = $("", $(value3, "otherwise"));
-					final Object _y1 = $("", $(value2, "if", condition2), _y2);
-					final Object _y0 = $("", $(value1, "if", condition1), _y1);
-					
 					bind("definition_of_sequence_append", ",", _x, _x0, _x1, _y);
 					
-					tryCasesIfNot(condition0, value0, _y0);
-					tryCasesIfStop(condition1, value1, _y1);
+					new CasesHelper()
+					.addCase(value0, condition0)
+					.addCase(value1, condition1)
+					.addCase(value2, condition2)
+					.addCase(value3)
+					.selectCase(1);
 					
 					conclude();
 				}
@@ -739,13 +739,14 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					
 					final Object value3 = $("sequence_new", _s, _x, _y);
 					
-					final Object _y2 = $("", $(value3, "otherwise"));
-					final Object _y1 = $("", $(value2, "if", condition2), _y2);
-					final Object _y0 = $("", $(value1, "if", condition1), _y1);
-					
 					bind("definition_of_sequence_append", ",", _x, _x0, _x1, _y);
 					
-					tryCasesIfStop(condition0, value0, _y0);
+					new CasesHelper()
+					.addCase(value0, condition0)
+					.addCase(value1, condition1)
+					.addCase(value2, condition2)
+					.addCase(value3)
+					.selectCase(0);
 					
 					conclude();
 				}
@@ -773,15 +774,14 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 						
 						final Object value3 = $("sequence_new", _s, _x, _y);
 						
-						final Object _y2 = $("", $(value3, "otherwise"));
-						final Object _y1 = $("", $(value2, "if", condition2), _y2);
-						final Object _y0 = $("", $(value1, "if", condition1), _y1);
-						
 						bind("definition_of_sequence_append", ",", _x, _x0, _x1, _y);
 						
-						tryCasesIfNot(condition0, value0, _y0);
-						tryCasesIfNot(condition1, value1, _y1);
-						tryCasesIfStop(condition2, value2, _y2);
+						new CasesHelper()
+						.addCase(value0, condition0)
+						.addCase(value1, condition1)
+						.addCase(value2, condition2)
+						.addCase(value3)
+						.selectCase(2);
 						
 						conclude();
 					}
@@ -814,14 +814,14 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 						
 						final Object value3 = $("sequence_new", _s, _x, _y);
 						
-						final Object _y2 = $("", $(value3, "otherwise"));
-						final Object _y1 = $("", $(value2, "if", condition2), _y2);
-						final Object _y0 = $("", $(value1, "if", condition1), _y1);
-						
 						bind("definition_of_sequence_append", ",", _x, _x0, _x1, _y);
 						
-						tryCasesIfNot(condition0, value0, _y0);
-						tryCasesIfStop(condition1, value1, _y1);
+						new CasesHelper()
+						.addCase(value0, condition0)
+						.addCase(value1, condition1)
+						.addCase(value2, condition2)
+						.addCase(value3)
+						.selectCase(1);
 						
 						conclude();
 					}
@@ -1713,6 +1713,27 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		conclude();
 	}
 	
+	public static final void tryCasesIf(final Object condition, final Object value) {
+		subdeduction();
+		
+		{
+			subdeduction();
+			
+			bind("try_cases_if", value, condition);
+			
+			// TODO autodetect required verification
+			evaluateStructuralFormula(condition(proposition(-1)));
+			
+			apply(name(-2), name(-1));
+			
+			conclude();
+		}
+		
+		rewrite(name(-2), name(-1));
+		
+		conclude();
+	}
+	
 	public static final void tryCasesIfStop(final Object condition, final Object value, final Object _y) {
 		subdeduction();
 		
@@ -1866,6 +1887,61 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		}
 		
 		private static final long serialVersionUID = 4750503376771325114L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-14)
+	 */
+	public static final class CasesHelper implements Serializable {
+		
+		private final List<Pair<Object, Object>> cases = new ArrayList<>();
+		
+		public final CasesHelper addCase(final Object value) {
+			return this.addCase(value, null);
+		}
+		
+		public final CasesHelper addCase(final Object value, final Object condition) {
+			this.cases.add(new Pair<>(value, condition));
+			
+			return this;
+		}
+		
+		public final void selectCase(final int index) {
+			final int n = this.cases.size();
+			final Object[] continuations = new Object[n - 1];
+			
+			for (int i = n - 2; 0 <= i; --i) {
+				final Pair<Object, Object> nextCase = this.cases.get(i + 1);
+				final Object nextItem = nextCase.getSecond() == null
+						? $(nextCase.getFirst(), "otherwise")
+								: $(nextCase.getFirst(), "if", nextCase.getSecond());
+				
+				if (i == n - 2) {
+					continuations[i] = $("", nextItem);
+				} else {
+					continuations[i] = $("", nextItem, continuations[i + 1]);
+				}
+			}
+			
+			for (int i = 0; i < index; ++i) {
+				final Pair<Object, Object> c = this.cases.get(i);
+				
+				tryCasesIfNot(c.getSecond(), c.getFirst(), continuations[i]);
+			}
+			
+			final Pair<Object, Object> c = this.cases.get(index);
+			
+			if (c.getSecond() == null) {
+				tryCasesOtherwise(c.getFirst());
+			} else if (continuations[index] == null) {
+				tryCasesIf(c.getSecond(), c.getFirst());
+			} else {
+				tryCasesIfStop(c.getSecond(), c.getFirst(), continuations[index]);
+			}
+		}
+		
+		private static final long serialVersionUID = -598430379891995844L;
 		
 	}
 	
