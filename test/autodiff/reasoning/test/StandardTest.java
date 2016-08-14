@@ -61,7 +61,7 @@ public final class StandardTest {
 			
 			final Goal goal = Goal.deduce($equality("a", "a"));
 			
-			bind("identity", (Object) $("a"));
+			bind("identity", $("a"));
 			
 			goal.conclude();
 		});
@@ -78,7 +78,7 @@ public final class StandardTest {
 			
 			final Goal goal = Goal.deduce($rule("a", "a"));
 			
-			bind("recall", (Object) $("a"));
+			bind("recall", $("a"));
 			
 			goal.conclude();
 		});

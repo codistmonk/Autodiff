@@ -6,9 +6,9 @@ import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.BasicNumericVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
 import static multij.tools.Tools.*;
-
 import autodiff.reasoning.deductions.Standard;
 import autodiff.reasoning.expressions.ExpressionVisitor;
+import autodiff.reasoning.proofs.BasicNumericVerification;
 import autodiff.reasoning.proofs.Deduction;
 
 import java.io.Serializable;
@@ -473,7 +473,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				suppose("try_cases_if_stop",
 						$forall(_x, _y, _c,
 								$rule(_c,
-										$(cases($(_x, "if", _c), _y), "=", _x))));
+										$($("cases", $("", $(_x, "if", _c), _y)), "=", _x))));
 			}
 			
 			{
@@ -484,8 +484,103 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				suppose("try_cases_if_not",
 						$forall(_x, _y, _c,
 								$rule($(LNOT, _c),
-										$(cases($("", $(_x, "if", _c)), _y), "=", $("cases", _y)))));
+										$($("cases", $("", $(_x, "if", _c), _y)), "=", $("cases", _y)))));
 			}
+			
+			{
+				subdeduction("try_cases.test1");
+				
+				final Object _x = $new("x");
+				
+				suppose($(_x, "=", cases(
+						$(42, "if", $(2, "=", 2)),
+						$(24, "otherwise"))));
+				
+				{
+					subdeduction();
+					
+					bind("try_cases_if_stop", 42, $("", $(24, "otherwise")), $(2, "=", 2));
+					verifyBasicNumericProposition($(2, "=", 2));
+					apply(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+			}
+			
+			{
+				subdeduction("try_cases.test2");
+				
+				final Object _x = $new("x");
+				
+				suppose($(_x, "=", cases(
+						$(42, "if", $(2, "=", 3)),
+						$(24, "if", $(1, "=", 2)),
+						$(0, "otherwise"))));
+				
+				debugPrint(proposition(-1));
+				
+				{
+					subdeduction();
+					
+					{
+						subdeduction();
+						
+						bind("try_cases_if_not", 42, $("", $(24, "if", $(1, "=", 2)), $("", $(0, "otherwise"))), $(2, "=", 3));
+						verifyBasicNumericProposition($(2, "=", 3));
+						apply(name(-2), name(-1));
+						
+						conclude();
+					}
+					
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				debugPrint(proposition(-1));
+				
+				{
+					subdeduction();
+					
+					{
+						subdeduction();
+						
+						bind("try_cases_if_not", 24, $("", $(0, "otherwise")), $(1, "=", 2));
+						verifyBasicNumericProposition($(1, "=", 2));
+						apply(name(-2), name(-1));
+						
+						conclude();
+					}
+					
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				{
+					subdeduction();
+					
+					{
+						subdeduction();
+						
+						bind("try_cases_otherwise", 0);
+						
+						conclude();
+					}
+					
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				conclude();
+			}
+			
+			abort();
 			
 			{
 				final Object _s = $new("s");

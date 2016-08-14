@@ -27,13 +27,9 @@ public final class BasicNumericVerification extends Proof.Abstract {
 		final Object verification = Verifier.INSTANCE.apply(this.proposition);
 		
 		if (!(Boolean) verification) {
-			throw new IllegalArgumentException("Invalid: " + this.proposition + " verification: " + verification);
+			return $(LNOT, this.proposition);
 		}
 		
-		return this.getProvedProposition();
-	}
-	
-	public final Object getProvedProposition() {
 		return this.proposition;
 	}
 	

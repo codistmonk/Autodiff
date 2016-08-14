@@ -4,9 +4,10 @@ import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.BasicNumericVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
 
-import org.junit.Test;
-
 import autodiff.reasoning.proofs.BasicNumericVerification.BinaryOperator;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author codistmonk (creation 2016-01-30)
@@ -53,37 +54,49 @@ public final class BasicNumericVerificationTest {
 		});
 	}
 	
-	@Test(expected=Exception.class)
+	@Test
 	public final void testKO1() {
 		StandardTest.build(new Runnable() {
 			
 			@Override
 			public final void run() {
-				verifyBasicNumericProposition($equality(2, 3));
+				final Object proposition = $equality(2, 3);
+				
+				verifyBasicNumericProposition(proposition);
+				
+				Assert.assertEquals($(LNOT, proposition), proposition(-1));
 			}
 			
 		});
 	}
 	
-	@Test(expected=Exception.class)
+	@Test
 	public final void testKO2() {
 		StandardTest.build(new Runnable() {
 			
 			@Override
 			public final void run() {
-				verifyBasicNumericProposition($equality(1, "1"));
+				final Object proposition = $equality(1, "1");
+				
+				verifyBasicNumericProposition(proposition);
+				
+				Assert.assertEquals($(LNOT, proposition), proposition(-1));
 			}
 			
 		});
 	}
 	
-	@Test(expected=Exception.class)
+	@Test
 	public final void testKO3() {
 		StandardTest.build(new Runnable() {
 			
 			@Override
 			public final void run() {
-				verifyBasicNumericProposition($(2.5, "∈", N));
+				final Object proposition = $(2.5, "∈", N);
+				
+				verifyBasicNumericProposition(proposition);
+				
+				Assert.assertEquals($(LNOT, proposition), proposition(-1));
 			}
 			
 		});
