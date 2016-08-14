@@ -627,6 +627,43 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				new SequenceAppendHelper(_s, _x, _y).compute("sequence_append.test3");
 			}
 			
+			{
+				final Object _X = $new("X");
+				final Object _Y = $new("Y");
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				
+				suppose("type_of_tuple2",
+						$(FORALL, _X, ",", _Y, IN, U,
+								$(FORALL, _x, IN, _X,
+										$(FORALL, _y, IN, _Y,
+												$($("sequence_append", ",", _x, _y), IN, $("sequence_append", CROSS, _X, _Y))))));
+			}
+			
+			{
+				subdeduction("type_of_tuple2.test1");
+				
+				{
+					subdeduction();
+					
+					ebind("type_of_tuple2", N, N, 1, 2);
+					trimLast();
+					
+					conclude();
+				}
+				
+				final List<?> _x = list(left(proposition(-1)));
+				final List<?> _X = list(right(proposition(-1)));
+				
+				new SequenceAppendHelper(_x.get(1), _x.get(2), _x.get(3)).compute();
+				rewrite(name(-2), name(-1));
+				
+				new SequenceAppendHelper(_X.get(1), _X.get(2), _X.get(3)).compute();
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+			}
+			
 			abort();
 			
 //			{
