@@ -25,17 +25,17 @@ public final class Simple {
 		throw new IllegalInstantiationException();
 	}
 	
-	private static String groupStart = "(";
+	private static Object groupStart = "(";
 	
-	private static String groupEnd = ")";
+	private static Object groupEnd = ")";
 	
-	private static String implies = Expressions.IMPLIES;
+	private static Object implies = Expressions.IMPLIES;
 	
-	public static final synchronized String getGroupStart() {
+	public static final synchronized Object getGroupStart() {
 		return groupStart;
 	}
 	
-	public static final synchronized String getGroupEnd() {
+	public static final synchronized Object getGroupEnd() {
 		return groupEnd;
 	}
 	
@@ -44,7 +44,7 @@ public final class Simple {
 		Simple.groupEnd = groupEnd;
 	}
 	
-	public static final synchronized String getImplies() {
+	public static final synchronized Object getImplies() {
 		return implies;
 	}
 	
@@ -157,7 +157,7 @@ public final class Simple {
 	}
 	
 	public static final synchronized String group(final Object object) {
-		return groupStart + object + groupEnd;
+		return "" + groupStart + object + groupEnd;
 	}
 	
 }

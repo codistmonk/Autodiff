@@ -6,13 +6,12 @@ import static autodiff.reasoning.proofs.Stack.*;
 import static multij.tools.Tools.debugPrint;
 import static org.junit.Assert.*;
 
-import java.util.List;
-
 import autodiff.nodes.ComputationNode;
 import autodiff.nodes.Data;
 import autodiff.nodes.Node;
 import autodiff.reasoning.deductions.Standard;
-import multij.tools.Tools;
+
+import java.util.List;
 
 import org.junit.Test;
 

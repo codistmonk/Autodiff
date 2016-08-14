@@ -26,17 +26,17 @@ public final class Expressions {
 		throw new IllegalInstantiationException();
 	}
 	
-	public static final String FORALL = $("∀");
+	public static final Object FORALL = $("∀");
 	
-	public static final String IMPLIES = $("⇒");
+	public static final Object IMPLIES = $("⇒");
 	
-	public static final String EQUALS = $("=");
+	public static final Object EQUALS = $("=");
 	
-	public static final String GIVEN = $("|");
+	public static final Object GIVEN = $("|");
 	
-	public static final String AND = $(",");
+	public static final Object AND = $(",");
 	
-	public static final String AT = $("@");
+	public static final Object AT = $("@");
 	
 	public static final Object LAND = $("∧");
 	
@@ -46,21 +46,20 @@ public final class Expressions {
 		return $(new Id(name));
 	}
 	
-	@SuppressWarnings("unchecked")
-	public static final <T> T $(final Object... objects) {
+	public static final Object $(final Object... objects) {
 		if (objects.length == 1) {
-			return (T) objects[0];
+			return objects[0];
 		}
 		
 		if (objects.length <= 1) {
-			return (T) Arrays.asList(objects);
+			return Arrays.asList(objects);
 		}
 		
-		return (T) Arrays.stream(objects).map(Expressions::$).collect(toList());
+		return Arrays.stream(objects).map(Expressions::$).collect(toList());
 	}
 	
 	public static final List<Object> $forall(final Object variableOrName) {
-		return $(FORALL, $(variableOrName));
+		return list($(FORALL, $(variableOrName)));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -81,7 +80,7 @@ public final class Expressions {
 	}
 	
 	public static final List<Object> $equality(final Object left, final Object right) {
-		return $(left, EQUALS, right);
+		return list($(left, EQUALS, right));
 	}
 	
 	public static final List<Object> $list(final Object... objects) {

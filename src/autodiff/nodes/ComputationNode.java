@@ -340,13 +340,17 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	
 	public static final SequenceBuilder SB_CROSS = new SequenceBuilder(CROSS);
 	
+	public static final Object cases(final Object... cases) {
+		return new SequenceBuilder("").build(append(array((Object) "cases"), cases));
+	}
+	
 	public static final Deduction AUTODIFF = Standard.build("autodiff", new Runnable() {
 		
 		@Override
 		public final void run() {
 			Standard.setup();
 			
-			debugPrint(SB_COMMA.build((Object) $("a", "b", "c")));
+			debugPrint(SB_COMMA.build($("a", "b", "c")));
 			debugPrint(SB_COMMA.build(1));
 			debugPrint(SB_COMMA.build(1, 2));
 			debugPrint(SB_COMMA.build(1, 2, 3));
@@ -374,6 +378,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			supposeNaturalsSubsetReals();
 			deduceNaturalsInUhm();
 			supposeDefinitionOfPositives();
+			
 			{
 				final Object _i = $new("i");
 				final Object _n = $new("n");
@@ -384,6 +389,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 										$($(_i, IN, $(N, "_", $("<", _n))),
 												"=", $($(_i, IN, N), LAND, $(_i, "<", _n))))));
 			}
+			
 			{
 				final Object _i = $new("i");
 				final Object _x = $new("x");
@@ -395,6 +401,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 									$rule($(p(_x, ",", _y), IN, $($(_X, "^", _i), CROSS, _X)),
 											$($(p(_x, ",", _y), "_", _i), "=", _y))));
 			}
+			
 			supposeTransitivityOfSubset();
 			deducePositivesSubsetNaturals();
 			deducePositivesInUhm();
@@ -446,7 +453,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				
 				suppose("try_cases_otherwise",
 						$forall(_x,
-								$("cases", $("", $(_x, "otherwise"))), "=", _x));
+								$(cases($(_x, "otherwise")), "=", _x)));
 			}
 			
 			{
@@ -455,7 +462,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				
 				suppose("try_cases_if",
 						$forall(_x, _c,
-								$rule(_c, $("cases", $("", $(_x, "if", _c))), "=", _x)));
+								$rule(_c, $(cases($(_x, "if", _c)), "=", _x))));
 			}
 			
 			{
@@ -466,7 +473,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				suppose("try_cases_if_stop",
 						$forall(_x, _y, _c,
 								$rule(_c,
-										$($("cases", $("", $(_x, "if", _c), _y)), "=", _x))));
+										$(cases($(_x, "if", _c), _y), "=", _x))));
 			}
 			
 			{
@@ -477,7 +484,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				suppose("try_cases_if_not",
 						$forall(_x, _y, _c,
 								$rule($(LNOT, _c),
-										$($("cases", $("", $(_x, "if", _c), _y)), "=", $("cases", _y)))));
+										$(cases($("", $(_x, "if", _c)), _y), "=", $("cases", _y)))));
 			}
 			
 			{
@@ -489,7 +496,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				
 				suppose("definition_of_sequence_append",
 						$forall(_s, _x, _x0, _x1, _y,
-								$($("sequence_append", _s, _x, _y), "=", $("cases",
+								$($("sequence_append", _s, _x, _y), "=", cases(
 										$($("sequence_new", _s, _x0, $("sequence_append", _s, _x1, _y)), "if", $(_x, "=", $("sequence_new", _s, _x0, _x1))),
 										$($(_s, _x0, $("sequence_append", _s, _x1, _y)), "if", $(_x, "=", $(_s, _x0, _x1))),
 										$($("sequence_new", _s, _x, _y), "otherwise")))));
@@ -629,9 +636,9 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		final Object i = $new("i");
 		
 		result.setDefinition(
-				$(FORALL, n, IN, POS,
+				list($(FORALL, n, IN, POS,
 						$(FORALL, s, IN, $(POS, "^", n),
-								$($("ones", " ", s), "=", p($(p(1), "_", $(i, "<", $(PI, s))), ",", s)))));
+								$($("ones", " ", s), "=", p($(p(1), "_", $(i, "<", $(PI, s))), ",", s))))));
 		
 		result.set("s", null);
 		
@@ -661,7 +668,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				{
 					subdeduction();
 					
-					ebindLast((Object) $(result.get("n")));
+					ebindLast($(result.get("n")));
 					eapplyLast();
 					
 					canonicalizeForallIn(name(-1));
@@ -744,11 +751,11 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	}
 	
 	public static final List<Object> p(final Object... objects) {
-		return $("(", $(objects), ")");
+		return list($("(", $(objects), ")"));
 	}
 	
 	public static final List<Object> c(final Object... objects) {
-		return $("{", $(objects), "}");
+		return list($("{", $(objects), "}"));
 	}
 	
 	public static final void deducePositivity(final Object target) {
@@ -1107,7 +1114,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			conclude();
 		}
 		
-		bind("logical_equality", (Object) $(_X, LAND, _Y), $(_Y, LAND, _X));
+		bind("logical_equality", $(_X, LAND, _Y), $(_Y, LAND, _X));
 		trimLast();
 		
 		conclude();
@@ -1216,7 +1223,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		suppose("cartesian_m_n",
 				$(FORALL, _X, IN, U,
 						$(FORALL, _m, ",", _n, IN, POS,
-								$(SB_CROSS.build($(_X, "^", _m), $(_X, "^", _n)), "=", SB_CROSS.build((Object) $(_X, "^", $(_m, "+", _n)))))));
+								$(SB_CROSS.build($(_X, "^", _m), $(_X, "^", _n)), "=", SB_CROSS.build($(_X, "^", $(_m, "+", _n)))))));
 	}
 	
 	public static final void deducePositivesInUhm() {
@@ -1295,7 +1302,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 						trimLast();
 						
 						ebind("type_of_tuple",
-								(Object) $(POS, "^", m), $(POS, "^", n), x, y);
+								$(POS, "^", m), $(POS, "^", n), x, y);
 						
 						eapplyLast();
 						
@@ -1432,16 +1439,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		}
 		
 		public final Object build(final Object... elements) {
-			if (false) {
-				Object result = elements[0];
-				
-				for (int i = 1; i < elements.length; ++i) {
-					result = Arrays.asList(result, this.getSeparator(), elements[i]);
-				}
-				
-				return result;
-			}
-			
 			if (elements.length == 1) {
 				return elements[0];
 			}
