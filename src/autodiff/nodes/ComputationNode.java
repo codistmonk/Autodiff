@@ -6,10 +6,10 @@ import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.BasicNumericVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
 import static multij.tools.Tools.*;
+
 import autodiff.reasoning.deductions.Standard;
 import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.proofs.Deduction;
-import multij.tools.Tools;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -323,10 +323,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	public static final Object SUBSET = $("⊂");
 	
 	public static final Object EQUIV = $("⇔");
-	
-	public static final Object LAND = $("∧");
-	
-	public static final Object LNOT = $("¬");
 	
 	public static final Object P = $("ℙ");
 	

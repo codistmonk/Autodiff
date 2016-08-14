@@ -23,7 +23,7 @@ public final class StructuralEvaluationTest {
 					
 					evaluateStructuralFormula(proposition);
 					
-					Assert.assertEquals($(proposition, "=", true), proposition(-1));
+					Assert.assertEquals(proposition, proposition(-1));
 				}
 				
 				{
@@ -31,7 +31,7 @@ public final class StructuralEvaluationTest {
 					
 					evaluateStructuralFormula(proposition);
 					
-					Assert.assertEquals($(proposition, "=", false), proposition(-1));
+					Assert.assertEquals($(LNOT, proposition), proposition(-1));
 				}
 			}
 			

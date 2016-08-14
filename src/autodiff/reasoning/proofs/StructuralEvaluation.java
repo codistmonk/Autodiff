@@ -37,7 +37,7 @@ public final class StructuralEvaluation extends Abstract {
 		@Override
 		public final Object visit(final List<?> expression) {
 			if (3 == expression.size() && MATCH.equals(operator(expression))) {
-				return $(expression, "=", new Substitution.ExpressionEquality().apply(left(expression), right(expression)));
+				return new Substitution.ExpressionEquality().apply(left(expression), right(expression)) ? expression : $(LNOT, expression);
 			}
 			
 			throw new IllegalArgumentException();
