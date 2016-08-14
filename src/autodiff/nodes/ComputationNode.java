@@ -1,14 +1,13 @@
 package autodiff.nodes;
 
-import static autodiff.reasoning.deductions.Standard.rewrite;
-import static autodiff.reasoning.deductions.Standard.rewriteRight;
+import static autodiff.reasoning.deductions.Standard.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.BasicNumericVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
 import static multij.tools.Tools.*;
+
 import autodiff.reasoning.deductions.Standard;
 import autodiff.reasoning.expressions.ExpressionVisitor;
-import autodiff.reasoning.proofs.BasicNumericVerification;
 import autodiff.reasoning.proofs.Deduction;
 
 import java.io.Serializable;
@@ -490,7 +489,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			{
 				subdeduction("try_cases.test1");
 				
-				final Object _x = $new("x");
+				final Object _x = forall("x");
 				
 				suppose($(_x, "=", cases(
 						$(42, "if", $(2, "=", 2)),
@@ -514,7 +513,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			{
 				subdeduction("try_cases.test2");
 				
-				final Object _x = $new("x");
+				final Object _x = forall("x");
 				
 				suppose($(_x, "=", cases(
 						$(42, "if", $(2, "=", 3)),
@@ -580,8 +579,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				conclude();
 			}
 			
-			abort();
-			
 			{
 				final Object _s = $new("s");
 				final Object _x = $new("x");
@@ -589,13 +586,102 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				final Object _x1 = $new("x1");
 				final Object _y = $new("y");
 				
+				final Object value0 = $("sequence_new", _s, _x0, $("sequence_append", _s, _x1, _y));
+				final Object value1 = $(_s, _x0, $("sequence_append", _s, _x1, _y));
+				final Object value2 = $("sequence_new", _s, _x, _y);
+				final Object condition0 = $(_x, ":=:", $("sequence_new", _s, _x0, _x1));
+				final Object condition1 = $(_x, ":=:", $(_s, _x0, _x1));
+				
 				suppose("definition_of_sequence_append",
 						$forall(_s, _x, _x0, _x1, _y,
 								$($("sequence_append", _s, _x, _y), "=", cases(
-										$($("sequence_new", _s, _x0, $("sequence_append", _s, _x1, _y)), "if", $(_x, "=", $("sequence_new", _s, _x0, _x1))),
-										$($(_s, _x0, $("sequence_append", _s, _x1, _y)), "if", $(_x, "=", $(_s, _x0, _x1))),
-										$($("sequence_new", _s, _x, _y), "otherwise")))));
+										$(value0, "if", condition0),
+										$(value1, "if", condition1),
+										$(value2, "otherwise")))));
 			}
+			
+			{
+				subdeduction("sequence_append.test1");
+				
+				final Object _x = 1;
+				final Object _s = ",";
+				final Object _x0 = "()";
+				final Object _x1 = "()";
+				final Object _y = 2;
+				
+				final Object value0 = $("sequence_new", _s, _x0, $("sequence_append", _s, _x1, _y));
+				final Object value1 = $(_s, _x0, $("sequence_append", _s, _x1, _y));
+				final Object value2 = $("sequence_new", _s, _x, _y);
+				final Object condition0 = $(_x, ":=:", $("sequence_new", _s, _x0, _x1));
+				final Object condition1 = $(_x, ":=:", $(_s, _x0, _x1));
+				
+				final Object _y1 = $("", $(value2, "otherwise"));
+				final Object _y0 = $("", $(value1, "if", condition1), _y1);
+				
+				{
+					subdeduction();
+					
+					
+					bind("definition_of_sequence_append", ",", _x, _x0, _x1, _y);
+					
+					{
+						subdeduction();
+						
+						bind("try_cases_if_not", value0, _y0, condition0);
+						evaluateStructuralFormula(list(condition(proposition(-1))).get(1));
+						apply(name(-2), name(-1));
+						
+						conclude();
+					}
+					
+					debugPrint(right(proposition(-2)));
+					debugPrint(left(proposition(-1)));
+					
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				{
+					subdeduction();
+					
+					{
+						subdeduction();
+						
+						bind("try_cases_if_not", value1, _y1, condition1);
+						evaluateStructuralFormula(list(condition(proposition(-1))).get(1));
+						apply(name(-2), name(-1));
+						
+						conclude();
+					}
+					
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				{
+					subdeduction();
+					
+					bind("try_cases_otherwise", value2);
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				{
+					subdeduction();
+					
+					bind("definition_of_sequence_new", _s, _x, _y);
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				conclude();
+			}
+			
+			abort();
 			
 //			{
 //				final Object _s = $new("s");
