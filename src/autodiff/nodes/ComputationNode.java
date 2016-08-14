@@ -606,13 +606,11 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			{
 				subdeduction("sequence_append.test1");
 				
-				final Object _x = 1;
 				final Object _s = ",";
-				final Object _x0 = "()";
-				final Object _x1 = "()";
+				final Object _x = 1;
 				final Object _y = 2;
 				
-				new SequenceAppendHelper(_s, _x, _x0, _x1, _y).compute(3);
+				new SequenceAppendHelper(_s, _x, _y).compute(3);
 				
 				conclude();
 			}
@@ -620,19 +618,17 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			{
 				subdeduction("sequence_append.test2");
 				
+				final Object _s = ",";
+				
 				{
 					final Object _x = SB_COMMA.build(1, 2);
-					final Object _s = ",";
-					final Object _x0 = 1;
-					final Object _x1 = $(",", 2);
 					final Object _y = 3;
 					
-					new SequenceAppendHelper(_s, _x, _x0, _x1, _y).compute(0);
+					new SequenceAppendHelper(_s, _x, _y).compute(0);
 				}
 				
 				{
 					final Object _x = $(",", 2);
-					final Object _s = ",";
 					final Object _x0 = 2;
 					final Object _x1 = "()";
 					final Object _y = 3;
@@ -648,14 +644,13 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			{
 				subdeduction("sequence_append.test3");
 				
+				final Object _s = ",";
+				
 				{
 					final Object _x = SB_COMMA.build(1, 2, 3);
-					final Object _s = ",";
-					final Object _x0 = 1;
-					final Object _x1 = $(",", 2, $(",", 3));
 					final Object _y = 4;
 					
-					new SequenceAppendHelper(_s, _x, _x0, _x1, _y).compute(0);
+					new SequenceAppendHelper(_s, _x, _y).compute(0);
 				}
 				
 				{
@@ -663,7 +658,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					
 					{
 						final Object _x = $(",", 2, $(",", 3));
-						final Object _s = ",";
 						final Object _x0 = 2;
 						final Object _x1 = $(",", 3);
 						final Object _y = 4;
@@ -681,7 +675,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					
 					{
 						final Object _x = $(",", 3);
-						final Object _s = ",";
 						final Object _x0 = 3;
 						final Object _x1 = "()";
 						final Object _y = 4;
@@ -1837,6 +1830,10 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		
 		private final Object value3;
 		
+		public SequenceAppendHelper(final Object s, final Object x, final Object y) {
+			this(s, x, x0(x), x1(x), y);
+		}
+		
 		public SequenceAppendHelper(final Object s, final Object x, final Object x0,
 				final Object x1, final Object y) {
 			this.s = s;
@@ -1882,6 +1879,34 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		}
 		
 		private static final long serialVersionUID = 1480975513598301733L;
+		
+		public static final Object x0(final Object x) {
+			final List<?> list = cast(List.class, x);
+			
+			if (list == null) {
+				return $("()");
+			}
+			
+			if (2 == list.size()) {
+				return first(list);
+			}
+			
+			throw new IllegalArgumentException();
+		}
+		
+		public static final Object x1(final Object x) {
+			final List<?> list = cast(List.class, x);
+			
+			if (list == null) {
+				return $("()");
+			}
+			
+			if (2 == list.size()) {
+				return second(list);
+			}
+			
+			throw new IllegalArgumentException();
+		}
 		
 	}
 	
