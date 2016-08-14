@@ -33,7 +33,7 @@ public final class BasicNumericVerification extends Proof.Abstract {
 		return this.getProvedProposition();
 	}
 	
-	public final synchronized Object getProvedProposition() {
+	public final Object getProvedProposition() {
 		return this.proposition;
 	}
 	

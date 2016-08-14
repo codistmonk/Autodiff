@@ -183,6 +183,8 @@ public final class Deduction extends Proof.Abstract {
 	
 	@SuppressWarnings("unchecked")
 	public static final Collection<Class<? extends Proof>> PRIMITIVE_PROOFS = unmodifiableSet(Tools.set(
-			ModusPonens.class, Substitution.class, Binding.class, BasicNumericVerification.class, Deduction.class));
+			ModusPonens.class, Substitution.class, Binding.class,
+			BasicNumericVerification.class, StructuralEvaluation.class,
+			Deduction.class));
 	
 }
