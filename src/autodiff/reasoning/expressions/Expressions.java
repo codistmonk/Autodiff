@@ -213,6 +213,14 @@ public final class Expressions {
 		return list(binaryOperation).get(2);
 	}
 	
+	public static final Object first(final Object pair) {
+		return list(pair).get(0);
+	}
+	
+	public static final Object second(final Object pair) {
+		return list(pair).get(1);
+	}
+	
 	public static final boolean isSubstitution(final Object object) {
 		final List<?> expression = cast(List.class, object);
 		
