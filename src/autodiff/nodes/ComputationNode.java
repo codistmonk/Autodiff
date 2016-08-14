@@ -326,6 +326,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	
 	public static final Object LAND = $("∧");
 	
+	public static final Object LNOT = $("¬");
+	
 	public static final Object P = $("ℙ");
 	
 	public static final Object CROSS = $("×");
@@ -444,20 +446,95 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			}
 			
 			{
-				final Object _s = $new("s");
 				final Object _x = $new("x");
-				final Object _y = $new("y");
-				final Object _z = $new("z");
 				
-				suppose("definition_of_sequence_append",
-						$forall(_s, _x, _y, _z,
-								$($("sequence_append", _s, $(_x, $(_s, _y)), _z), "=", $(_x, $(_s, _y, $(_s, _z))))));
+				suppose("try_cases_otherwise",
+						$forall(_x,
+								$("cases", $("", $(_x, "otherwise"))), "=", _x));
 			}
 			
 			{
 				final Object _x = $new("x");
+				final Object _c = $new("c");
 				
-				suppose("definition_of_repetition_0",
+				suppose("try_cases_if",
+						$forall(_x, _c,
+								$rule(_c, $("cases", $("", $(_x, "if", _c))), "=", _x)));
+			}
+			
+			{
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				final Object _c = $new("c");
+				
+				suppose("try_cases_if_stop",
+						$forall(_x, _y, _c,
+								$rule(_c,
+										$($("cases", $("", $(_x, "if", _c), _y)), "=", _x))));
+			}
+			
+			{
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				final Object _c = $new("c");
+				
+				suppose("try_cases_if_not",
+						$forall(_x, _y, _c,
+								$rule($(LNOT, _c),
+										$($("cases", $("", $(_x, "if", _c), _y)), "=", $("cases", _y)))));
+			}
+			
+			{
+				final Object _s = $new("s");
+				final Object _x = $new("x");
+				final Object _x0 = $new("x0");
+				final Object _x1 = $new("x1");
+				final Object _y = $new("y");
+				
+				suppose("definition_of_sequence_append",
+						$forall(_s, _x, _x0, _x1, _y,
+								$($("sequence_append", _s, _x, _y), "=", $("cases",
+										$($("sequence_new", _s, _x0, $("sequence_append", _s, _x1, _y)), "if", $(_x, "=", $("sequence_new", _s, _x0, _x1))),
+										$($(_s, _x0, $("sequence_append", _s, _x1, _y)), "if", $(_x, "=", $(_s, _x0, _x1))),
+										$($("sequence_new", _s, _x, _y), "otherwise")))));
+			}
+			
+//			{
+//				final Object _s = $new("s");
+//				final Object _x = $new("x");
+//				final Object _z = $new("z");
+//				
+//				suppose("definition_of_sequence_append_0",
+//						$forall(_s, _x, _z,
+//								$($("sequence_append", _s, _x, _z), "=", $("sequence_new", _s, _x, _z))));
+//			}
+//			
+//			{
+//				final Object _s = $new("s");
+//				final Object _x = $new("x");
+//				final Object _y = $new("y");
+//				final Object _z = $new("z");
+//				
+//				suppose("definition_of_sequence_append_n",
+//						$forall(_s, _x, _y, _z,
+//								$($("sequence_append", _s, $(_s, _x, _y), _z), "=", $(_s, _x, $("sequence_append", _s, _y, _z)))));
+//			}
+//			
+//			{
+//				final Object _s = $new("s");
+//				final Object _x = $new("x");
+//				final Object _y = $new("y");
+//				final Object _z = $new("z");
+//				
+//				suppose("definition_of_sequence_append",
+//						$forall(_s, _x, _y, _z,
+//								$($("sequence_append", _s, $(_x, $(_s, _y)), _z), "=", $("sequence_new", _s, _x, $("sequence_append", _s, _y, _z)))));
+//			}
+			
+			{
+				final Object _x = $new("x");
+				
+				suppose("definition_of_repeat_0",
 						$forall(_x,
 								$($("repeat", 0, _x), "=", _x)));
 			}
@@ -466,7 +543,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				final Object _x = $new("x");
 				final Object _n = $new("n");
 				
-				suppose("definition_of_repetition_n",
+				suppose("definition_of_repeat_n",
 						$forall(_x,
 								$(FORALL, _n, IN, POS,
 										$($("repeat", _n, _x), "=", $(_x, $("repeat", $(_n, "-", 1), _x))))));
@@ -506,6 +583,39 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				suppose("definition_of_zip_n",
 						$forall(_x0, _x1, _sx, _y0, _y1, _sy,
 								$($("zip", _f, _sx, _sy, $(_sx, _x0, _x1), $(_sy, _y0, _y1)), "=", $($(_f, _x0, _y0), $("zip", _f, _sx, _sy, _x1, _y1)))));
+			}
+			
+			{
+				final Object _f = $new("f");
+				final Object _x0 = $new("x0");
+				final Object _x1 = $new("x1");
+				final Object _sx = $new("sx");
+				final Object _y0 = $new("y0");
+				final Object _y1 = $new("y1");
+				final Object _sy = $new("sy");
+				
+				suppose("definition_of_zip_begin",
+						$forall(_x0, _x1, _sx, _y0, _y1, _sy,
+								$($("zip", _f, _sx, _sy, $(_x0, $(_sx, _x1)), $(_y0, $(_sy, _y1))), "=", $($(_f, _x0, _y0), $("zip", _f, _sx, _sy, _x1, _y1)))));
+			}
+			
+			{
+				final Object _f = $new("f");
+				final Object _x0 = $new("x0");
+				final Object _x1 = $new("x1");
+				
+				suppose("definition_of_reduce_0",
+						$forall(_f, _x0, _x0,
+								$($("reduce", _f, $(_x0, _x1)), "=", $(_f, _x0, _x1))));
+			}
+			
+			{
+				final Object _x = $new("x");
+				final Object _X = $new("X");
+				
+				suppose("definition_of_cross_type",
+						$forall(_x, _X,
+								$rule($("reduce", LAND, $("zip", IN, ",", CROSS, _x, _X)), $(_x, IN, _X))));
 			}
 			
 			supposeDefinitionOfProductLoop0();
