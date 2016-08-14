@@ -628,68 +628,10 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				
 				bind("definition_of_sequence_append", ",", _x, _x0, _x1, _y);
 				
-				{
-					subdeduction();
-					
-					{
-						subdeduction();
-						
-						bind("try_cases_if_not", value0, _y0, condition0);
-						evaluateStructuralFormula(list(condition(proposition(-1))).get(1));
-						apply(name(-2), name(-1));
-						
-						conclude();
-					}
-					
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-				}
-				
-				{
-					subdeduction();
-					
-					{
-						subdeduction();
-						
-						bind("try_cases_if_not", value1, _y1, condition1);
-						evaluateStructuralFormula(list(condition(proposition(-1))).get(1));
-						apply(name(-2), name(-1));
-						
-						conclude();
-					}
-					
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-				}
-				
-				{
-					subdeduction();
-					
-					{
-						subdeduction();
-						
-						bind("try_cases_if_not", value2, _y2, condition2);
-						evaluateStructuralFormula(second(condition(proposition(-1))));
-						apply(name(-2), name(-1));
-						
-						conclude();
-					}
-					
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-				}
-				
-				{
-					subdeduction();
-					
-					bind("try_cases_otherwise", value3);
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-				}
+				tryCasesIfNot(condition0, value0, _y0);
+				tryCasesIfNot(condition1, value1, _y1);
+				tryCasesIfNot(condition2, value2, _y2);
+				tryCasesOtherwise(value3);
 				
 				{
 					subdeduction();
@@ -732,17 +674,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					
 					bind("definition_of_sequence_append", ",", _x, _x0, _x1, _y);
 					
-					{
-						subdeduction();
-						
-						bind("try_cases_if_stop", value0, _y0, condition0);
-						evaluateStructuralFormula(condition(proposition(-1)));
-						apply(name(-2), name(-1));
-						
-						conclude();
-					}
-					
-					rewrite(name(-2), name(-1));
+					tryCasesIfStop(condition0, value0, _y0);
 					
 					conclude();
 				}
@@ -773,41 +705,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					
 					bind("definition_of_sequence_append", ",", _x, _x0, _x1, _y);
 					
-					{
-						subdeduction();
-						
-						{
-							subdeduction();
-							
-							bind("try_cases_if_not", value0, _y0, condition0);
-							evaluateStructuralFormula(second(condition(proposition(-1))));
-							apply(name(-2), name(-1));
-							
-							conclude();
-						}
-						
-						rewrite(name(-2), name(-1));
-						
-						conclude();
-					}
-					
-					{
-						subdeduction();
-						
-						{
-							subdeduction();
-							
-							bind("try_cases_if_stop", value1, _y1, condition1);
-							evaluateStructuralFormula(condition(proposition(-1)));
-							apply(name(-2), name(-1));
-							
-							conclude();
-						}
-						
-						rewrite(name(-2), name(-1));
-						
-						conclude();
-					}
+					tryCasesIfNot(condition0, value0, _y0);
+					tryCasesIfStop(condition1, value1, _y1);
 					
 					conclude();
 				}
@@ -846,17 +745,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					
 					bind("definition_of_sequence_append", ",", _x, _x0, _x1, _y);
 					
-					{
-						subdeduction();
-						
-						bind("try_cases_if_stop", value0, _y0, condition0);
-						evaluateStructuralFormula(condition(proposition(-1)));
-						apply(name(-2), name(-1));
-						
-						conclude();
-					}
-					
-					rewrite(name(-2), name(-1));
+					tryCasesIfStop(condition0, value0, _y0);
 					
 					conclude();
 				}
@@ -890,59 +779,9 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 						
 						bind("definition_of_sequence_append", ",", _x, _x0, _x1, _y);
 						
-						{
-							subdeduction();
-							
-							{
-								subdeduction();
-								
-								bind("try_cases_if_not", value0, _y0, condition0);
-								evaluateStructuralFormula(second(condition(proposition(-1))));
-								apply(name(-2), name(-1));
-								
-								conclude();
-							}
-							
-							rewrite(name(-2), name(-1));
-							
-							conclude();
-						}
-						
-						{
-							subdeduction();
-							
-							{
-								subdeduction();
-								
-								bind("try_cases_if_not", value1, _y1, condition1);
-								evaluateStructuralFormula(second(condition(proposition(-1))));
-								apply(name(-2), name(-1));
-								
-								conclude();
-							}
-							
-							rewrite(name(-2), name(-1));
-							
-							conclude();
-						}
-						
-						{
-							subdeduction();
-							
-							{
-								subdeduction();
-								
-								bind("try_cases_if_stop", value2, _y2, condition2);
-								evaluateStructuralFormula(condition(proposition(-1)));
-								apply(name(-2), name(-1));
-								
-								conclude();
-							}
-							
-							rewrite(name(-2), name(-1));
-							
-							conclude();
-						}
+						tryCasesIfNot(condition0, value0, _y0);
+						tryCasesIfNot(condition1, value1, _y1);
+						tryCasesIfStop(condition2, value2, _y2);
 						
 						conclude();
 					}
@@ -981,41 +820,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 						
 						bind("definition_of_sequence_append", ",", _x, _x0, _x1, _y);
 						
-						{
-							subdeduction();
-							
-							{
-								subdeduction();
-								
-								bind("try_cases_if_not", value0, _y0, condition0);
-								evaluateStructuralFormula(second(condition(proposition(-1))));
-								apply(name(-2), name(-1));
-								
-								conclude();
-							}
-							
-							rewrite(name(-2), name(-1));
-							
-							conclude();
-						}
-						
-						{
-							subdeduction();
-							
-							{
-								subdeduction();
-								
-								bind("try_cases_if_stop", value1, _y1, condition1);
-								evaluateStructuralFormula(condition(proposition(-1)));
-								apply(name(-2), name(-1));
-								
-								conclude();
-							}
-							
-							rewrite(name(-2), name(-1));
-							
-							conclude();
-						}
+						tryCasesIfNot(condition0, value0, _y0);
+						tryCasesIfStop(condition1, value1, _y1);
 						
 						conclude();
 					}
@@ -1882,6 +1688,57 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		
 		ebind("subset_in_Uhm", N, R);
 		trimLast();
+		
+		conclude();
+	}
+	
+	public static final void tryCasesIfNot(final Object condition, final Object value, final Object _y) {
+		subdeduction();
+		
+		{
+			subdeduction();
+			
+			bind("try_cases_if_not", value, _y, condition);
+
+			// TODO autodetect required verification
+			evaluateStructuralFormula(second(condition(proposition(-1))));
+			
+			apply(name(-2), name(-1));
+			
+			conclude();
+		}
+		
+		rewrite(name(-2), name(-1));
+		
+		conclude();
+	}
+	
+	public static final void tryCasesIfStop(final Object condition, final Object value, final Object _y) {
+		subdeduction();
+		
+		{
+			subdeduction();
+			
+			bind("try_cases_if_stop", value, _y, condition);
+			
+			// TODO autodetect required verification
+			evaluateStructuralFormula(condition(proposition(-1)));
+			
+			apply(name(-2), name(-1));
+			
+			conclude();
+		}
+		
+		rewrite(name(-2), name(-1));
+		
+		conclude();
+	}
+	
+	public static final void tryCasesOtherwise(final Object value) {
+		subdeduction();
+		
+		bind("try_cases_otherwise", value);
+		rewrite(name(-2), name(-1));
 		
 		conclude();
 	}
