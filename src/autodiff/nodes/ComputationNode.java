@@ -624,7 +624,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					final Object _x = SB_COMMA.build(1, 2);
 					final Object _y = 3;
 					
-					new SequenceAppendHelper(_s, _x, _y).compute(0);
+					new SequenceAppendHelper(_s, _x, _y).compute();
 				}
 				
 				{
@@ -633,7 +633,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					final Object _x1 = "()";
 					final Object _y = 3;
 					
-					new SequenceAppendHelper(_s, _x, _x0, _x1, _y).compute(1);
+					new SequenceAppendHelper(_s, _x, _x0, _x1, _y).compute();
 				}
 				
 				rewrite(name(-2), name(-1));
@@ -650,7 +650,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					final Object _x = SB_COMMA.build(1, 2, 3);
 					final Object _y = 4;
 					
-					new SequenceAppendHelper(_s, _x, _y).compute(0);
+					new SequenceAppendHelper(_s, _x, _y).compute();
 				}
 				
 				{
@@ -662,7 +662,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 						final Object _x1 = $(",", 3);
 						final Object _y = 4;
 						
-						new SequenceAppendHelper(_s, _x, _x0, _x1, _y).compute(2);
+						new SequenceAppendHelper(_s, _x, _x0, _x1, _y).compute();
 					}
 					
 					rewrite(name(-2), name(-1));
@@ -679,7 +679,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 						final Object _x1 = "()";
 						final Object _y = 4;
 						
-						new SequenceAppendHelper(_s, _x, _x0, _x1, _y).compute(1);
+						new SequenceAppendHelper(_s, _x, _x0, _x1, _y).compute();
 					}
 					
 					rewrite(name(-2), name(-1));
@@ -1808,27 +1808,27 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		
 		private final Object s;
 		
-		private final Object x;
+		private Object x;
 		
-		private final Object x0;
+		private Object x0;
 		
-		private final Object x1;
+		private Object x1;
 		
-		private final Object y;
+		private Object y;
 		
-		private final Object condition0;
+		private Object condition0;
 		
-		private final Object value0;
+		private Object value0;
 		
-		private final Object condition1;
+		private Object condition1;
 		
-		private final Object value1;
+		private Object value1;
 		
-		private final Object condition2;
+		private Object condition2;
 		
-		private final Object value2;
+		private Object value2;
 		
-		private final Object value3;
+		private Object value3;
 		
 		public SequenceAppendHelper(final Object s, final Object x, final Object y) {
 			this(s, x, x0(x), x1(x), y);
@@ -1842,16 +1842,29 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			this.x1 = x1;
 			this.y = y;
 			
-			this.condition0 = $(x, ":=:", $(x0, x1));
-			this.value0 = $(x0, $("sequence_append", s, x1, y));
+			this.setConditionsAndValues(s, x, x0, x1, y);
+		}
+		
+		public final void compute() {
+			final List<?> list = cast(List.class, this.x);
 			
-			this.condition1 = $(x, ":=:", $(s, x0));
-			this.value1 = $(s, x0, $(s, y));
+			if (list != null) {
+				if (2 == list.size()) {
+					if (this.s.equals(first(list))) {
+						this.compute(1);
+					} else {
+						this.compute(0);
+					}
+					
+					return;
+				} else if (3 == list.size() && this.s.equals(first(list))) {
+					this.compute(2);
+					
+					return;
+				}
+			}
 			
-			this.condition2 = $(x, ":=:", $(s, x0, x1));
-			this.value2 = $(s, x0, $("sequence_append", s, x1, y));
-			
-			this.value3 = $("sequence_new", s, x, y);
+			this.compute(3);
 		}
 		
 		public final void compute(final int caseIndex) {
@@ -1876,6 +1889,20 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			}
 			
 			conclude();
+		}
+		
+		private final void setConditionsAndValues(final Object s, final Object x,
+				final Object x0, final Object x1, final Object y) {
+			this.condition0 = $(x, ":=:", $(x0, x1));
+			this.value0 = $(x0, $("sequence_append", s, x1, y));
+			
+			this.condition1 = $(x, ":=:", $(s, x0));
+			this.value1 = $(s, x0, $(s, y));
+			
+			this.condition2 = $(x, ":=:", $(s, x0, x1));
+			this.value2 = $(s, x0, $("sequence_append", s, x1, y));
+			
+			this.value3 = $("sequence_new", s, x, y);
 		}
 		
 		private static final long serialVersionUID = 1480975513598301733L;
