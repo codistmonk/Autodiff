@@ -520,8 +520,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 						$(24, "if", $(1, "=", 2)),
 						$(0, "otherwise"))));
 				
-				debugPrint(proposition(-1));
-				
 				{
 					subdeduction();
 					
@@ -539,8 +537,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					
 					conclude();
 				}
-				
-				debugPrint(proposition(-1));
 				
 				{
 					subdeduction();
@@ -586,18 +582,24 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				final Object _x1 = $new("x1");
 				final Object _y = $new("y");
 				
-				final Object value0 = $("sequence_new", _s, _x0, $("sequence_append", _s, _x1, _y));
-				final Object value1 = $(_s, _x0, $("sequence_append", _s, _x1, _y));
-				final Object value2 = $("sequence_new", _s, _x, _y);
-				final Object condition0 = $(_x, ":=:", $("sequence_new", _s, _x0, _x1));
-				final Object condition1 = $(_x, ":=:", $(_s, _x0, _x1));
+				final Object condition0 = $(_x, ":=:", $(_x0, _x1));
+				final Object value0 = $(_x0, $("sequence_append", _s, _x1, _y));
+				
+				final Object condition1 = $(_x, ":=:", $(_s, _x0));
+				final Object value1 = $(_s, _x0, $(_s, _y));
+				
+				final Object condition2 = $(_x, ":=:", $(_s, _x0, _x1));
+				final Object value2 = $(_s, _x0, $("sequence_append", _s, _x1, _y));
+				
+				final Object value3 = $("sequence_new", _s, _x, _y);
 				
 				suppose("definition_of_sequence_append",
 						$forall(_s, _x, _x0, _x1, _y,
 								$($("sequence_append", _s, _x, _y), "=", cases(
 										$(value0, "if", condition0),
 										$(value1, "if", condition1),
-										$(value2, "otherwise")))));
+										$(value2, "if", condition2),
+										$(value3, "otherwise")))));
 			}
 			
 			{
@@ -609,20 +611,25 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				final Object _x1 = "()";
 				final Object _y = 2;
 				
-				final Object value0 = $("sequence_new", _s, _x0, $("sequence_append", _s, _x1, _y));
-				final Object value1 = $(_s, _x0, $("sequence_append", _s, _x1, _y));
-				final Object value2 = $("sequence_new", _s, _x, _y);
-				final Object condition0 = $(_x, ":=:", $("sequence_new", _s, _x0, _x1));
-				final Object condition1 = $(_x, ":=:", $(_s, _x0, _x1));
+				final Object condition0 = $(_x, ":=:", $(_x0, _x1));
+				final Object value0 = $(_x0, $("sequence_append", _s, _x1, _y));
 				
-				final Object _y1 = $("", $(value2, "otherwise"));
+				final Object condition1 = $(_x, ":=:", $(_s, _x0));
+				final Object value1 = $(_s, _x0, $(_s, _y));
+				
+				final Object condition2 = $(_x, ":=:", $(_s, _x0, _x1));
+				final Object value2 = $(_s, _x0, $("sequence_append", _s, _x1, _y));
+				
+				final Object value3 = $("sequence_new", _s, _x, _y);
+				
+				final Object _y2 = $("", $(value3, "otherwise"));
+				final Object _y1 = $("", $(value2, "if", condition2), _y2);
 				final Object _y0 = $("", $(value1, "if", condition1), _y1);
+				
+				bind("definition_of_sequence_append", ",", _x, _x0, _x1, _y);
 				
 				{
 					subdeduction();
-					
-					
-					bind("definition_of_sequence_append", ",", _x, _x0, _x1, _y);
 					
 					{
 						subdeduction();
@@ -633,9 +640,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 						
 						conclude();
 					}
-					
-					debugPrint(right(proposition(-2)));
-					debugPrint(left(proposition(-1)));
 					
 					rewrite(name(-2), name(-1));
 					
@@ -663,7 +667,25 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				{
 					subdeduction();
 					
-					bind("try_cases_otherwise", value2);
+					{
+						subdeduction();
+						
+						bind("try_cases_if_not", value2, _y2, condition2);
+						evaluateStructuralFormula(list(condition(proposition(-1))).get(1));
+						apply(name(-2), name(-1));
+						
+						conclude();
+					}
+					
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				{
+					subdeduction();
+					
+					bind("try_cases_otherwise", value3);
 					rewrite(name(-2), name(-1));
 					
 					conclude();
@@ -681,7 +703,56 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				conclude();
 			}
 			
-			abort();
+			{
+				subdeduction("sequence_append.test1");
+				
+				final Object _x = SB_COMMA.build(1, 2);
+				final Object _s = ",";
+				final Object _x0 = 1;
+				final Object _x1 = $(",", 2);
+				final Object _y = 3;
+				
+				final Object condition0 = $(_x, ":=:", $(_x0, _x1));
+				final Object value0 = $(_x0, $("sequence_append", _s, _x1, _y));
+				
+				final Object condition1 = $(_x, ":=:", $(_s, _x0));
+				final Object value1 = $(_s, _x0, $(_s, _y));
+				
+				final Object condition2 = $(_x, ":=:", $(_s, _x0, _x1));
+				final Object value2 = $(_s, _x0, $("sequence_append", _s, _x1, _y));
+				
+				final Object value3 = $("sequence_new", _s, _x, _y);
+				
+				final Object _y2 = $("", $(value3, "otherwise"));
+				final Object _y1 = $("", $(value2, "if", condition2), _y2);
+				final Object _y0 = $("", $(value1, "if", condition1), _y1);
+				
+				bind("definition_of_sequence_append", ",", _x, _x0, _x1, _y);
+				
+				{
+					subdeduction();
+					
+					{
+						subdeduction();
+						
+						bind("try_cases_if_stop", value0, _y0, condition0);
+						evaluateStructuralFormula(condition(proposition(-1)));
+						apply(name(-2), name(-1));
+						
+						conclude();
+					}
+					
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				abort();
+				
+				// TODO
+				
+				conclude();
+			}
 			
 //			{
 //				final Object _s = $new("s");
