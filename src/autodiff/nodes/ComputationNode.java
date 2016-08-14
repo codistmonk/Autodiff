@@ -612,34 +612,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				final Object _x1 = "()";
 				final Object _y = 2;
 				
-				final Object condition0 = $(_x, ":=:", $(_x0, _x1));
-				final Object value0 = $(_x0, $("sequence_append", _s, _x1, _y));
-				
-				final Object condition1 = $(_x, ":=:", $(_s, _x0));
-				final Object value1 = $(_s, _x0, $(_s, _y));
-				
-				final Object condition2 = $(_x, ":=:", $(_s, _x0, _x1));
-				final Object value2 = $(_s, _x0, $("sequence_append", _s, _x1, _y));
-				
-				final Object value3 = $("sequence_new", _s, _x, _y);
-				
-				bind("definition_of_sequence_append", ",", _x, _x0, _x1, _y);
-				
-				new CasesHelper()
-				.addCase(value0, condition0)
-				.addCase(value1, condition1)
-				.addCase(value2, condition2)
-				.addCase(value3)
-				.selectCase(3);
-				
-				{
-					subdeduction();
-					
-					bind("definition_of_sequence_new", _s, _x, _y);
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-				}
+				new SequenceAppendHelper(_s, _x, _x0, _x1, _y).compute(3);
 				
 				conclude();
 			}
@@ -648,67 +621,23 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				subdeduction("sequence_append.test2");
 				
 				{
-					subdeduction();
-					
 					final Object _x = SB_COMMA.build(1, 2);
 					final Object _s = ",";
 					final Object _x0 = 1;
 					final Object _x1 = $(",", 2);
 					final Object _y = 3;
 					
-					final Object condition0 = $(_x, ":=:", $(_x0, _x1));
-					final Object value0 = $(_x0, $("sequence_append", _s, _x1, _y));
-					
-					final Object condition1 = $(_x, ":=:", $(_s, _x0));
-					final Object value1 = $(_s, _x0, $(_s, _y));
-					
-					final Object condition2 = $(_x, ":=:", $(_s, _x0, _x1));
-					final Object value2 = $(_s, _x0, $("sequence_append", _s, _x1, _y));
-					
-					final Object value3 = $("sequence_new", _s, _x, _y);
-					
-					bind("definition_of_sequence_append", ",", _x, _x0, _x1, _y);
-					
-					new CasesHelper()
-					.addCase(value0, condition0)
-					.addCase(value1, condition1)
-					.addCase(value2, condition2)
-					.addCase(value3)
-					.selectCase(0);
-					
-					conclude();
+					new SequenceAppendHelper(_s, _x, _x0, _x1, _y).compute(0);
 				}
 				
 				{
-					subdeduction();
-					
 					final Object _x = $(",", 2);
 					final Object _s = ",";
 					final Object _x0 = 2;
 					final Object _x1 = "()";
 					final Object _y = 3;
 					
-					final Object condition0 = $(_x, ":=:", $(_x0, _x1));
-					final Object value0 = $(_x0, $("sequence_append", _s, _x1, _y));
-					
-					final Object condition1 = $(_x, ":=:", $(_s, _x0));
-					final Object value1 = $(_s, _x0, $(_s, _y));
-					
-					final Object condition2 = $(_x, ":=:", $(_s, _x0, _x1));
-					final Object value2 = $(_s, _x0, $("sequence_append", _s, _x1, _y));
-					
-					final Object value3 = $("sequence_new", _s, _x, _y);
-					
-					bind("definition_of_sequence_append", ",", _x, _x0, _x1, _y);
-					
-					new CasesHelper()
-					.addCase(value0, condition0)
-					.addCase(value1, condition1)
-					.addCase(value2, condition2)
-					.addCase(value3)
-					.selectCase(1);
-					
-					conclude();
+					new SequenceAppendHelper(_s, _x, _x0, _x1, _y).compute(1);
 				}
 				
 				rewrite(name(-2), name(-1));
@@ -720,70 +649,26 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				subdeduction("sequence_append.test3");
 				
 				{
-					subdeduction();
-					
 					final Object _x = SB_COMMA.build(1, 2, 3);
 					final Object _s = ",";
 					final Object _x0 = 1;
 					final Object _x1 = $(",", 2, $(",", 3));
 					final Object _y = 4;
 					
-					final Object condition0 = $(_x, ":=:", $(_x0, _x1));
-					final Object value0 = $(_x0, $("sequence_append", _s, _x1, _y));
-					
-					final Object condition1 = $(_x, ":=:", $(_s, _x0));
-					final Object value1 = $(_s, _x0, $(_s, _y));
-					
-					final Object condition2 = $(_x, ":=:", $(_s, _x0, _x1));
-					final Object value2 = $(_s, _x0, $("sequence_append", _s, _x1, _y));
-					
-					final Object value3 = $("sequence_new", _s, _x, _y);
-					
-					bind("definition_of_sequence_append", ",", _x, _x0, _x1, _y);
-					
-					new CasesHelper()
-					.addCase(value0, condition0)
-					.addCase(value1, condition1)
-					.addCase(value2, condition2)
-					.addCase(value3)
-					.selectCase(0);
-					
-					conclude();
+					new SequenceAppendHelper(_s, _x, _x0, _x1, _y).compute(0);
 				}
 				
 				{
 					subdeduction();
 					
 					{
-						subdeduction();
-						
 						final Object _x = $(",", 2, $(",", 3));
 						final Object _s = ",";
 						final Object _x0 = 2;
 						final Object _x1 = $(",", 3);
 						final Object _y = 4;
 						
-						final Object condition0 = $(_x, ":=:", $(_x0, _x1));
-						final Object value0 = $(_x0, $("sequence_append", _s, _x1, _y));
-						
-						final Object condition1 = $(_x, ":=:", $(_s, _x0));
-						final Object value1 = $(_s, _x0, $(_s, _y));
-						
-						final Object condition2 = $(_x, ":=:", $(_s, _x0, _x1));
-						final Object value2 = $(_s, _x0, $("sequence_append", _s, _x1, _y));
-						
-						final Object value3 = $("sequence_new", _s, _x, _y);
-						
-						bind("definition_of_sequence_append", ",", _x, _x0, _x1, _y);
-						
-						new CasesHelper()
-						.addCase(value0, condition0)
-						.addCase(value1, condition1)
-						.addCase(value2, condition2)
-						.addCase(value3)
-						.selectCase(2);
-						
-						conclude();
+						new SequenceAppendHelper(_s, _x, _x0, _x1, _y).compute(2);
 					}
 					
 					rewrite(name(-2), name(-1));
@@ -795,35 +680,13 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					subdeduction();
 					
 					{
-						subdeduction();
-						
 						final Object _x = $(",", 3);
 						final Object _s = ",";
 						final Object _x0 = 3;
 						final Object _x1 = "()";
 						final Object _y = 4;
 						
-						final Object condition0 = $(_x, ":=:", $(_x0, _x1));
-						final Object value0 = $(_x0, $("sequence_append", _s, _x1, _y));
-						
-						final Object condition1 = $(_x, ":=:", $(_s, _x0));
-						final Object value1 = $(_s, _x0, $(_s, _y));
-						
-						final Object condition2 = $(_x, ":=:", $(_s, _x0, _x1));
-						final Object value2 = $(_s, _x0, $("sequence_append", _s, _x1, _y));
-						
-						final Object value3 = $("sequence_new", _s, _x, _y);
-						
-						bind("definition_of_sequence_append", ",", _x, _x0, _x1, _y);
-						
-						new CasesHelper()
-						.addCase(value0, condition0)
-						.addCase(value1, condition1)
-						.addCase(value2, condition2)
-						.addCase(value3)
-						.selectCase(1);
-						
-						conclude();
+						new SequenceAppendHelper(_s, _x, _x0, _x1, _y).compute(1);
 					}
 					
 					rewrite(name(-2), name(-1));
@@ -1942,6 +1805,83 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		}
 		
 		private static final long serialVersionUID = -598430379891995844L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-14)
+	 */
+	public static final class SequenceAppendHelper implements Serializable {
+		
+		private final Object s;
+		
+		private final Object x;
+		
+		private final Object x0;
+		
+		private final Object x1;
+		
+		private final Object y;
+		
+		private final Object condition0;
+		
+		private final Object value0;
+		
+		private final Object condition1;
+		
+		private final Object value1;
+		
+		private final Object condition2;
+		
+		private final Object value2;
+		
+		private final Object value3;
+		
+		public SequenceAppendHelper(final Object s, final Object x, final Object x0,
+				final Object x1, final Object y) {
+			this.s = s;
+			this.x = x;
+			this.x0 = x0;
+			this.x1 = x1;
+			this.y = y;
+			
+			this.condition0 = $(x, ":=:", $(x0, x1));
+			this.value0 = $(x0, $("sequence_append", s, x1, y));
+			
+			this.condition1 = $(x, ":=:", $(s, x0));
+			this.value1 = $(s, x0, $(s, y));
+			
+			this.condition2 = $(x, ":=:", $(s, x0, x1));
+			this.value2 = $(s, x0, $("sequence_append", s, x1, y));
+			
+			this.value3 = $("sequence_new", s, x, y);
+		}
+		
+		public final void compute(final int caseIndex) {
+			subdeduction();
+			
+			bind("definition_of_sequence_append", this.s, this.x, this.x0, this.x1, this.y);
+			
+			new CasesHelper()
+			.addCase(this.value0, this.condition0)
+			.addCase(this.value1, this.condition1)
+			.addCase(this.value2, this.condition2)
+			.addCase(this.value3)
+			.selectCase(caseIndex);
+			
+			if (3 == caseIndex) {
+				subdeduction();
+				
+				bind("definition_of_sequence_new", this.s, this.x, this.y);
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+			}
+			
+			conclude();
+		}
+		
+		private static final long serialVersionUID = 1480975513598301733L;
 		
 	}
 	
