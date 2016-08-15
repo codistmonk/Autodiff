@@ -709,6 +709,71 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				conclude();
 			}
 			
+			{
+				final Object _s = $new("s");
+				final Object _x = $new("x");
+				
+				suppose("definition_of_repeat_1",
+						$forall(_s, _x,
+								$($("repeat", _s, _x, 1), "=", _x)));
+			}
+			
+			{
+				final Object _s = $new("s");
+				final Object _x = $new("x");
+				final Object _n = $new("n");
+				
+				suppose("definition_of_repeat_n",
+						$forall(_s, _x,
+								$(FORALL, _n, IN, POS,
+										$($("repeat", _s, _x, _n), "=", $("sequence_append", _s, $("repeat", _s, _x, $(_n, "-", 1)), _x)))));
+			}
+			
+			{
+				final Object _n = $new("n");
+				final Object _X = $new("X");
+				
+				suppose("simplification_of_tuple_type",
+						$(FORALL, _X, IN, U,
+								$(FORALL, _n, IN, N,
+										$($("repeat", CROSS, _X, _n), "=", $(_X, "^", _n)))));
+			}
+			
+			{
+				subdeduction("simplification_of_tuple_type.test1");
+				
+				ebind("simplification_of_tuple_type", N, 3);
+				trimLast();
+				
+				{
+					subdeduction();
+					
+					{
+						subdeduction();
+						
+						ebind("definition_of_repeat_n", CROSS, N, 3);
+						trimLast();
+						
+						verifyBasicNumericProposition($($(3, "-", 1), "=", $(2)));
+						rewrite(name(-2), name(-1));
+						
+						conclude();
+					}
+					
+					final List<?> rhs = list(right(proposition(-1)));
+					
+					debugPrint(rhs);
+					
+					abort();
+					
+					conclude();
+				}
+				
+				abort();
+				
+				conclude();
+			}
+			
 			abort();
 			
 //			{
