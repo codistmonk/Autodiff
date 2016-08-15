@@ -127,35 +127,39 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	public static final void eapply(final String target) {
 		subdeduction();
 		
-		final Object condition = condition(proposition(target));
-		
-		PropositionDescription justification = null;
-		
-		for (final PropositionDescription description : iterateBackward(deduction())) {
-			if (condition.equals(description.getProposition())) {
-				justification = description;
-				break;
-			}
-		}
-		
-		final String justificationName;
-		
-		if (justification == null) {
-			if (isPositivity(condition)) {
-				deducePositivity(left(condition));
-			} else if(isNaturality(condition) || isReality(condition)) {
-				verifyBasicNumericProposition(condition);
-			} else {
-				throw new IllegalStateException();
-			}
-			justificationName = name(-1);
-		} else {
-			justificationName = justification.getName();
-		}
+		final String justificationName = justicationFor(condition(proposition(target))).getName();
 		
 		apply(target, justificationName);
 		
 		conclude();
+	}
+	
+	public static final PropositionDescription justicationFor(final Object proposition) {
+		PropositionDescription result = null;
+		
+		for (final PropositionDescription description : iterateBackward(deduction())) {
+			if (proposition.equals(description.getProposition())) {
+				result = description;
+				break;
+			}
+		}
+		
+		if (result == null) {
+			if (isPositivity(proposition)) {
+				deducePositivity(left(proposition));
+			} else if(isNaturality(proposition) || isReality(proposition)) {
+				verifyBasicNumericProposition(proposition);
+			} else {
+				throw new IllegalStateException();
+			}
+			
+			result = new PropositionDescription()
+			.setIndex(-1)
+			.setName(name(-1))
+			.setProposition(proposition(-1));
+		}
+		
+		return result;
 	}
 	
 	public static final void ebindLast(final Object... values) {
@@ -629,7 +633,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				final Object _X = $new("X");
 				final Object _x = $new("x");
 				
-				suppose("type_of_single2",
+				suppose("type_of_single",
 						$(FORALL, _X, IN, U,
 								$forall(_x,
 										$($(_x, IN, _X), "=", $($1(_x), IN, $1(_X))))));
@@ -660,7 +664,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				final Object _X = $new("X");
 				final Object _Y = $new("Y");
 				
-				suppose("tuple_type_in_Uhm",
+				suppose("type_of_tuple_in_Uhm",
 						$(FORALL, _X, ",", _Y, IN, U,
 								$($("sequence_append", CROSS, _X, _Y), IN, U)));
 			}
@@ -685,7 +689,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					{
 						subdeduction();
 						
-						ebind("type_of_single2", N, 1);
+						ebind("type_of_single", N, 1);
 						trimLast();
 						
 						conclude();
@@ -708,9 +712,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				final List<?> _x = list(left(proposition(-1)));
 				final List<?> _X = list(right(proposition(-1)));
 				
-				debugPrint(_x);
-				debugPrint(_X);
-				
 				new SequenceAppendHelper(_x.get(1), _x.get(2), _x.get(3)).compute();
 				rewrite(name(-2), name(-1));
 				
@@ -726,7 +727,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				{
 					subdeduction();
 					
-					ebind("tuple_type_in_Uhm", $1(N), N);
+					ebind("type_of_tuple_in_Uhm", $1(N), N);
 					trimLast();
 					
 					new SequenceAppendHelper(CROSS, $1(N), N).compute();
@@ -780,16 +781,16 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				final Object _n = $new("n");
 				final Object _X = $new("X");
 				
-				suppose("simplification_of_tuple_type",
+				suppose("simplification_of_type_of_tuple",
 						$(FORALL, _X, IN, U,
 								$(FORALL, _n, IN, N,
 										$($("repeat", CROSS, _X, _n), "=", $(_X, "^", _n)))));
 			}
 			
 			{
-				subdeduction("simplification_of_tuple_type.test1");
+				subdeduction("simplification_of_type_of_tuple.test1");
 				
-				ebind("simplification_of_tuple_type", N, 3);
+				ebind("simplification_of_type_of_tuple", N, 3);
 				trimLast();
 				
 				{
@@ -861,16 +862,19 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			{
 				subdeduction("type_of_tuple.test3");
 				
-				rewrite("type_of_tuple.test2", "simplification_of_tuple_type.test1");
+				rewrite("type_of_tuple.test2", "simplification_of_type_of_tuple.test1");
 				
 				conclude();
 			}
 			
-			abort();
-			
 			supposeDefinitionOfProductLoop0();
 			supposeDefinitionOfProductLoopN();
 			supposeDefinitionOfProductReduction();
+			
+			{
+				suppose("positives_single_in_Uhm",
+						$($1(POS), IN, U));
+			}
 		}
 		
 	}, 1);
@@ -925,9 +929,59 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 //					bind(name(-1), p(toBinaryTree(",", s)));
 					bind(name(-1), SB_COMMA.build(s));
 					
-					deduceCartesianType(s, "positivity");
+					{
+						subdeduction();
+						
+						beginCartesianProduct(2, POS);
+						append(1, POS);
+						append(3, POS);
+						
+						conclude();
+					}
+					abort();
 					
-					apply(name(-2), name(-1));
+					conclude();
+				}
+			}
+
+			public void beginCartesianProduct(final Object value,
+					final Object type) {
+				subdeduction();
+				
+				deduceSingleType(justicationFor($(value, IN, type)).getName());
+				
+				conclude();
+			}
+
+			public void append(final Object value, final Object type) {
+				final Object previousValue = left(proposition(-1));
+				final Object previousType = right(proposition(-1));
+				
+				{
+					subdeduction();
+					
+					ebind("type_of_tuple_in_Uhm", previousType, type);
+					trimLast();
+					
+					new SequenceAppendHelper(CROSS, previousType, type).compute();
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				{
+					subdeduction();
+					
+					deducePositivity(1);
+					
+					ebind("type_of_tuple", previousType, type, previousValue, value);
+					trimLast();
+					
+					new SequenceAppendHelper(",", previousValue, value).compute();
+					rewrite(name(-2), name(-1));
+					
+					new SequenceAppendHelper(CROSS, previousType, type).compute();
+					rewrite(name(-2), name(-1));
 					
 					conclude();
 				}
@@ -1024,28 +1078,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		}
 		
 		rewriteRight(name(-1), name(-2));
-		
-		conclude();
-	}
-	
-	public static final void deduceCartesianPositivity(final Object value) {
-		subdeduction();
-		
-		ebind("cartesian_1", POS);
-		eapplyLast();
-		deducePositivity(value);
-		rewrite(name(-1), name(-2));
-		
-		conclude();
-	}
-	
-	public static final void deduceCartesianRealness(final Object value) {
-		subdeduction();
-		
-		ebind("cartesian_1", R);
-		eapplyLast();
-		verifyBasicNumericProposition($(value, IN, R));
-		rewrite(name(-1), name(-2));
 		
 		conclude();
 	}
@@ -1464,77 +1496,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 								$($(PI, _v), "=", $(PI, "_", $(_i, "<", _n), $(_v, "_", _i))))));
 	}
 	
-	public static final void deduceCartesianType(final Object[] s, final String type) {
-		subdeduction();
-		
-		boolean first = true;
-		
-		for (final Object value : s) {
-			if ("positivity".equals(type)) {
-				deduceCartesianPositivity(value);
-			} else {
-				deduceCartesianRealness(value);
-			}
-			
-			if (first) {
-				first = false;
-			} else {
-				final Object x = left(proposition(-2));
-				final Object y = left(proposition(-1));
-				
-				final Object m = right(right(proposition(-2)));
-				final Object n = right(right(proposition(-1)));
-				
-				{
-					subdeduction();
-					
-					{
-						subdeduction();
-						
-						ebind("vector_type_in_Uhm", POS, m);
-						trimLast();
-						
-						ebind("vector_type_in_Uhm", POS, n);
-						trimLast();
-						
-						ebind("type_of_tuple",
-								$(POS, "^", m), $(POS, "^", n), x, y);
-						
-						eapplyLast();
-						
-//						bind("definition_of_parentheses", middle(left(proposition(-1))));
-//						rewrite(name(-2), name(-1));
-						
-						conclude();
-					}
-					
-					{
-						subdeduction();
-						
-						ebind("cartesian_m_n", POS, m, n);
-						eapplyLast();
-						
-						verifyBasicNumericProposition(
-								$($(m, "+", n), "=", (Integer) m + (Integer) n));
-						
-						rewrite(name(-2), name(-1));
-						
-						conclude();
-					}
-					
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-				}
-			}
-		}
-		
-//		bind("definition_of_parentheses", left(proposition(-1)));
-//		rewriteRight(name(-2), name(-1));
-		
-		conclude();
-	}
-	
 	public static final void supposeSubsetInUhm() {
 		final Object _X = $new("X");
 		final Object _Y = $new("Y");
@@ -1622,6 +1583,25 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		
 		bind("try_cases_otherwise", value);
 		rewrite(name(-2), name(-1));
+		
+		conclude();
+	}
+	
+	public static final void deduceSingleType(final String targetName) {
+		final Object proposition = proposition(targetName);
+		
+		subdeduction();
+		
+		{
+			subdeduction();
+			
+			ebind("type_of_single", right(proposition), left(proposition));
+			trimLast();
+			
+			conclude();
+		}
+		
+		rewrite(targetName, name(-1));
 		
 		conclude();
 	}
@@ -1911,7 +1891,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			
 			bind("definition_of_sequence_append", this.s, this.x, this.x0, this.x1, this.x2, this.y);
 			
-			debugPrint(caseIndex, this.s, this.x, this.x0, this.x1, this.x2, this.y);
+//			debugPrint(caseIndex, this.s, this.x, this.x0, this.x1, this.x2, this.y);
 			
 			new CasesHelper()
 			.addCase(this.value0, this.condition0)

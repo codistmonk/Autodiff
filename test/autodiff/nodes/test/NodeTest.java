@@ -87,7 +87,7 @@ public final class NodeTest {
 					subdeduction();
 					
 					ebind("definition_of_product_reduction", 1, v);
-					deduceCartesianType(new Object[] { 2 }, "realness");
+//					deduceCartesianType(new Object[] { 2 }, "realness");
 					eapply(name(-2));
 					
 					conclude();
