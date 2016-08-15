@@ -583,6 +583,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				final Object _x1 = $new("x1");
 				final Object _y = $new("y");
 				
+				// TODO use $(_s, _x1) instead of _x1
 				final Object condition0 = $(_x, ":=:", $(_x0, _x1));
 				final Object value0 = $(_x0, $("sequence_append", _s, _x1, _y));
 				
@@ -759,15 +760,13 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				conclude();
 			}
 			
-			abort();
-			
 			{
 				final Object _s = $new("s");
 				final Object _x = $new("x");
 				
 				suppose("definition_of_repeat_1",
 						$forall(_s, _x,
-								$($("repeat", _s, _x, 1), "=", _x)));
+								$($("repeat", _s, _x, 1), "=", $1(_x))));
 			}
 			
 			{
@@ -806,7 +805,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 						ebind("definition_of_repeat_n", CROSS, N, 3);
 						trimLast();
 						
-						verifyBasicNumericProposition($($(3, "-", 1), "=", $(2)));
+						verifyBasicNumericProposition($($(3, "-", 1), "=", 2));
 						rewrite(name(-2), name(-1));
 						
 						conclude();
@@ -816,77 +815,62 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					
 					debugPrint(rhs);
 					
-					abort();
+					{
+						subdeduction();
+						
+						{
+							subdeduction();
+							
+							ebind("definition_of_repeat_n", CROSS, N, 2);
+							trimLast();
+							
+							verifyBasicNumericProposition($($(2, "-", 1), "=", 1));
+							rewrite(name(-2), name(-1));
+							
+							conclude();
+						}
+						
+						{
+							subdeduction();
+							
+							ebind("definition_of_repeat_1", CROSS, N);
+							trimLast();
+							
+							conclude();
+						}
+						
+						rewrite(name(-2), name(-1));
+						
+						new SequenceAppendHelper(CROSS, $1(N), N).compute();
+						
+						rewrite(name(-2), name(-1));
+						
+						conclude();
+					}
+					
+					rewrite(name(-2), name(-1));
+					
+					new SequenceAppendHelper(CROSS, SB_CROSS.build(N, N), N).compute();
+					
+					rewrite(name(-2), name(-1));
 					
 					conclude();
 				}
 				
-				abort();
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+			}
+			
+			{
+				subdeduction("type_of_tuple.test3");
+				
+				rewrite("type_of_tuple2.test2", "simplification_of_tuple_type.test1");
 				
 				conclude();
 			}
 			
 			abort();
-			
-//			{
-//				final Object _s = $new("s");
-//				final Object _x = $new("x");
-//				final Object _z = $new("z");
-//				
-//				suppose("definition_of_sequence_append_0",
-//						$forall(_s, _x, _z,
-//								$($("sequence_append", _s, _x, _z), "=", $("sequence_new", _s, _x, _z))));
-//			}
-//			
-//			{
-//				final Object _s = $new("s");
-//				final Object _x = $new("x");
-//				final Object _y = $new("y");
-//				final Object _z = $new("z");
-//				
-//				suppose("definition_of_sequence_append_n",
-//						$forall(_s, _x, _y, _z,
-//								$($("sequence_append", _s, $(_s, _x, _y), _z), "=", $(_s, _x, $("sequence_append", _s, _y, _z)))));
-//			}
-//			
-//			{
-//				final Object _s = $new("s");
-//				final Object _x = $new("x");
-//				final Object _y = $new("y");
-//				final Object _z = $new("z");
-//				
-//				suppose("definition_of_sequence_append",
-//						$forall(_s, _x, _y, _z,
-//								$($("sequence_append", _s, $(_x, $(_s, _y)), _z), "=", $("sequence_new", _s, _x, $("sequence_append", _s, _y, _z)))));
-//			}
-			
-			{
-				final Object _x = $new("x");
-				
-				suppose("definition_of_repeat_0",
-						$forall(_x,
-								$($("repeat", 0, _x), "=", _x)));
-			}
-			
-			{
-				final Object _x = $new("x");
-				final Object _n = $new("n");
-				
-				suppose("definition_of_repeat_n",
-						$forall(_x,
-								$(FORALL, _n, IN, POS,
-										$($("repeat", _n, _x), "=", $(_x, $("repeat", $(_n, "-", 1), _x))))));
-			}
-			
-			{
-				final Object _X = $new("X");
-				final Object _n = $new("n");
-				
-				suppose("simplification_of_cross_sequence",
-						$forall(_X,
-								$(FORALL, _n, IN, N,
-										$($(_X, $("repeat", _n, $(CROSS, _X))), "=", $(_X, "^", $(_n, "+", 2))))));
-			}
 			
 			{
 				final Object _f = $new("f");
