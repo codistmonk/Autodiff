@@ -5,6 +5,7 @@ import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.BasicNumericVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
 import static multij.tools.Tools.*;
+
 import autodiff.reasoning.deductions.Standard;
 import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.proofs.Deduction;
@@ -615,20 +616,23 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				 * 
 				 */
 				
-				final Object condition0 = $(_x, ":=:", $1(_x0));
-				final Object value0 = $(_x0, $(_s, _y));
+				final Object condition0 = $(_x, ":=:", $());
+				final Object value0 = $1(_y);
 				
-				final Object condition1 = $(_x, ":=:", $(_x0, $(_s, _x1)));
-				final Object value1 = $(_x0, $(_s, _x1, $(_s, _y)));
+				final Object condition1 = $(_x, ":=:", $1(_x0));
+				final Object value1 = $(_x0, $(_s, _y));
 				
-				final Object condition2 = $(_x, ":=:", $(_x0, $(_s, _x1, _x2)));
-				final Object value2 = $(_x0, $(_s, _x1, $("sequence_append", _s, _x2, _y)));
+				final Object condition2 = $(_x, ":=:", $(_x0, $(_s, _x1)));
+				final Object value2 = $(_x0, $(_s, _x1, $(_s, _y)));
 				
-				final Object condition3 = $(_x, ":=:", $(_s, _x0));
-				final Object value3 = $(_s, _x0, $(_s, _y));
+				final Object condition3 = $(_x, ":=:", $(_x0, $(_s, _x1, _x2)));
+				final Object value3 = $(_x0, $(_s, _x1, $("sequence_append", _s, _x2, _y)));
 				
-				final Object condition4 = $(_x, ":=:", $(_s, _x0, _x1));
-				final Object value4 = $(_s, _x0, $("sequence_append", _s, _x1, _y));
+				final Object condition4 = $(_x, ":=:", $(_s, _x0));
+				final Object value4 = $(_s, _x0, $(_s, _y));
+				
+				final Object condition5 = $(_x, ":=:", $(_s, _x0, _x1));
+				final Object value5 = $(_s, _x0, $("sequence_append", _s, _x1, _y));
 				
 				suppose("definition_of_sequence_append",
 						$forall(_s, _x, _x0, _x1, _x2, _y,
@@ -637,7 +641,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 										$(value1, "if", condition1),
 										$(value2, "if", condition2),
 										$(value3, "if", condition3),
-										$(value4, "if", condition4)))));
+										$(value4, "if", condition4),
+										$(value5, "if", condition5)))));
 			}
 			
 			{
@@ -1798,25 +1803,9 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		
 		private final Object y;
 		
-		private Object condition0;
+		private final Object[] conditions;
 		
-		private Object value0;
-		
-		private Object condition1;
-		
-		private Object value1;
-		
-		private Object condition2;
-		
-		private Object value2;
-		
-		private Object condition3;
-		
-		private Object value3;
-		
-		private Object condition4;
-		
-		private Object value4;
+		private final Object[] values;
 		
 		private boolean first;
 		
@@ -1833,6 +1822,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			this.x2 = x2;
 			this.y = y;
 			this.first = true;
+			this.conditions = new Object[6];
+			this.values = new Object[6];
 			
 			this.setConditionsAndValues();
 		}
@@ -1851,33 +1842,35 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				final List<?> list = cast(List.class, this.x);
 				
 				if (list != null) {
-					if (1 == list.size()) {
+					if (0 == list.size()) {
 						caseIndex = 0;
+					} else if (1 == list.size()) {
+						caseIndex = 1;
 					} else if (2 == list.size()) {
 						if (this.s.equals(first(list))) {
-							caseIndex = 3;
+							caseIndex = 4;
 						} else {
 							final List<?> second = list(second(list));
 							
 							if (2 == second.size() && this.s.equals(first(second))) {
-								caseIndex = 1;
-							} else if (3 == second.size() && this.s.equals(first(second))) {
 								caseIndex = 2;
+							} else if (3 == second.size() && this.s.equals(first(second))) {
+								caseIndex = 3;
 							}
 						}
 					} else if (3 == list.size() && this.s.equals(first(list))) {
-						caseIndex = 4;
+						caseIndex = 5;
 					}
 				}
 				
 				this.compute(caseIndex);
-			} while (caseIndex == 2 || caseIndex == 4);
+			} while (caseIndex == 3 || caseIndex == 5);
 			
 			conclude();
 		}
 		
 		public final void compute(final int caseIndex) {
-			if (caseIndex < 0 || 4 < caseIndex) {
+			if (caseIndex < 0 || 5 < caseIndex) {
 				throw new IllegalArgumentException("caseIndex: " + caseIndex);
 			}
 			
@@ -1888,11 +1881,12 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 //			debugPrint(caseIndex, this.s, this.x, this.x0, this.x1, this.x2, this.y);
 			
 			new CasesHelper()
-			.addCase(this.value0, this.condition0)
-			.addCase(this.value1, this.condition1)
-			.addCase(this.value2, this.condition2)
-			.addCase(this.value3, this.condition3)
-			.addCase(this.value4, this.condition4)
+			.addCase(this.values[0], this.conditions[0])
+			.addCase(this.values[1], this.conditions[1])
+			.addCase(this.values[2], this.conditions[2])
+			.addCase(this.values[3], this.conditions[3])
+			.addCase(this.values[4], this.conditions[4])
+			.addCase(this.values[5], this.conditions[5])
 			.selectCase(caseIndex);
 			
 			conclude();
@@ -1903,12 +1897,12 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				rewrite(name(-2), name(-1));
 			}
 			
-			if (caseIndex == 2 || caseIndex == 4) {
-				if (caseIndex == 2) {
+			if (caseIndex == 3 || caseIndex == 5) {
+				if (caseIndex == 3) {
 					this.x = this.x2;
 				}
 				
-				if (caseIndex == 4) {
+				if (caseIndex == 5) {
 					this.x = this.x1;
 				}
 				
@@ -1924,20 +1918,23 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		}
 		
 		private final void setConditionsAndValues() {
-			this.condition0 = $(this.x, ":=:", $1(this.x0));
-			this.value0 = $(this.x0, $(this.s, this.y));
+			this.conditions[0] = $(this.x, ":=:", $());
+			this.values[0] = $1(this.y);
 			
-			this.condition1 = $(this.x, ":=:", $(this.x0, $(this.s, this.x1)));
-			this.value1 = $(this.x0, $(this.s, this.x1, $(this.s, this.y)));
+			this.conditions[1] = $(this.x, ":=:", $1(this.x0));
+			this.values[1] = $(this.x0, $(this.s, this.y));
 			
-			this.condition2 = $(this.x, ":=:", $(this.x0, $(this.s, this.x1, this.x2)));
-			this.value2 = $(this.x0, $(this.s, this.x1, $("sequence_append", this.s, this.x2, this.y)));
+			this.conditions[2] = $(this.x, ":=:", $(this.x0, $(this.s, this.x1)));
+			this.values[2] = $(this.x0, $(this.s, this.x1, $(this.s, this.y)));
 			
-			this.condition3 = $(this.x, ":=:", $(this.s, this.x0));
-			this.value3 = $(this.s, this.x0, $(this.s, this.y));
+			this.conditions[3] = $(this.x, ":=:", $(this.x0, $(this.s, this.x1, this.x2)));
+			this.values[3] = $(this.x0, $(this.s, this.x1, $("sequence_append", this.s, this.x2, this.y)));
 			
-			this.condition4 = $(this.x, ":=:", $(this.s, this.x0, this.x1));
-			this.value4 = $(this.s, this.x0, $("sequence_append", this.s, this.x1, this.y));
+			this.conditions[4] = $(this.x, ":=:", $(this.s, this.x0));
+			this.values[4] = $(this.s, this.x0, $(this.s, this.y));
+			
+			this.conditions[5] = $(this.x, ":=:", $(this.s, this.x0, this.x1));
+			this.values[5] = $(this.s, this.x0, $("sequence_append", this.s, this.x1, this.y));
 		}
 		
 		private static final long serialVersionUID = 1480975513598301733L;
