@@ -371,12 +371,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	
 	public static final Object POS = $(N, "_", $(">", 0));
 	
-	public static final SequenceBuilder SB_COMMA = new SequenceBuilder(",");
-	
-	public static final SequenceBuilder SB_CROSS = new SequenceBuilder(CROSS);
-	
 	public static final Object cases(final Object... cases) {
-		return new SequenceBuilder("").build(append(array((Object) "cases"), cases));
+		return sequence("", append(array((Object) "cases"), cases));
 	}
 	
 	public static final Deduction AUTODIFF = Standard.build("autodiff", new Runnable() {
@@ -385,14 +381,14 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		public final void run() {
 			Standard.setup();
 			
-			debugPrint(SB_COMMA.build($(1, 2, 3)));
-			debugPrint(SB_COMMA.build(1));
-			debugPrint(SB_COMMA.build(1, 2));
-			debugPrint(SB_COMMA.build(1, 2, 3));
-			debugPrint(SB_COMMA.build(1, SB_COMMA.build(2, 3)));
-			debugPrint(SB_COMMA.build(SB_COMMA.build(1, 2), 3));
-			debugPrint(SB_COMMA.build(1, SB_COMMA.build(2, 3), 4));
-			debugPrint(SB_COMMA.build(1, 2, 3, 4));
+			debugPrint(sequence(",", $(1, 2, 3)));
+			debugPrint(sequence(",", 1));
+			debugPrint(sequence(",", 1, 2));
+			debugPrint(sequence(",", 1, 2, 3));
+			debugPrint(sequence(",", 1, sequence(",", 2, 3)));
+			debugPrint(sequence(",", sequence(",", 1, 2), 3));
+			debugPrint(sequence(",", 1, sequence(",", 2, 3), 4));
+			debugPrint(sequence(",", 1, 2, 3, 4));
 			
 			supposeDefinitionOfParentheses();
 			supposeDefinitionOfForallIn();
@@ -645,7 +641,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			
 			{
 				final Object _s = ",";
-				final Object _x = SB_COMMA.build(1);
+				final Object _x = sequence(",", 1);
 				final Object _y = 2;
 				
 				new SequenceAppendHelper(_s, _x, _y).compute("sequence_append.test1");
@@ -653,7 +649,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			
 			{
 				final Object _s = ",";
-				final Object _x = SB_COMMA.build(1, 2);
+				final Object _x = sequence(",", 1, 2);
 				final Object _y = 3;
 				
 				new SequenceAppendHelper(_s, _x, _y).compute("sequence_append.test2");
@@ -661,7 +657,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			
 			{
 				final Object _s = ",";
-				final Object _x = SB_COMMA.build(1, 2, 3);
+				final Object _x = sequence(",", 1, 2, 3);
 				final Object _y = 4;
 				
 				new SequenceAppendHelper(_s, _x, _y).compute("sequence_append.test3");
@@ -777,7 +773,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				{
 					subdeduction();
 					
-					ebind("type_of_tuple", SB_CROSS.build(N, N), N, SB_COMMA.build(1, 2), 3);
+					ebind("type_of_tuple", sequence(CROSS, N, N), N, sequence(",", 1, 2), 3);
 					trimLast();
 					
 					conclude();
@@ -900,7 +896,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			{
 				subdeduction("sequence_head.test1");
 				
-				computeSequenceHead(SB_COMMA.build(1, 2, 3));
+				computeSequenceHead(sequence(",", 1, 2, 3));
 				
 				conclude();
 			}
@@ -908,7 +904,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			{
 				subdeduction("sequence_tail.test1");
 				
-				computeSequenceTail(",", SB_COMMA.build(1, 2, 3));
+				computeSequenceTail(",", sequence(",", 1, 2, 3));
 				
 				conclude();
 			}
@@ -941,7 +937,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			{
 				subdeduction("vector_access.test1");
 				
-				final Object _x = SB_COMMA.build(1, 2, 3);
+				final Object _x = sequence(",", 1, 2, 3);
 				
 				{
 					subdeduction();
@@ -1019,7 +1015,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			{
 				subdeduction("vector_reduction_by_product.test1");
 				
-				final Object _x = SB_COMMA.build(1, 2, 3);
+				final Object _x = sequence(",", 1, 2, 3);
 				
 				{
 					subdeduction();
@@ -1164,7 +1160,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					final Object[] s = toObjects((int[]) result.get("s"));
 					
 //					bind(name(-1), p(toBinaryTree(",", s)));
-					bind(name(-1), SB_COMMA.build(s));
+					bind(name(-1), sequence(",", s));
 					
 					deduceCartesianProduct(POS, s);
 					
@@ -1863,6 +1859,22 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		conclude();
 	}
 	
+	public static final Object sequence(final Object separator, final Object... elements) {
+		if (elements.length <= 1) {
+			return Arrays.asList(elements);
+		}
+		
+		List<Object> result = Arrays.asList(separator, elements[elements.length - 1]);
+		
+		for (int i = elements.length - 2; 0 < i; --i) {
+			result = Arrays.asList(separator, elements[i], result);
+		}
+		
+		result = Arrays.asList(elements[0], result);
+		
+		return result;
+	}
+	
 	/**
 	 * @author codistmonk (creation 2016-08-10)
 	 */
@@ -1925,67 +1937,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		}
 		
 		private static final long serialVersionUID = -3590873676651429520L;
-		
-	}
-	
-	/**
-	 * @author codistmonk (creation 2016-08-13)
-	 */
-	public static final class SequenceBuilder implements Serializable {
-		
-		private final Object separator;
-		
-		public SequenceBuilder(final Object separator) {
-			this.separator = separator;
-		}
-		
-		public final Object getSeparator() {
-			return this.separator;
-		}
-		
-		public final Object build(final Object... elements) {
-			if (elements.length <= 1) {
-				return Arrays.asList(elements);
-			}
-			
-			List<Object> result = Arrays.asList(this.getSeparator(), elements[elements.length - 1]);
-			
-			for (int i = elements.length - 2; 0 < i; --i) {
-				result = Arrays.asList(this.getSeparator(), elements[i], result);
-			}
-			
-			result = Arrays.asList(elements[0], result);
-			
-			return result;
-			
-			/*
-			 * 
-			 * 1
-			 * [( 1 )]
-			 * [1]
-			 * 
-			 * 1,2
-			 * [( 1 [, 2 )]
-			 * [1 [, 2]]
-			 * 
-			 * 1,2,3
-			 * [( 1 [, 2 [, 3 )]]]
-			 * [1 [, 2 [, 3]]]
-			 * 
-			 * 		
-			 * 
-			 * 1,(2,3)
-			 * [( 1 [, [( 2 [, 3 )]] )]]
-			 * [1 [, [2 [, 3]]]]
-			 * 
-			 * (1,2),3
-			 * [( [( 1 [, 2 )]] [, 3 )]]
-			 * [[1 [, 2]] [, 3]]
-			 * 
-			 */
-		}
-		
-		private static final long serialVersionUID = 4750503376771325114L;
 		
 	}
 	
