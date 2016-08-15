@@ -350,7 +350,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		public final void run() {
 			Standard.setup();
 			
-			debugPrint(SB_COMMA.build($("a", "b", "c")));
+			debugPrint(SB_COMMA.build($(1, 2, 3)));
 			debugPrint(SB_COMMA.build(1));
 			debugPrint(SB_COMMA.build(1, 2));
 			debugPrint(SB_COMMA.build(1, 2, 3));
@@ -592,7 +592,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				final Object condition2 = $(_x, ":=:", $(_s, _x0, _x1));
 				final Object value2 = $(_s, _x0, $("sequence_append", _s, _x1, _y));
 				
-				final Object value3 = $("sequence_new", _s, _x, _y);
+				final Object condition3 = $(_x, ":=:", $1(_x0));
+				final Object value3 = $(_x0, $(_s, _y));
 				
 				suppose("definition_of_sequence_append",
 						$forall(_s, _x, _x0, _x1, _y,
@@ -600,12 +601,12 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 										$(value0, "if", condition0),
 										$(value1, "if", condition1),
 										$(value2, "if", condition2),
-										$(value3, "otherwise")))));
+										$(value3, "if", condition3)))));
 			}
 			
 			{
 				final Object _s = ",";
-				final Object _x = 1;
+				final Object _x = $1(1);
 				final Object _y = 2;
 				
 				new SequenceAppendHelper(_s, _x, _y).compute("sequence_append.test1");
@@ -625,6 +626,24 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				final Object _y = 4;
 				
 				new SequenceAppendHelper(_s, _x, _y).compute("sequence_append.test3");
+			}
+			
+			{
+				final Object _X = $new("X");
+				final Object _x = $new("x");
+				
+				suppose("type_of_single2",
+						$(FORALL, _X, IN, U,
+								$forall(_x,
+										$($(_x, IN, _X), "=", $($1(_x), IN, $1(_X))))));
+			}
+			
+			{
+				final Object _X = $new("X");
+				
+				suppose("type_of_single_in_Uhm",
+						$(FORALL, _X, IN, U,
+								$($1(_X), IN, U)));
 			}
 			
 			{
@@ -650,12 +669,40 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			}
 			
 			{
+				subdeduction("single_N_in_Uhm");
+				
+				ebind("type_of_single_in_Uhm", N);
+				trimLast();
+				
+				conclude();
+			}
+			
+			{
 				subdeduction("type_of_tuple2.test1");
 				
 				{
 					subdeduction();
 					
-					ebind("type_of_tuple2", N, N, 1, 2);
+					verifyBasicNumericProposition($(1, IN, N));
+					
+					{
+						subdeduction();
+						
+						ebind("type_of_single2", N, 1);
+						trimLast();
+						
+						conclude();
+					}
+					
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				{
+					subdeduction();
+					
+					ebind("type_of_tuple2", $1(N), N, $1(1), 2);
 					trimLast();
 					
 					conclude();
@@ -663,6 +710,9 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				
 				final List<?> _x = list(left(proposition(-1)));
 				final List<?> _X = list(right(proposition(-1)));
+				
+				debugPrint(_x);
+				debugPrint(_X);
 				
 				new SequenceAppendHelper(_x.get(1), _x.get(2), _x.get(3)).compute();
 				rewrite(name(-2), name(-1));
@@ -679,10 +729,10 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				{
 					subdeduction();
 					
-					ebind("tuple_type_in_Uhm", N, N);
+					ebind("tuple_type_in_Uhm", $1(N), N);
 					trimLast();
 					
-					new SequenceAppendHelper(CROSS, N, N).compute();
+					new SequenceAppendHelper(CROSS, $1(N), N).compute();
 					rewrite(name(-2), name(-1));
 					
 					conclude();
@@ -708,6 +758,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				
 				conclude();
 			}
+			
+			abort();
 			
 			{
 				final Object _s = $new("s");
@@ -1785,8 +1837,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		}
 		
 		public final Object build(final Object... elements) {
-			if (elements.length == 1) {
-				return elements[0];
+			if (1 == elements.length) {
+				return Arrays.asList(elements[0]);
 			}
 			
 			List<Object> result = Arrays.asList(this.getSeparator(), elements[elements.length - 1]);
@@ -1849,7 +1901,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		
 		public final void selectCase(final int index) {
 			final int n = this.cases.size();
-			final Object[] continuations = new Object[n - 1];
+			final Object[] continuations = new Object[n];
 			
 			for (int i = n - 2; 0 <= i; --i) {
 				final Pair<Object, Object> nextCase = this.cases.get(i + 1);
@@ -1912,6 +1964,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		
 		private Object value2;
 		
+		private Object condition3;
+		
 		private Object value3;
 		
 		private boolean first;
@@ -1968,21 +2022,23 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			
 			bind("definition_of_sequence_append", this.s, this.x, this.x0, this.x1, this.y);
 			
+			debugPrint(caseIndex, this.s, this.x, this.x0, this.x1, this.y);
+			
 			new CasesHelper()
 			.addCase(this.value0, this.condition0)
 			.addCase(this.value1, this.condition1)
 			.addCase(this.value2, this.condition2)
-			.addCase(this.value3)
+			.addCase(this.value3, this.condition3)
 			.selectCase(caseIndex);
 			
-			if (3 == caseIndex) {
-				subdeduction();
-				
-				bind("definition_of_sequence_new", this.s, this.x, this.y);
-				rewrite(name(-2), name(-1));
-				
-				conclude();
-			}
+//			if (3 == caseIndex) {
+//				subdeduction();
+//				
+//				bind("definition_of_sequence_new", this.s, this.x, this.y);
+//				rewrite(name(-2), name(-1));
+//				
+//				conclude();
+//			}
 			
 			conclude();
 			
@@ -2014,7 +2070,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			this.condition2 = $(this.x, ":=:", $(this.s, this.x0, this.x1));
 			this.value2 = $(this.s, this.x0, $("sequence_append", this.s, this.x1, this.y));
 			
-			this.value3 = $("sequence_new", this.s, this.x, this.y);
+			this.condition3 = $(this.x, ":=:", $1(this.x0));
+			this.value3 = $(this.x0, $(this.s, this.y));
 		}
 		
 		private static final long serialVersionUID = 1480975513598301733L;
@@ -2024,6 +2081,10 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			
 			if (list == null) {
 				return $("()");
+			}
+			
+			if (1 == list.size()) {
+				return first(list);
 			}
 			
 			if (2 == list.size()) {
@@ -2044,7 +2105,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		public static final Object x1(final Object s, final Object x) {
 			final List<?> list = cast(List.class, x);
 			
-			if (list == null) {
+			if (list == null || 1 == list.size()) {
 				return $("()");
 			}
 			

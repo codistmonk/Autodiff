@@ -58,6 +58,10 @@ public final class Expressions {
 		return Arrays.stream(objects).map(Expressions::$).collect(toList());
 	}
 	
+	public static final Object $1(final Object object) {
+		return Arrays.asList(object);
+	}
+	
 	public static final List<Object> $forall(final Object variableOrName) {
 		return list($(FORALL, $(variableOrName)));
 	}
