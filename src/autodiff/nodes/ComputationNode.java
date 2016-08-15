@@ -10,6 +10,7 @@ import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.proofs.Deduction;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -975,6 +976,97 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				}
 				
 				rewrite(name(-2), name(-1));
+				
+				conclude();
+			}
+			
+			{
+				suppose("definition_of_vector_reduction_by_product_0",
+						$($(PI, $()), "=", 1));
+			}
+			
+			{
+				final Object _x0 = $new("x0");
+				
+				suppose("definition_of_vector_reduction_by_product_1",
+						$(FORALL, _x0, IN, R,
+								$($(PI, $(_x0)), "=", _x0)));
+			}
+			
+			{
+				final Object _s = $new("s");
+				final Object _x0 = $new("x0");
+				final Object _x1 = $new("x1");
+				
+				suppose("definition_of_vector_reduction_by_product_2",
+						$forall(_s,
+								$(FORALL, _x0, ",", _x1, IN, R,
+										$($(PI, $(_x0, $(_s, _x1))), "=", $(_x0, "*", _x1)))));
+			}
+			
+			{
+				final Object _s = $new("s");
+				final Object _x0 = $new("x0");
+				final Object _x1 = $new("x1");
+				final Object _x2 = $new("x2");
+				
+				suppose("definition_of_vector_reduction_by_product_3",
+						$forall(_s, _x2,
+								$(FORALL, _x0, ",", _x1, IN, R,
+										$($(PI, $(_x0, $(_s, _x1, _x2))), "=", $(_x0, "*", $(PI, $(_x1, _x2)))))));
+			}
+			
+			{
+				subdeduction("vector_reduction_by_product.test1");
+				
+				final Object _x = SB_COMMA.build(1, 2, 3);
+				
+				{
+					subdeduction();
+					
+					ebind("definition_of_vector_reduction_by_product_3", ",", third(second(_x)), first(_x), second(second(_x)));
+					trimLast();
+					
+					conclude();
+				}
+				
+				{
+					subdeduction();
+					
+					final Object x0 = second(second(_x));
+					final Object x1 = second(third(second(_x)));
+					
+					ebind("definition_of_vector_reduction_by_product_2", ",", x0, x1);
+					trimLast();
+					
+					{
+						subdeduction();
+						
+						final Object a = left(right(proposition(-1)));
+						final Object b = right(right(proposition(-1)));
+						
+						verifyBasicNumericProposition($($(a, "*", b), "=", new BigDecimal("" + a).multiply(new BigDecimal("" + b))));
+						rewrite(name(-2), name(-1));
+						
+						conclude();
+					}
+					
+					conclude();
+				}
+				
+				rewrite(name(-2), name(-1));
+				
+				{
+					subdeduction();
+					
+					final Object a = left(right(proposition(-1)));
+					final Object b = right(right(proposition(-1)));
+					
+					verifyBasicNumericProposition($($(a, "*", b), "=", new BigDecimal("" + a).multiply(new BigDecimal("" + b))));
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
 				
 				conclude();
 			}
