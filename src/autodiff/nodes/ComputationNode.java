@@ -408,24 +408,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			supposeDefinitionOfMs();
 			supposeTypeOfFlat();
 			supposeDefinitionOfSingleton();
-			supposeTypeOfSingle();
-//			supposeTypeOfPair();
-			supposeCartesian1();
-			supposeTypeOfCartesian();
-			supposeCartesianMN();
-			
-			{
-				final Object _X = $new("X");
-				final Object _Y = $new("Y");
-				final Object _x = $new("x");
-				final Object _y = $new("y");
-				
-				suppose("type_of_tuple",
-						$(FORALL, _X, ",", _Y, IN, U,
-								$(FORALL, _x, IN, _X,
-										$(FORALL, _y, IN, _Y,
-												$(SB_COMMA.build(_x, _y), IN, SB_CROSS.build(_X, _Y))))));
-			}
 			
 			{
 				final Object _X = $new("X");
@@ -594,7 +576,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				 * 
 				 */
 				
-				// TODO use $(_s, _x1) instead of _x1
 				final Object condition0 = $(_x, ":=:", $1(_x0));
 				final Object value0 = $(_x0, $(_s, _y));
 				
@@ -622,7 +603,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			
 			{
 				final Object _s = ",";
-				final Object _x = $1(1);
+				final Object _x = SB_COMMA.build(1);
 				final Object _y = 2;
 				
 				new SequenceAppendHelper(_s, _x, _y).compute("sequence_append.test1");
@@ -668,7 +649,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				final Object _x = $new("x");
 				final Object _y = $new("y");
 				
-				suppose("type_of_tuple2",
+				suppose("type_of_tuple",
 						$(FORALL, _X, ",", _Y, IN, U,
 								$(FORALL, _x, IN, _X,
 										$(FORALL, _y, IN, _Y,
@@ -694,7 +675,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			}
 			
 			{
-				subdeduction("type_of_tuple2.test1");
+				subdeduction("type_of_tuple.test1");
 				
 				{
 					subdeduction();
@@ -718,7 +699,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				{
 					subdeduction();
 					
-					ebind("type_of_tuple2", $1(N), N, $1(1), 2);
+					ebind("type_of_tuple", $1(N), N, $1(1), 2);
 					trimLast();
 					
 					conclude();
@@ -740,7 +721,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			}
 			
 			{
-				subdeduction("type_of_tuple2.test2");
+				subdeduction("type_of_tuple.test2");
 				
 				{
 					subdeduction();
@@ -757,7 +738,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				{
 					subdeduction();
 					
-					ebind("type_of_tuple2", SB_CROSS.build(N, N), N, SB_COMMA.build(1, 2), 3);
+					ebind("type_of_tuple", SB_CROSS.build(N, N), N, SB_COMMA.build(1, 2), 3);
 					trimLast();
 					
 					conclude();
@@ -880,71 +861,12 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			{
 				subdeduction("type_of_tuple.test3");
 				
-				rewrite("type_of_tuple2.test2", "simplification_of_tuple_type.test1");
+				rewrite("type_of_tuple.test2", "simplification_of_tuple_type.test1");
 				
 				conclude();
 			}
 			
 			abort();
-			
-			{
-				final Object _f = $new("f");
-				final Object _x = $new("x0");
-				final Object _sx = $new("sx");
-				final Object _y = $new("y0");
-				final Object _sy = $new("sy");
-				
-				suppose("definition_of_zip_0",
-						$forall(_x, _sx, _y, _sy,
-								$($("zip", _f, _sx, _sy, $(_sx, _x), $(_sy, _y)), "=", $(_f, _x, _y))));
-			}
-			
-			{
-				final Object _f = $new("f");
-				final Object _x0 = $new("x0");
-				final Object _x1 = $new("x1");
-				final Object _sx = $new("sx");
-				final Object _y0 = $new("y0");
-				final Object _y1 = $new("y1");
-				final Object _sy = $new("sy");
-				
-				suppose("definition_of_zip_n",
-						$forall(_x0, _x1, _sx, _y0, _y1, _sy,
-								$($("zip", _f, _sx, _sy, $(_sx, _x0, _x1), $(_sy, _y0, _y1)), "=", $($(_f, _x0, _y0), $("zip", _f, _sx, _sy, _x1, _y1)))));
-			}
-			
-			{
-				final Object _f = $new("f");
-				final Object _x0 = $new("x0");
-				final Object _x1 = $new("x1");
-				final Object _sx = $new("sx");
-				final Object _y0 = $new("y0");
-				final Object _y1 = $new("y1");
-				final Object _sy = $new("sy");
-				
-				suppose("definition_of_zip_begin",
-						$forall(_x0, _x1, _sx, _y0, _y1, _sy,
-								$($("zip", _f, _sx, _sy, $(_x0, $(_sx, _x1)), $(_y0, $(_sy, _y1))), "=", $($(_f, _x0, _y0), $("zip", _f, _sx, _sy, _x1, _y1)))));
-			}
-			
-			{
-				final Object _f = $new("f");
-				final Object _x0 = $new("x0");
-				final Object _x1 = $new("x1");
-				
-				suppose("definition_of_reduce_0",
-						$forall(_f, _x0, _x0,
-								$($("reduce", _f, $(_x0, _x1)), "=", $(_f, _x0, _x1))));
-			}
-			
-			{
-				final Object _x = $new("x");
-				final Object _X = $new("X");
-				
-				suppose("definition_of_cross_type",
-						$forall(_x, _X,
-								$rule($("reduce", LAND, $("zip", IN, ",", CROSS, _x, _X)), $(_x, IN, _X))));
-			}
 			
 			supposeDefinitionOfProductLoop0();
 			supposeDefinitionOfProductLoopN();
@@ -1498,57 +1420,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		suppose("definition_of_singleton",
 				$forall(_X,
 						$(_X, IN, c(_X))));
-	}
-	
-	public static final void supposeTypeOfSingle() {
-		final Object _X = $new("X");
-		final Object _x = $new("x");
-		
-		suppose("type_of_single",
-				$forall(_X,
-						$(FORALL, _x, IN, _X,
-										$(p(_x), IN, _X))));
-	}
-	
-	public static final void supposeTypeOfPair() {
-		final Object _X = $new("X");
-		final Object _Y = $new("Y");
-		final Object _x = $new("x");
-		final Object _y = $new("y");
-		
-		suppose("type_of_pair",
-				$forall(_X, _Y,
-						$(FORALL, _x, IN, _X,
-								$(FORALL, _y, IN, _Y,
-										$(p(_x, ",", _y), IN, $(_X, CROSS, _Y))))));
-	}
-	
-	public static final void supposeCartesian1() {
-		final Object _X = $new("X");
-		
-		suppose("cartesian_1",
-				$(FORALL, _X, IN, U,
-						$(_X, "=", $(_X, "^", 1))));
-	}
-	
-	public static final void supposeTypeOfCartesian() {
-		final Object _X = $new("X");
-		final Object _Y = $new("Y");
-		
-		suppose("type_of_cartesian",
-				$(FORALL, _X, ",", _Y, IN, U,
-						$(pp(_X, CROSS, _Y), SUBSET, U)));
-	}
-	
-	public static final void supposeCartesianMN() {
-		final Object _X = $new("X");
-		final Object _m = $new("m");
-		final Object _n = $new("n");
-		
-		suppose("cartesian_m_n",
-				$(FORALL, _X, IN, U,
-						$(FORALL, _m, ",", _n, IN, POS,
-								$(SB_CROSS.build($(_X, "^", _m), $(_X, "^", _n)), "=", SB_CROSS.build($(_X, "^", $(_m, "+", _n)))))));
 	}
 	
 	public static final void deducePositivesInUhm() {
