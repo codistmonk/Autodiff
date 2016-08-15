@@ -197,6 +197,15 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		ebind(name(-1), values);
 	}
 	
+	public static final void ebindTrim(final String target, final Object... values) {
+		subdeduction();
+		
+		ebind(target, values);
+		trimLast();
+		
+		conclude();
+	}
+	
 	public static final void ebind(final String target, final Object... values) {
 		subdeduction();
 		
@@ -706,8 +715,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			{
 				subdeduction("single_N_in_Uhm");
 				
-				ebind("type_of_single_in_Uhm", N);
-				trimLast();
+				ebindTrim("type_of_single_in_Uhm", N);
 				
 				conclude();
 			}
@@ -720,28 +728,14 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					
 					verifyBasicNumericProposition($(1, IN, N));
 					
-					{
-						subdeduction();
-						
-						ebind("type_of_single", N, 1);
-						trimLast();
-						
-						conclude();
-					}
+					ebindTrim("type_of_single", N, 1);
 					
 					rewrite(name(-2), name(-1));
 					
 					conclude();
 				}
 				
-				{
-					subdeduction();
-					
-					ebind("type_of_tuple", $1(N), N, $1(1), 2);
-					trimLast();
-					
-					conclude();
-				}
+				ebindTrim("type_of_tuple", $1(N), N, $1(1), 2);
 				
 				final List<?> _x = list(left(proposition(-1)));
 				final List<?> _X = list(right(proposition(-1)));
@@ -761,8 +755,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				{
 					subdeduction();
 					
-					ebind("type_of_tuple_in_Uhm", $1(N), N);
-					trimLast();
+					ebindTrim("type_of_tuple_in_Uhm", $1(N), N);
 					
 					new SequenceAppendHelper(CROSS, $1(N), N).compute();
 					rewrite(name(-2), name(-1));
@@ -770,14 +763,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					conclude();
 				}
 				
-				{
-					subdeduction();
-					
-					ebind("type_of_tuple", sequence(CROSS, N, N), N, sequence(",", 1, 2), 3);
-					trimLast();
-					
-					conclude();
-				}
+				ebindTrim("type_of_tuple", sequence(CROSS, N, N), N, sequence(",", 1, 2), 3);
 				
 				final List<?> _x = list(left(proposition(-1)));
 				final List<?> _X = list(right(proposition(-1)));
@@ -824,8 +810,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			{
 				subdeduction("simplification_of_type_of_tuple.test1");
 				
-				ebind("simplification_of_type_of_tuple", N, 3);
-				trimLast();
+				ebindTrim("simplification_of_type_of_tuple", N, 3);
 				
 				new RepeatHelper(CROSS, N, 3).compute();
 				rewrite(name(-2), name(-1));
@@ -944,8 +929,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					
 					deduceCartesianProduct(R, flattenSequence(",", _x).toArray());
 					
-					ebind("definition_of_vector_access_i", R, 3, 1, _x);
-					trimLast();
+					ebindTrim("definition_of_vector_access_i", R, 3, 1, _x);
 					
 					verifyBasicNumericProposition($($(1, "-", 1), "=", 0));
 					rewrite(name(-2), name(-1));
@@ -962,8 +946,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					final Object tail = left(right(proposition(-1)));
 					
 					deduceCartesianProduct(R, flattenSequence(",", tail).toArray());
-					ebind("definition_of_vector_access_0", R, 2, tail);
-					trimLast();
+					ebindTrim("definition_of_vector_access_0", R, 2, tail);
 					
 					computeSequenceHead(tail);
 					rewrite(name(-2), name(-1));
@@ -1017,14 +1000,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				
 				final Object _x = sequence(",", 1, 2, 3);
 				
-				{
-					subdeduction();
-					
-					ebind("definition_of_vector_reduction_by_product_3", ",", third(second(_x)), first(_x), second(second(_x)));
-					trimLast();
-					
-					conclude();
-				}
+				ebindTrim("definition_of_vector_reduction_by_product_3", ",", third(second(_x)), first(_x), second(second(_x)));
 				
 				{
 					subdeduction();
@@ -1032,8 +1008,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					final Object x0 = second(second(_x));
 					final Object x1 = second(third(second(_x)));
 					
-					ebind("definition_of_vector_reduction_by_product_2", ",", x0, x1);
-					trimLast();
+					ebindTrim("definition_of_vector_reduction_by_product_2", ",", x0, x1);
 					
 					{
 						subdeduction();
@@ -1187,8 +1162,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		{
 			subdeduction();
 			
-			ebind("simplification_of_type_of_tuple", valueType, values.length);
-			trimLast();
+			ebindTrim("simplification_of_type_of_tuple", valueType, values.length);
 			
 			new RepeatHelper(CROSS, valueType, values.length).compute();
 			rewrite(name(-2), name(-1));
@@ -1217,8 +1191,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		{
 			subdeduction();
 			
-			ebind("type_of_tuple_in_Uhm", previousType, type);
-			trimLast();
+			ebindTrim("type_of_tuple_in_Uhm", previousType, type);
 			
 			new SequenceAppendHelper(CROSS, previousType, type).compute();
 			rewrite(name(-2), name(-1));
@@ -1231,8 +1204,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			
 			deducePositivity(1);
 			
-			ebind("type_of_tuple", previousType, type, previousValue, value);
-			trimLast();
+			ebindTrim("type_of_tuple", previousType, type, previousValue, value);
 			
 			new SequenceAppendHelper(",", previousValue, value).compute();
 			rewrite(name(-2), name(-1));
@@ -1464,8 +1436,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			{
 				subdeduction();
 				
-				ebind("definition_of_subset", _X, _Y);
-				trimLast();
+				ebindTrim("definition_of_subset", _X, _Y);
 				rewrite(h1, name(-1));
 				bind(name(-1), _x);
 				
@@ -1477,8 +1448,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			{
 				subdeduction();
 				
-				ebind("definition_of_subset", _Y, _Z);
-				trimLast();
+				ebindTrim("definition_of_subset", _Y, _Z);
 				rewrite(h2, name(-1));
 				bind(name(-1), _x);
 				
@@ -1490,8 +1460,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			conclude();
 		}
 		
-		ebind("definition_of_subset", _X, _Z);
-		trimLast();
+		ebindTrim("definition_of_subset", _X, _Z);
 		rewriteRight(name(-2), name(-1));
 		
 		conclude();
@@ -1610,8 +1579,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		
 		breakConjunction(name(-1));
 		
-		bind("logical_equality", _X, _Y);
-		trimLast();
+		ebindTrim("logical_equality", _X, _Y);
 		
 		conclude();
 	}
@@ -1628,8 +1596,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			suppose($(_X, LAND, _Y));
 			breakConjunction(name(-1));
 			
-			bind("introduction_of_conjunction", _Y, _X);
-			trimLast();
+			ebindTrim("introduction_of_conjunction", _Y, _X);
 			
 			conclude();
 		}
@@ -1640,14 +1607,12 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			suppose($(_Y, LAND, _X));
 			breakConjunction(name(-1));
 			
-			bind("introduction_of_conjunction", _X, _Y);
-			trimLast();
+			ebindTrim("introduction_of_conjunction", _X, _Y);
 			
 			conclude();
 		}
 		
-		bind("logical_equality", $(_X, LAND, _Y), $(_Y, LAND, _X));
-		trimLast();
+		ebindTrim("logical_equality", $(_X, LAND, _Y), $(_Y, LAND, _X));
 		
 		conclude();
 	}
@@ -1655,8 +1620,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	public static final void deducePositivesSubsetNaturals() {
 		subdeduction("positives_subset_naturals");
 		
-		ebind("definition_of_subset", POS, N);
-		trimLast();
+		ebindTrim("definition_of_subset", POS, N);
 		
 		{
 			subdeduction();
@@ -1710,8 +1674,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	public static final void deducePositivesInUhm() {
 		subdeduction("positives_in_Uhm");
 		
-		ebind("subset_in_Uhm", POS, N);
-		trimLast();
+		ebindTrim("subset_in_Uhm", POS, N);
 		
 		conclude();
 	}
@@ -1762,8 +1725,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	public static final void deduceNaturalsInUhm() {
 		subdeduction("naturals_in_Uhm");
 		
-		ebind("subset_in_Uhm", N, R);
-		trimLast();
+		ebindTrim("subset_in_Uhm", N, R);
 		
 		conclude();
 	}
@@ -1848,8 +1810,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		{
 			subdeduction();
 			
-			ebind("type_of_single", right(proposition), left(proposition));
-			trimLast();
+			ebindTrim("type_of_single", right(proposition), left(proposition));
 			
 			conclude();
 		}
@@ -1881,11 +1842,13 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	public static abstract interface BindListener extends Serializable {
 		
 		public default void beforeBind(final String key, final Object value) {
-			// NOP
+			ignore(key);
+			ignore(value);
 		}
 		
 		public default void afterBind(final String key, final Object value) {
-			// NOP
+			ignore(key);
+			ignore(value);
 		}
 		
 	}
@@ -2250,8 +2213,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				{
 					subdeduction();
 					
-					ebind("definition_of_repeat_n", this.s, this.x, this.n);
-					trimLast();
+					ebindTrim("definition_of_repeat_n", this.s, this.x, this.n);
 					verifyBasicNumericProposition($($(this.n, "-", 1), "=", this.n - 1));
 					rewrite(name(-2), name(-1));
 					
