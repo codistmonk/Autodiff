@@ -105,11 +105,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 //		final Object shapeExpression = middle(right(middle(right(proposition))));
 		final Object shapeExpression = right(middle(right(proposition)));
 		
-		debugPrint(shapeExpression);
-		debugPrint(flattenSequence(",", shapeExpression));
-		
-//		setShape(flattenBinaryTree(shapeExpression).stream().mapToInt(
-//				o -> ((Number) o).intValue()).toArray());
 		setShape(toInts(flattenSequence(",", shapeExpression)));
 		
 		return this;
@@ -859,6 +854,11 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			}
 			
 			{
+				suppose("reals_single_in_Uhm",
+						$($1(R), IN, U));
+			}
+			
+			{
 				final Object _x0 = $new("x0");
 				
 				suppose("definition_of_sequence_head_1",
@@ -911,15 +911,79 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				
 				conclude();
 			}
+			
+			{
+				final Object _x = $new("x");
+				final Object _X = $new("X");
+				final Object _n = $new("n");
+				
+				suppose("definition_of_vector_access_0",
+						$(FORALL, _X, IN, U,
+								$(FORALL, _n, IN, POS,
+										$(FORALL, _x, IN, $(_X, "^", _n),
+												$($(_x, "_", 0), "=", $("sequence_head", _x))))));
+			}
+			
+			{
+				final Object _x = $new("x");
+				final Object _X = $new("X");
+				final Object _n = $new("n");
+				final Object _i = $new("i");
+				
+				suppose("definition_of_vector_access_i",
+						$(FORALL, _X, IN, U,
+								$(FORALL, _n, ",", _i, IN, POS,
+										$(FORALL, _x, IN, $(_X, "^", _n),
+												$($(_x, "_", _i), "=", $($("sequence_tail", ",", _x), "_", $(_i, "-", 1)))))));
+			}
+			
+			{
+				subdeduction("vector_access.test1");
+				
+				final Object _x = SB_COMMA.build(1, 2, 3);
+				
+				{
+					subdeduction();
+					
+					deduceCartesianProduct(R, flattenSequence(",", _x).toArray());
+					
+					ebind("definition_of_vector_access_i", R, 3, 1, _x);
+					trimLast();
+					
+					verifyBasicNumericProposition($($(1, "-", 1), "=", 0));
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				computeSequenceTail(",", _x);
+				rewrite(name(-2), name(-1));
+				
+				{
+					subdeduction();
+					
+					final Object tail = left(right(proposition(-1)));
+					
+					deduceCartesianProduct(R, flattenSequence(",", tail).toArray());
+					ebind("definition_of_vector_access_0", R, 2, tail);
+					trimLast();
+					
+					computeSequenceHead(tail);
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+			}
 		}
 		
 	}, 1);
 	
 	public static final void computeSequenceHead(final Object x) {
 		final List<?> list = list(x);
-		
-		debugPrint(list);
-		debugPrint(list.size());
 		
 		if (1 == list.size()) {
 			ebind("definition_of_sequence_head_1", first(list));
@@ -938,9 +1002,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	
 	public static final void computeSequenceTail(final Object separator, final Object x) {
 		final List<?> list = list(x);
-		
-		debugPrint(list);
-		debugPrint(list.size());
 		
 		if (2 == list.size()) {
 			final List<?> second = list(second(list));
@@ -1013,7 +1074,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 //					bind(name(-1), p(toBinaryTree(",", s)));
 					bind(name(-1), SB_COMMA.build(s));
 					
-					this.deduceCartesianProduct(POS, s);
+					deduceCartesianProduct(POS, s);
 					
 					apply(name(-2), name(-1));
 					
@@ -1021,77 +1082,78 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				}
 			}
 			
-			public final void deduceCartesianProduct(final Object valueType, final Object... values) {
-				subdeduction();
-				
-				this.beginCartesianProduct(values[0], valueType);
-				
-				for (int i = 1; i < values.length; ++i) {
-					this.append(values[i], valueType);
-				}
-				
-				{
-					subdeduction();
-					
-					ebind("simplification_of_type_of_tuple", valueType, values.length);
-					trimLast();
-					
-					new RepeatHelper(CROSS, valueType, values.length).compute();
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-				}
-				
-				rewrite(name(-2), name(-1));
-				
-				conclude();
-			}
-			
-			public final void beginCartesianProduct(final Object value,
-					final Object type) {
-				subdeduction();
-				
-				deduceSingleType(justicationFor($(value, IN, type)).getName());
-				
-				conclude();
-			}
-			
-			public final void append(final Object value, final Object type) {
-				final Object previousValue = left(proposition(-1));
-				final Object previousType = right(proposition(-1));
-				
-				{
-					subdeduction();
-					
-					ebind("type_of_tuple_in_Uhm", previousType, type);
-					trimLast();
-					
-					new SequenceAppendHelper(CROSS, previousType, type).compute();
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-				}
-				
-				{
-					subdeduction();
-					
-					deducePositivity(1);
-					
-					ebind("type_of_tuple", previousType, type, previousValue, value);
-					trimLast();
-					
-					new SequenceAppendHelper(",", previousValue, value).compute();
-					rewrite(name(-2), name(-1));
-					
-					new SequenceAppendHelper(CROSS, previousType, type).compute();
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-				}
-			}
 		});
 		
 		return result;
+	}
+	
+	public static final void deduceCartesianProduct(final Object valueType, final Object... values) {
+		subdeduction();
+		
+		beginCartesianProduct(values[0], valueType);
+		
+		for (int i = 1; i < values.length; ++i) {
+			appendToCartesianProduct(values[i], valueType);
+		}
+		
+		{
+			subdeduction();
+			
+			ebind("simplification_of_type_of_tuple", valueType, values.length);
+			trimLast();
+			
+			new RepeatHelper(CROSS, valueType, values.length).compute();
+			rewrite(name(-2), name(-1));
+			
+			conclude();
+		}
+		
+		rewrite(name(-2), name(-1));
+		
+		conclude();
+	}
+	
+	public static final void beginCartesianProduct(final Object value,
+			final Object type) {
+		subdeduction();
+		
+		deduceSingleType(justicationFor($(value, IN, type)).getName());
+		
+		conclude();
+	}
+	
+	public static final void appendToCartesianProduct(final Object value, final Object type) {
+		final Object previousValue = left(proposition(-1));
+		final Object previousType = right(proposition(-1));
+		
+		{
+			subdeduction();
+			
+			ebind("type_of_tuple_in_Uhm", previousType, type);
+			trimLast();
+			
+			new SequenceAppendHelper(CROSS, previousType, type).compute();
+			rewrite(name(-2), name(-1));
+			
+			conclude();
+		}
+		
+		{
+			subdeduction();
+			
+			deducePositivity(1);
+			
+			ebind("type_of_tuple", previousType, type, previousValue, value);
+			trimLast();
+			
+			new SequenceAppendHelper(",", previousValue, value).compute();
+			rewrite(name(-2), name(-1));
+			
+			new SequenceAppendHelper(CROSS, previousType, type).compute();
+			rewrite(name(-2), name(-1));
+			
+			conclude();
+		}
 	}
 	
 	public static final Integer[] toObjects(final int... values) {
