@@ -396,6 +396,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			debugPrint(SB_COMMA.build(1, 2, 3));
 			debugPrint(SB_COMMA.build(1, SB_COMMA.build(2, 3)));
 			debugPrint(SB_COMMA.build(SB_COMMA.build(1, 2), 3));
+			debugPrint(SB_COMMA.build(1, SB_COMMA.build(2, 3), 4));
+			debugPrint(SB_COMMA.build(1, 2, 3, 4));
 			
 			supposeDefinitionOfParentheses();
 			supposeDefinitionOfForallIn();
@@ -608,6 +610,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				
 				/*
 				 * 
+				 * []
 				 * [x0]
 				 * [x0 [, x1]]
 				 * [x0 [, x1 x2]]
@@ -801,9 +804,9 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				final Object _s = $new("s");
 				final Object _x = $new("x");
 				
-				suppose("definition_of_repeat_1",
+				suppose("definition_of_repeat_0",
 						$forall(_s, _x,
-								$($("repeat", _s, _x, 1), "=", $1(_x))));
+								$($("repeat", _s, _x, 0), "=", $())));
 			}
 			
 			{
@@ -2027,14 +2030,14 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			this.x = x;
 			this.n = n;
 			
-			if (n < 1) {
+			if (n < 0) {
 				throw new IllegalArgumentException();
 			}
 		}
 		
 		public final void compute() {
-			if (this.n == 1) {
-				ebind("definition_of_repeat_1", this.s, this.x);
+			if (this.n == 0) {
+				ebind("definition_of_repeat_0", this.s, this.x);
 			} else {
 				subdeduction();
 				
