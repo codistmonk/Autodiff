@@ -5,7 +5,6 @@ import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.BasicNumericVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
 import static multij.tools.Tools.*;
-
 import autodiff.reasoning.deductions.Standard;
 import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.proofs.Deduction;
@@ -858,9 +857,111 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				suppose("positives_single_in_Uhm",
 						$($1(POS), IN, U));
 			}
+			
+			{
+				final Object _x0 = $new("x0");
+				
+				suppose("definition_of_sequence_head_1",
+						$forall(_x0,
+								$($("sequence_head", $1(_x0)), "=", _x0)));
+			}
+			
+			{
+				final Object _x0 = $new("x0");
+				final Object _x1 = $new("x1");
+				
+				suppose("definition_of_sequence_head_2",
+						$forall(_x0, _x1,
+								$($("sequence_head", $(_x0, _x1)), "=", _x0)));
+			}
+			
+			{
+				final Object _s = $new("s");
+				final Object _x0 = $new("x0");
+				final Object _x1 = $new("x1");
+				
+				suppose("definition_of_sequence_tail_1",
+						$forall(_s, _x0, _x1,
+								$($("sequence_tail", _s, $(_x0, $(_s, _x1))), "=", $1(_x1))));
+			}
+			
+			{
+				final Object _s = $new("s");
+				final Object _x0 = $new("x0");
+				final Object _x1 = $new("x1");
+				final Object _x2 = $new("x2");
+				
+				suppose("definition_of_sequence_tail_2",
+						$forall(_s, _x0, _x1, _x2,
+								$($("sequence_tail", _s, $(_x0, $(_s, _x1, _x2))), "=", $(_x1, _x2))));
+			}
+			
+			{
+				subdeduction("sequence_head.test1");
+				
+				computeSequenceHead(SB_COMMA.build(1, 2, 3));
+				
+				conclude();
+			}
+			
+			{
+				subdeduction("sequence_tail.test1");
+				
+				computeSequenceTail(",", SB_COMMA.build(1, 2, 3));
+				
+				conclude();
+			}
 		}
 		
 	}, 1);
+	
+	public static final void computeSequenceHead(final Object x) {
+		final List<?> list = list(x);
+		
+		debugPrint(list);
+		debugPrint(list.size());
+		
+		if (1 == list.size()) {
+			ebind("definition_of_sequence_head_1", first(list));
+			
+			return;
+		}
+		
+		if (2 == list.size()) {
+			ebind("definition_of_sequence_head_2", first(list), second(list));
+			
+			return;
+		}
+		
+		throw new IllegalArgumentException();
+	}
+	
+	public static final void computeSequenceTail(final Object separator, final Object x) {
+		final List<?> list = list(x);
+		
+		debugPrint(list);
+		debugPrint(list.size());
+		
+		if (2 == list.size()) {
+			final List<?> second = list(second(list));
+			
+			if (separator.equals(first(second))) {
+				if (2 == second.size()) {
+					ebind("definition_of_sequence_tail_1", separator, first(list), second(second));
+					
+					return;
+				}
+				
+				if (3 == second.size()) {
+					ebind("definition_of_sequence_tail_2", separator, first(list), second(second), third(second));
+					
+					return;
+				}
+			}
+		}
+		
+		throw new IllegalArgumentException();
+	}
 	
 	public static final ComputationNode ones() {
 		final ComputationNode result = new ComputationNode().setTypeName("ones");

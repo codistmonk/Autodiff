@@ -225,6 +225,10 @@ public final class Expressions {
 		return list(pair).get(1);
 	}
 	
+	public static final Object third(final Object pair) {
+		return list(pair).get(2);
+	}
+	
 	public static final boolean isSubstitution(final Object object) {
 		final List<?> expression = cast(List.class, object);
 		
