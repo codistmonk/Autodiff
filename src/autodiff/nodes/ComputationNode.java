@@ -1689,8 +1689,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		}
 		
 		public final Object build(final Object... elements) {
-			if (1 == elements.length) {
-				return Arrays.asList(elements[0]);
+			if (elements.length <= 1) {
+				return Arrays.asList(elements);
 			}
 			
 			List<Object> result = Arrays.asList(this.getSeparator(), elements[elements.length - 1]);
