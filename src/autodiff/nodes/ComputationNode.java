@@ -105,10 +105,45 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 //		final Object shapeExpression = middle(right(middle(right(proposition))));
 		final Object shapeExpression = right(middle(right(proposition)));
 		
-		setShape(flattenBinaryTree(shapeExpression).stream().mapToInt(
-				o -> ((Number) o).intValue()).toArray());
+		debugPrint(shapeExpression);
+		debugPrint(flattenSequence(",", shapeExpression));
+		
+//		setShape(flattenBinaryTree(shapeExpression).stream().mapToInt(
+//				o -> ((Number) o).intValue()).toArray());
+		setShape(toInts(flattenSequence(",", shapeExpression)));
 		
 		return this;
+	}
+	
+	public static final int[] toInts(final List<Object> numbers) {
+		return numbers.stream().mapToInt(n -> ((Number) n).intValue()).toArray();
+	}
+	
+	public static final List<Object> flattenSequence(final Object separator, final Object sequence) {
+		final List<Object> result = new ArrayList<>();
+		final List<?> list = list(sequence);
+		
+		result.add(first(list));
+		
+		if (2 == list.size()) {
+			List<?> tmp = list(second(list));
+			
+			while (tmp != null) {
+				if (2 == tmp.size() && separator.equals(first(tmp))) {
+					result.add(second(tmp));
+					break;
+				}
+				
+				if (3 == tmp.size() && separator.equals(first(tmp))) {
+					result.add(second(tmp));
+					tmp = list(tmp.get(2));
+				}
+			}
+		} else if (1 != list.size()) {
+			throw new IllegalArgumentException();
+		}
+		
+		return result;
 	}
 	
 	public final Deduction getBoundForm() {
@@ -793,67 +828,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				ebind("simplification_of_type_of_tuple", N, 3);
 				trimLast();
 				
-				{
-					subdeduction();
-					
-					{
-						subdeduction();
-						
-						ebind("definition_of_repeat_n", CROSS, N, 3);
-						trimLast();
-						
-						verifyBasicNumericProposition($($(3, "-", 1), "=", 2));
-						rewrite(name(-2), name(-1));
-						
-						conclude();
-					}
-					
-					final List<?> rhs = list(right(proposition(-1)));
-					
-					debugPrint(rhs);
-					
-					{
-						subdeduction();
-						
-						{
-							subdeduction();
-							
-							ebind("definition_of_repeat_n", CROSS, N, 2);
-							trimLast();
-							
-							verifyBasicNumericProposition($($(2, "-", 1), "=", 1));
-							rewrite(name(-2), name(-1));
-							
-							conclude();
-						}
-						
-						{
-							subdeduction();
-							
-							ebind("definition_of_repeat_1", CROSS, N);
-							trimLast();
-							
-							conclude();
-						}
-						
-						rewrite(name(-2), name(-1));
-						
-						new SequenceAppendHelper(CROSS, $1(N), N).compute();
-						
-						rewrite(name(-2), name(-1));
-						
-						conclude();
-					}
-					
-					rewrite(name(-2), name(-1));
-					
-					new SequenceAppendHelper(CROSS, SB_CROSS.build(N, N), N).compute();
-					
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-				}
-				
+				new RepeatHelper(CROSS, N, 3).compute();
 				rewrite(name(-2), name(-1));
 				
 				conclude();
@@ -929,22 +904,41 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 //					bind(name(-1), p(toBinaryTree(",", s)));
 					bind(name(-1), SB_COMMA.build(s));
 					
-					{
-						subdeduction();
-						
-						beginCartesianProduct(2, POS);
-						append(1, POS);
-						append(3, POS);
-						
-						conclude();
-					}
-					abort();
+					this.deduceCartesianProduct(POS, s);
+					
+					apply(name(-2), name(-1));
 					
 					conclude();
 				}
 			}
-
-			public void beginCartesianProduct(final Object value,
+			
+			public final void deduceCartesianProduct(final Object valueType, final Object... values) {
+				subdeduction();
+				
+				this.beginCartesianProduct(values[0], valueType);
+				
+				for (int i = 1; i < values.length; ++i) {
+					this.append(values[i], valueType);
+				}
+				
+				{
+					subdeduction();
+					
+					ebind("simplification_of_type_of_tuple", valueType, values.length);
+					trimLast();
+					
+					new RepeatHelper(CROSS, valueType, values.length).compute();
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+			}
+			
+			public final void beginCartesianProduct(final Object value,
 					final Object type) {
 				subdeduction();
 				
@@ -952,8 +946,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				
 				conclude();
 			}
-
-			public void append(final Object value, final Object type) {
+			
+			public final void append(final Object value, final Object type) {
 				final Object previousValue = left(proposition(-1));
 				final Object previousType = right(proposition(-1));
 				
@@ -1884,7 +1878,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		
 		public final void compute(final int caseIndex) {
 			if (caseIndex < 0 || 4 < caseIndex) {
-				throw new IllegalArgumentException();
+				throw new IllegalArgumentException("caseIndex: " + caseIndex);
 			}
 			
 			subdeduction();
@@ -2017,6 +2011,60 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			
 			return $("()");
 		}
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-15)
+	 */
+	public static final class RepeatHelper implements Serializable {
+		
+		private final Object s;
+		
+		private final Object x;
+		
+		private final int n;
+		
+		public RepeatHelper(final Object s, final Object x, final int n) {
+			this.s = s;
+			this.x = x;
+			this.n = n;
+			
+			if (n < 1) {
+				throw new IllegalArgumentException();
+			}
+		}
+		
+		public final void compute() {
+			if (this.n == 1) {
+				ebind("definition_of_repeat_1", this.s, this.x);
+			} else {
+				subdeduction();
+				
+				{
+					subdeduction();
+					
+					ebind("definition_of_repeat_n", this.s, this.x, this.n);
+					trimLast();
+					verifyBasicNumericProposition($($(this.n, "-", 1), "=", this.n - 1));
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				new RepeatHelper(this.s, this.x, this.n - 1).compute();
+				rewrite(name(-2), name(-1));
+				
+				final List<?> formula = list(right(proposition(-1)));
+				
+				new SequenceAppendHelper(this.s, formula.get(2), formula.get(3)).compute();
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+			}
+		}
+		
+		private static final long serialVersionUID = -3837963189941891310L;
 		
 	}
 	
