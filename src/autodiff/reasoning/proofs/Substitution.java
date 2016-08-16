@@ -5,14 +5,12 @@ import static java.util.stream.Collectors.toList;
 import static multij.tools.Tools.cast;
 
 import autodiff.reasoning.expressions.ExpressionZipper;
-import autodiff.rules.Variable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
@@ -130,7 +128,7 @@ public final class Substitution extends Proof.Abstract {
 	/**
 	 * @author codistmonk (creation 2016-08-11)
 	 */
-	public static final class ExpressionEquality implements ExpressionZipper<Boolean> {
+	public static abstract class AbstractExpressionEquality implements ExpressionZipper<Boolean> {
 		
 		private final Collection<Object> bound = new HashSet<>();
 		
@@ -149,7 +147,7 @@ public final class Substitution extends Proof.Abstract {
 				}
 			}
 			
-			return false;
+			return this.postVisit(expression1, expression2);
 		}
 		
 		@Override
@@ -184,6 +182,10 @@ public final class Substitution extends Proof.Abstract {
 			}
 			
 			return true;
+		}
+		
+		protected boolean postVisit(final Object expression1, final Object expression2) {
+			return false;
 		}
 		
 		private static final long serialVersionUID = 1097894997336832052L;
@@ -191,96 +193,11 @@ public final class Substitution extends Proof.Abstract {
 	}
 	
 	/**
-	 * @author codistmonk (creation 2016-08-16)
+	 * @author codistmonk (creation 2016-08-11)
 	 */
-	public static final class PatternMatching implements ExpressionZipper<Boolean> {
+	public static final class ExpressionEquality extends AbstractExpressionEquality {
 		
-		private final Collection<Object> bound;
-		
-		private final Map<Variable, Object> mapping;
-		
-		public PatternMatching() {
-			this(new LinkedHashMap<>());
-		}
-		
-		public PatternMatching(final Map<Variable, Object> mapping) {
-			this.bound = new HashSet<>();
-			this.mapping = mapping;
-		}
-		
-		public final Map<Variable, Object> getMapping() {
-			return this.mapping;
-		}
-		
-		@Override
-		public final Boolean visit(final Object expression1, final Object expression2) {
-			if (expression1.equals(expression2)) {
-				return true;
-			}
-			
-			{
-				final Number n1 = cast(Number.class, expression1);
-				final Number n2 = cast(Number.class, expression2);
-				
-				if (n1 != null && n2 != null && n1.toString().equals(n2.toString())) {
-					return true;
-				}
-			}
-			
-			{
-				final Variable variable = cast(Variable.class, expression1);
-				
-				if (variable != null) {
-					final Object existing = this.getMapping().get(variable);
-					
-					if (existing == null) {
-						this.getMapping().put(variable, expression2);
-						
-						return true;
-					}
-					
-					return existing.equals(expression2);
-				}
-			}
-			
-			return false;
-		}
-		
-		@Override
-		public final Boolean visit(final List<?> expression1, final List<?> expression2) {
-			final int n = expression1.size();
-			
-			if (n != expression2.size()) {
-				return false;
-			}
-			
-			if (isBlock(expression1) && isBlock(expression2)) {
-				final Object v1 = variable(expression1);
-				final Object s1 = scope(expression1);
-				final Object v2 = variable(expression2);
-				final Object s2 = scope(expression2);
-				
-				if (!deepContains(s1, v2) && !deepContains(s2, v1)) {
-					if (this.bound.add(v1)) {
-						try {
-							return this.apply(s1, substituteIn(s2, map(v2, v1), Collections.emptyList()));
-						} finally {
-							this.bound.remove(v1);
-						}
-					}
-				}
-			}
-			
-			for (int i = 0; i < n; ++i) {
-				if (!this.apply(expression1.get(i), expression2.get(i))) {
-					return false;
-				}
-			}
-			
-			return true;
-		}
-		
-		private static final long serialVersionUID = 1097894997336832052L;
+		private static final long serialVersionUID = 6883500932984939229L;
 		
 	}
 	
