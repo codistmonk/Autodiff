@@ -1006,85 +1006,93 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			}
 			
 			{
-				final Disjunction<Object, Pair<String, Map<Variable, Object>>> rules = new Disjunction<>();
-				
-				{
-					rules.add(rule($(PI, $()),
-							(_1, m) -> new Pair<>("definition_of_vector_reduction_by_product_0", m)));
-				}
-				
-				{
-					final Variable _x0 = new Variable("x0");
-					
-					rules.add(rule($(PI, $1(_x0)),
-							(_1, m) -> new Pair<>("definition_of_vector_reduction_by_product_1", m)));
-				}
-				
-				{
-					final Variable _s = new Variable("s");
-					final Variable _x0 = new Variable("x0");
-					final Variable _x1 = new Variable("x1");
-					
-					rules.add(rule($(PI, $(_x0, $(_s, _x1))),
-							(_1, m) -> new Pair<>("definition_of_vector_reduction_by_product_2", m)));
-				}
-				
-				{
-					final Variable _s = new Variable("s");
-					final Variable _x0 = new Variable("x0");
-					final Variable _x1 = new Variable("x1");
-					final Variable _x2 = new Variable("x2");
-					
-					rules.add(rule($(PI, $(_x0, $(_s, _x1, _x2))),
-							(_1, m) -> new Pair<>("definition_of_vector_reduction_by_product_3", m)));
-				}
-				
-				debugPrint(rules.applyTo($(PI, sequence(","))));
-				debugPrint(rules.applyTo($(PI, sequence(",", 1))));
-				debugPrint(rules.applyTo($(PI, sequence(",", 1, 2))));
-				debugPrint(rules.applyTo($(PI, sequence(",", 1, 2, 3))));
-				debugPrint(rules.applyTo($(PI, sequence(",", 1, sequence(",", 2, 3)))));
-				debugPrint(rules.applyTo($(PI, sequence(",", 1, 2, 3, 4))));
-			}
-			
-			{
 				subdeduction("vector_reduction_by_product.test1");
 				
-//				{
-//					final List<Pair<String, Map<Variable, Object>>> found = findConclusions($($(PI, new Variable("x")), "=", new Variable()));
-//					
-//					for (final Pair<String, Map<Variable, Object>> p : found) {
-//						debugPrint(p.getFirst());
-//						debugPrint(p.getSecond());
-//					}
-//				}
-				
-				final Object _x = sequence(",", 1, 2, 3);
-				
-				ebindTrim("definition_of_vector_reduction_by_product_3", ",", third(second(_x)), first(_x), second(second(_x)));
-				
-				{
-					subdeduction();
-					
-					final Object x0 = second(second(_x));
-					final Object x1 = second(third(second(_x)));
-					
-					ebindTrim("definition_of_vector_reduction_by_product_2", ",", x0, x1);
-					
-					simplifyBasicNumericExpression(name(-1), right(proposition(-1)));
-					
-					conclude();
-				}
-				
-				rewrite(name(-2), name(-1));
-				
-				simplifyBasicNumericExpression(name(-1), right(proposition(-1)));
+				computeVectorReductionByProduct($(PI, sequence(",", 1, 2, 3)));
 				
 				conclude();
 			}
 		}
 		
 	}, 1);
+	
+	public static final void computeVectorReductionByProduct(final Object vector) {
+		debugPrint(vector);
+		
+		final Disjunction<Object, Void> rules = new Disjunction<>();
+		
+		{
+			rules.add(rule($(PI, $()),
+					(_1, m) -> {
+						// NOP
+						
+						return null;
+					}));
+		}
+		
+		{
+			final Variable _x0 = new Variable("x0");
+			
+			rules.add(rule($(PI, $1(_x0)),
+					(_1, m) -> {
+						ebindTrim("definition_of_vector_reduction_by_product_1",
+								m.get(_x0));
+						
+						return null;
+					}));
+		}
+		
+		{
+			final Variable _s = new Variable("s");
+			final Variable _x0 = new Variable("x0");
+			final Variable _x1 = new Variable("x1");
+			
+			rules.add(rule($(PI, $(_x0, $(_s, _x1))),
+					(_1, m) -> {
+						{
+							subdeduction();
+							
+							ebindTrim("definition_of_vector_reduction_by_product_2",
+									m.get(_s), m.get(_x0), m.get(_x1));
+							
+							simplifyBasicNumericExpression(name(-1), right(proposition(-1)));
+							
+							conclude();
+						}
+						
+						return null;
+					}));
+		}
+		
+		{
+			final Variable _s = new Variable("s");
+			final Variable _x0 = new Variable("x0");
+			final Variable _x1 = new Variable("x1");
+			final Variable _x2 = new Variable("x2");
+			
+			rules.add(rule($(PI, $(_x0, $(_s, _x1, _x2))),
+					(_1, m) -> {
+						{
+							subdeduction();
+							
+							ebindTrim("definition_of_vector_reduction_by_product_3",
+									m.get(_s), m.get(_x2), m.get(_x0), m.get(_x1));
+							
+							computeVectorReductionByProduct(right(right(proposition(-1))));
+							
+							rewrite(name(-2), name(-1));
+							
+							simplifyBasicNumericExpression(name(-1), right(proposition(-1)));
+							
+							conclude();
+						}
+						
+						return null;
+					}));
+		}
+		
+		rules.applyTo(vector);
+	}
 	
 	public static final List<Pair<String, Map<Variable, Object>>> findConclusions(final Object pattern) {
 		final List<Pair<String, Map<Variable, Object>>> result = new ArrayList<>();
