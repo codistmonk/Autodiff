@@ -7,6 +7,13 @@ import static autodiff.reasoning.proofs.Stack.*;
 import static multij.tools.Tools.debugPrint;
 import static org.junit.Assert.*;
 
+import java.io.Serializable;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import autodiff.nodes.ComputationNode;
 import autodiff.nodes.Data;
 import autodiff.nodes.Node;
@@ -90,6 +97,28 @@ public final class NodeTest {
 					conclude();
 				}
 				
+				/*
+				 * (1)_2
+				 * 
+				 *   |
+				 *   V
+				 * 
+				 * allocate("i",1);repeat(2,"i",0,()->{write("result",read("i",0),1);});
+				 * 
+				 */
+				
+				{
+					final int n = 2;
+					
+					final Context context = new Context();
+					
+					context.allocate("result", n);
+					
+					context.allocate("i",1);context.repeat(2,"i",0,()->{context.write("result",context.read("i",0),1);});
+					
+					debugPrint(context.read("result", 0), context.read("result", 1));
+				}
+				
 				abort();
 				
 				// TODO
@@ -98,6 +127,52 @@ public final class NodeTest {
 		}, 1);
 		
 		fail("TODO");
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-16)
+	 */
+	public static final class Context implements Serializable {
+		
+		private final Map<String, FloatBuffer> buffers = new LinkedHashMap<>();
+		
+		public final void repeat(final Number n, final String counterName, final Number counterIndex, final Runnable instructions) {
+			final String deltaName = this.buffers.size() + ":delta";
+			
+			this.allocate(deltaName, 1);
+			this.write(deltaName, 0, 1);
+			
+			for (this.write(counterName, counterIndex, 0);
+					this.read(counterName, counterIndex) < n.intValue();
+					this.addTo(counterName, counterIndex, deltaName, 0)) {
+				instructions.run();
+			}
+		}
+		
+		public final void allocate(final String name, final int n) {
+			this.buffers.put(name,
+					ByteBuffer.allocateDirect(n * Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer());
+		}
+		
+		public final void write(final String targetName, final Number index, final Number value) {
+			this.buffer(targetName).put(index.intValue(), value.floatValue());
+		}
+		
+		public final float read(final String sourceName, final Number index) {
+			return this.buffer(sourceName).get(index.intValue());
+		}
+		
+		public final void addTo(final String targetName, final Number targetIndex, final String sourceName, final Number sourceIndex) {
+			this.write(targetName, targetIndex,
+					this.read(targetName, targetIndex) + this.read(sourceName, sourceIndex));
+		}
+		
+		private final FloatBuffer buffer(final String name) {
+			return this.buffers.get(name);
+		}
+		
+		private static final long serialVersionUID = -7818200319668460156L;
+		
 	}
 	
 	@Test
