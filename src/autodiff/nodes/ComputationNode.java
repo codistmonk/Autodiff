@@ -4,7 +4,7 @@ import static autodiff.reasoning.deductions.Standard.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.BasicNumericVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
-import static autodiff.rules.PatternPredicate.rule;
+import static autodiff.reasoning.tactics.PatternPredicate.rule;
 import static multij.tools.Tools.*;
 
 import autodiff.reasoning.deductions.Standard;
@@ -186,6 +186,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				deducePositivity(left(proposition));
 			} else if(isNaturality(proposition) || isReality(proposition)) {
 				verifyBasicNumericProposition(proposition);
+			} else if(isCartesianProductity(proposition)) {
+				deduceCartesianProduct(left(right(proposition)), flattenSequence(",", left(proposition)).toArray());
 			} else {
 				debugError(proposition);
 				
@@ -276,6 +278,18 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			conclude();
 			
 			return true;
+		}
+		
+		return false;
+	}
+	
+	public static final boolean isCartesianProductity(final Object proposition) {
+		final List<?> list = cast(List.class, proposition);
+		
+		if (list != null && 3 == list.size() && IN.equals(middle(list))) {
+			final List<?> type = cast(List.class, right(list));
+			
+			return type != null && "^".equals(middle(type));
 		}
 		
 		return false;
@@ -930,41 +944,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			{
 				subdeduction("vector_access.test1");
 				
-				final Object _x = sequence(",", 1, 2, 3);
-				
-				{
-					subdeduction();
-					
-					deduceCartesianProduct(R, flattenSequence(",", _x).toArray());
-					
-					ebindTrim("definition_of_vector_access_i", R, 3, 1, _x);
-					
-					simplifyBasicNumericExpression(name(-1), $(1, "-", 1));
-					
-					conclude();
-				}
-				
-				computeSequenceTail(",", _x);
-				rewrite(name(-2), name(-1));
-				
-				{
-					subdeduction();
-					
-					final Object tail = left(right(proposition(-1)));
-					
-					deduceCartesianProduct(R, flattenSequence(",", tail).toArray());
-					ebindTrim("definition_of_vector_access_0", R, 2, tail);
-					
-					computeSequenceHead(tail);
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-				}
-				
-				debugPrint(right(proposition(-2)));
-				debugPrint(left(proposition(-1)));
-				
-				rewrite(name(-2), name(-1));
+				computeVectorAccess(R, $(sequence(",", 1, 2, 3), "_", 1));
 				
 				conclude();
 			}
@@ -1016,9 +996,100 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		
 	}, 1);
 	
-	public static final void computeVectorReductionByProduct(final Object vector) {
-		debugPrint(vector);
+	public static final int sequenceLength(final Object separator, final Object sequence) {
+		final List<?> list = list(sequence);
 		
+		if (list.size() <= 1) {
+			return list.size();
+		}
+		
+		final List<?> second = list(second(sequence));
+		
+		if (2 == second.size() && separator.equals(first(second))) {
+			return 2;
+		}
+		
+		if (3 == second.size() && separator.equals(first(second))) {
+			return 1 + sequenceLength(separator, $(second(second), third(second)));
+		}
+		
+		throw new IllegalArgumentException();
+	}
+	
+	public static final void computeVectorAccess(final Object elementType, final Object formula) {
+		final Disjunction<Object, Void> rules = new Disjunction<>();
+//		{
+//			final Object _x = $new("x");
+//			final Object _X = $new("X");
+//			final Object _n = $new("n");
+//			
+//			suppose("definition_of_vector_access_0",
+//					$(FORALL, _X, IN, U,
+//							$(FORALL, _n, IN, POS,
+//									$(FORALL, _x, IN, $(_X, "^", _n),
+//											$($(_x, "_", 0), "=", $("sequence_head", _x))))));
+//		}
+		
+		{
+			final Variable _x = new Variable("x");
+			
+			rules.add(rule($(_x, "_", 0), (__, m) -> {
+				{
+					subdeduction();
+					
+					ebindTrim("definition_of_vector_access_0", elementType, sequenceLength(",", m.get(_x)), m.get(_x));
+					computeSequenceHead(m.get(_x));
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				return null;
+			}));
+		}
+		
+//		{
+//			final Object _x = $new("x");
+//			final Object _X = $new("X");
+//			final Object _n = $new("n");
+//			final Object _i = $new("i");
+//			
+//			suppose("definition_of_vector_access_i",
+//					$(FORALL, _X, IN, U,
+//							$(FORALL, _n, ",", _i, IN, POS,
+//									$(FORALL, _x, IN, $(_X, "^", _n),
+//											$($(_x, "_", _i), "=", $($("sequence_tail", ",", _x), "_", $(_i, "-", 1)))))));
+//		}
+		
+		{
+			final Variable _x = new Variable("x");
+			final Variable _i = new Variable("i");
+			
+			rules.add(rule($(_x, "_", _i), (__, m) -> {
+				{
+					subdeduction();
+					
+					ebindTrim("definition_of_vector_access_i", elementType, sequenceLength(",", m.get(_x)), m.get(_i), m.get(_x));
+					debugPrint(right(right(proposition(-1))));
+					simplifyBasicNumericExpression(name(-1), right(right(proposition(-1))));
+					
+					computeSequenceTail(",", m.get(_x));
+					rewrite(name(-2), name(-1));
+					
+					computeVectorAccess(elementType, right(proposition(-1)));
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				return null;
+			}));
+		}
+		
+		rules.applyTo(formula);
+	}
+	
+	public static final void computeVectorReductionByProduct(final Object formula) {
 		final Disjunction<Object, Void> rules = new Disjunction<>();
 		
 		{
@@ -1091,7 +1162,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					}));
 		}
 		
-		rules.applyTo(vector);
+		rules.applyTo(formula);
 	}
 	
 	public static final List<Pair<String, Map<Variable, Object>>> findConclusions(final Object pattern) {
