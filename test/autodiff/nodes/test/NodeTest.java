@@ -5,19 +5,22 @@ import static autodiff.reasoning.deductions.Standard.rewrite;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.Stack.*;
 import static multij.tools.Tools.debugPrint;
+import static multij.tools.Tools.invoke;
 import static org.junit.Assert.*;
+
+import autodiff.nodes.ComputationNode;
+import autodiff.nodes.Data;
+import autodiff.nodes.Node;
+import autodiff.reasoning.deductions.Standard;
+import autodiff.reasoning.expressions.ExpressionRewriter;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-
-import autodiff.nodes.ComputationNode;
-import autodiff.nodes.Data;
-import autodiff.nodes.Node;
-import autodiff.reasoning.deductions.Standard;
 
 import org.junit.Test;
 
@@ -119,6 +122,25 @@ public final class NodeTest {
 					debugPrint(context.read("result", 0), context.read("result", 1));
 				}
 				
+				{
+					final int n = 2;
+					
+					final Context context = new Context();
+					
+					context.allocate("result", n);
+					
+					final Object program = sequence(";",
+							app("allocate", str("i"), 1),
+							app("repeat", 2, str("i"), 0,
+									block(app("write", str("result"), app("read", str("i"), 0) , 1))));
+					
+					debugPrint(program);
+					
+					context.interpret(program);
+					
+					debugPrint(context.read("result", 0), context.read("result", 1));
+				}
+				
 				abort();
 				
 				// TODO
@@ -129,12 +151,30 @@ public final class NodeTest {
 		fail("TODO");
 	}
 	
+	public static final Object block(final Object... arguments) {
+		return $("()->{", sequence(";", arguments), "}");
+	}
+	
+	public static final Object app(final Object name, final Object... arguments) {
+		return $(name, "(", sequence(",", arguments), ")");
+	}
+	
+	public static final Object str(final Object object) {
+		return $("\"", object, "\"");
+	}
+	
 	/**
 	 * @author codistmonk (creation 2016-08-16)
 	 */
 	public static final class Context implements Serializable {
 		
 		private final Map<String, FloatBuffer> buffers = new LinkedHashMap<>();
+		
+		private final Interpreter interpreter = this.new Interpreter();
+		
+		public final Object interpret(final Object program) {
+			return this.interpreter.apply(program);
+		}
 		
 		public final void repeat(final Number n, final String counterName, final Number counterIndex, final Runnable instructions) {
 			final String deltaName = this.buffers.size() + ":delta";
@@ -169,6 +209,45 @@ public final class NodeTest {
 		
 		private final FloatBuffer buffer(final String name) {
 			return this.buffers.get(name);
+		}
+		
+		/**
+		 * @author codistmonk (creation 2016-08-16)
+		 */
+		public final class Interpreter implements ExpressionRewriter {
+			
+			@Override
+			public final Object visit(final List<?> expression) {
+				if (3 == expression.size()) {
+					if ("\"".equals(left(expression)) && "\"".equals(right(expression))) {
+						return middle(expression).toString();
+					}
+					
+					if ("()->{".equals(left(expression)) && "}".equals(right(expression))) {
+						return new Runnable() {
+							
+							@Override
+							public final void run() {
+								Interpreter.this.apply(middle(expression));
+							}
+							
+						};
+					}
+				}
+				
+				if (4 == expression.size()) {
+					if ("(".equals(expression.get(1)) && ")".equals(expression.get(3))) {
+						final List<Object> arguments = flattenSequence(",", this.apply(expression.get(2)));
+						
+						return invoke(Context.this, expression.get(0).toString(), arguments.toArray());
+					}
+				}
+				
+				return ExpressionRewriter.super.visit(expression);
+			}
+			
+			private static final long serialVersionUID = -6614888521968958004L;
+			
 		}
 		
 		private static final long serialVersionUID = -7818200319668460156L;
