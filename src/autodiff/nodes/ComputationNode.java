@@ -4,6 +4,7 @@ import static autodiff.reasoning.deductions.Standard.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.BasicNumericVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
+import static autodiff.rules.PatternPredicate.rule;
 import static multij.tools.Tools.*;
 
 import autodiff.reasoning.deductions.Standard;
@@ -11,6 +12,7 @@ import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.proofs.BasicNumericVerification;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.proofs.Substitution;
+import autodiff.rules.Disjunction;
 import autodiff.rules.Variable;
 
 import java.io.Serializable;
@@ -1001,6 +1003,48 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 						$forall(_s, _x2,
 								$(FORALL, _x0, ",", _x1, IN, R,
 										$($(PI, $(_x0, $(_s, _x1, _x2))), "=", $(_x0, "*", $(PI, $(_x1, _x2)))))));
+			}
+			
+			{
+				final Disjunction<Object, Pair<String, Map<Variable, Object>>> rules = new Disjunction<>();
+				
+				{
+					rules.add(rule($(PI, $()),
+							(_1, m) -> new Pair<>("definition_of_vector_reduction_by_product_0", m)));
+				}
+				
+				{
+					final Variable _x0 = new Variable("x0");
+					
+					rules.add(rule($(PI, $1(_x0)),
+							(_1, m) -> new Pair<>("definition_of_vector_reduction_by_product_1", m)));
+				}
+				
+				{
+					final Variable _s = new Variable("s");
+					final Variable _x0 = new Variable("x0");
+					final Variable _x1 = new Variable("x1");
+					
+					rules.add(rule($(PI, $(_x0, $(_s, _x1))),
+							(_1, m) -> new Pair<>("definition_of_vector_reduction_by_product_2", m)));
+				}
+				
+				{
+					final Variable _s = new Variable("s");
+					final Variable _x0 = new Variable("x0");
+					final Variable _x1 = new Variable("x1");
+					final Variable _x2 = new Variable("x2");
+					
+					rules.add(rule($(PI, $(_x0, $(_s, _x1, _x2))),
+							(_1, m) -> new Pair<>("definition_of_vector_reduction_by_product_3", m)));
+				}
+				
+				debugPrint(rules.applyTo($(PI, sequence(","))));
+				debugPrint(rules.applyTo($(PI, sequence(",", 1))));
+				debugPrint(rules.applyTo($(PI, sequence(",", 1, 2))));
+				debugPrint(rules.applyTo($(PI, sequence(",", 1, 2, 3))));
+				debugPrint(rules.applyTo($(PI, sequence(",", 1, sequence(",", 2, 3)))));
+				debugPrint(rules.applyTo($(PI, sequence(",", 1, 2, 3, 4))));
 			}
 			
 			{
