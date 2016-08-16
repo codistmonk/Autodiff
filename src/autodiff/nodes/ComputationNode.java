@@ -1038,7 +1038,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				
 				conclude();
 			}
-			abort();
 		}
 		
 	}, 1);

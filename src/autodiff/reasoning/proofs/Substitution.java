@@ -115,6 +115,17 @@ public final class Substitution extends Proof.Abstract {
 				}
 			}
 			
+			return false;
+		}
+		
+		@Override
+		public final Boolean visit(final List<?> expression1, final List<?> expression2) {
+			final int n = expression1.size();
+			
+			if (n != expression2.size()) {
+				return false;
+			}
+			
 			if (isBlock(expression1) && isBlock(expression2)) {
 				final Object v1 = variable(expression1);
 				final Object s1 = scope(expression1);
@@ -132,28 +143,13 @@ public final class Substitution extends Proof.Abstract {
 				}
 			}
 			
-			return false;
-		}
-		
-		@Override
-		public final Boolean visit(final List<?> expression1, final List<?> expression2) {
-			final int n = expression1.size();
-			
-			if (n != expression2.size()) {
-				return false;
-			}
-			
-			boolean result = true;
-			
 			for (int i = 0; i < n; ++i) {
-				result = this.apply(expression1.get(i), expression2.get(i));
-				
-				if (!result) {
-					break;
+				if (!this.apply(expression1.get(i), expression2.get(i))) {
+					return false;
 				}
 			}
 			
-			return result || this.visit((Object) expression1, (Object) expression2);
+			return true;
 		}
 		
 		private static final long serialVersionUID = 1097894997336832052L;
