@@ -1,6 +1,7 @@
 package autodiff.nodes.test;
 
 import static autodiff.nodes.ComputationNode.*;
+import static autodiff.reasoning.deductions.Standard.rewrite;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.Stack.*;
 import static multij.tools.Tools.debugPrint;
@@ -10,8 +11,6 @@ import autodiff.nodes.ComputationNode;
 import autodiff.nodes.Data;
 import autodiff.nodes.Node;
 import autodiff.reasoning.deductions.Standard;
-
-import java.util.List;
 
 import org.junit.Test;
 
@@ -78,7 +77,6 @@ public final class NodeTest {
 				final Object boundForm = proposition(-1);
 				final Object valuesExpression = left(middle(right(boundForm)));
 				final Object nExpression = right(right(valuesExpression));
-				final Object v = list(nExpression).get(1);
 				
 				debugPrint(valuesExpression);
 				debugPrint(nExpression);
@@ -86,24 +84,10 @@ public final class NodeTest {
 				{
 					subdeduction();
 					
-					ebind("definition_of_product_reduction", 1, v);
-					// TODO
-					abort();
-//					deduceCartesianType(new Object[] { 2 }, "realness");
-					eapply(name(-2));
+					computeVectorReductionByProduct(nExpression);
+					rewrite(name(-2), name(-1));
 					
 					conclude();
-				}
-				
-				{
-					final List<?> product = list(right(proposition(-1)));
-					final Object i = left(product.get(2));
-					final Object operand = product.get(3);
-					
-					debugPrint(product);
-					debugPrint(i, operand);
-					
-					ebind("definition_of_product_loop_n", 1, i, operand);
 				}
 				
 				abort();
