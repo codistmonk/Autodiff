@@ -5,14 +5,18 @@ import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.BasicNumericVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
 import static multij.tools.Tools.*;
+
 import autodiff.reasoning.deductions.Standard;
 import autodiff.reasoning.expressions.ExpressionVisitor;
+import autodiff.reasoning.proofs.BasicNumericVerification;
 import autodiff.reasoning.proofs.Deduction;
+import autodiff.reasoning.proofs.Substitution;
+import autodiff.rules.Variable;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -169,7 +173,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		PropositionDescription result = null;
 		
 		for (final PropositionDescription description : iterateBackward(deduction())) {
-			if (proposition.equals(description.getProposition())) {
+			if (new Substitution.ExpressionEquality().apply(proposition, description.getProposition())) {
 				result = description;
 				break;
 			}
@@ -181,6 +185,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			} else if(isNaturality(proposition) || isReality(proposition)) {
 				verifyBasicNumericProposition(proposition);
 			} else {
+				debugError(proposition);
+				
 				throw new IllegalStateException();
 			}
 			
@@ -931,8 +937,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					
 					ebindTrim("definition_of_vector_access_i", R, 3, 1, _x);
 					
-					verifyBasicNumericProposition($($(1, "-", 1), "=", 0));
-					rewrite(name(-2), name(-1));
+					simplifyBasicNumericExpression(name(-1), $(1, "-", 1));
 					
 					conclude();
 				}
@@ -954,6 +959,9 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					conclude();
 				}
 				
+				debugPrint(right(proposition(-2)));
+				debugPrint(left(proposition(-1)));
+				
 				rewrite(name(-2), name(-1));
 				
 				conclude();
@@ -969,7 +977,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				
 				suppose("definition_of_vector_reduction_by_product_1",
 						$(FORALL, _x0, IN, R,
-								$($(PI, $(_x0)), "=", _x0)));
+								$($(PI, $1(_x0)), "=", _x0)));
 			}
 			
 			{
@@ -998,6 +1006,15 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			{
 				subdeduction("vector_reduction_by_product.test1");
 				
+//				{
+//					final List<Pair<String, Map<Variable, Object>>> found = findConclusions($($(PI, new Variable("x")), "=", new Variable()));
+//					
+//					for (final Pair<String, Map<Variable, Object>> p : found) {
+//						debugPrint(p.getFirst());
+//						debugPrint(p.getSecond());
+//					}
+//				}
+				
 				final Object _x = sequence(",", 1, 2, 3);
 				
 				ebindTrim("definition_of_vector_reduction_by_product_3", ",", third(second(_x)), first(_x), second(second(_x)));
@@ -1010,40 +1027,53 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					
 					ebindTrim("definition_of_vector_reduction_by_product_2", ",", x0, x1);
 					
-					{
-						subdeduction();
-						
-						final Object a = left(right(proposition(-1)));
-						final Object b = right(right(proposition(-1)));
-						
-						verifyBasicNumericProposition($($(a, "*", b), "=", new BigDecimal("" + a).multiply(new BigDecimal("" + b))));
-						rewrite(name(-2), name(-1));
-						
-						conclude();
-					}
+					simplifyBasicNumericExpression(name(-1), right(proposition(-1)));
 					
 					conclude();
 				}
 				
 				rewrite(name(-2), name(-1));
 				
-				{
-					subdeduction();
-					
-					final Object a = left(right(proposition(-1)));
-					final Object b = right(right(proposition(-1)));
-					
-					verifyBasicNumericProposition($($(a, "*", b), "=", new BigDecimal("" + a).multiply(new BigDecimal("" + b))));
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-				}
+				simplifyBasicNumericExpression(name(-1), right(proposition(-1)));
 				
 				conclude();
 			}
+			abort();
 		}
 		
 	}, 1);
+	
+	public static final List<Pair<String, Map<Variable, Object>>> findConclusions(final Object pattern) {
+		final List<Pair<String, Map<Variable, Object>>> result = new ArrayList<>();
+		
+		for (final PropositionDescription description : iterateBackward(deduction())) {
+			final LinkedHashMap<Variable, Object> mapping = new LinkedHashMap<>();
+			
+			if (Variable.match(pattern, eultimate(description.getProposition()), mapping)) {
+				result.add(new Pair<>(description.getName(), mapping));
+			}
+		}
+		
+		Collections.reverse(result);
+		
+		return result;
+	}
+	
+	public static final Object eultimate(final Object expression) {
+		if (isForallIn(expression) || isForallIn2(expression)) {
+			return eultimate(last(list(expression)));
+		}
+		
+		if (isBlock(expression)) {
+			return eultimate(scope(expression));
+		}
+		
+		if (isRule(expression)) {
+			return eultimate(conclusion(expression));
+		}
+		
+		return expression;
+	}
 	
 	public static final void computeSequenceHead(final Object x) {
 		final List<?> list = list(x);
@@ -1127,12 +1157,11 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				{
 					subdeduction();
 					
-					ebindLast($(result.get("n")));
-					eapplyLast();
+					final Object[] s = toObjects((int[]) result.get("s"));
+					
+					ebindTrim(name(-1), $(result.get("n")));
 					
 					canonicalizeForallIn(name(-1));
-					
-					final Object[] s = toObjects((int[]) result.get("s"));
 					
 //					bind(name(-1), p(toBinaryTree(",", s)));
 					bind(name(-1), sequence(",", s));
@@ -1631,7 +1660,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			bind("definition_of_positives", _x);
 			rewrite(name(-2), name(-1));
 			deduceConjunctionLeft(name(-1));
-			
 			conclude();
 		}
 		
@@ -1834,6 +1862,17 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		result = Arrays.asList(elements[0], result);
 		
 		return result;
+	}
+	
+	public static void simplifyBasicNumericExpression(final String targetName, final Object expression) {
+		subdeduction();
+		
+		final Object simplified = BasicNumericVerification.Verifier.INSTANCE.apply(expression);
+		
+		verifyBasicNumericProposition($(expression, "=", simplified));
+		rewrite(targetName, name(-1));
+		
+		conclude();
 	}
 	
 	/**

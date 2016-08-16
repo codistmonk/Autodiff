@@ -4,6 +4,8 @@ import static autodiff.reasoning.expressions.Expressions.*;
 import static java.util.stream.Collectors.toList;
 import static multij.tools.Tools.cast;
 
+import autodiff.reasoning.expressions.ExpressionZipper;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -12,8 +14,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
-
-import autodiff.reasoning.expressions.ExpressionZipper;
 
 /**
  * @author codistmonk (creation 2015-04-11)
@@ -106,6 +106,15 @@ public final class Substitution extends Proof.Abstract {
 				return true;
 			}
 			
+			{
+				final Number n1 = cast(Number.class, expression1);
+				final Number n2 = cast(Number.class, expression2);
+				
+				if (n1 != null && n2 != null && n1.toString().equals(n2.toString())) {
+					return true;
+				}
+			}
+			
 			if (isBlock(expression1) && isBlock(expression2)) {
 				final Object v1 = variable(expression1);
 				final Object s1 = scope(expression1);
@@ -128,9 +137,23 @@ public final class Substitution extends Proof.Abstract {
 		
 		@Override
 		public final Boolean visit(final List<?> expression1, final List<?> expression2) {
-			final Boolean result = ExpressionZipper.super.visit(expression1, expression2);
+			final int n = expression1.size();
 			
-			return result == null ? false : result;
+			if (n != expression2.size()) {
+				return false;
+			}
+			
+			boolean result = true;
+			
+			for (int i = 0; i < n; ++i) {
+				result = this.apply(expression1.get(i), expression2.get(i));
+				
+				if (!result) {
+					break;
+				}
+			}
+			
+			return result || this.visit((Object) expression1, (Object) expression2);
 		}
 		
 		private static final long serialVersionUID = 1097894997336832052L;
