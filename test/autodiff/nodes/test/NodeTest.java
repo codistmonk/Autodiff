@@ -127,11 +127,11 @@ public final class NodeTest {
 					suppose("definition_of_vector_generator_to_java",
 							$forall(_X, _i,
 									$(FORALL, _n, IN, N,
-											$rule($(FORALL, _j, IN, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", _j))), IN, R),
+											$rule($(FORALL, _j, IN, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", _j)), "@", $()), IN, R)),
 													$($("to_java", $(p(_X), "_", $(_i, "<", _n))), "=", sequence(";",
 															app("allocate", str("i"), 1),
 															app("repeat", 2, str("i"), 0,
-																	block(app("write", str("result"), app("read", str("i"), 0) , $("to_java", _X)))))))))));
+																	block(app("write", str("result"), app("read", str("i"), 0) , $("to_java", _X))))))))));
 				}
 				
 				{
@@ -152,10 +152,46 @@ public final class NodeTest {
 					ebind("definition_of_vector_generator_to_java", _X, _i, _n);
 					eapplyLast();
 					
-					abort();
+					{
+						subdeduction();
+						
+						final Object j = second(left(proposition(-1)));
+						
+						{
+							subdeduction();
+							
+							final Object _j = forall("j");
+							
+							suppose($(_j, IN, $(N, "_", $("<", _n))));
+							
+							substitute(_X, map(_i, _j));
+							
+							verifyBasicNumericProposition($(right(proposition(-1)), IN, R));
+							
+							rewriteRight(name(-1), name(-2));
+							
+							conclude();
+						}
+						
+						{
+							ebind("definition_of_forall_in", j, $(N, "_", $("<", 2)), $($(_X, "|", $1($(_i, "=", j)), "@", $()), IN, R));
+							
+							rewriteRight(name(-2), name(-1));
+						}
+						
+						conclude();
+					}
+					
+					eapply(name(-2));
+					
+					ebindTrim("definition_of_real_to_java", 1);
+					
+					rewrite(name(-2), name(-1));
 					
 					conclude();
 				}
+				
+				abort();
 				
 				{
 					final int n = 2;

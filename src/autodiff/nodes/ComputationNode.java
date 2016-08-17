@@ -161,12 +161,12 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		eapply(name(-1));
 	}
 	
-	public static final void eapply(final String target) {
+	public static final void eapply(final String targetName) {
 		subdeduction();
+				
+		final String justificationName = justicationFor(condition(proposition(targetName))).getName();
 		
-		final String justificationName = justicationFor(condition(proposition(target))).getName();
-		
-		apply(target, justificationName);
+		apply(targetName, justificationName);
 		
 		conclude();
 	}
@@ -175,6 +175,12 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		PropositionDescription result = null;
 		
 		for (final PropositionDescription description : iterateBackward(deduction())) {
+			if ("[4]ones_bind.6.3".equals(description.getName())) {
+				debugPrint(description.getProposition());
+				debugPrint(proposition);
+				debugPrint(proposition.equals(description.getProposition()));
+				debugPrint(new Substitution.ExpressionEquality().apply(proposition, description.getProposition()));
+			}
 			if (new Substitution.ExpressionEquality().apply(proposition, description.getProposition())) {
 				result = description;
 				break;
@@ -190,6 +196,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 				deduceCartesianProduct(left(right(proposition)), flattenSequence(",", left(proposition)).toArray());
 			} else {
 				debugError(proposition);
+				debugError(proposition("[4]ones_bind.6.3"));
 				
 				throw new IllegalStateException();
 			}
