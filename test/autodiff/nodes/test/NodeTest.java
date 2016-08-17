@@ -14,6 +14,7 @@ import autodiff.nodes.Data;
 import autodiff.nodes.Node;
 import autodiff.reasoning.deductions.Standard;
 import autodiff.reasoning.expressions.ExpressionRewriter;
+import autodiff.reasoning.proofs.Deduction;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
@@ -81,7 +82,7 @@ public final class NodeTest {
 		
 		assertArrayEquals(new int[] { 2 }, node.getShape());
 		
-		Standard.build(node.getBoundForm(), new Runnable() {
+		Standard.build(new Deduction(node.getBoundForm(), node.getName() + "_to_java"), new Runnable() {
 			
 			@Override
 			public final void run() {
@@ -191,43 +192,15 @@ public final class NodeTest {
 					conclude();
 				}
 				
-				abort();
-				
 				{
-					final int n = 2;
-					
 					final Context context = new Context();
 					
-					context.allocate("result", n);
+					context.setBuffer("result", node.getFloatBuffer());
 					
-					context.allocate("i",1);context.repeat(2,"i",0,()->{context.write("result",context.read("i",0),1);});
+					context.interpret(right(proposition(-1)));
 					
 					debugPrint(context.read("result", 0), context.read("result", 1));
 				}
-				
-				{
-					final int n = 2;
-					
-					final Context context = new Context();
-					
-					context.allocate("result", n);
-					
-					final Object program = sequence(";",
-							app("allocate", str("i"), 1),
-							app("repeat", 2, str("i"), 0,
-									block(app("write", str("result"), app("read", str("i"), 0) , 1))));
-					
-					debugPrint(program);
-					debugPrint(deepJoin("", (Iterable<?>) program));
-					
-					context.interpret(program);
-					
-					debugPrint(context.read("result", 0), context.read("result", 1));
-				}
-				
-				abort();
-				
-				// TODO
 			}
 			
 		}, 1);
@@ -279,11 +252,11 @@ public final class NodeTest {
 		}
 		
 		public final void write(final String targetName, final Number index, final Number value) {
-			this.buffer(targetName).put(index.intValue(), value.floatValue());
+			this.getBuffer(targetName).put(index.intValue(), value.floatValue());
 		}
 		
 		public final float read(final String sourceName, final Number index) {
-			return this.buffer(sourceName).get(index.intValue());
+			return this.getBuffer(sourceName).get(index.intValue());
 		}
 		
 		public final void addTo(final String targetName, final Number targetIndex, final String sourceName, final Number sourceIndex) {
@@ -291,8 +264,12 @@ public final class NodeTest {
 					this.read(targetName, targetIndex) + this.read(sourceName, sourceIndex));
 		}
 		
-		private final FloatBuffer buffer(final String name) {
+		public final FloatBuffer getBuffer(final String name) {
 			return this.buffers.get(name);
+		}
+		
+		public final void setBuffer(final String name, final FloatBuffer buffer) {
+			this.buffers.put(name, buffer);
 		}
 		
 		/**
