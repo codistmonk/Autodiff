@@ -10,6 +10,7 @@ import static multij.tools.Tools.invoke;
 import static org.junit.Assert.*;
 
 import autodiff.nodes.ComputationNode;
+import autodiff.nodes.ComputationNode.PropositionDescription;
 import autodiff.nodes.Data;
 import autodiff.nodes.Node;
 import autodiff.reasoning.deductions.Standard;
@@ -102,47 +103,6 @@ public final class NodeTest {
 					conclude();
 				}
 				
-				/*
-				 * (1)_i<2
-				 * 
-				 *   |
-				 *   V
-				 * 
-				 * allocate("i",1);repeat(2,"i",0,()->{write("result",read("i",0),1)})
-				 * 
-				 * 
-				 * forall X n
-				 *   to_java (X)_i<n = allocate("i",1);repeat(n,"i",0,()->{write("result",read("i",0),to_java X)})
-				 * 
-				 * forall X in R
-				 *   to_java X = X
-				 * 
-				 */
-				
-				{
-					final Object _X = $new("X");
-					final Object _i = $new("i");
-					final Object _j = $new("j");
-					final Object _n = $new("n");
-					
-					suppose("definition_of_vector_generator_to_java",
-							$forall(_X, _i,
-									$(FORALL, _n, IN, N,
-											$rule($(FORALL, _j, IN, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", _j)), "@", $()), IN, R)),
-													$($("to_java", $(p(_X), "_", $(_i, "<", _n))), "=", sequence(";",
-															app("allocate", str("i"), 1),
-															app("repeat", 2, str("i"), 0,
-																	block(app("write", str("result"), app("read", str("i"), 0) , $("to_java", _X))))))))));
-				}
-				
-				{
-					final Object _x = $new("x");
-					
-					suppose("definition_of_real_to_java",
-							$(FORALL, _x, IN, R,
-									$($("to_java", _x), "=", _x)));
-				}
-				
 				{
 					subdeduction();
 					
@@ -167,15 +127,18 @@ public final class NodeTest {
 							
 							substitute(_X, map(_i, _j));
 							
-							verifyBasicNumericProposition($(right(proposition(-1)), IN, R));
-							
-							rewriteRight(name(-1), name(-2));
+							{
+								final Object proposition = $(right(proposition(-1)), IN, R);
+								final PropositionDescription justication = justicationFor(proposition);
+								
+								rewriteRight(justication.getName(), name(-2));
+							}
 							
 							conclude();
 						}
 						
 						{
-							ebind("definition_of_forall_in", j, $(N, "_", $("<", 2)), $($(_X, "|", $1($(_i, "=", j)), "@", $()), IN, R));
+							ebind("definition_of_forall_in", j, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", j)), "@", $()), IN, R));
 							
 							rewriteRight(name(-2), name(-1));
 						}
@@ -185,7 +148,7 @@ public final class NodeTest {
 					
 					eapply(name(-2));
 					
-					ebindTrim("definition_of_real_to_java", 1);
+					ebindTrim("definition_of_real_to_java", _X);
 					
 					rewrite(name(-2), name(-1));
 					
@@ -206,18 +169,6 @@ public final class NodeTest {
 		}, 1);
 		
 		fail("TODO");
-	}
-	
-	public static final Object block(final Object... arguments) {
-		return $("()->{", sequence(";", arguments), "}");
-	}
-	
-	public static final Object app(final Object name, final Object... arguments) {
-		return $(name, "(", sequence(",", arguments), ")");
-	}
-	
-	public static final Object str(final Object object) {
-		return $("\"", object, "\"");
 	}
 	
 	/**
