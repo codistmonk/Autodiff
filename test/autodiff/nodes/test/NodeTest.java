@@ -1,8 +1,9 @@
 package autodiff.nodes.test;
 
 import static autodiff.nodes.ComputationNode.*;
-import static autodiff.reasoning.deductions.Standard.rewrite;
+import static autodiff.reasoning.deductions.Standard.*;
 import static autodiff.reasoning.expressions.Expressions.*;
+import static autodiff.reasoning.proofs.BasicNumericVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
 import static multij.tools.Tools.debugPrint;
 import static multij.tools.Tools.invoke;
@@ -101,14 +102,60 @@ public final class NodeTest {
 				}
 				
 				/*
-				 * (1)_2
+				 * (1)_i<2
 				 * 
 				 *   |
 				 *   V
 				 * 
-				 * allocate("i",1);repeat(2,"i",0,()->{write("result",read("i",0),1);});
+				 * allocate("i",1);repeat(2,"i",0,()->{write("result",read("i",0),1)})
+				 * 
+				 * 
+				 * forall X n
+				 *   to_java (X)_i<n = allocate("i",1);repeat(n,"i",0,()->{write("result",read("i",0),to_java X)})
+				 * 
+				 * forall X in R
+				 *   to_java X = X
 				 * 
 				 */
+				
+				{
+					final Object _X = $new("X");
+					final Object _i = $new("i");
+					final Object _j = $new("j");
+					final Object _n = $new("n");
+					
+					suppose("definition_of_vector_generator_to_java",
+							$forall(_X, _i,
+									$(FORALL, _n, IN, N,
+											$rule($(FORALL, _j, IN, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", _j))), IN, R),
+													$($("to_java", $(p(_X), "_", $(_i, "<", _n))), "=", sequence(";",
+															app("allocate", str("i"), 1),
+															app("repeat", 2, str("i"), 0,
+																	block(app("write", str("result"), app("read", str("i"), 0) , $("to_java", _X)))))))))));
+				}
+				
+				{
+					final Object _x = $new("x");
+					
+					suppose("definition_of_real_to_java",
+							$(FORALL, _x, IN, R,
+									$($("to_java", _x), "=", _x)));
+				}
+				
+				{
+					subdeduction();
+					
+					final Object _n = 2;
+					final Object _i = $new("i");
+					final Object _X = 1;
+					
+					ebind("definition_of_vector_generator_to_java", _X, _i, _n);
+					eapplyLast();
+					
+					abort();
+					
+					conclude();
+				}
 				
 				{
 					final int n = 2;
@@ -135,6 +182,7 @@ public final class NodeTest {
 									block(app("write", str("result"), app("read", str("i"), 0) , 1))));
 					
 					debugPrint(program);
+					debugPrint(deepJoin("", (Iterable<?>) program));
 					
 					context.interpret(program);
 					
