@@ -50,6 +50,11 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		this.bindListeners = new ArrayList<>();
 	}
 	
+	@Override
+	public final boolean isComputationNode() {
+		return true;
+	}
+	
 	public final List<BindListener> getBindListeners() {
 		return this.bindListeners;
 	}
@@ -1045,9 +1050,124 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 						$(FORALL, _x, IN, R,
 								$($("to_java", _x), "=", _x)));
 			}
+			
+			{
+				final Object _X = $new("X");
+				final Object _i = $new("i");
+				final Object _j = $new("j");
+				final Object _n = $new("n");
+				
+				suppose("definition_of_vector_generator_to_CL",
+						$forall(_X, _i,
+								$(FORALL, _n, IN, N,
+										$rule($(FORALL, _j, IN, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", _j)), "@", $()), IN, R)),
+												$($("to_CL", $(p(_X), "_", $(_i, "<", _n))), "=", sequence(";\n",
+														"	int const gid = get_global_id(0)",
+														$("	result[gid] = ", $($("to_CL", _X), "|", $1($(_i, "=", "gid")), "@", $())),
+														""))))));
+			}
+			
+			{
+				final Object _x = $new("x");
+				
+				suppose("definition_of_real_to_CL",
+						$(FORALL, _x, IN, R,
+								$($("to_CL", _x), "=", _x)));
+			}
 		}
 		
 	}, 1);
+	
+	/**
+	 * @author codistmonk (creation 2016-08-18)
+	 */
+	public static final class ToCLHelper implements Serializable {
+		
+		private final Rules<Object, Void> rules = new Rules<>();
+		
+		{
+			{
+				final Variable vX = new Variable("X");
+				final Variable vi = new Variable("i");
+				final Variable vn = new Variable("n");
+				
+				this.rules.add(rule($("to_CL", $(p(vX), "_", $(vi, "<", vn))), (__, m) -> {
+					final Object _X = m.get(vX);
+					final Object _i = m.get(vi);
+					final Object _n = m.get(vn);
+					
+					ebind("definition_of_vector_generator_to_CL", _X, _i, _n);
+					eapplyLast();
+					
+					{
+						subdeduction();
+						
+						{
+							subdeduction();
+							
+							final Object j = second(left(proposition(-1)));
+							
+							{
+								subdeduction();
+								
+								final Object _j = forall("j");
+								
+								suppose($(_j, IN, $(N, "_", $("<", _n))));
+								
+								substitute(_X, map(_i, _j));
+								
+								{
+									final Object proposition = $(right(proposition(-1)), IN, R);
+									final PropositionDescription justication = justicationFor(proposition);
+									
+									rewriteRight(justication.getName(), name(-2));
+								}
+								
+								conclude();
+							}
+							
+							{
+								ebind("definition_of_forall_in", j, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", j)), "@", $()), IN, R));
+								
+								rewriteRight(name(-2), name(-1));
+							}
+							
+							conclude();
+						}
+						
+						eapply(name(-2));
+						
+						this.rules.applyTo($("to_CL", _X));
+						rewrite(name(-2), name(-1));
+						
+						substitute(_X, map(_i, "gid"));
+						rewrite(name(-2), name(-1));
+						
+						conclude();
+					}
+					
+					return null;
+				}));
+			}
+			
+			{
+				final Variable vX = new Variable("X");
+				
+				this.rules.add(rule($("to_CL", vX), (__, m) -> {
+					ebindTrim("definition_of_real_to_CL", m.get(vX));
+					
+					return null;
+				}));
+			}
+		}
+		
+		public final void compute(final Object proposition) {
+			this.rules.applyTo(proposition);
+		}
+		
+		private static final long serialVersionUID = 3834061141856389415L;
+		
+	}
 	
 	/**
 	 * @author codistmonk (creation 2016-08-18)

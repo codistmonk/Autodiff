@@ -1,5 +1,8 @@
 package autodiff.computing;
 
+import static autodiff.nodes.ComputationNode.IN;
+import static autodiff.reasoning.expressions.Expressions.FORALL;
+import static autodiff.reasoning.proofs.BasicNumericVerification.R;
 import static java.lang.Math.pow;
 import static java.util.Collections.synchronizedMap;
 import static java.util.Collections.unmodifiableSet;
@@ -32,12 +35,6 @@ public final class Functions {
 	public static final String IF = "if";
 	
 	public static final String OTHERWISE = "otherwise";
-	
-	public static final String FORALL = "forall";
-	
-	public static final String IN = "in";
-	
-	public static final String R = "|R";
 	
 	public static final String ID = "id";
 	
@@ -102,109 +99,109 @@ public final class Functions {
 				1);
 		
 		define("-", x,
-				$("-", x));
+				$$("-", x));
 		defineDiff("-", x,
 				-1);
 		
 		defineDiff(SQUARED, x,
-				$(2, "*", x));
+				$$(2, "*", x));
 		
-		define(SQUARED, x, $(x, SQUARED),
-				$(x, "*", x));
+		define(SQUARED, x, $$(x, SQUARED),
+				$$(x, "*", x));
 		defineDiff(SQUARED, x,
-				$(2, "*", x));
+				$$(2, "*", x));
 		
 		// TODO asymptotic cases
 		define(SHI, x,
-				$(LN, $(1, "+", $(EXP, x))));
+				$$(LN, $$(1, "+", $$(EXP, x))));
 		// TODO asymptotic cases
 		define(SIGMOID, x,
-				$(1, "/", $(1, "+", $(EXP, $("-", x)))));
+				$$(1, "/", $$(1, "+", $$(EXP, $$("-", x)))));
 		// TODO asymptotic cases
 		define(BUMP, x,
-				$($(1, "-", $(SIGMOID, x)), "*", $(SIGMOID, x)));
+				$$($$(1, "-", $$(SIGMOID, x)), "*", $$(SIGMOID, x)));
 		
 		defineDiff(SHI, x,
-				$(SIGMOID, x));
+				$$(SIGMOID, x));
 		defineDiff(SIGMOID, x,
-				$(BUMP, x));
+				$$(BUMP, x));
 		
 		define(RELU, x,
-				$(MAX, 0, x));
+				$$(MAX, 0, x));
 		defineDiff(RELU, x,
-				$(SIGMOID, x));
+				$$(SIGMOID, x));
 		
 		define(STEP0, x,
-				$(CASES, $(0, IF, $(x, "<", 0)), $(1, OTHERWISE)));
+				$$(CASES, $$(0, IF, $$(x, "<", 0)), $$(1, OTHERWISE)));
 		defineDiff(STEP0, x,
 				EPSILON);
 		
 		define(STEP1, x,
-				$(CASES, $(0, IF, $(x, "<=", 0)), $(1, OTHERWISE)));
+				$$(CASES, $$(0, IF, $$(x, "<=", 0)), $$(1, OTHERWISE)));
 		defineDiff(STEP1, x,
 				EPSILON);
 		
-		define(KRONECKER, $(x, y),
-				$(CASES, $(1, IF, $(x, "=", y)), $(0, OTHERWISE)));
-		defineDiff(KRONECKER, 0, $(x, y),
-				$(CASES, $(EPSILON, IF, $(x, "<=", y)), $(-EPSILON, OTHERWISE)));
-		defineDiff(KRONECKER, 1, $(x, y),
-				$(CASES, $(EPSILON, IF, $(y, "<=", x)), $(-EPSILON, OTHERWISE)));
+		define(KRONECKER, $$(x, y),
+				$$(CASES, $$(1, IF, $$(x, "=", y)), $$(0, OTHERWISE)));
+		defineDiff(KRONECKER, 0, $$(x, y),
+				$$(CASES, $$(EPSILON, IF, $$(x, "<=", y)), $$(-EPSILON, OTHERWISE)));
+		defineDiff(KRONECKER, 1, $$(x, y),
+				$$(CASES, $$(EPSILON, IF, $$(y, "<=", x)), $$(-EPSILON, OTHERWISE)));
 		
 		autodefine(SQRT, x);
 		defineDiff(SQRT, x,
-				$(1, "/", $(2, "*", $(SQRT, x))));
+				$$(1, "/", $$(2, "*", $$(SQRT, x))));
 		
 		autodefine(EXP, x);
 		defineDiff(EXP, x,
-				$(EXP, x));
+				$$(EXP, x));
 		
 		autodefine(LN, x);
 		defineDiff(LN, x,
-				$(1, "/", x));
+				$$(1, "/", x));
 		
 		autodefine(SIN, x);
 		defineDiff(SIN, x,
-				$(COS, x));
+				$$(COS, x));
 		
 		autodefine(COS, x);
 		defineDiff(COS, x,
-				$("-", $(SIN, x)));
+				$$("-", $$(SIN, x)));
 		
 		autodefine(ROUND, x);
 		defineDiff(ROUND, x,
 				EPSILON);
 		
-		autodefineInfix("+", $(x, y));
-		defineDiff("+", 0, $(x, y),
+		autodefineInfix("+", $$(x, y));
+		defineDiff("+", 0, $$(x, y),
 				1);
-		defineDiff("+", 1, $(x, y),
+		defineDiff("+", 1, $$(x, y),
 				1);
 		
-		autodefineInfix("-", $(x, y));
-		defineDiff("-", 0, $(x, y),
+		autodefineInfix("-", $$(x, y));
+		defineDiff("-", 0, $$(x, y),
 				1);
-		defineDiff("-", 1, $(x, y),
+		defineDiff("-", 1, $$(x, y),
 				-1);
 		
-		autodefineInfix("*", $(x, y));
-		defineDiff("*", 0, $(x, y),
+		autodefineInfix("*", $$(x, y));
+		defineDiff("*", 0, $$(x, y),
 				y);
-		defineDiff("*", 1, $(x, y),
+		defineDiff("*", 1, $$(x, y),
 				x);
 		
-		autodefineInfix("/", $(x, y));
-		defineDiff("/", 0, $(x, y),
-				$(1, "/", y));
-		defineDiff("/", 1, $(x, y),
-				$($("-", x), "/", $(y, "*", y)));
+		autodefineInfix("/", $$(x, y));
+		defineDiff("/", 0, $$(x, y),
+				$$(1, "/", y));
+		defineDiff("/", 1, $$(x, y),
+				$$($$("-", x), "/", $$(y, "*", y)));
 		
-		defineInfix(SQMINUS, $(x, y),
-				$($(x, "-", y), SQUARED));
-		defineDiff(SQMINUS, 0, $(x, y),
-				$(2, "*", $(x, "-", y)));
-		defineDiff(SQMINUS, 1, $(x, y),
-				$(2, "*", $(y, "-", x)));
+		defineInfix(SQMINUS, $$(x, y),
+				$$($$(x, "-", y), SQUARED));
+		defineDiff(SQMINUS, 0, $$(x, y),
+				$$(2, "*", $$(x, "-", y)));
+		defineDiff(SQMINUS, 1, $$(x, y),
+				$$(2, "*", $$(y, "-", x)));
 	}
 	
 	public static final Map<String, List<Object>> getDefinitions() {
@@ -212,15 +209,15 @@ public final class Functions {
 	}
 	
 	public static final void define(final String functionName, final List<Object> variableNames, final List<Object> notation, final Object definition) {
-		getDefinitions().put(fName(functionName, variableNames.size()), $(FORALL, variableNames, IN, R, $(notation, "=", definition)));
+		getDefinitions().put(fName(functionName, variableNames.size()), $$(FORALL, variableNames, IN, R, $$(notation, "=", definition)));
 	}
 	
 	public static final void defineInfix(final String functionName, final List<Object> variableNames, final Object definition) {
-		define(functionName, variableNames, $(variableNames.get(0), functionName, variableNames.get(1)), definition);
+		define(functionName, variableNames, $$(variableNames.get(0), functionName, variableNames.get(1)), definition);
 	}
 	
 	public static final void autodefineInfix(final String functionName, final List<Object> variableNames) {
-		final List<Object> notation = $(variableNames.get(0), functionName, variableNames.get(1));
+		final List<Object> notation = $$(variableNames.get(0), functionName, variableNames.get(1));
 		
 		define(functionName, variableNames, notation, notation);
 	}
@@ -232,7 +229,7 @@ public final class Functions {
 	}
 	
 	public static final List<Object> application(final Object function, final List<Object> variableNames) {
-		final List<Object> result = $(new Object[1 + variableNames.size()]);
+		final List<Object> result = $$(new Object[1 + variableNames.size()]);
 		
 		result.set(0, function);
 		
@@ -242,27 +239,27 @@ public final class Functions {
 	}
 	
 	public static final void define(final String functionName, final String variableName, final Object definition) {
-		define(functionName, $(variableName), definition);
+		define(functionName, $$(variableName), definition);
 	}
 	
 	public static final void define(final String functionName, final String variableName, final List<Object> notation, final Object definition) {
-		define(functionName, $(variableName), notation, definition);
+		define(functionName, $$(variableName), notation, definition);
 	}
 	
 	public static final void autodefine(final String functionName, final String variableName) {
-		final List<Object> notation = $(functionName, variableName);
+		final List<Object> notation = $$(functionName, variableName);
 		
-		define(functionName, $(variableName), notation, notation);
+		define(functionName, $$(variableName), notation, notation);
 	}
 	
 	public static final void defineDiff(final String functionName, final String variableName, final Object definition) {
-		defineDiff(functionName, 0, $(variableName), definition);
+		defineDiff(functionName, 0, $$(variableName), definition);
 	}
 	
 	public static final void defineDiff(final String functionName, final int variableIndex, final List<Object> variableNames, final Object definition) {
-		final List<Object> notation = application($(D, variableIndex, functionName), variableNames);
+		final List<Object> notation = application($$(D, variableIndex, functionName), variableNames);
 		
-		getDefinitions().put(fName(diffName(functionName, variableIndex), variableNames.size()), $(FORALL, variableNames, IN, R, $(notation, "=", definition)));
+		getDefinitions().put(fName(diffName(functionName, variableIndex), variableNames.size()), $$(FORALL, variableNames, IN, R, $$(notation, "=", definition)));
 	}
 	
 	public static final List<Object> getDefinition(final String functionName, final int variableCount) {
@@ -295,7 +292,7 @@ public final class Functions {
 		return object;
 	}
 	
-	public static final List<Object> $(final Object... objects) {
+	public static final List<Object> $$(final Object... objects) {
 		final int n = objects.length;
 		
 		for (int i = 0; i < n; ++i) {

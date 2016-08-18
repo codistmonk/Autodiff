@@ -1,6 +1,10 @@
 package autodiff.computing;
 
 import static autodiff.computing.Functions.*;
+import static autodiff.nodes.ComputationNode.IN;
+import static autodiff.reasoning.expressions.Expressions.*;
+import static autodiff.reasoning.proofs.BasicNumericVerification.R;
+import static autodiff.reasoning.proofs.Stack.*;
 import static autodiff.rules.PatternPredicate.rule;
 import static java.lang.Math.max;
 import static multij.tools.Tools.cast;
@@ -11,12 +15,15 @@ import static org.jocl.CL.setExceptionsEnabled;
 
 import autodiff.cl.CLContext;
 import autodiff.cl.CLKernel;
-import autodiff.nodes.BinaryNode;
+import autodiff.nodes.ComputationNode;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
 import autodiff.nodes.NodeVisitor;
 import autodiff.nodes.Zipping;
+import autodiff.nodes.ComputationNode.ToCLHelper;
+import autodiff.reasoning.deductions.Standard;
+import autodiff.reasoning.proofs.Deduction;
 import autodiff.rules.Rules;
 import autodiff.rules.PatternPredicate;
 
@@ -47,8 +54,6 @@ public final class CLProcessor implements NodeProcessor {
 	
 	private final Map<Object, TicToc> timers;
 	
-	private final Map<Node<?>, Object> computationCodes;
-	
 	private final Map<Node<?>, List<Node<?>>> forwards;
 	
 	private final Map<Node<?>, List<Node<?>>> backwards;
@@ -73,7 +78,6 @@ public final class CLProcessor implements NodeProcessor {
 	
 	public CLProcessor(final CLContext context) {
 		this.timers = new HashMap<>();
-		this.computationCodes = new HashMap<>();
 		this.forwards = new HashMap<>();
 		this.backwards = new HashMap<>();
 		this.context = context;
@@ -88,11 +92,6 @@ public final class CLProcessor implements NodeProcessor {
 	@Override
 	public final Map<Object, TicToc> getTimers() {
 		return this.timers;
-	}
-	
-	@Override
-	public final Map<Node<?>, Object> getComputationCodes() {
-		return this.computationCodes;
 	}
 	
 	@Override
@@ -322,7 +321,36 @@ public final class CLProcessor implements NodeProcessor {
 				return getContext().createAndBuildProgram(programSource).createKernel(kernelName);
 			});
 		}
+		
+		@Override
+		public final CLKernel visit(final ComputationNode node) {
+			return getForwardKernels().computeIfAbsent(node, __ -> {
+				final String kernelName = node.getClass().getSimpleName() + node.getId();
 				
+				final Deduction clCodeDeduction = Standard.build(new Deduction(node.getBoundForm(), node.getName() + "_to_java"), new Runnable() {
+					
+					@Override
+					public final void run() {
+						final Object boundForm = proposition(-1);
+						final Object valuesExpression = left(middle(right(boundForm)));
+						
+						new ToCLHelper().compute($("to_CL", valuesExpression));
+					}
+					
+				}, 1);
+				
+				String programSource = "";
+				
+				programSource += "__kernel void " + kernelName + "(";
+				programSource += "__global float * const result) {\n";
+				programSource += ComputationNode.deepJoin("",
+						(Iterable<?>) right(clCodeDeduction.getProposition(clCodeDeduction.getPropositionName(-1))));
+				programSource += "}\n";
+				
+				return getContext().createAndBuildProgram(programSource).createKernel(kernelName);
+			});
+		}
+		
 		private static final long serialVersionUID = -41684012969905022L;
 		
 	}
@@ -333,22 +361,15 @@ public final class CLProcessor implements NodeProcessor {
 	final class ForwardInitializer implements NodeVisitor<CLKernel> {
 		
 		@Override
-		public final CLKernel visit(final BinaryNode<?> node) {
+		public final CLKernel visit(final Node<?> node) {
 			final CLKernel result = getForwardKernel(node);
+			final int n = node.getArguments().size();
 			
-			result.setArg(0, clBuffer(node.getLeft()));
-			result.setArg(1, clBuffer(node.getRight()));
-			result.setArg(2, clBuffer(node));
+			for (int i = 0; i < n; ++i) {
+				result.setArg(i, clBuffer(node.getArguments().get(i)));
+			}
 			
-			return result;
-		}
-		
-		@Override
-		public final CLKernel visit(final Mapping node) {
-			final CLKernel result = getForwardKernel(node);
-			
-			result.setArg(0, clBuffer(node.getArgument()));
-			result.setArg(1, clBuffer(node));
+			result.setArg(n, clBuffer(node));
 			
 			return result;
 		}
@@ -473,7 +494,7 @@ public final class CLProcessor implements NodeProcessor {
 					final autodiff.rules.Variable x = new autodiff.rules.Variable();
 					final autodiff.rules.Variable y = new autodiff.rules.Variable();
 					final autodiff.rules.Variable z = new autodiff.rules.Variable();
-					final List<Object> function1DefinitionPattern = $(FORALL, $(x), IN, R, $(y, "=", z));
+					final List<Object> function1DefinitionPattern = $$(FORALL, $$(x), IN, R, $$(y, "=", z));
 					final Map<autodiff.rules.Variable, Object> mapping = new HashMap<>();
 					
 					if (autodiff.rules.Variable.match(function1DefinitionPattern, definition, mapping)
@@ -494,7 +515,7 @@ public final class CLProcessor implements NodeProcessor {
 					final autodiff.rules.Variable x1 = new autodiff.rules.Variable();
 					final autodiff.rules.Variable y = new autodiff.rules.Variable();
 					final autodiff.rules.Variable z = new autodiff.rules.Variable();
-					final List<Object> function2DefinitionPattern = $(FORALL, $(x0, x1), IN, R, $(y, "=", z));
+					final List<Object> function2DefinitionPattern = $$(FORALL, $$(x0, x1), IN, R, $$(y, "=", z));
 					final Map<autodiff.rules.Variable, Object> mapping = new HashMap<>();
 					
 					if (autodiff.rules.Variable.match(function2DefinitionPattern, definition, mapping)
@@ -559,7 +580,7 @@ public final class CLProcessor implements NodeProcessor {
 			{
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				
-				this.rules.add(rule($(ABS, x), (__, m) -> {
+				this.rules.add(rule($$(ABS, x), (__, m) -> {
 					return prefix("abs", x, m);
 				}));
 			}
@@ -567,7 +588,7 @@ public final class CLProcessor implements NodeProcessor {
 			{
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				
-				this.rules.add(rule($(SQRT, x), (__, m) -> {
+				this.rules.add(rule($$(SQRT, x), (__, m) -> {
 					return prefix("sqrt", x, m);
 				}));
 			}
@@ -575,7 +596,7 @@ public final class CLProcessor implements NodeProcessor {
 			{
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				
-				this.rules.add(rule($(EXP, x), (__, m) -> {
+				this.rules.add(rule($$(EXP, x), (__, m) -> {
 					return prefix("exp", x, m);
 				}));
 			}
@@ -583,7 +604,7 @@ public final class CLProcessor implements NodeProcessor {
 			{
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				
-				this.rules.add(rule($("-", x), (__, m) -> {
+				this.rules.add(rule($$("-", x), (__, m) -> {
 					return prefix("-", x, m);
 				}));
 			}
@@ -591,7 +612,7 @@ public final class CLProcessor implements NodeProcessor {
 			{
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				
-				this.rules.add(rule($(LN, x), (__, m) -> {
+				this.rules.add(rule($$(LN, x), (__, m) -> {
 					return prefix("log", x, m);
 				}));
 			}
@@ -599,7 +620,7 @@ public final class CLProcessor implements NodeProcessor {
 			{
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				
-				this.rules.add(rule($(SIN, x), (__, m) -> {
+				this.rules.add(rule($$(SIN, x), (__, m) -> {
 					return prefix("sin", x, m);
 				}));
 			}
@@ -607,7 +628,7 @@ public final class CLProcessor implements NodeProcessor {
 			{
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				
-				this.rules.add(rule($(COS, x), (__, m) -> {
+				this.rules.add(rule($$(COS, x), (__, m) -> {
 					return prefix("cos", x, m);
 				}));
 			}
@@ -615,7 +636,7 @@ public final class CLProcessor implements NodeProcessor {
 			{
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				
-				this.rules.add(rule($(ROUND, x), (__, m) -> {
+				this.rules.add(rule($$(ROUND, x), (__, m) -> {
 					return prefix("round", x, m);
 				}));
 			}
@@ -624,7 +645,7 @@ public final class CLProcessor implements NodeProcessor {
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				final autodiff.rules.Variable y = new autodiff.rules.Variable();
 				
-				this.rules.add(rule($(x, "+", y), (__, m) -> {
+				this.rules.add(rule($$(x, "+", y), (__, m) -> {
 					return infix("+", x, y, m);
 				}));
 			}
@@ -633,7 +654,7 @@ public final class CLProcessor implements NodeProcessor {
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				final autodiff.rules.Variable y = new autodiff.rules.Variable();
 				
-				this.rules.add(rule($(x, "-", y), (__, m) -> {
+				this.rules.add(rule($$(x, "-", y), (__, m) -> {
 					return infix("-", x, y, m);
 				}));
 			}
@@ -642,7 +663,7 @@ public final class CLProcessor implements NodeProcessor {
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				final autodiff.rules.Variable y = new autodiff.rules.Variable();
 				
-				this.rules.add(rule($(x, "*", y), (__, m) -> {
+				this.rules.add(rule($$(x, "*", y), (__, m) -> {
 					return infix("*", x, y, m);
 				}));
 			}
@@ -651,7 +672,7 @@ public final class CLProcessor implements NodeProcessor {
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				final autodiff.rules.Variable y = new autodiff.rules.Variable();
 				
-				this.rules.add(rule($(x, "/", y), (__, m) -> {
+				this.rules.add(rule($$(x, "/", y), (__, m) -> {
 					return infix("/", x, y, m);
 				}));
 			}
@@ -660,7 +681,7 @@ public final class CLProcessor implements NodeProcessor {
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				final autodiff.rules.Variable y = new autodiff.rules.Variable();
 				
-				this.rules.add(rule($(x, "=", y), (__, m) -> {
+				this.rules.add(rule($$(x, "=", y), (__, m) -> {
 					return infix("==", x, y, m);
 				}));
 			}
@@ -669,7 +690,7 @@ public final class CLProcessor implements NodeProcessor {
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				final autodiff.rules.Variable y = new autodiff.rules.Variable();
 				
-				this.rules.add(rule($(x, "!=", y), (__, m) -> {
+				this.rules.add(rule($$(x, "!=", y), (__, m) -> {
 					return infix("!=", x, y, m);
 				}));
 			}
@@ -678,7 +699,7 @@ public final class CLProcessor implements NodeProcessor {
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				final autodiff.rules.Variable y = new autodiff.rules.Variable();
 				
-				this.rules.add(rule($(x, "<", y), (__, m) -> {
+				this.rules.add(rule($$(x, "<", y), (__, m) -> {
 					return infix("<", x, y, m);
 				}));
 			}
@@ -687,7 +708,7 @@ public final class CLProcessor implements NodeProcessor {
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				final autodiff.rules.Variable y = new autodiff.rules.Variable();
 				
-				this.rules.add(rule($(x, "<=", y), (__, m) -> {
+				this.rules.add(rule($$(x, "<=", y), (__, m) -> {
 					return infix("<=", x, y, m);
 				}));
 			}
@@ -696,7 +717,7 @@ public final class CLProcessor implements NodeProcessor {
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				final autodiff.rules.Variable y = new autodiff.rules.Variable();
 				
-				this.rules.add(rule($(x, ">", y), (__, m) -> {
+				this.rules.add(rule($$(x, ">", y), (__, m) -> {
 					return infix(">", x, y, m);
 				}));
 			}
@@ -705,7 +726,7 @@ public final class CLProcessor implements NodeProcessor {
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				final autodiff.rules.Variable y = new autodiff.rules.Variable();
 				
-				this.rules.add(rule($(x, ">=", y), (__, m) -> {
+				this.rules.add(rule($$(x, ">=", y), (__, m) -> {
 					return infix(">=", x, y, m);
 				}));
 			}
@@ -747,7 +768,7 @@ public final class CLProcessor implements NodeProcessor {
 				final autodiff.rules.Variable x = new autodiff.rules.Variable();
 				final autodiff.rules.Variable y = new autodiff.rules.Variable();
 				final autodiff.rules.Variable z = new autodiff.rules.Variable();
-				final List<Object> function1DefinitionPattern = $(FORALL, $(x), IN, R, $(y, "=", z));
+				final List<Object> function1DefinitionPattern = $$(FORALL, $$(x), IN, R, $$(y, "=", z));
 				final Map<autodiff.rules.Variable, Object> mapping = new HashMap<>();
 				
 				if (autodiff.rules.Variable.match(function1DefinitionPattern, definition, mapping)) {
@@ -776,7 +797,7 @@ public final class CLProcessor implements NodeProcessor {
 				final autodiff.rules.Variable x1 = new autodiff.rules.Variable();
 				final autodiff.rules.Variable y = new autodiff.rules.Variable();
 				final autodiff.rules.Variable z = new autodiff.rules.Variable();
-				final List<Object> function2DefinitionPattern = $(FORALL, $(x0, x1), IN, R, $(y, "=", z));
+				final List<Object> function2DefinitionPattern = $$(FORALL, $$(x0, x1), IN, R, $$(y, "=", z));
 				final Map<autodiff.rules.Variable, Object> mapping = new HashMap<>();
 				
 				if (autodiff.rules.Variable.match(function2DefinitionPattern, definition, mapping)) {

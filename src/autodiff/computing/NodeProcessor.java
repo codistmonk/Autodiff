@@ -34,8 +34,6 @@ public abstract interface NodeProcessor extends Serializable {
 		return this.getTimers().computeIfAbsent(key, __ -> new TicToc());
 	}
 	
-	public abstract Map<Node<?>, Object> getComputationCodes();
-	
 	public abstract Map<Node<?>, List<Node<?>>> getForwards();
 	
 	public abstract Map<Node<?>, List<Node<?>>> getBackwards();
