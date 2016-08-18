@@ -1029,7 +1029,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 										$rule($(FORALL, _j, IN, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", _j)), "@", $()), IN, R)),
 												$($("to_java", $(p(_X), "_", $(_i, "<", _n))), "=", sequence(";",
 														app("allocate", str("i"), 1),
-														app("repeat", 2, str("i"), 0,
+														app("repeat", _n, str("i"), 0,
 																block(app("write", str("result"), app("read", str("i"), 0) , $("to_java", _X))))))))));
 			}
 			
@@ -1043,6 +1043,95 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		}
 		
 	}, 1);
+	
+	/**
+	 * @author codistmonk (creation 2016-08-18)
+	 */
+	public static final class ToJavaHelper implements Serializable {
+		
+		private final Rules<Object, Void> rules = new Rules<>();
+		
+		{
+			{
+				final Variable vX = new Variable("X");
+				final Variable vi = new Variable("i");
+				final Variable vn = new Variable("n");
+				
+				this.rules.add(rule($("to_java", $(p(vX), "_", $(vi, "<", vn))), (__, m) -> {
+					final Object _X = m.get(vX);
+					final Object _i = m.get(vi);
+					final Object _n = m.get(vn);
+					
+					ebind("definition_of_vector_generator_to_java", _X, _i, _n);
+					eapplyLast();
+					
+					{
+						subdeduction();
+						
+						{
+							subdeduction();
+							
+							final Object j = second(left(proposition(-1)));
+							
+							{
+								subdeduction();
+								
+								final Object _j = forall("j");
+								
+								suppose($(_j, IN, $(N, "_", $("<", _n))));
+								
+								substitute(_X, map(_i, _j));
+								
+								{
+									final Object proposition = $(right(proposition(-1)), IN, R);
+									final PropositionDescription justication = justicationFor(proposition);
+									
+									rewriteRight(justication.getName(), name(-2));
+								}
+								
+								conclude();
+							}
+							
+							{
+								ebind("definition_of_forall_in", j, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", j)), "@", $()), IN, R));
+								
+								rewriteRight(name(-2), name(-1));
+							}
+							
+							conclude();
+						}
+						
+						eapply(name(-2));
+						
+						this.rules.applyTo($("to_java", _X));
+						
+						rewrite(name(-2), name(-1));
+						
+						conclude();
+					}
+					
+					return null;
+				}));
+			}
+			
+			{
+				final Variable vX = new Variable("X");
+				
+				this.rules.add(rule($("to_java", vX), (__, m) -> {
+					ebindTrim("definition_of_real_to_java", m.get(vX));
+					
+					return null;
+				}));
+			}
+		}
+		
+		public final void compute(final Object proposition) {
+			this.rules.applyTo(proposition);
+		}
+		
+		private static final long serialVersionUID = 8767164056521982370L;
+		
+	}
 	
 	public static final Object block(final Object... arguments) {
 		return $("()->{", sequence(";", arguments), "}");
@@ -1078,17 +1167,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	
 	public static final void computeVectorAccess(final Object elementType, final Object formula) {
 		final Rules<Object, Void> rules = new Rules<>();
-//		{
-//			final Object _x = $new("x");
-//			final Object _X = $new("X");
-//			final Object _n = $new("n");
-//			
-//			suppose("definition_of_vector_access_0",
-//					$(FORALL, _X, IN, U,
-//							$(FORALL, _n, IN, POS,
-//									$(FORALL, _x, IN, $(_X, "^", _n),
-//											$($(_x, "_", 0), "=", $("sequence_head", _x))))));
-//		}
 		
 		{
 			final Variable _x = new Variable("x");
@@ -1108,19 +1186,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 			}));
 		}
 		
-//		{
-//			final Object _x = $new("x");
-//			final Object _X = $new("X");
-//			final Object _n = $new("n");
-//			final Object _i = $new("i");
-//			
-//			suppose("definition_of_vector_access_i",
-//					$(FORALL, _X, IN, U,
-//							$(FORALL, _n, ",", _i, IN, POS,
-//									$(FORALL, _x, IN, $(_X, "^", _n),
-//											$($(_x, "_", _i), "=", $($("sequence_tail", ",", _x), "_", $(_i, "-", 1)))))));
-//		}
-		
 		{
 			final Variable _x = new Variable("x");
 			final Variable _i = new Variable("i");
@@ -1130,7 +1195,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					subdeduction();
 					
 					ebindTrim("definition_of_vector_access_i", elementType, sequenceLength(",", m.get(_x)), m.get(_i), m.get(_x));
-					debugPrint(right(right(proposition(-1))));
 					simplifyBasicNumericExpression(name(-1), right(right(proposition(-1))));
 					
 					computeSequenceTail(",", m.get(_x));
@@ -1351,6 +1415,18 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 					deduceCartesianProduct(POS, s);
 					
 					apply(name(-2), name(-1));
+					
+					final Object valuesExpression = left(middle(right(proposition(-1))));
+					final Object nExpression = right(right(valuesExpression));
+					
+					{
+						subdeduction();
+						
+						computeVectorReductionByProduct(nExpression);
+						rewrite(name(-2), name(-1));
+						
+						conclude();
+					}
 					
 					conclude();
 				}

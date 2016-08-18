@@ -1,23 +1,18 @@
 package autodiff.nodes.test;
 
 import static autodiff.nodes.ComputationNode.*;
-import static autodiff.reasoning.deductions.Standard.*;
 import static autodiff.reasoning.expressions.Expressions.*;
-import static autodiff.reasoning.proofs.BasicNumericVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
 import static autodiff.rules.PatternPredicate.rule;
-import static multij.tools.Tools.debugPrint;
 import static multij.tools.Tools.invoke;
 import static org.junit.Assert.*;
 
 import autodiff.nodes.ComputationNode;
-import autodiff.nodes.ComputationNode.PropositionDescription;
 import autodiff.nodes.Data;
 import autodiff.nodes.Node;
 import autodiff.reasoning.deductions.Standard;
 import autodiff.reasoning.expressions.ExpressionRewriter;
 import autodiff.reasoning.proofs.Deduction;
-import autodiff.rules.PatternPredicate;
 import autodiff.rules.Rules;
 import autodiff.rules.Variable;
 
@@ -87,92 +82,29 @@ public final class NodeTest {
 		
 		assertArrayEquals(new int[] { 2 }, node.getShape());
 		
-		Standard.build(new Deduction(node.getBoundForm(), node.getName() + "_to_java"), new Runnable() {
+		final Deduction javaCodeDeduction = Standard.build(new Deduction(node.getBoundForm(), node.getName() + "_to_java"), new Runnable() {
 			
 			@Override
 			public final void run() {
 				final Object boundForm = proposition(-1);
 				final Object valuesExpression = left(middle(right(boundForm)));
-				final Object nExpression = right(right(valuesExpression));
 				
-				debugPrint(valuesExpression);
-				debugPrint(nExpression);
-				
-				{
-					subdeduction();
-					
-					computeVectorReductionByProduct(nExpression);
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-				}
-				
-				{
-					subdeduction();
-					
-					final Object _n = 2;
-					final Object _i = $new("i");
-					final Object _X = 1;
-					
-					ebind("definition_of_vector_generator_to_java", _X, _i, _n);
-					eapplyLast();
-					
-					{
-						subdeduction();
-						
-						final Object j = second(left(proposition(-1)));
-						
-						{
-							subdeduction();
-							
-							final Object _j = forall("j");
-							
-							suppose($(_j, IN, $(N, "_", $("<", _n))));
-							
-							substitute(_X, map(_i, _j));
-							
-							{
-								final Object proposition = $(right(proposition(-1)), IN, R);
-								final PropositionDescription justication = justicationFor(proposition);
-								
-								rewriteRight(justication.getName(), name(-2));
-							}
-							
-							conclude();
-						}
-						
-						{
-							ebind("definition_of_forall_in", j, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", j)), "@", $()), IN, R));
-							
-							rewriteRight(name(-2), name(-1));
-						}
-						
-						conclude();
-					}
-					
-					eapply(name(-2));
-					
-					ebindTrim("definition_of_real_to_java", _X);
-					
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-				}
-				
-				{
-					final Context context = new Context();
-					
-					context.setBuffer("result", node.getFloatBuffer());
-					
-					context.interpret(right(proposition(-1)));
-					
-					debugPrint(context.read("result", 0), context.read("result", 1));
-				}
+				new ToJavaHelper().compute($("to_java", valuesExpression));
 			}
 			
 		}, 1);
 		
-		fail("TODO");
+		final Object javaCode = right(javaCodeDeduction.getProposition(javaCodeDeduction.getPropositionName(-1)));
+		
+		{
+			final Context context = new Context();
+			
+			context.setBuffer("result", node.getFloatBuffer());
+			
+			context.run(javaCode);
+		}
+		
+		assertArrayEquals(new float[] { 1F, 1F }, node.get(new float[node.getLength()]), 0F);
 	}
 	
 	@Test
@@ -185,7 +117,30 @@ public final class NodeTest {
 		
 		assertArrayEquals(new int[] { 2, 1, 3 }, node.getShape());
 		
-		fail("TODO");
+		final Deduction javaCodeDeduction = Standard.build(new Deduction(node.getBoundForm(), node.getName() + "_to_java"), new Runnable() {
+			
+			@Override
+			public final void run() {
+				final Object boundForm = proposition(-1);
+				final Object valuesExpression = left(middle(right(boundForm)));
+				
+				new ToJavaHelper().compute($("to_java", valuesExpression));
+			}
+			
+		}, 1);
+		
+		
+		final Object javaCode = right(javaCodeDeduction.getProposition(javaCodeDeduction.getPropositionName(-1)));
+		
+		{
+			final Context context = new Context();
+			
+			context.setBuffer("result", node.getFloatBuffer());
+			
+			context.run(javaCode);
+		}
+		
+		assertArrayEquals(new float[] { 1F, 1F, 1F, 1F, 1F, 1F }, node.get(new float[node.getLength()]), 0F);
 	}
 	
 	/**
@@ -197,7 +152,7 @@ public final class NodeTest {
 		
 		private final Interpreter interpreter = this.new Interpreter();
 		
-		public final Object interpret(final Object program) {
+		public final Object run(final Object program) {
 			return this.interpreter.apply(program);
 		}
 		
