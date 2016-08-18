@@ -22,6 +22,10 @@ public final class Stack {
 	
 	private static final List<Deduction> stack = new ArrayList<>();
 	
+	private static final List<Deduction> stack() {
+		return stack;
+	}
+	
 	public static final Deduction push() {
 		return push("");
 	}
@@ -31,13 +35,13 @@ public final class Stack {
 	}
 	
 	public static final Deduction push(final Deduction result) {
-		stack.add(result);
+		stack().add(result);
 		
 		return result;
 	}
 	
 	public static final Deduction pop() {
-		return stack.remove(stack.size() - 1);
+		return stack().remove(stack().size() - 1);
 	}
 	
 	public static final Deduction pop(final Deduction deduction) {
@@ -49,7 +53,7 @@ public final class Stack {
 	}
 	
 	public static final Deduction deduction() {
-		return last(stack);
+		return last(stack());
 	}
 	
 	public static final Object forall(final String name) {

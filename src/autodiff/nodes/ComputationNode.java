@@ -1251,6 +1251,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		}
 		
 		public final void compute(final Object proposition) {
+			debugPrint();
 			this.rules.applyTo(proposition);
 		}
 		

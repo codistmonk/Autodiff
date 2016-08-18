@@ -21,6 +21,7 @@ import autodiff.reasoning.deductions.Standard;
 import autodiff.reasoning.expressions.ExpressionRewriter;
 import autodiff.reasoning.expressions.Expressions;
 import autodiff.reasoning.proofs.Deduction;
+import autodiff.reasoning.proofs.Stack;
 import autodiff.rules.Rules;
 import autodiff.rules.PatternPredicate;
 
@@ -199,19 +200,36 @@ public final class DefaultProcessor implements NodeProcessor {
 			timer.tic();
 			
 			final Object javaCode = getComputationCodes().computeIfAbsent(node, __ -> {
-				final Deduction javaCodeDeduction = Standard.build(new Deduction(node.getBoundForm(), node.getName() + "_to_java"), new Runnable() {
-					
-					@Override
-					public final void run() {
-						final Object boundForm = proposition(-1);
-						final Object valuesExpression = left(middle(right(boundForm)));
+				debugPrint(node.getName());
+				try {
+					final Deduction javaCodeDeduction = Standard.build(new Deduction(node.getBoundForm(), node.getName() + "_to_java"), new Runnable() {
 						
-						new ToJavaHelper().compute($$("to_java", valuesExpression));
-					}
+						@Override
+						public final void run() {
+							debugPrint(node.getName());
+							final Object boundForm = proposition(-1);
+							final Object valuesExpression = left(middle(right(boundForm)));
+							
+							new ToJavaHelper().compute($$("to_java", valuesExpression));
+						}
+						
+					}, 1);
 					
-				}, 1);
-				
-				return right(javaCodeDeduction.getProposition(javaCodeDeduction.getPropositionName(-1)));
+					return right(javaCodeDeduction.getProposition(javaCodeDeduction.getPropositionName(-1)));
+				} catch (final Exception exception) {
+					exception.printStackTrace();
+					
+					Standard.build(node.getBoundForm(), new Runnable() {
+						
+						@Override
+						public final void run() {
+							Stack.abort();
+						}
+						
+					}, 1);
+					
+					return null;
+				}
 			});
 			
 			{

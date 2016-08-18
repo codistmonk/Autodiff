@@ -327,7 +327,7 @@ public final class CLProcessor implements NodeProcessor {
 			return getForwardKernels().computeIfAbsent(node, __ -> {
 				final String kernelName = node.getClass().getSimpleName() + node.getId();
 				
-				final Deduction clCodeDeduction = Standard.build(new Deduction(node.getBoundForm(), node.getName() + "_to_java"), new Runnable() {
+				final Deduction clCodeDeduction = Standard.build(new Deduction(node.getBoundForm(), node.getName() + "_to_CL"), new Runnable() {
 					
 					@Override
 					public final void run() {
