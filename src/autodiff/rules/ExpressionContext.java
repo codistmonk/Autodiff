@@ -15,15 +15,15 @@ import autodiff.rules.SimpleRule.Predicate;
  */
 public final class ExpressionContext implements Serializable {
 	
-	private final Disjunction<Object, Object> typeRules = new Disjunction<>();
+	private final Rules<Object, Object> typeRules = new Rules<>();
 	
-	private final Disjunction<Object, Object> simplificationRules = new Disjunction<>();
+	private final Rules<Object, Object> simplificationRules = new Rules<>();
 	
-	public final Disjunction<Object, Object> getTypeRules() {
+	public final Rules<Object, Object> getTypeRules() {
 		return this.typeRules;
 	}
 	
-	public final Disjunction<Object, Object> getSimplificationRules() {
+	public final Rules<Object, Object> getSimplificationRules() {
 		return this.simplificationRules;
 	}
 	

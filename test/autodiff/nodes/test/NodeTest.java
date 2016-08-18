@@ -5,6 +5,7 @@ import static autodiff.reasoning.deductions.Standard.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.BasicNumericVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
+import static autodiff.rules.PatternPredicate.rule;
 import static multij.tools.Tools.debugPrint;
 import static multij.tools.Tools.invoke;
 import static org.junit.Assert.*;
@@ -16,6 +17,9 @@ import autodiff.nodes.Node;
 import autodiff.reasoning.deductions.Standard;
 import autodiff.reasoning.expressions.ExpressionRewriter;
 import autodiff.reasoning.proofs.Deduction;
+import autodiff.rules.PatternPredicate;
+import autodiff.rules.Rules;
+import autodiff.rules.Variable;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
@@ -171,6 +175,19 @@ public final class NodeTest {
 		fail("TODO");
 	}
 	
+	@Test
+	public final void testComputationNode2() {
+		final ComputationNode node = ComputationNode.ones();
+		
+		node.set("s", new int[] { 2, 1, 3 });
+		
+		node.autoShape();
+		
+		assertArrayEquals(new int[] { 2, 1, 3 }, node.getShape());
+		
+		fail("TODO");
+	}
+	
 	/**
 	 * @author codistmonk (creation 2016-08-16)
 	 */
@@ -228,34 +245,49 @@ public final class NodeTest {
 		 */
 		public final class Interpreter implements ExpressionRewriter {
 			
+			private final Rules<Object, Object> rules = new Rules<>();
+			
+			{
+				{
+					final Variable s = new Variable("s");
+					
+					this.rules.add(rule($("\"", s, "\""), (__, m) -> m.get(s).toString()));
+				}
+				
+				{
+					final Variable p = new Variable("p");
+					
+					this.rules.add(rule($("()->{", p, "}"), (__, m) -> new Runnable() {
+						
+						private final Object _p = m.get(p);
+						
+						@Override
+						public final void run() {
+							Interpreter.this.apply(this._p);
+						}
+						
+					}));
+				}
+				
+				{
+					final Variable f = new Variable("f");
+					final Variable x = new Variable("x");
+					
+					this.rules.add(rule($(f, "(", x, ")"), (__, m) -> {
+						final List<Object> arguments = flattenSequence(",", this.apply(m.get(x)));
+						
+						return invoke(Context.this, m.get(f).toString(), arguments.toArray());
+					}));
+				}
+				
+				{
+					this.rules.add(rule(new Variable("*"), (e, __) -> ExpressionRewriter.super.visit((List<?>) e)));
+				}
+			}
+			
 			@Override
 			public final Object visit(final List<?> expression) {
-				if (3 == expression.size()) {
-					if ("\"".equals(left(expression)) && "\"".equals(right(expression))) {
-						return middle(expression).toString();
-					}
-					
-					if ("()->{".equals(left(expression)) && "}".equals(right(expression))) {
-						return new Runnable() {
-							
-							@Override
-							public final void run() {
-								Interpreter.this.apply(middle(expression));
-							}
-							
-						};
-					}
-				}
-				
-				if (4 == expression.size()) {
-					if ("(".equals(expression.get(1)) && ")".equals(expression.get(3))) {
-						final List<Object> arguments = flattenSequence(",", this.apply(expression.get(2)));
-						
-						return invoke(Context.this, expression.get(0).toString(), arguments.toArray());
-					}
-				}
-				
-				return ExpressionRewriter.super.visit(expression);
+				return this.rules.applyTo(expression);
 			}
 			
 			private static final long serialVersionUID = -6614888521968958004L;
@@ -264,19 +296,6 @@ public final class NodeTest {
 		
 		private static final long serialVersionUID = -7818200319668460156L;
 		
-	}
-	
-	@Test
-	public final void testComputationNode2() {
-		final ComputationNode node = ComputationNode.ones();
-		
-		node.set("s", new int[] { 2, 1, 3 });
-		
-		node.autoShape();
-		
-		assertArrayEquals(new int[] { 2, 1, 3 }, node.getShape());
-		
-		fail("TODO");
 	}
 	
 }

@@ -14,7 +14,7 @@ import autodiff.rules.SimpleRule.Predicate;
  * @param <T>
  * @param <R>
  */
-public final class Disjunction<T, R> implements Rule<T, R> {
+public final class Rules<T, R> implements Rule<T, R> {
 	
 	private final List<Rule<T, R>> rules = new ArrayList<>();
 	

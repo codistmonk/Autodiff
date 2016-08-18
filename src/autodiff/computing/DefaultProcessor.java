@@ -9,7 +9,7 @@ import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
 import autodiff.nodes.NodeVisitor;
 import autodiff.nodes.Zipping;
-import autodiff.rules.Disjunction;
+import autodiff.rules.Rules;
 import autodiff.rules.PatternPredicate;
 
 import java.io.Serializable;
@@ -179,7 +179,7 @@ public final class DefaultProcessor implements NodeProcessor {
 	 */
 	public static final class Context implements Serializable {
 		
-		private final Disjunction<Object, FloatSupplier> rules = new Disjunction<>();
+		private final Rules<Object, FloatSupplier> rules = new Rules<>();
 		
 		private final List<Variable> inputs = new ArrayList<>();
 		
@@ -441,7 +441,7 @@ public final class DefaultProcessor implements NodeProcessor {
 			this.rules.add((object, __) -> object instanceof Number, (x, __) -> new Constant(((Number) x).floatValue()));
 		}
 		
-		public final Disjunction<Object, FloatSupplier> getRules() {
+		public final Rules<Object, FloatSupplier> getRules() {
 			return this.rules;
 		}
 		

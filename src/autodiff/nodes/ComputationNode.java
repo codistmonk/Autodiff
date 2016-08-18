@@ -12,7 +12,7 @@ import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.proofs.BasicNumericVerification;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.proofs.Substitution;
-import autodiff.rules.Disjunction;
+import autodiff.rules.Rules;
 import autodiff.rules.Variable;
 
 import java.io.Serializable;
@@ -1077,7 +1077,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	}
 	
 	public static final void computeVectorAccess(final Object elementType, final Object formula) {
-		final Disjunction<Object, Void> rules = new Disjunction<>();
+		final Rules<Object, Void> rules = new Rules<>();
 //		{
 //			final Object _x = $new("x");
 //			final Object _X = $new("X");
@@ -1150,7 +1150,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	}
 	
 	public static final void computeVectorReductionByProduct(final Object formula) {
-		final Disjunction<Object, Void> rules = new Disjunction<>();
+		final Rules<Object, Void> rules = new Rules<>();
 		
 		{
 			rules.add(rule($(PI, $()),

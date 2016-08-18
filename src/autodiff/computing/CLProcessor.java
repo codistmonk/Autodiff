@@ -17,7 +17,7 @@ import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
 import autodiff.nodes.NodeVisitor;
 import autodiff.nodes.Zipping;
-import autodiff.rules.Disjunction;
+import autodiff.rules.Rules;
 import autodiff.rules.PatternPredicate;
 
 import java.io.Serializable;
@@ -457,7 +457,7 @@ public final class CLProcessor implements NodeProcessor {
 	 */
 	public static final class Context implements Serializable {
 		
-		private final Disjunction<Object, String> rules = new Disjunction<>();
+		private final Rules<Object, String> rules = new Rules<>();
 		
 		{
 			for (final List<Object> definition : Functions.getDefinitions().values()) {
@@ -723,7 +723,7 @@ public final class CLProcessor implements NodeProcessor {
 			return "(" + this.rules.applyTo(m.get(x), m) + op + this.rules.applyTo(m.get(y), m) + ")";
 		}
 		
-		public final Disjunction<Object, String> getRules() {
+		public final Rules<Object, String> getRules() {
 			return this.rules;
 		}
 		
