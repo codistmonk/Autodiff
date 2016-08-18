@@ -47,6 +47,8 @@ public final class CLProcessor implements NodeProcessor {
 	
 	private final Map<Object, TicToc> timers;
 	
+	private final Map<Node<?>, Object> computationCodes;
+	
 	private final Map<Node<?>, List<Node<?>>> forwards;
 	
 	private final Map<Node<?>, List<Node<?>>> backwards;
@@ -71,6 +73,7 @@ public final class CLProcessor implements NodeProcessor {
 	
 	public CLProcessor(final CLContext context) {
 		this.timers = new HashMap<>();
+		this.computationCodes = new HashMap<>();
 		this.forwards = new HashMap<>();
 		this.backwards = new HashMap<>();
 		this.context = context;
@@ -85,6 +88,11 @@ public final class CLProcessor implements NodeProcessor {
 	@Override
 	public final Map<Object, TicToc> getTimers() {
 		return this.timers;
+	}
+	
+	@Override
+	public final Map<Node<?>, Object> getComputationCodes() {
+		return this.computationCodes;
 	}
 	
 	@Override

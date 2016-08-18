@@ -1,20 +1,36 @@
 package autodiff.computing;
 
 import static autodiff.computing.Functions.*;
+import static autodiff.nodes.ComputationNode.flattenSequence;
+import static autodiff.reasoning.expressions.Expressions.left;
+import static autodiff.reasoning.expressions.Expressions.middle;
+import static autodiff.reasoning.expressions.Expressions.right;
+import static autodiff.reasoning.proofs.Stack.proposition;
 import static autodiff.rules.PatternPredicate.rule;
 import static java.lang.Math.*;
 import static multij.tools.Tools.*;
+
+import autodiff.nodes.ComputationNode;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
 import autodiff.nodes.NodeVisitor;
 import autodiff.nodes.Zipping;
+import autodiff.nodes.ComputationNode.ToJavaHelper;
+import autodiff.reasoning.deductions.Standard;
+import autodiff.reasoning.expressions.ExpressionRewriter;
+import autodiff.reasoning.expressions.Expressions;
+import autodiff.reasoning.proofs.Deduction;
 import autodiff.rules.Rules;
 import autodiff.rules.PatternPredicate;
 
 import java.io.Serializable;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +44,8 @@ public final class DefaultProcessor implements NodeProcessor {
 	
 	private final Map<Object, TicToc> timers = new HashMap<>();
 	
+	private final Map<Node<?>, Object> computationCodes = new HashMap<>();
+	
 	private final Map<Node<?>, List<Node<?>>> forwards = new HashMap<>();
 	
 	private final Map<Node<?>, List<Node<?>>> backwards = new HashMap<>();
@@ -37,6 +55,11 @@ public final class DefaultProcessor implements NodeProcessor {
 	@Override
 	public final Map<Object, TicToc> getTimers() {
 		return this.timers;
+	}
+	
+	@Override
+	public final Map<Node<?>, Object> getComputationCodes() {
+		return this.computationCodes;
 	}
 	
 	@Override
@@ -170,7 +193,152 @@ public final class DefaultProcessor implements NodeProcessor {
 			return null;
 		}
 		
+		@Override
+		public final Void visit(final ComputationNode node) {
+			final TicToc timer = getOrCreateTimer("ComputationNode");
+			
+			timer.tic();
+			
+			final Object javaCode = getComputationCodes().computeIfAbsent(node, __ -> {
+				final Deduction javaCodeDeduction = Standard.build(new Deduction(node.getBoundForm(), node.getName() + "_to_java"), new Runnable() {
+					
+					@Override
+					public final void run() {
+						final Object boundForm = proposition(-1);
+						final Object valuesExpression = left(middle(right(boundForm)));
+						
+						new ToJavaHelper().compute($("to_java", valuesExpression));
+					}
+					
+				}, 1);
+				
+				return right(javaCodeDeduction.getProposition(javaCodeDeduction.getPropositionName(-1)));
+			});
+			
+			{
+				final JavaCodeContext context = new JavaCodeContext();
+				
+				context.setBuffer("result", node.getFloatBuffer());
+				
+				context.run(javaCode);
+			}
+			
+			timer.toc();
+			
+			return null;
+		}
+		
 		private static final long serialVersionUID = -8842155630294708599L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-16)
+	 */
+	public static final class JavaCodeContext implements Serializable {
+		
+		private final Map<String, FloatBuffer> buffers = new LinkedHashMap<>();
+		
+		private final Interpreter interpreter = this.new Interpreter();
+		
+		public final Object run(final Object program) {
+			return this.interpreter.apply(program);
+		}
+		
+		public final void repeat(final Number n, final String counterName, final Number counterIndex, final Runnable instructions) {
+			final String deltaName = this.buffers.size() + ":delta";
+			
+			this.allocate(deltaName, 1);
+			this.write(deltaName, 0, 1);
+			
+			for (this.write(counterName, counterIndex, 0);
+					this.read(counterName, counterIndex) < n.intValue();
+					this.addTo(counterName, counterIndex, deltaName, 0)) {
+				instructions.run();
+			}
+		}
+		
+		public final void allocate(final String name, final int n) {
+			this.buffers.put(name,
+					ByteBuffer.allocateDirect(n * Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer());
+		}
+		
+		public final void write(final String targetName, final Number index, final Number value) {
+			this.getBuffer(targetName).put(index.intValue(), value.floatValue());
+		}
+		
+		public final float read(final String sourceName, final Number index) {
+			return this.getBuffer(sourceName).get(index.intValue());
+		}
+		
+		public final void addTo(final String targetName, final Number targetIndex, final String sourceName, final Number sourceIndex) {
+			this.write(targetName, targetIndex,
+					this.read(targetName, targetIndex) + this.read(sourceName, sourceIndex));
+		}
+		
+		public final FloatBuffer getBuffer(final String name) {
+			return this.buffers.get(name);
+		}
+		
+		public final void setBuffer(final String name, final FloatBuffer buffer) {
+			this.buffers.put(name, buffer);
+		}
+		
+		/**
+		 * @author codistmonk (creation 2016-08-16)
+		 */
+		public final class Interpreter implements ExpressionRewriter {
+			
+			private final Rules<Object, Object> rules = new Rules<>();
+			
+			{
+				{
+					final autodiff.rules.Variable s = new autodiff.rules.Variable("s");
+					
+					this.rules.add(rule(Expressions.$("\"", s, "\""), (__, m) -> m.get(s).toString()));
+				}
+				
+				{
+					final autodiff.rules.Variable p = new autodiff.rules.Variable("p");
+					
+					this.rules.add(rule(Expressions.$("()->{", p, "}"), (__, m) -> new Runnable() {
+						
+						private final Object _p = m.get(p);
+						
+						@Override
+						public final void run() {
+							Interpreter.this.apply(this._p);
+						}
+						
+					}));
+				}
+				
+				{
+					final autodiff.rules.Variable f = new autodiff.rules.Variable("f");
+					final autodiff.rules.Variable x = new autodiff.rules.Variable("x");
+					
+					this.rules.add(rule(Expressions.$(f, "(", x, ")"), (__, m) -> {
+						final List<Object> arguments = flattenSequence(",", this.apply(m.get(x)));
+						
+						return invoke(JavaCodeContext.this, m.get(f).toString(), arguments.toArray());
+					}));
+				}
+				
+				{
+					this.rules.add(rule(new autodiff.rules.Variable("*"), (e, __) -> ExpressionRewriter.super.visit((List<?>) e)));
+				}
+			}
+			
+			@Override
+			public final Object visit(final List<?> expression) {
+				return this.rules.applyTo(expression);
+			}
+			
+			private static final long serialVersionUID = -6614888521968958004L;
+			
+		}
+		
+		private static final long serialVersionUID = -7818200319668460156L;
 		
 	}
 	

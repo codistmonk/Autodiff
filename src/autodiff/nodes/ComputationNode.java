@@ -101,6 +101,11 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	}
 	
 	@Override
+	public final <V> V accept(final NodeVisitor<V> visitor) {
+		return visitor.visit(this);
+	}
+	
+	@Override
 	public final String getName() {
 		return "[" + this.getId() + "]" + this.getTypeName();
 	}
@@ -419,14 +424,14 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		public final void run() {
 			Standard.setup();
 			
-			debugPrint(sequence(",", $(1, 2, 3)));
-			debugPrint(sequence(",", 1));
-			debugPrint(sequence(",", 1, 2));
-			debugPrint(sequence(",", 1, 2, 3));
-			debugPrint(sequence(",", 1, sequence(",", 2, 3)));
-			debugPrint(sequence(",", sequence(",", 1, 2), 3));
-			debugPrint(sequence(",", 1, sequence(",", 2, 3), 4));
-			debugPrint(sequence(",", 1, 2, 3, 4));
+//			debugPrint(sequence(",", $(1, 2, 3)));
+//			debugPrint(sequence(",", 1));
+//			debugPrint(sequence(",", 1, 2));
+//			debugPrint(sequence(",", 1, 2, 3));
+//			debugPrint(sequence(",", 1, sequence(",", 2, 3)));
+//			debugPrint(sequence(",", sequence(",", 1, 2), 3));
+//			debugPrint(sequence(",", 1, sequence(",", 2, 3), 4));
+//			debugPrint(sequence(",", 1, 2, 3, 4));
 			
 			supposeDefinitionOfParentheses();
 			supposeDefinitionOfForallIn();
