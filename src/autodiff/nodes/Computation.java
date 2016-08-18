@@ -29,7 +29,7 @@ import multij.tools.Pair;
 /**
  * @author codistmonk (creation 2016-08-09)
  */
-public final class ComputationNode extends AbstractNode<ComputationNode> {
+public final class Computation extends AbstractNode<Computation> {
 	
 	private final Map<String, Object> bindings;
 	
@@ -43,7 +43,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	
 	private Deduction boundForm;
 	
-	public ComputationNode() {
+	public Computation() {
 		super(new ArrayList<>());
 		this.bindings = new LinkedHashMap<>();
 		this.definition = new ArrayList<>();
@@ -67,7 +67,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		return this.getBindings().get(key);
 	}
 	
-	public final ComputationNode set(final String key, final Object value) {
+	public final Computation set(final String key, final Object value) {
 		this.getBindListeners().forEach(l -> l.beforeBind(key, value));
 		this.getBindings().put(key, value);
 		this.getBindListeners().forEach(l -> l.afterBind(key, value));
@@ -79,7 +79,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		return this.definition;
 	}
 	
-	public final ComputationNode setDefinition(final List<Object> definition) {
+	public final Computation setDefinition(final List<Object> definition) {
 		this.definition = definition;
 		
 		return this;
@@ -89,7 +89,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		return this.typeName;
 	}
 	
-	public final ComputationNode setTypeName(final String typeName) {
+	public final Computation setTypeName(final String typeName) {
 		this.typeName = typeName;
 		
 		return this;
@@ -99,7 +99,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		return this.binder;
 	}
 	
-	public final ComputationNode setBinder(final Runnable binder) {
+	public final Computation setBinder(final Runnable binder) {
 		this.binder = binder;
 		
 		return this;
@@ -116,7 +116,7 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	}
 	
 	@Override
-	public final ComputationNode autoShape() {
+	public final Computation autoShape() {
 		final Deduction deduction = this.getBoundForm();
 		final Object proposition = deduction.getProposition(deduction.getPropositionName(-1));
 //		final Object shapeExpression = middle(right(middle(right(proposition))));
@@ -348,11 +348,11 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 	}
 	
 	public static final Iterable<PropositionDescription> iterateBackward(final Deduction deduction) {
-		return new Iterable<ComputationNode.PropositionDescription>() {
+		return new Iterable<Computation.PropositionDescription>() {
 			
 			@Override
 			public final Iterator<PropositionDescription> iterator() {
-				return new Iterator<ComputationNode.PropositionDescription>() {
+				return new Iterator<Computation.PropositionDescription>() {
 					
 					private final PropositionDescription result = new PropositionDescription();
 					
@@ -1251,7 +1251,6 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		}
 		
 		public final void compute(final Object proposition) {
-			debugPrint();
 			this.rules.applyTo(proposition);
 		}
 		
@@ -1489,8 +1488,8 @@ public final class ComputationNode extends AbstractNode<ComputationNode> {
 		throw new IllegalArgumentException();
 	}
 	
-	public static final ComputationNode ones() {
-		final ComputationNode result = new ComputationNode().setTypeName("ones");
+	public static final Computation ones() {
+		final Computation result = new Computation().setTypeName("ones");
 		
 		final Object n = $new("n");
 		final Object s = $new("s");

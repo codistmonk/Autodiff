@@ -1,7 +1,7 @@
 package autodiff.computing;
 
 import static autodiff.computing.Functions.*;
-import static autodiff.nodes.ComputationNode.IN;
+import static autodiff.nodes.Computation.IN;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.BasicNumericVerification.R;
 import static autodiff.reasoning.proofs.Stack.*;
@@ -15,13 +15,13 @@ import static org.jocl.CL.setExceptionsEnabled;
 
 import autodiff.cl.CLContext;
 import autodiff.cl.CLKernel;
-import autodiff.nodes.ComputationNode;
+import autodiff.nodes.Computation;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
 import autodiff.nodes.NodeVisitor;
 import autodiff.nodes.Zipping;
-import autodiff.nodes.ComputationNode.ToCLHelper;
+import autodiff.nodes.Computation.ToCLHelper;
 import autodiff.reasoning.deductions.Standard;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.rules.Rules;
@@ -323,7 +323,7 @@ public final class CLProcessor implements NodeProcessor {
 		}
 		
 		@Override
-		public final CLKernel visit(final ComputationNode node) {
+		public final CLKernel visit(final Computation node) {
 			return getForwardKernels().computeIfAbsent(node, __ -> {
 				final String kernelName = node.getClass().getSimpleName() + node.getId();
 				
@@ -343,7 +343,7 @@ public final class CLProcessor implements NodeProcessor {
 				
 				programSource += "__kernel void " + kernelName + "(";
 				programSource += "__global float * const result) {\n";
-				programSource += ComputationNode.deepJoin("",
+				programSource += Computation.deepJoin("",
 						(Iterable<?>) right(clCodeDeduction.getProposition(clCodeDeduction.getPropositionName(-1))));
 				programSource += "}\n";
 				

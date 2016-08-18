@@ -12,7 +12,7 @@ import static multij.tools.Tools.ints;
 import static org.junit.Assert.*;
 
 import autodiff.computing.NodeProcessor;
-import autodiff.nodes.ComputationNode;
+import autodiff.nodes.Computation;
 import autodiff.nodes.Data;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.Node;
@@ -35,8 +35,8 @@ public abstract class ProcessorTest {
 	}
 	
 	@Test
-	public final void testComputationNode1() {
-		final ComputationNode node = ComputationNode.ones();
+	public final void testComputation1() {
+		final Computation node = Computation.ones();
 		
 		node.set("s", new int[] { 2 });
 		

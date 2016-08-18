@@ -156,7 +156,7 @@ public final class NodesTools {
 	
 	public static final Node<?> ones(final int... shape) {
 		if (true) {
-			return ComputationNode.ones().set("s", shape).autoShape();
+			return Computation.ones().set("s", shape).autoShape();
 		}
 		
 		return new Ones(shape).autoShape();

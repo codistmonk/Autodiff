@@ -3,7 +3,7 @@ package autodiff.nodes.test;
 import static org.junit.Assert.*;
 
 import autodiff.computing.DefaultProcessor;
-import autodiff.nodes.ComputationNode;
+import autodiff.nodes.Computation;
 import autodiff.nodes.Data;
 import autodiff.nodes.Node;
 
@@ -56,8 +56,8 @@ public final class NodeTest {
 	}
 	
 	@Test
-	public final void testComputationNode1() {
-		final ComputationNode node = ComputationNode.ones();
+	public final void testComputation1() {
+		final Computation node = Computation.ones();
 		
 		node.set("s", new int[] { 2 });
 		
@@ -71,8 +71,8 @@ public final class NodeTest {
 	}
 	
 	@Test
-	public final void testComputationNode2() {
-		final ComputationNode node = ComputationNode.ones();
+	public final void testComputation() {
+		final Computation node = Computation.ones();
 		
 		node.set("s", new int[] { 2, 1, 3 });
 		

@@ -1,6 +1,6 @@
 package autodiff.computing;
 
-import static autodiff.nodes.ComputationNode.IN;
+import static autodiff.nodes.Computation.IN;
 import static autodiff.reasoning.expressions.Expressions.FORALL;
 import static autodiff.reasoning.proofs.BasicNumericVerification.R;
 import static java.lang.Math.pow;

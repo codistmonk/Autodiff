@@ -1,8 +1,8 @@
 package autodiff.computing;
 
 import static autodiff.computing.Functions.*;
-import static autodiff.nodes.ComputationNode.IN;
-import static autodiff.nodes.ComputationNode.flattenSequence;
+import static autodiff.nodes.Computation.IN;
+import static autodiff.nodes.Computation.flattenSequence;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.BasicNumericVerification.R;
 import static autodiff.reasoning.proofs.Stack.proposition;
@@ -10,18 +10,17 @@ import static autodiff.rules.PatternPredicate.rule;
 import static java.lang.Math.*;
 import static multij.tools.Tools.*;
 
-import autodiff.nodes.ComputationNode;
+import autodiff.nodes.Computation;
 import autodiff.nodes.Mapping;
 import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
 import autodiff.nodes.NodeVisitor;
 import autodiff.nodes.Zipping;
-import autodiff.nodes.ComputationNode.ToJavaHelper;
+import autodiff.nodes.Computation.ToJavaHelper;
 import autodiff.reasoning.deductions.Standard;
 import autodiff.reasoning.expressions.ExpressionRewriter;
 import autodiff.reasoning.expressions.Expressions;
 import autodiff.reasoning.proofs.Deduction;
-import autodiff.reasoning.proofs.Stack;
 import autodiff.rules.Rules;
 import autodiff.rules.PatternPredicate;
 
@@ -194,42 +193,25 @@ public final class DefaultProcessor implements NodeProcessor {
 		}
 		
 		@Override
-		public final Void visit(final ComputationNode node) {
+		public final Void visit(final Computation node) {
 			final TicToc timer = getOrCreateTimer("ComputationNode");
 			
 			timer.tic();
 			
 			final Object javaCode = getComputationCodes().computeIfAbsent(node, __ -> {
-				debugPrint(node.getName());
-				try {
-					final Deduction javaCodeDeduction = Standard.build(new Deduction(node.getBoundForm(), node.getName() + "_to_java"), new Runnable() {
-						
-						@Override
-						public final void run() {
-							debugPrint(node.getName());
-							final Object boundForm = proposition(-1);
-							final Object valuesExpression = left(middle(right(boundForm)));
-							
-							new ToJavaHelper().compute($$("to_java", valuesExpression));
-						}
-						
-					}, 1);
+				final Deduction javaCodeDeduction = Standard.build(new Deduction(node.getBoundForm(), node.getName() + "_to_java"), new Runnable() {
 					
-					return right(javaCodeDeduction.getProposition(javaCodeDeduction.getPropositionName(-1)));
-				} catch (final Exception exception) {
-					exception.printStackTrace();
-					
-					Standard.build(node.getBoundForm(), new Runnable() {
+					@Override
+					public final void run() {
+						final Object boundForm = proposition(-1);
+						final Object valuesExpression = left(middle(right(boundForm)));
 						
-						@Override
-						public final void run() {
-							Stack.abort();
-						}
-						
-					}, 1);
+						new ToJavaHelper().compute($$("to_java", valuesExpression));
+					}
 					
-					return null;
-				}
+				}, 1);
+				
+				return right(javaCodeDeduction.getProposition(javaCodeDeduction.getPropositionName(-1)));
 			});
 			
 			{
