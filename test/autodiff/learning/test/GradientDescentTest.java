@@ -11,6 +11,7 @@ import static multij.tools.Tools.cast;
 import static multij.tools.Tools.debug;
 import static multij.tools.Tools.debugPrint;
 import static org.junit.Assert.*;
+
 import autodiff.computing.NodeProcessor;
 import autodiff.io.Iris;
 import autodiff.io.LabeledData;
@@ -47,7 +48,7 @@ public abstract class GradientDescentTest {
 		final Random random = new Random(1L);
 		final Node<?> x = new Data().set(random.nextFloat() * 100F);
 		final Node<?> y = $(x, SQUARED);
-		final GradientDescent gd = new GradientDescent(y).setIterations(100);
+		final GradientDescent gd = new GradientDescent(y).setProcessor(this.getProcessor()).setIterations(100);
 		
 		gd.getParameters().add(x);
 		gd.run();
@@ -61,7 +62,7 @@ public abstract class GradientDescentTest {
 		final Random random = new Random(1L);
 		final Node<?> x = new Data().set(random.nextFloat() * 100F);
 		final Node<?> y = $($(x, SQUARED), "-", $(COS, $(8, "*", x)));
-		final GradientDescent gd = new GradientDescent(y).setIterations(50).setLearningRateDivisor(1.5F).setLearningRateMultiplier(1.05F);
+		final GradientDescent gd = new GradientDescent(y).setProcessor(this.getProcessor()).setIterations(50).setLearningRateDivisor(1.5F).setLearningRateMultiplier(1.05F);
 		
 		gd.getParameters().add(x);
 		gd.run();
@@ -93,7 +94,7 @@ public abstract class GradientDescentTest {
 		final Node<?> w1 = $(w, "@", 1);
 		final Node<?> w2 = $(w, "@", 2);
 		final Node<?> z = $($(w0, "*", colinearityConstraint), "+", $($(w1, "*", orthogonalityConstraint), "+", $(w2, "*", lengthConstraint)));
-		final GradientDescent gd = new GradientDescent(z).setIterations(200).setLearningRateDivisor(1.5F).setLearningRateMultiplier(1.05F);
+		final GradientDescent gd = new GradientDescent(z).setProcessor(this.getProcessor()).setIterations(200).setLearningRateDivisor(1.5F).setLearningRateMultiplier(1.05F);
 		
 		gd.getParameters().add(v);
 		gd.getParameters().add(k);
@@ -140,7 +141,7 @@ public abstract class GradientDescentTest {
 			debugPrint(cost.get());
 		}
 		
-		final GradientDescent gd = new GradientDescent(cost).setLearningRate(1E-1F).setIterations(400);
+		final GradientDescent gd = new GradientDescent(cost).setProcessor(this.getProcessor()).setLearningRate(1E-1F).setIterations(400);
 		gd.getParameters().add(a);
 		gd.getParameters().add(b);
 		
@@ -200,7 +201,7 @@ public abstract class GradientDescentTest {
 		
 		initialize(random::nextGaussian, a, b);
 		
-		final GradientDescent gd = new GradientDescent(cost).setIterations(1);
+		final GradientDescent gd = new GradientDescent(cost).setProcessor(this.getProcessor()).setIterations(1);
 		gd.getParameters().add(a);
 		gd.getParameters().add(b);
 		final MinibatchMinimizer minibatchMinimizer = new MinibatchMinimizer(gd, trainingData, minibatchData).setEpochs(100);

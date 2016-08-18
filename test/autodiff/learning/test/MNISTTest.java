@@ -55,7 +55,7 @@ public abstract class MNISTTest {
 		
 		initialize(random::nextGaussian, 1E-3, a, b);
 		
-		final GradientDescent gd = new GradientDescent(cost).setLearningRate(1E-5F).setIterations(1);
+		final GradientDescent gd = new GradientDescent(cost).setProcessor(this.getProcessor()).setLearningRate(1E-5F).setIterations(1);
 		gd.getParameters().add(a);
 		gd.getParameters().add(b);
 		final MinibatchMinimizer minibatchMinimizer = new MinibatchMinimizer(

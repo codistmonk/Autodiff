@@ -49,8 +49,11 @@ public abstract class AbstractMinimizer<M extends AbstractMinimizer<?>> implemen
 		return this.processor;
 	}
 	
-	public final void setProcessor(final NodeProcessor processor) {
+	@SuppressWarnings("unchecked")
+	public final M setProcessor(final NodeProcessor processor) {
 		this.processor = processor;
+		
+		return (M) this;
 	}
 	
 	@Override
