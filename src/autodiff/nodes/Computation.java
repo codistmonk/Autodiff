@@ -127,37 +127,6 @@ public final class Computation extends AbstractNode<Computation> {
 		return this;
 	}
 	
-	public static final int[] toInts(final List<Object> numbers) {
-		return numbers.stream().mapToInt(n -> ((Number) n).intValue()).toArray();
-	}
-	
-	public static final List<Object> flattenSequence(final Object separator, final Object sequence) {
-		final List<Object> result = new ArrayList<>();
-		final List<?> list = list(sequence);
-		
-		result.add(first(list));
-		
-		if (2 == list.size()) {
-			List<?> tmp = list(second(list));
-			
-			while (tmp != null) {
-				if (2 == tmp.size() && separator.equals(first(tmp))) {
-					result.add(second(tmp));
-					break;
-				}
-				
-				if (3 == tmp.size() && separator.equals(first(tmp))) {
-					result.add(second(tmp));
-					tmp = list(tmp.get(2));
-				}
-			}
-		} else if (1 != list.size()) {
-			throw new IllegalArgumentException();
-		}
-		
-		return result;
-	}
-	
 	public final Deduction getBoundForm() {
 		if (this.boundForm == null) {
 			this.boundForm = Standard.build(new Deduction(
@@ -165,236 +134,6 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 		
 		return this.boundForm;
-	}
-	
-	public static final void eapplyLast() {
-		eapply(name(-1));
-	}
-	
-	public static final void eapply(final String targetName) {
-		subdeduction();
-				
-		final String justificationName = justicationFor(condition(proposition(targetName))).getName();
-		
-		apply(targetName, justificationName);
-		
-		conclude();
-	}
-	
-	public static final PropositionDescription justicationFor(final Object proposition) {
-		PropositionDescription result = null;
-		
-		for (final PropositionDescription description : iterateBackward(deduction())) {
-			if ("[4]ones_bind.6.3".equals(description.getName())) {
-				debugPrint(description.getProposition());
-				debugPrint(proposition);
-				debugPrint(proposition.equals(description.getProposition()));
-				debugPrint(new Substitution.ExpressionEquality().apply(proposition, description.getProposition()));
-			}
-			if (new Substitution.ExpressionEquality().apply(proposition, description.getProposition())) {
-				result = description;
-				break;
-			}
-		}
-		
-		if (result == null) {
-			if (isPositivity(proposition)) {
-				deducePositivity(left(proposition));
-			} else if(isNaturality(proposition) || isReality(proposition)) {
-				verifyBasicNumericProposition(proposition);
-			} else if(isCartesianProductity(proposition)) {
-				deduceCartesianProduct(left(right(proposition)), flattenSequence(",", left(proposition)).toArray());
-			} else {
-				debugError(proposition);
-				debugError(proposition("[4]ones_bind.6.3"));
-				
-				throw new IllegalStateException();
-			}
-			
-			result = new PropositionDescription()
-			.setIndex(-1)
-			.setName(name(-1))
-			.setProposition(proposition(-1));
-		}
-		
-		return result;
-	}
-	
-	public static final void ebindLast(final Object... values) {
-		ebind(name(-1), values);
-	}
-	
-	public static final void ebindTrim(final String target, final Object... values) {
-		subdeduction();
-		
-		ebind(target, values);
-		trimLast();
-		
-		conclude();
-	}
-	
-	public static final void ebind(final String target, final Object... values) {
-		subdeduction();
-		
-		String newTarget = target;
-		
-		for (final Object value : values) {
-			ebind1(newTarget, value);
-			newTarget = name(-1);
-		}
-		
-		conclude();
-	}
-	
-	public static final void ebind1(final String target, final Object value) {
-		subdeduction();
-		
-		String newTarget = target;
-		boolean done = false;
-		
-		while (!done) {
-//		while (!isBlock(proposition(newTarget))) {
-//			debugPrint(proposition(newTarget));
-			
-			done = true;
-			
-			if (isForallIn(proposition(newTarget))) {
-				canonicalizeForallIn(newTarget);
-				newTarget = name(-1);
-				done = false;
-			} else if (isForallIn2(proposition(newTarget))) {
-				canonicalizeForallIn2(newTarget);
-				newTarget = name(-1);
-				done = false;
-			} else if (trim(newTarget)) {
-				newTarget = name(-1);
-				done = false;
-			}
-		}
-		
-		bind(newTarget, value);
-		
-		conclude();
-	}
-	
-	public static final void trimLast() {
-		trim(name(-1));
-	}
-	
-	public static final boolean trim(final String target) {
-		if (isRule(proposition(target))) {
-			String newTarget = target;
-			
-			subdeduction();
-			
-			while (isRule(proposition(newTarget))) {
-				eapply(newTarget);
-				newTarget = name(-1);
-			}
-			
-			conclude();
-			
-			return true;
-		}
-		
-		return false;
-	}
-	
-	public static final boolean isCartesianProductity(final Object proposition) {
-		final List<?> list = cast(List.class, proposition);
-		
-		if (list != null && 3 == list.size() && IN.equals(middle(list))) {
-			final List<?> type = cast(List.class, right(list));
-			
-			return type != null && "^".equals(middle(type));
-		}
-		
-		return false;
-	}
-	
-	public static final boolean isPositivity(final Object proposition) {
-		final List<?> list = cast(List.class, proposition);
-		
-		return list != null && 3 == list.size()
-				&& IN.equals(middle(list)) && POS.equals(right(list));
-	}
-	
-	public static final boolean isNaturality(final Object proposition) {
-		final List<?> list = cast(List.class, proposition);
-		
-		return list != null && 3 == list.size()
-				&& IN.equals(middle(list)) && N.equals(right(list));
-	}
-	
-	public static final boolean isReality(final Object proposition) {
-		final List<?> list = cast(List.class, proposition);
-		
-		return list != null && 3 == list.size()
-				&& IN.equals(middle(list)) && R.equals(right(list));
-	}
-	
-	public static final boolean isForallIn(final Object proposition) {
-		final List<?> list = cast(List.class, proposition);
-		
-		return list != null && 5 == list.size()
-				&& FORALL.equals(list.get(0)) && IN.equals(list.get(2));
-	}
-	
-	public static final boolean isForallIn2(final Object proposition) {
-		final List<?> list = cast(List.class, proposition);
-		
-		return list != null && 7 == list.size()
-				&& FORALL.equals(list.get(0)) && ",".equals(list.get(2)) && IN.equals(list.get(4));
-	}
-	
-	public static final Iterable<PropositionDescription> iterateBackward(final Deduction deduction) {
-		return new Iterable<Computation.PropositionDescription>() {
-			
-			@Override
-			public final Iterator<PropositionDescription> iterator() {
-				return new Iterator<Computation.PropositionDescription>() {
-					
-					private final PropositionDescription result = new PropositionDescription();
-					
-					private Deduction currentDeduction = deduction;
-					
-					private int i = this.currentDeduction.getPropositionNames().size();
-					
-					@Override
-					public final boolean hasNext() {
-						return 0 < this.i || !isEmpty(this.currentDeduction.getParent());
-					}
-					
-					@Override
-					public final PropositionDescription next() {
-						if (--this.i < 0) {
-							this.currentDeduction = this.currentDeduction.getParent();
-							
-							while (this.currentDeduction.getPropositionNames().isEmpty()) {
-								this.currentDeduction = this.currentDeduction.getParent();
-							}
-							
-							this.i = this.currentDeduction.getPropositionNames().size() - 1;
-						}
-						
-						final String name = this.currentDeduction.getPropositionNames().get(this.i);
-						
-						return this.result
-								.setIndex(this.result.getIndex() - 1)
-								.setName(name)
-								.setProposition(this.currentDeduction.getPropositions().get(name));
-					}
-					
-				};
-			}
-			
-		};
-	}
-	
-	public static final boolean isEmpty(final Deduction deduction) {
-		return deduction == null
-				|| (deduction.getPropositionNames().isEmpty()
-						&& (deduction.getParent() == null || isEmpty(deduction.getParent())));
 	}
 	
 	private static final long serialVersionUID = 2834011599617369367L;
@@ -406,6 +145,8 @@ public final class Computation extends AbstractNode<Computation> {
 	public static final Object SUBSET = $("⊂");
 	
 	public static final Object EQUIV = $("⇔");
+	
+	public static final Object DEF = $("≝");
 	
 	public static final Object P = $("ℙ");
 	
@@ -438,7 +179,16 @@ public final class Computation extends AbstractNode<Computation> {
 //			debugPrint(sequence(",", 1, sequence(",", 2, 3), 4));
 //			debugPrint(sequence(",", 1, 2, 3, 4));
 			
-			supposeDefinitionOfParentheses();
+			{
+				final Object _X = $new("X");
+				final Object _Y = $new("Y");
+				
+				suppose("definition_of_definition",
+						$forall(_X, _Y,
+								$rule($(_X, DEF, _Y), $(_X, "=", _Y))));
+			}
+			
+			supposeEliminationOfParentheses();
 			supposeDefinitionOfForallIn();
 			supposeDefinitionOfForallIn2();
 			supposeDefinitionOfForallIn3();
@@ -462,7 +212,7 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			supposeDefinitionOfRange();
 			
-			supposeTransitivityOfSubset();
+			deduceTransitivityOfSubset();
 			deducePositivesSubsetNaturals();
 			deducePositivesInUhm();
 			supposeDefinitionOfMs();
@@ -540,6 +290,21 @@ public final class Computation extends AbstractNode<Computation> {
 			supposeDefinitionsForJavaCode();
 			
 			supposeDefinitionsForCLCode();
+			
+			{
+				final Object _a = $new("a");
+				final Object _n = $new("n");
+				final Object _b = $new("b");
+				final Object _j = $new("j");
+				final Object _p = $new("p");
+				
+				suppose("meaning_of_allocate",
+						$forall(_a, _n, _b, _j, _p,
+								$($("sequence_append", ";", _p, app("read", str(_b), _j)),
+										"=", $("sequence_append", ";", $("sequence_append", ";", _p, app("allocate", str(_a), _n)), app("read", str(_b), _j)))));
+			}
+			
+			abort();
 		}
 		
 	}, 1);
@@ -1054,10 +819,10 @@ public final class Computation extends AbstractNode<Computation> {
 		conclude();
 	}
 	
-	public static final void supposeDefinitionOfParentheses() {
+	public static final void supposeEliminationOfParentheses() {
 		final Object _X = $new("X");
 		
-		suppose("definition_of_parentheses", $forall(_X,
+		suppose("elimination_of_parentheses", $forall(_X,
 				$(p(_X), "=", _X)));
 	}
 	
@@ -1067,7 +832,7 @@ public final class Computation extends AbstractNode<Computation> {
 		final Object _Y = $new("Y");
 		
 		suppose("definition_of_subset", $forall(_X, $(FORALL, _Y, IN, U,
-				$($(_X, SUBSET, _Y), "=", $forall(_x, $rule($(_x, IN, _X), $(_x, IN, _Y)))))));
+				$($(_X, SUBSET, _Y), DEF, $forall(_x, $rule($(_x, IN, _X), $(_x, IN, _Y)))))));
 	}
 	
 	public static final void supposeNaturalsSubsetReals() {
@@ -1075,7 +840,7 @@ public final class Computation extends AbstractNode<Computation> {
 				$(N, SUBSET, R));
 	}
 	
-	public static final void supposeTransitivityOfSubset() {
+	public static final void deduceTransitivityOfSubset() {
 		subdeduction("transitivity_of_subset");
 		
 		final Object _X = forall("X");
@@ -1104,6 +869,8 @@ public final class Computation extends AbstractNode<Computation> {
 				subdeduction();
 				
 				ebindTrim("definition_of_subset", _X, _Y);
+				ebind("definition_of_definition", left(proposition(-1)), right(proposition(-1)));
+				eapplyLast();
 				rewrite(h1, name(-1));
 				bind(name(-1), _x);
 				
@@ -1116,6 +883,8 @@ public final class Computation extends AbstractNode<Computation> {
 				subdeduction();
 				
 				ebindTrim("definition_of_subset", _Y, _Z);
+				ebind("definition_of_definition", left(proposition(-1)), right(proposition(-1)));
+				eapplyLast();
 				rewrite(h2, name(-1));
 				bind(name(-1), _x);
 				
@@ -1127,7 +896,16 @@ public final class Computation extends AbstractNode<Computation> {
 			conclude();
 		}
 		
-		ebindTrim("definition_of_subset", _X, _Z);
+		{
+			subdeduction();
+			
+			ebindTrim("definition_of_subset", _X, _Z);
+			ebind("definition_of_definition", left(proposition(-1)), right(proposition(-1)));
+			eapplyLast();
+			
+			conclude();
+		}
+		
 		rewriteRight(name(-2), name(-1));
 		
 		conclude();
@@ -1288,6 +1066,7 @@ public final class Computation extends AbstractNode<Computation> {
 		subdeduction("positives_subset_naturals");
 		
 		ebindTrim("definition_of_subset", POS, N);
+		ebindTrim("definition_of_definition", left(proposition(-1)), right(proposition(-1)));
 		
 		{
 			subdeduction();
@@ -2105,6 +1884,267 @@ public final class Computation extends AbstractNode<Computation> {
 									$(FORALL, _x, IN, $(_X, "^", _n),
 											$($(_x, "_", _i), "=", $($("sequence_tail", ",", _x), "_", $(_i, "-", 1)))))));
 		}
+	}
+	
+	public static final void eapplyLast() {
+		eapply(name(-1));
+	}
+	
+	public static final void eapply(final String targetName) {
+		subdeduction();
+				
+		final String justificationName = justicationFor(condition(proposition(targetName))).getName();
+		
+		apply(targetName, justificationName);
+		
+		conclude();
+	}
+	
+	public static final PropositionDescription justicationFor(final Object proposition) {
+		PropositionDescription result = null;
+		
+		for (final PropositionDescription description : iterateBackward(deduction())) {
+			if ("[4]ones_bind.6.3".equals(description.getName())) {
+				debugPrint(description.getProposition());
+				debugPrint(proposition);
+				debugPrint(proposition.equals(description.getProposition()));
+				debugPrint(new Substitution.ExpressionEquality().apply(proposition, description.getProposition()));
+			}
+			if (new Substitution.ExpressionEquality().apply(proposition, description.getProposition())) {
+				result = description;
+				break;
+			}
+		}
+		
+		if (result == null) {
+			if (isPositivity(proposition)) {
+				deducePositivity(left(proposition));
+			} else if(isNaturality(proposition) || isReality(proposition)) {
+				verifyBasicNumericProposition(proposition);
+			} else if(isCartesianProductity(proposition)) {
+				deduceCartesianProduct(left(right(proposition)), flattenSequence(",", left(proposition)).toArray());
+			} else {
+				debugError(proposition);
+				debugError(proposition("[4]ones_bind.6.3"));
+				
+				throw new IllegalStateException();
+			}
+			
+			result = new PropositionDescription()
+			.setIndex(-1)
+			.setName(name(-1))
+			.setProposition(proposition(-1));
+		}
+		
+		return result;
+	}
+	
+	public static final void ebindLast(final Object... values) {
+		ebind(name(-1), values);
+	}
+	
+	public static final void ebindTrim(final String target, final Object... values) {
+		subdeduction();
+		
+		ebind(target, values);
+		trimLast();
+		
+		conclude();
+	}
+	
+	public static final void ebind(final String target, final Object... values) {
+		subdeduction();
+		
+		String newTarget = target;
+		
+		for (final Object value : values) {
+			ebind1(newTarget, value);
+			newTarget = name(-1);
+		}
+		
+		conclude();
+	}
+	
+	public static final void ebind1(final String target, final Object value) {
+		subdeduction();
+		
+		String newTarget = target;
+		boolean done = false;
+		
+		while (!done) {
+//		while (!isBlock(proposition(newTarget))) {
+//			debugPrint(proposition(newTarget));
+			
+			done = true;
+			
+			if (isForallIn(proposition(newTarget))) {
+				canonicalizeForallIn(newTarget);
+				newTarget = name(-1);
+				done = false;
+			} else if (isForallIn2(proposition(newTarget))) {
+				canonicalizeForallIn2(newTarget);
+				newTarget = name(-1);
+				done = false;
+			} else if (trim(newTarget)) {
+				newTarget = name(-1);
+				done = false;
+			}
+		}
+		
+		bind(newTarget, value);
+		
+		conclude();
+	}
+	
+	public static final void trimLast() {
+		trim(name(-1));
+	}
+	
+	public static final boolean trim(final String target) {
+		if (isRule(proposition(target))) {
+			String newTarget = target;
+			
+			subdeduction();
+			
+			while (isRule(proposition(newTarget))) {
+				eapply(newTarget);
+				newTarget = name(-1);
+			}
+			
+			conclude();
+			
+			return true;
+		}
+		
+		return false;
+	}
+	
+	public static final boolean isCartesianProductity(final Object proposition) {
+		final List<?> list = cast(List.class, proposition);
+		
+		if (list != null && 3 == list.size() && IN.equals(middle(list))) {
+			final List<?> type = cast(List.class, right(list));
+			
+			return type != null && "^".equals(middle(type));
+		}
+		
+		return false;
+	}
+	
+	public static final boolean isPositivity(final Object proposition) {
+		final List<?> list = cast(List.class, proposition);
+		
+		return list != null && 3 == list.size()
+				&& IN.equals(middle(list)) && POS.equals(right(list));
+	}
+	
+	public static final boolean isNaturality(final Object proposition) {
+		final List<?> list = cast(List.class, proposition);
+		
+		return list != null && 3 == list.size()
+				&& IN.equals(middle(list)) && N.equals(right(list));
+	}
+	
+	public static final boolean isReality(final Object proposition) {
+		final List<?> list = cast(List.class, proposition);
+		
+		return list != null && 3 == list.size()
+				&& IN.equals(middle(list)) && R.equals(right(list));
+	}
+	
+	public static final boolean isForallIn(final Object proposition) {
+		final List<?> list = cast(List.class, proposition);
+		
+		return list != null && 5 == list.size()
+				&& FORALL.equals(list.get(0)) && IN.equals(list.get(2));
+	}
+	
+	public static final boolean isForallIn2(final Object proposition) {
+		final List<?> list = cast(List.class, proposition);
+		
+		return list != null && 7 == list.size()
+				&& FORALL.equals(list.get(0)) && ",".equals(list.get(2)) && IN.equals(list.get(4));
+	}
+	
+	public static final Iterable<PropositionDescription> iterateBackward(final Deduction deduction) {
+		return new Iterable<Computation.PropositionDescription>() {
+			
+			@Override
+			public final Iterator<PropositionDescription> iterator() {
+				return new Iterator<Computation.PropositionDescription>() {
+					
+					private final PropositionDescription result = new PropositionDescription();
+					
+					private Deduction currentDeduction = deduction;
+					
+					private int i = this.currentDeduction.getPropositionNames().size();
+					
+					@Override
+					public final boolean hasNext() {
+						return 0 < this.i || !isEmpty(this.currentDeduction.getParent());
+					}
+					
+					@Override
+					public final PropositionDescription next() {
+						if (--this.i < 0) {
+							this.currentDeduction = this.currentDeduction.getParent();
+							
+							while (this.currentDeduction.getPropositionNames().isEmpty()) {
+								this.currentDeduction = this.currentDeduction.getParent();
+							}
+							
+							this.i = this.currentDeduction.getPropositionNames().size() - 1;
+						}
+						
+						final String name = this.currentDeduction.getPropositionNames().get(this.i);
+						
+						return this.result
+								.setIndex(this.result.getIndex() - 1)
+								.setName(name)
+								.setProposition(this.currentDeduction.getPropositions().get(name));
+					}
+					
+				};
+			}
+			
+		};
+	}
+	
+	public static final boolean isEmpty(final Deduction deduction) {
+		return deduction == null
+				|| (deduction.getPropositionNames().isEmpty()
+						&& (deduction.getParent() == null || isEmpty(deduction.getParent())));
+	}
+	
+	public static final int[] toInts(final List<Object> numbers) {
+		return numbers.stream().mapToInt(n -> ((Number) n).intValue()).toArray();
+	}
+	
+	public static final List<Object> flattenSequence(final Object separator, final Object sequence) {
+		final List<Object> result = new ArrayList<>();
+		final List<?> list = list(sequence);
+		
+		result.add(first(list));
+		
+		if (2 == list.size()) {
+			List<?> tmp = list(second(list));
+			
+			while (tmp != null) {
+				if (2 == tmp.size() && separator.equals(first(tmp))) {
+					result.add(second(tmp));
+					break;
+				}
+				
+				if (3 == tmp.size() && separator.equals(first(tmp))) {
+					result.add(second(tmp));
+					tmp = list(tmp.get(2));
+				}
+			}
+		} else if (1 != list.size()) {
+			throw new IllegalArgumentException();
+		}
+		
+		return result;
 	}
 	
 	/**
