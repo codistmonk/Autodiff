@@ -1123,7 +1123,7 @@ public final class Computation extends AbstractNode<Computation> {
 						$forall(_i, _X,
 								$rule($rule($(_i, IN, $(N, "_", $("<", _n))), $(_X, IN, R)),
 										$($(PI, "_", $(_i, "<", _n), _X),
-												"=", $($(PI, "_", $(_i, "<", $(_n, "-", 1)), _X), $(_X, "|", $(_i, "=", $(_n, "-", 1)))))))));
+												"=", $($(PI, "_", $(_i, "<", $(_n, "-", 1)), _X), "*", $(_X, "|", $1($(_i, "=", $(_n, "-", 1))), "@", $())))))));
 	}
 	
 	public static final void supposeDefinitionOfProductReduction() {
