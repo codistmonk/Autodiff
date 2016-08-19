@@ -460,28 +460,7 @@ public final class Computation extends AbstractNode<Computation> {
 			deduceNaturalsInUhm();
 			supposeDefinitionOfPositives();
 			
-			{
-				final Object _i = $new("i");
-				final Object _n = $new("n");
-				
-				suppose("definition_of_range",
-						$(FORALL, _n, IN, N,
-								$forall(_i,
-										$($(_i, IN, $(N, "_", $("<", _n))),
-												"=", $($(_i, IN, N), LAND, $(_i, "<", _n))))));
-			}
-			
-			{
-				final Object _i = $new("i");
-				final Object _x = $new("x");
-				final Object _y = $new("y");
-				final Object _X = $new("X");
-				
-				suppose("definition_of_indexing_i",
-						$(FORALL, _i, IN, POS,
-									$rule($(p(_x, ",", _y), IN, $($(_X, "^", _i), CROSS, _X)),
-											$($(p(_x, ",", _y), "_", _i), "=", _y))));
-			}
+			supposeDefinitionOfRange();
 			
 			supposeTransitivityOfSubset();
 			deducePositivesSubsetNaturals();
@@ -490,16 +469,7 @@ public final class Computation extends AbstractNode<Computation> {
 			supposeTypeOfFlat();
 			supposeDefinitionOfSingleton();
 			
-			{
-				final Object _X = $new("X");
-				final Object _n = $new("n");
-				
-				suppose("vector_type_in_Uhm",
-						
-						$(FORALL, _X, IN, U,
-								$(FORALL, _n, IN, N,
-										$($(_X, "^", _n), IN, U))));
-			}
+			supposeVectorTypeInUhm();
 			
 			{
 				final Object _s = $new("s");
@@ -511,245 +481,17 @@ public final class Computation extends AbstractNode<Computation> {
 								$($("sequence_new", _s, _x, _y), "=", $(_x, $(_s, _y)))));
 			}
 			
-			{
-				final Object _x = $new("x");
-				
-				suppose("try_cases_otherwise",
-						$forall(_x,
-								$(cases($(_x, "otherwise")), "=", _x)));
-			}
+			supposeEliminationsOfCases();
+			testEliminationOfCases();
 			
-			{
-				final Object _x = $new("x");
-				final Object _c = $new("c");
-				
-				suppose("try_cases_if",
-						$forall(_x, _c,
-								$rule(_c, $(cases($(_x, "if", _c)), "=", _x))));
-			}
+			supposeDefinitionOfSequenceAppend();
+			testSequenceAppend();
 			
-			{
-				final Object _x = $new("x");
-				final Object _y = $new("y");
-				final Object _c = $new("c");
-				
-				suppose("try_cases_if_stop",
-						$forall(_x, _y, _c,
-								$rule(_c,
-										$($("cases", $("", $(_x, "if", _c), _y)), "=", _x))));
-			}
+			supposeTypeOfSingle();
+			supposeTypeOfSingleInUhm();
 			
-			{
-				final Object _x = $new("x");
-				final Object _y = $new("y");
-				final Object _c = $new("c");
-				
-				suppose("try_cases_if_not",
-						$forall(_x, _y, _c,
-								$rule($(LNOT, _c),
-										$($("cases", $("", $(_x, "if", _c), _y)), "=", $("cases", _y)))));
-			}
-			
-			{
-				subdeduction("try_cases.test1");
-				
-				final Object _x = forall("x");
-				
-				suppose($(_x, "=", cases(
-						$(42, "if", $(2, "=", 2)),
-						$(24, "otherwise"))));
-				
-				{
-					subdeduction();
-					
-					bind("try_cases_if_stop", 42, $("", $(24, "otherwise")), $(2, "=", 2));
-					verifyBasicNumericProposition($(2, "=", 2));
-					apply(name(-2), name(-1));
-					
-					conclude();
-				}
-				
-				rewrite(name(-2), name(-1));
-				
-				conclude();
-			}
-			
-			{
-				subdeduction("try_cases.test2");
-				
-				final Object _x = forall("x");
-				
-				suppose($(_x, "=", cases(
-						$(42, "if", $(2, "=", 3)),
-						$(24, "if", $(1, "=", 2)),
-						$(0, "otherwise"))));
-				
-				{
-					subdeduction();
-					
-					{
-						subdeduction();
-						
-						bind("try_cases_if_not", 42, $("", $(24, "if", $(1, "=", 2)), $("", $(0, "otherwise"))), $(2, "=", 3));
-						verifyBasicNumericProposition($(2, "=", 3));
-						apply(name(-2), name(-1));
-						
-						conclude();
-					}
-					
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-				}
-				
-				{
-					subdeduction();
-					
-					{
-						subdeduction();
-						
-						bind("try_cases_if_not", 24, $("", $(0, "otherwise")), $(1, "=", 2));
-						verifyBasicNumericProposition($(1, "=", 2));
-						apply(name(-2), name(-1));
-						
-						conclude();
-					}
-					
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-				}
-				
-				{
-					subdeduction();
-					
-					{
-						subdeduction();
-						
-						bind("try_cases_otherwise", 0);
-						
-						conclude();
-					}
-					
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-				}
-				
-				conclude();
-			}
-			
-			{
-				final Object _s = $new("s");
-				final Object _x = $new("x");
-				final Object _x0 = $new("x0");
-				final Object _x1 = $new("x1");
-				final Object _x2 = $new("x2");
-				final Object _y = $new("y");
-				
-				/*
-				 * 
-				 * []
-				 * [x0]
-				 * [x0 [, x1]]
-				 * [x0 [, x1 x2]]
-				 * [, x0]]
-				 * [, x0 x1]]
-				 * 
-				 */
-				
-				final Object condition0 = $(_x, ":=:", $());
-				final Object value0 = $1(_y);
-				
-				final Object condition1 = $(_x, ":=:", $1(_x0));
-				final Object value1 = $(_x0, $(_s, _y));
-				
-				final Object condition2 = $(_x, ":=:", $(_x0, $(_s, _x1)));
-				final Object value2 = $(_x0, $(_s, _x1, $(_s, _y)));
-				
-				final Object condition3 = $(_x, ":=:", $(_x0, $(_s, _x1, _x2)));
-				final Object value3 = $(_x0, $(_s, _x1, $("sequence_append", _s, _x2, _y)));
-				
-				final Object condition4 = $(_x, ":=:", $(_s, _x0));
-				final Object value4 = $(_s, _x0, $(_s, _y));
-				
-				final Object condition5 = $(_x, ":=:", $(_s, _x0, _x1));
-				final Object value5 = $(_s, _x0, $("sequence_append", _s, _x1, _y));
-				
-				suppose("definition_of_sequence_append",
-						$forall(_s, _x, _x0, _x1, _x2, _y,
-								$($("sequence_append", _s, _x, _y), "=", cases(
-										$(value0, "if", condition0),
-										$(value1, "if", condition1),
-										$(value2, "if", condition2),
-										$(value3, "if", condition3),
-										$(value4, "if", condition4),
-										$(value5, "if", condition5)))));
-			}
-			
-			{
-				final Object _s = ",";
-				final Object _x = sequence(",", 1);
-				final Object _y = 2;
-				
-				new SequenceAppendHelper(_s, _x, _y).compute("sequence_append.test1");
-			}
-			
-			{
-				final Object _s = ",";
-				final Object _x = sequence(",", 1, 2);
-				final Object _y = 3;
-				
-				new SequenceAppendHelper(_s, _x, _y).compute("sequence_append.test2");
-			}
-			
-			{
-				final Object _s = ",";
-				final Object _x = sequence(",", 1, 2, 3);
-				final Object _y = 4;
-				
-				new SequenceAppendHelper(_s, _x, _y).compute("sequence_append.test3");
-			}
-			
-			{
-				final Object _X = $new("X");
-				final Object _x = $new("x");
-				
-				suppose("type_of_single",
-						$(FORALL, _X, IN, U,
-								$forall(_x,
-										$($(_x, IN, _X), "=", $($1(_x), IN, $1(_X))))));
-			}
-			
-			{
-				final Object _X = $new("X");
-				
-				suppose("type_of_single_in_Uhm",
-						$(FORALL, _X, IN, U,
-								$($1(_X), IN, U)));
-			}
-			
-			{
-				final Object _X = $new("X");
-				final Object _Y = $new("Y");
-				final Object _x = $new("x");
-				final Object _y = $new("y");
-				
-				suppose("type_of_tuple",
-						$(FORALL, _X, ",", _Y, IN, U,
-								$(FORALL, _x, IN, _X,
-										$(FORALL, _y, IN, _Y,
-												$($("sequence_append", ",", _x, _y), IN, $("sequence_append", CROSS, _X, _Y))))));
-			}
-			
-			{
-				final Object _X = $new("X");
-				final Object _Y = $new("Y");
-				
-				suppose("type_of_tuple_in_Uhm",
-						$(FORALL, _X, ",", _Y, IN, U,
-								$($("sequence_append", CROSS, _X, _Y), IN, U)));
-			}
+			supposeTypeOfTuple();
+			supposeTypeOfTupleInUhm();
 			
 			{
 				subdeduction("single_N_in_Uhm");
@@ -759,111 +501,13 @@ public final class Computation extends AbstractNode<Computation> {
 				conclude();
 			}
 			
-			{
-				subdeduction("type_of_tuple.test1");
-				
-				{
-					subdeduction();
-					
-					verifyBasicNumericProposition($(1, IN, N));
-					
-					ebindTrim("type_of_single", N, 1);
-					
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-				}
-				
-				ebindTrim("type_of_tuple", $1(N), N, $1(1), 2);
-				
-				final List<?> _x = list(left(proposition(-1)));
-				final List<?> _X = list(right(proposition(-1)));
-				
-				new SequenceAppendHelper(_x.get(1), _x.get(2), _x.get(3)).compute();
-				rewrite(name(-2), name(-1));
-				
-				new SequenceAppendHelper(_X.get(1), _X.get(2), _X.get(3)).compute();
-				rewrite(name(-2), name(-1));
-				
-				conclude();
-			}
+			testTypeOfTuple();
 			
-			{
-				subdeduction("type_of_tuple.test2");
-				
-				{
-					subdeduction();
-					
-					ebindTrim("type_of_tuple_in_Uhm", $1(N), N);
-					
-					new SequenceAppendHelper(CROSS, $1(N), N).compute();
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-				}
-				
-				ebindTrim("type_of_tuple", sequence(CROSS, N, N), N, sequence(",", 1, 2), 3);
-				
-				final List<?> _x = list(left(proposition(-1)));
-				final List<?> _X = list(right(proposition(-1)));
-				
-				new SequenceAppendHelper(_x.get(1), _x.get(2), _x.get(3)).compute();
-				rewrite(name(-2), name(-1));
-				
-				new SequenceAppendHelper(_X.get(1), _X.get(2), _X.get(3)).compute();
-				rewrite(name(-2), name(-1));
-				
-				conclude();
-			}
+			supposeDefinitionsForRepeat();
 			
-			{
-				final Object _s = $new("s");
-				final Object _x = $new("x");
-				
-				suppose("definition_of_repeat_0",
-						$forall(_s, _x,
-								$($("repeat", _s, _x, 0), "=", $())));
-			}
+			supposeSimplificationOfTypeOfTuple();
 			
-			{
-				final Object _s = $new("s");
-				final Object _x = $new("x");
-				final Object _n = $new("n");
-				
-				suppose("definition_of_repeat_n",
-						$forall(_s, _x,
-								$(FORALL, _n, IN, POS,
-										$($("repeat", _s, _x, _n), "=", $("sequence_append", _s, $("repeat", _s, _x, $(_n, "-", 1)), _x)))));
-			}
-			
-			{
-				final Object _n = $new("n");
-				final Object _X = $new("X");
-				
-				suppose("simplification_of_type_of_tuple",
-						$(FORALL, _X, IN, U,
-								$(FORALL, _n, IN, N,
-										$($("repeat", CROSS, _X, _n), "=", $(_X, "^", _n)))));
-			}
-			
-			{
-				subdeduction("simplification_of_type_of_tuple.test1");
-				
-				ebindTrim("simplification_of_type_of_tuple", N, 3);
-				
-				new RepeatHelper(CROSS, N, 3).compute();
-				rewrite(name(-2), name(-1));
-				
-				conclude();
-			}
-			
-			{
-				subdeduction("type_of_tuple.test3");
-				
-				rewrite("type_of_tuple.test2", "simplification_of_type_of_tuple.test1");
-				
-				conclude();
-			}
+			testSimplificationOfTypeOfTuple();
 			
 			supposeDefinitionOfProductLoop0();
 			supposeDefinitionOfProductLoopN();
@@ -879,384 +523,26 @@ public final class Computation extends AbstractNode<Computation> {
 						$($1(R), IN, U));
 			}
 			
-			{
-				final Object _x0 = $new("x0");
-				
-				suppose("definition_of_sequence_head_1",
-						$forall(_x0,
-								$($("sequence_head", $1(_x0)), "=", _x0)));
-			}
+			supposeDefinitionsForSequenceHead();
 			
-			{
-				final Object _x0 = $new("x0");
-				final Object _x1 = $new("x1");
-				
-				suppose("definition_of_sequence_head_2",
-						$forall(_x0, _x1,
-								$($("sequence_head", $(_x0, _x1)), "=", _x0)));
-			}
+			supposeDefinitonsForSequenceTail();
 			
-			{
-				final Object _s = $new("s");
-				final Object _x0 = $new("x0");
-				final Object _x1 = $new("x1");
-				
-				suppose("definition_of_sequence_tail_1",
-						$forall(_s, _x0, _x1,
-								$($("sequence_tail", _s, $(_x0, $(_s, _x1))), "=", $1(_x1))));
-			}
+			testSequenceHead();
 			
-			{
-				final Object _s = $new("s");
-				final Object _x0 = $new("x0");
-				final Object _x1 = $new("x1");
-				final Object _x2 = $new("x2");
-				
-				suppose("definition_of_sequence_tail_2",
-						$forall(_s, _x0, _x1, _x2,
-								$($("sequence_tail", _s, $(_x0, $(_s, _x1, _x2))), "=", $(_x1, _x2))));
-			}
+			supposeDefinitionsForVectorAccess();
 			
-			{
-				subdeduction("sequence_head.test1");
-				
-				computeSequenceHead(sequence(",", 1, 2, 3));
-				
-				conclude();
-			}
+			testVectorAccess();
 			
-			{
-				subdeduction("sequence_tail.test1");
-				
-				computeSequenceTail(",", sequence(",", 1, 2, 3));
-				
-				conclude();
-			}
+			supposeDefinitionOfVectorReductionByProduct();
 			
-			{
-				final Object _x = $new("x");
-				final Object _X = $new("X");
-				final Object _n = $new("n");
-				
-				suppose("definition_of_vector_access_0",
-						$(FORALL, _X, IN, U,
-								$(FORALL, _n, IN, POS,
-										$(FORALL, _x, IN, $(_X, "^", _n),
-												$($(_x, "_", 0), "=", $("sequence_head", _x))))));
-			}
+			testVectorReductionByProduct();
 			
-			{
-				final Object _x = $new("x");
-				final Object _X = $new("X");
-				final Object _n = $new("n");
-				final Object _i = $new("i");
-				
-				suppose("definition_of_vector_access_i",
-						$(FORALL, _X, IN, U,
-								$(FORALL, _n, ",", _i, IN, POS,
-										$(FORALL, _x, IN, $(_X, "^", _n),
-												$($(_x, "_", _i), "=", $($("sequence_tail", ",", _x), "_", $(_i, "-", 1)))))));
-			}
+			supposeDefinitionsForJavaCode();
 			
-			{
-				subdeduction("vector_access.test1");
-				
-				computeVectorAccess(R, $(sequence(",", 1, 2, 3), "_", 1));
-				
-				conclude();
-			}
-			
-			{
-				suppose("definition_of_vector_reduction_by_product_0",
-						$($(PI, $()), "=", 1));
-			}
-			
-			{
-				final Object _x0 = $new("x0");
-				
-				suppose("definition_of_vector_reduction_by_product_1",
-						$(FORALL, _x0, IN, R,
-								$($(PI, $1(_x0)), "=", _x0)));
-			}
-			
-			{
-				final Object _s = $new("s");
-				final Object _x0 = $new("x0");
-				final Object _x1 = $new("x1");
-				
-				suppose("definition_of_vector_reduction_by_product_2",
-						$forall(_s,
-								$(FORALL, _x0, ",", _x1, IN, R,
-										$($(PI, $(_x0, $(_s, _x1))), "=", $(_x0, "*", _x1)))));
-			}
-			
-			{
-				final Object _s = $new("s");
-				final Object _x0 = $new("x0");
-				final Object _x1 = $new("x1");
-				final Object _x2 = $new("x2");
-				
-				suppose("definition_of_vector_reduction_by_product_3",
-						$forall(_s, _x2,
-								$(FORALL, _x0, ",", _x1, IN, R,
-										$($(PI, $(_x0, $(_s, _x1, _x2))), "=", $(_x0, "*", $(PI, $(_x1, _x2)))))));
-			}
-			
-			{
-				subdeduction("vector_reduction_by_product.test1");
-				
-				computeVectorReductionByProduct($(PI, sequence(",", 1, 2, 3)));
-				
-				conclude();
-			}
-			
-			/*
-			 * (1)_i<2
-			 * 
-			 *   |
-			 *   V
-			 * 
-			 * allocate("i",1);repeat(2,"i",0,()->{write("result",read("i",0),1)})
-			 * 
-			 * 
-			 * forall X n
-			 *   to_java (X)_i<n = allocate("i",1);repeat(n,"i",0,()->{write("result",read("i",0),to_java X)})
-			 * 
-			 * forall X in R
-			 *   to_java X = X
-			 * 
-			 */
-			
-			{
-				final Object _X = $new("X");
-				final Object _i = $new("i");
-				final Object _j = $new("j");
-				final Object _n = $new("n");
-				
-				suppose("definition_of_vector_generator_to_java",
-						$forall(_X, _i,
-								$(FORALL, _n, IN, N,
-										$rule($(FORALL, _j, IN, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", _j)), "@", $()), IN, R)),
-												$($("to_java", $(p(_X), "_", $(_i, "<", _n))), "=", sequence(";",
-														app("allocate", str("i"), 1),
-														app("repeat", _n, str("i"), 0,
-																block(app("write", str("result"), app("read", str("i"), 0) , $("to_java", _X))))))))));
-			}
-			
-			{
-				final Object _x = $new("x");
-				
-				suppose("definition_of_real_to_java",
-						$(FORALL, _x, IN, R,
-								$($("to_java", _x), "=", _x)));
-			}
-			
-			{
-				final Object _X = $new("X");
-				final Object _i = $new("i");
-				final Object _j = $new("j");
-				final Object _n = $new("n");
-				
-				suppose("definition_of_vector_generator_to_CL",
-						$forall(_X, _i,
-								$(FORALL, _n, IN, N,
-										$rule($(FORALL, _j, IN, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", _j)), "@", $()), IN, R)),
-												$($("to_CL", $(p(_X), "_", $(_i, "<", _n))), "=", sequence(";\n",
-														"	int const gid = get_global_id(0)",
-														$("	result[gid] = ", $($("to_CL", _X), "|", $1($(_i, "=", "gid")), "@", $())),
-														""))))));
-			}
-			
-			{
-				final Object _x = $new("x");
-				
-				suppose("definition_of_real_to_CL",
-						$(FORALL, _x, IN, R,
-								$($("to_CL", _x), "=", _x)));
-			}
+			supposeDefinitionsForCLCode();
 		}
 		
 	}, 1);
-	
-	/**
-	 * @author codistmonk (creation 2016-08-18)
-	 */
-	public static final class ToCLHelper implements Serializable {
-		
-		private final Rules<Object, Void> rules = new Rules<>();
-		
-		{
-			{
-				final Variable vX = new Variable("X");
-				final Variable vi = new Variable("i");
-				final Variable vn = new Variable("n");
-				
-				this.rules.add(rule($("to_CL", $(p(vX), "_", $(vi, "<", vn))), (__, m) -> {
-					final Object _X = m.get(vX);
-					final Object _i = m.get(vi);
-					final Object _n = m.get(vn);
-					
-					ebind("definition_of_vector_generator_to_CL", _X, _i, _n);
-					eapplyLast();
-					
-					{
-						subdeduction();
-						
-						{
-							subdeduction();
-							
-							final Object j = second(left(proposition(-1)));
-							
-							{
-								subdeduction();
-								
-								final Object _j = forall("j");
-								
-								suppose($(_j, IN, $(N, "_", $("<", _n))));
-								
-								substitute(_X, map(_i, _j));
-								
-								{
-									final Object proposition = $(right(proposition(-1)), IN, R);
-									final PropositionDescription justication = justicationFor(proposition);
-									
-									rewriteRight(justication.getName(), name(-2));
-								}
-								
-								conclude();
-							}
-							
-							{
-								ebind("definition_of_forall_in", j, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", j)), "@", $()), IN, R));
-								
-								rewriteRight(name(-2), name(-1));
-							}
-							
-							conclude();
-						}
-						
-						eapply(name(-2));
-						
-						this.rules.applyTo($("to_CL", _X));
-						rewrite(name(-2), name(-1));
-						
-						substitute(_X, map(_i, "gid"));
-						rewrite(name(-2), name(-1));
-						
-						conclude();
-					}
-					
-					return null;
-				}));
-			}
-			
-			{
-				final Variable vX = new Variable("X");
-				
-				this.rules.add(rule($("to_CL", vX), (__, m) -> {
-					ebindTrim("definition_of_real_to_CL", m.get(vX));
-					
-					return null;
-				}));
-			}
-		}
-		
-		public final void compute(final Object proposition) {
-			this.rules.applyTo(proposition);
-		}
-		
-		private static final long serialVersionUID = 3834061141856389415L;
-		
-	}
-	
-	/**
-	 * @author codistmonk (creation 2016-08-18)
-	 */
-	public static final class ToJavaHelper implements Serializable {
-		
-		private final Rules<Object, Void> rules = new Rules<>();
-		
-		{
-			{
-				final Variable vX = new Variable("X");
-				final Variable vi = new Variable("i");
-				final Variable vn = new Variable("n");
-				
-				this.rules.add(rule($("to_java", $(p(vX), "_", $(vi, "<", vn))), (__, m) -> {
-					final Object _X = m.get(vX);
-					final Object _i = m.get(vi);
-					final Object _n = m.get(vn);
-					
-					ebind("definition_of_vector_generator_to_java", _X, _i, _n);
-					eapplyLast();
-					
-					{
-						subdeduction();
-						
-						{
-							subdeduction();
-							
-							final Object j = second(left(proposition(-1)));
-							
-							{
-								subdeduction();
-								
-								final Object _j = forall("j");
-								
-								suppose($(_j, IN, $(N, "_", $("<", _n))));
-								
-								substitute(_X, map(_i, _j));
-								
-								{
-									final Object proposition = $(right(proposition(-1)), IN, R);
-									final PropositionDescription justication = justicationFor(proposition);
-									
-									rewriteRight(justication.getName(), name(-2));
-								}
-								
-								conclude();
-							}
-							
-							{
-								ebind("definition_of_forall_in", j, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", j)), "@", $()), IN, R));
-								
-								rewriteRight(name(-2), name(-1));
-							}
-							
-							conclude();
-						}
-						
-						eapply(name(-2));
-						
-						this.rules.applyTo($("to_java", _X));
-						
-						rewrite(name(-2), name(-1));
-						
-						conclude();
-					}
-					
-					return null;
-				}));
-			}
-			
-			{
-				final Variable vX = new Variable("X");
-				
-				this.rules.add(rule($("to_java", vX), (__, m) -> {
-					ebindTrim("definition_of_real_to_java", m.get(vX));
-					
-					return null;
-				}));
-			}
-		}
-		
-		public final void compute(final Object proposition) {
-			this.rules.applyTo(proposition);
-		}
-		
-		private static final long serialVersionUID = 8767164056521982370L;
-		
-	}
 	
 	public static final Object block(final Object... arguments) {
 		return $("()->{", sequence(";", arguments), "}");
@@ -1534,7 +820,6 @@ public final class Computation extends AbstractNode<Computation> {
 					
 					canonicalizeForallIn(name(-1));
 					
-//					bind(name(-1), p(toBinaryTree(",", s)));
 					bind(name(-1), sequence(",", s));
 					
 					deduceCartesianProduct(POS, s);
@@ -1656,36 +941,6 @@ public final class Computation extends AbstractNode<Computation> {
 	
 	public static final List<Object> flattenBinaryTree(final Object binaryTree) {
 		return new FlattenBinaryTree().apply(binaryTree);
-	}
-	
-	/**
-	 * @author codistmonk (creation 2016-08-11)
-	 */
-	public static final class FlattenBinaryTree implements ExpressionVisitor<List<Object>> {
-		
-		private final List<Object> result = new ArrayList<>();
-		
-		@Override
-		public final List<Object> visit(final Object expression) {
-			this.getResult().add(expression);
-			
-			return this.getResult();
-		}
-		
-		@Override
-		public final List<Object> visit(final List<?> expression) {
-			this.apply(left(expression));
-			this.apply(right(expression));
-			
-			return this.getResult();
-		}
-		
-		public final List<Object> getResult() {
-			return this.result;
-		}
-		
-		private static final long serialVersionUID = 9145572614566666571L;
-		
 	}
 	
 	public static final List<Object> p(final Object... objects) {
@@ -2247,7 +1502,7 @@ public final class Computation extends AbstractNode<Computation> {
 		return result;
 	}
 	
-	public static void simplifyBasicNumericExpression(final String targetName, final Object expression) {
+	public static final void simplifyBasicNumericExpression(final String targetName, final Object expression) {
 		subdeduction();
 		
 		final Object simplified = BasicNumericVerification.Verifier.INSTANCE.apply(expression);
@@ -2256,6 +1511,600 @@ public final class Computation extends AbstractNode<Computation> {
 		rewrite(targetName, name(-1));
 		
 		conclude();
+	}
+	
+	public static final void testSequenceHead() {
+		{
+			subdeduction("sequence_head.test1");
+			
+			computeSequenceHead(sequence(",", 1, 2, 3));
+			
+			conclude();
+		}
+		
+		{
+			subdeduction("sequence_tail.test1");
+			
+			computeSequenceTail(",", sequence(",", 1, 2, 3));
+			
+			conclude();
+		}
+	}
+	
+	public static final void testVectorAccess() {
+		{
+			subdeduction("vector_access.test1");
+			
+			computeVectorAccess(R, $(sequence(",", 1, 2, 3), "_", 1));
+			
+			conclude();
+		}
+	}
+	
+	public static final void supposeDefinitionOfVectorReductionByProduct() {
+		{
+			suppose("definition_of_vector_reduction_by_product_0",
+					$($(PI, $()), "=", 1));
+		}
+		
+		{
+			final Object _x0 = $new("x0");
+			
+			suppose("definition_of_vector_reduction_by_product_1",
+					$(FORALL, _x0, IN, R,
+							$($(PI, $1(_x0)), "=", _x0)));
+		}
+		
+		{
+			final Object _s = $new("s");
+			final Object _x0 = $new("x0");
+			final Object _x1 = $new("x1");
+			
+			suppose("definition_of_vector_reduction_by_product_2",
+					$forall(_s,
+							$(FORALL, _x0, ",", _x1, IN, R,
+									$($(PI, $(_x0, $(_s, _x1))), "=", $(_x0, "*", _x1)))));
+		}
+		
+		{
+			final Object _s = $new("s");
+			final Object _x0 = $new("x0");
+			final Object _x1 = $new("x1");
+			final Object _x2 = $new("x2");
+			
+			suppose("definition_of_vector_reduction_by_product_3",
+					$forall(_s, _x2,
+							$(FORALL, _x0, ",", _x1, IN, R,
+									$($(PI, $(_x0, $(_s, _x1, _x2))), "=", $(_x0, "*", $(PI, $(_x1, _x2)))))));
+		}
+	}
+	
+	public static final void testVectorReductionByProduct() {
+		{
+			subdeduction("vector_reduction_by_product.test1");
+			
+			computeVectorReductionByProduct($(PI, sequence(",", 1, 2, 3)));
+			
+			conclude();
+		}
+	}
+	
+	public static final void supposeDefinitionsForJavaCode() {
+		/*
+		 * (1)_i<2
+		 * 
+		 *   |
+		 *   V
+		 * 
+		 * allocate("i",1);repeat(2,"i",0,()->{write("result",read("i",0),1)})
+		 * 
+		 * 
+		 * forall X n
+		 *   to_java (X)_i<n = allocate("i",1);repeat(n,"i",0,()->{write("result",read("i",0),to_java X)})
+		 * 
+		 * forall X in R
+		 *   to_java X = X
+		 * 
+		 */
+		
+		{
+			final Object _X = $new("X");
+			final Object _i = $new("i");
+			final Object _j = $new("j");
+			final Object _n = $new("n");
+			
+			suppose("definition_of_vector_generator_to_java",
+					$forall(_X, _i,
+							$(FORALL, _n, IN, N,
+									$rule($(FORALL, _j, IN, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", _j)), "@", $()), IN, R)),
+											$($("to_java", $(p(_X), "_", $(_i, "<", _n))), "=", sequence(";",
+													app("allocate", str("i"), 1),
+													app("repeat", _n, str("i"), 0,
+															block(app("write", str("result"), app("read", str("i"), 0) , $("to_java", _X))))))))));
+		}
+		
+		{
+			final Object _x = $new("x");
+			
+			suppose("definition_of_real_to_java",
+					$(FORALL, _x, IN, R,
+							$($("to_java", _x), "=", _x)));
+		}
+	}
+	
+	public static final void supposeDefinitionsForCLCode() {
+		{
+			final Object _X = $new("X");
+			final Object _i = $new("i");
+			final Object _j = $new("j");
+			final Object _n = $new("n");
+			
+			suppose("definition_of_vector_generator_to_CL",
+					$forall(_X, _i,
+							$(FORALL, _n, IN, N,
+									$rule($(FORALL, _j, IN, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", _j)), "@", $()), IN, R)),
+											$($("to_CL", $(p(_X), "_", $(_i, "<", _n))), "=", sequence(";\n",
+													"	int const gid = get_global_id(0)",
+													$("	result[gid] = ", $($("to_CL", _X), "|", $1($(_i, "=", "gid")), "@", $())),
+													""))))));
+		}
+		
+		{
+			final Object _x = $new("x");
+			
+			suppose("definition_of_real_to_CL",
+					$(FORALL, _x, IN, R,
+							$($("to_CL", _x), "=", _x)));
+		}
+	}
+	
+	public static final void supposeDefinitionOfRange() {
+		final Object _i = $new("i");
+		final Object _n = $new("n");
+		
+		suppose("definition_of_range",
+				$(FORALL, _n, IN, N,
+						$forall(_i,
+								$($(_i, IN, $(N, "_", $("<", _n))),
+										"=", $($(_i, IN, N), LAND, $(_i, "<", _n))))));
+	}
+	
+	public static final void supposeVectorTypeInUhm() {
+		final Object _X = $new("X");
+		final Object _n = $new("n");
+		
+		suppose("vector_type_in_Uhm",
+				
+				$(FORALL, _X, IN, U,
+						$(FORALL, _n, IN, N,
+								$($(_X, "^", _n), IN, U))));
+	}
+	
+	public static void supposeEliminationsOfCases() {
+		{
+			final Object _x = $new("x");
+			
+			suppose("try_cases_otherwise",
+					$forall(_x,
+							$(cases($(_x, "otherwise")), "=", _x)));
+		}
+		
+		{
+			final Object _x = $new("x");
+			final Object _c = $new("c");
+			
+			suppose("try_cases_if",
+					$forall(_x, _c,
+							$rule(_c, $(cases($(_x, "if", _c)), "=", _x))));
+		}
+		
+		{
+			final Object _x = $new("x");
+			final Object _y = $new("y");
+			final Object _c = $new("c");
+			
+			suppose("try_cases_if_stop",
+					$forall(_x, _y, _c,
+							$rule(_c,
+									$($("cases", $("", $(_x, "if", _c), _y)), "=", _x))));
+		}
+		
+		{
+			final Object _x = $new("x");
+			final Object _y = $new("y");
+			final Object _c = $new("c");
+			
+			suppose("try_cases_if_not",
+					$forall(_x, _y, _c,
+							$rule($(LNOT, _c),
+									$($("cases", $("", $(_x, "if", _c), _y)), "=", $("cases", _y)))));
+		}
+	}
+
+	public static void testEliminationOfCases() {
+		{
+			subdeduction("try_cases.test1");
+			
+			final Object _x = forall("x");
+			
+			suppose($(_x, "=", cases(
+					$(42, "if", $(2, "=", 2)),
+					$(24, "otherwise"))));
+			
+			{
+				subdeduction();
+				
+				bind("try_cases_if_stop", 42, $("", $(24, "otherwise")), $(2, "=", 2));
+				verifyBasicNumericProposition($(2, "=", 2));
+				apply(name(-2), name(-1));
+				
+				conclude();
+			}
+			
+			rewrite(name(-2), name(-1));
+			
+			conclude();
+		}
+		
+		{
+			subdeduction("try_cases.test2");
+			
+			final Object _x = forall("x");
+			
+			suppose($(_x, "=", cases(
+					$(42, "if", $(2, "=", 3)),
+					$(24, "if", $(1, "=", 2)),
+					$(0, "otherwise"))));
+			
+			{
+				subdeduction();
+				
+				{
+					subdeduction();
+					
+					bind("try_cases_if_not", 42, $("", $(24, "if", $(1, "=", 2)), $("", $(0, "otherwise"))), $(2, "=", 3));
+					verifyBasicNumericProposition($(2, "=", 3));
+					apply(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+			}
+			
+			{
+				subdeduction();
+				
+				{
+					subdeduction();
+					
+					bind("try_cases_if_not", 24, $("", $(0, "otherwise")), $(1, "=", 2));
+					verifyBasicNumericProposition($(1, "=", 2));
+					apply(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+			}
+			
+			{
+				subdeduction();
+				
+				{
+					subdeduction();
+					
+					bind("try_cases_otherwise", 0);
+					
+					conclude();
+				}
+				
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+			}
+			
+			conclude();
+		}
+	}
+	
+	public static final void supposeDefinitionOfSequenceAppend() {
+		final Object _s = $new("s");
+		final Object _x = $new("x");
+		final Object _x0 = $new("x0");
+		final Object _x1 = $new("x1");
+		final Object _x2 = $new("x2");
+		final Object _y = $new("y");
+		
+		/*
+		 * 
+		 * []
+		 * [x0]
+		 * [x0 [, x1]]
+		 * [x0 [, x1 x2]]
+		 * [, x0]]
+		 * [, x0 x1]]
+		 * 
+		 */
+		
+		final Object condition0 = $(_x, ":=:", $());
+		final Object value0 = $1(_y);
+		
+		final Object condition1 = $(_x, ":=:", $1(_x0));
+		final Object value1 = $(_x0, $(_s, _y));
+		
+		final Object condition2 = $(_x, ":=:", $(_x0, $(_s, _x1)));
+		final Object value2 = $(_x0, $(_s, _x1, $(_s, _y)));
+		
+		final Object condition3 = $(_x, ":=:", $(_x0, $(_s, _x1, _x2)));
+		final Object value3 = $(_x0, $(_s, _x1, $("sequence_append", _s, _x2, _y)));
+		
+		final Object condition4 = $(_x, ":=:", $(_s, _x0));
+		final Object value4 = $(_s, _x0, $(_s, _y));
+		
+		final Object condition5 = $(_x, ":=:", $(_s, _x0, _x1));
+		final Object value5 = $(_s, _x0, $("sequence_append", _s, _x1, _y));
+		
+		suppose("definition_of_sequence_append",
+				$forall(_s, _x, _x0, _x1, _x2, _y,
+						$($("sequence_append", _s, _x, _y), "=", cases(
+								$(value0, "if", condition0),
+								$(value1, "if", condition1),
+								$(value2, "if", condition2),
+								$(value3, "if", condition3),
+								$(value4, "if", condition4),
+								$(value5, "if", condition5)))));
+	}
+	
+	public static final void testSequenceAppend() {
+		{
+			final Object _s = ",";
+			final Object _x = sequence(",", 1);
+			final Object _y = 2;
+			
+			new SequenceAppendHelper(_s, _x, _y).compute("sequence_append.test1");
+		}
+		
+		{
+			final Object _s = ",";
+			final Object _x = sequence(",", 1, 2);
+			final Object _y = 3;
+			
+			new SequenceAppendHelper(_s, _x, _y).compute("sequence_append.test2");
+		}
+		
+		{
+			final Object _s = ",";
+			final Object _x = sequence(",", 1, 2, 3);
+			final Object _y = 4;
+			
+			new SequenceAppendHelper(_s, _x, _y).compute("sequence_append.test3");
+		}
+	}
+	
+	public static final void supposeTypeOfSingle() {
+		final Object _X = $new("X");
+		final Object _x = $new("x");
+		
+		suppose("type_of_single",
+				$(FORALL, _X, IN, U,
+						$forall(_x,
+								$($(_x, IN, _X), "=", $($1(_x), IN, $1(_X))))));
+	}
+	
+	public static final void supposeTypeOfSingleInUhm() {
+		final Object _X = $new("X");
+		
+		suppose("type_of_single_in_Uhm",
+				$(FORALL, _X, IN, U,
+						$($1(_X), IN, U)));
+	}
+	
+	public static final void supposeTypeOfTuple() {
+		final Object _X = $new("X");
+		final Object _Y = $new("Y");
+		final Object _x = $new("x");
+		final Object _y = $new("y");
+		
+		suppose("type_of_tuple",
+				$(FORALL, _X, ",", _Y, IN, U,
+						$(FORALL, _x, IN, _X,
+								$(FORALL, _y, IN, _Y,
+										$($("sequence_append", ",", _x, _y), IN, $("sequence_append", CROSS, _X, _Y))))));
+	}
+	
+	public static final void supposeTypeOfTupleInUhm() {
+		final Object _X = $new("X");
+		final Object _Y = $new("Y");
+		
+		suppose("type_of_tuple_in_Uhm",
+				$(FORALL, _X, ",", _Y, IN, U,
+						$($("sequence_append", CROSS, _X, _Y), IN, U)));
+	}
+	
+	public static final void testTypeOfTuple() {
+		{
+			subdeduction("type_of_tuple.test1");
+			
+			{
+				subdeduction();
+				
+				verifyBasicNumericProposition($(1, IN, N));
+				
+				ebindTrim("type_of_single", N, 1);
+				
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+			}
+			
+			ebindTrim("type_of_tuple", $1(N), N, $1(1), 2);
+			
+			final List<?> _x = list(left(proposition(-1)));
+			final List<?> _X = list(right(proposition(-1)));
+			
+			new SequenceAppendHelper(_x.get(1), _x.get(2), _x.get(3)).compute();
+			rewrite(name(-2), name(-1));
+			
+			new SequenceAppendHelper(_X.get(1), _X.get(2), _X.get(3)).compute();
+			rewrite(name(-2), name(-1));
+			
+			conclude();
+		}
+		
+		{
+			subdeduction("type_of_tuple.test2");
+			
+			{
+				subdeduction();
+				
+				ebindTrim("type_of_tuple_in_Uhm", $1(N), N);
+				
+				new SequenceAppendHelper(CROSS, $1(N), N).compute();
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+			}
+			
+			ebindTrim("type_of_tuple", sequence(CROSS, N, N), N, sequence(",", 1, 2), 3);
+			
+			final List<?> _x = list(left(proposition(-1)));
+			final List<?> _X = list(right(proposition(-1)));
+			
+			new SequenceAppendHelper(_x.get(1), _x.get(2), _x.get(3)).compute();
+			rewrite(name(-2), name(-1));
+			
+			new SequenceAppendHelper(_X.get(1), _X.get(2), _X.get(3)).compute();
+			rewrite(name(-2), name(-1));
+			
+			conclude();
+		}
+	}
+	
+	public static final void supposeDefinitionsForRepeat() {
+		{
+			final Object _s = $new("s");
+			final Object _x = $new("x");
+			
+			suppose("definition_of_repeat_0",
+					$forall(_s, _x,
+							$($("repeat", _s, _x, 0), "=", $())));
+		}
+		
+		{
+			final Object _s = $new("s");
+			final Object _x = $new("x");
+			final Object _n = $new("n");
+			
+			suppose("definition_of_repeat_n",
+					$forall(_s, _x,
+							$(FORALL, _n, IN, POS,
+									$($("repeat", _s, _x, _n), "=", $("sequence_append", _s, $("repeat", _s, _x, $(_n, "-", 1)), _x)))));
+		}
+	}
+	
+	public static final void supposeSimplificationOfTypeOfTuple() {
+		final Object _n = $new("n");
+		final Object _X = $new("X");
+		
+		suppose("simplification_of_type_of_tuple",
+				$(FORALL, _X, IN, U,
+						$(FORALL, _n, IN, N,
+								$($("repeat", CROSS, _X, _n), "=", $(_X, "^", _n)))));
+	}
+	
+	public static final void testSimplificationOfTypeOfTuple() {
+		{
+			subdeduction("simplification_of_type_of_tuple.test1");
+			
+			ebindTrim("simplification_of_type_of_tuple", N, 3);
+			
+			new RepeatHelper(CROSS, N, 3).compute();
+			rewrite(name(-2), name(-1));
+			
+			conclude();
+		}
+		
+		{
+			subdeduction("simplification_of_type_of_tuple.test2");
+			
+			rewrite("type_of_tuple.test2", "simplification_of_type_of_tuple.test1");
+			
+			conclude();
+		}
+	}
+	
+	public static final void supposeDefinitionsForSequenceHead() {
+		{
+			final Object _x0 = $new("x0");
+			
+			suppose("definition_of_sequence_head_1",
+					$forall(_x0,
+							$($("sequence_head", $1(_x0)), "=", _x0)));
+		}
+		
+		{
+			final Object _x0 = $new("x0");
+			final Object _x1 = $new("x1");
+			
+			suppose("definition_of_sequence_head_2",
+					$forall(_x0, _x1,
+							$($("sequence_head", $(_x0, _x1)), "=", _x0)));
+		}
+	}
+	
+	public static final void supposeDefinitonsForSequenceTail() {
+		{
+			final Object _s = $new("s");
+			final Object _x0 = $new("x0");
+			final Object _x1 = $new("x1");
+			
+			suppose("definition_of_sequence_tail_1",
+					$forall(_s, _x0, _x1,
+							$($("sequence_tail", _s, $(_x0, $(_s, _x1))), "=", $1(_x1))));
+		}
+		
+		{
+			final Object _s = $new("s");
+			final Object _x0 = $new("x0");
+			final Object _x1 = $new("x1");
+			final Object _x2 = $new("x2");
+			
+			suppose("definition_of_sequence_tail_2",
+					$forall(_s, _x0, _x1, _x2,
+							$($("sequence_tail", _s, $(_x0, $(_s, _x1, _x2))), "=", $(_x1, _x2))));
+		}
+	}
+	
+	public static final void supposeDefinitionsForVectorAccess() {
+		{
+			final Object _x = $new("x");
+			final Object _X = $new("X");
+			final Object _n = $new("n");
+			
+			suppose("definition_of_vector_access_0",
+					$(FORALL, _X, IN, U,
+							$(FORALL, _n, IN, POS,
+									$(FORALL, _x, IN, $(_X, "^", _n),
+											$($(_x, "_", 0), "=", $("sequence_head", _x))))));
+		}
+		
+		{
+			final Object _x = $new("x");
+			final Object _X = $new("X");
+			final Object _n = $new("n");
+			final Object _i = $new("i");
+			
+			suppose("definition_of_vector_access_i",
+					$(FORALL, _X, IN, U,
+							$(FORALL, _n, ",", _i, IN, POS,
+									$(FORALL, _x, IN, $(_X, "^", _n),
+											$($(_x, "_", _i), "=", $($("sequence_tail", ",", _x), "_", $(_i, "-", 1)))))));
+		}
 	}
 	
 	/**
@@ -2655,6 +2504,216 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 		
 		private static final long serialVersionUID = -3837963189941891310L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-11)
+	 */
+	public static final class FlattenBinaryTree implements ExpressionVisitor<List<Object>> {
+		
+		private final List<Object> result = new ArrayList<>();
+		
+		@Override
+		public final List<Object> visit(final Object expression) {
+			this.getResult().add(expression);
+			
+			return this.getResult();
+		}
+		
+		@Override
+		public final List<Object> visit(final List<?> expression) {
+			this.apply(left(expression));
+			this.apply(right(expression));
+			
+			return this.getResult();
+		}
+		
+		public final List<Object> getResult() {
+			return this.result;
+		}
+		
+		private static final long serialVersionUID = 9145572614566666571L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-18)
+	 */
+	public static final class ToCLHelper implements Serializable {
+		
+		private final Rules<Object, Void> rules = new Rules<>();
+		
+		{
+			{
+				final Variable vX = new Variable("X");
+				final Variable vi = new Variable("i");
+				final Variable vn = new Variable("n");
+				
+				this.rules.add(rule($("to_CL", $(p(vX), "_", $(vi, "<", vn))), (__, m) -> {
+					final Object _X = m.get(vX);
+					final Object _i = m.get(vi);
+					final Object _n = m.get(vn);
+					
+					ebind("definition_of_vector_generator_to_CL", _X, _i, _n);
+					eapplyLast();
+					
+					{
+						subdeduction();
+						
+						{
+							subdeduction();
+							
+							final Object j = second(left(proposition(-1)));
+							
+							{
+								subdeduction();
+								
+								final Object _j = forall("j");
+								
+								suppose($(_j, IN, $(N, "_", $("<", _n))));
+								
+								substitute(_X, map(_i, _j));
+								
+								{
+									final Object proposition = $(right(proposition(-1)), IN, R);
+									final PropositionDescription justication = justicationFor(proposition);
+									
+									rewriteRight(justication.getName(), name(-2));
+								}
+								
+								conclude();
+							}
+							
+							{
+								ebind("definition_of_forall_in", j, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", j)), "@", $()), IN, R));
+								
+								rewriteRight(name(-2), name(-1));
+							}
+							
+							conclude();
+						}
+						
+						eapply(name(-2));
+						
+						this.rules.applyTo($("to_CL", _X));
+						rewrite(name(-2), name(-1));
+						
+						substitute(_X, map(_i, "gid"));
+						rewrite(name(-2), name(-1));
+						
+						conclude();
+					}
+					
+					return null;
+				}));
+			}
+			
+			{
+				final Variable vX = new Variable("X");
+				
+				this.rules.add(rule($("to_CL", vX), (__, m) -> {
+					ebindTrim("definition_of_real_to_CL", m.get(vX));
+					
+					return null;
+				}));
+			}
+		}
+		
+		public final void compute(final Object proposition) {
+			this.rules.applyTo(proposition);
+		}
+		
+		private static final long serialVersionUID = 3834061141856389415L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-18)
+	 */
+	public static final class ToJavaHelper implements Serializable {
+		
+		private final Rules<Object, Void> rules = new Rules<>();
+		
+		{
+			{
+				final Variable vX = new Variable("X");
+				final Variable vi = new Variable("i");
+				final Variable vn = new Variable("n");
+				
+				this.rules.add(rule($("to_java", $(p(vX), "_", $(vi, "<", vn))), (__, m) -> {
+					final Object _X = m.get(vX);
+					final Object _i = m.get(vi);
+					final Object _n = m.get(vn);
+					
+					ebind("definition_of_vector_generator_to_java", _X, _i, _n);
+					eapplyLast();
+					
+					{
+						subdeduction();
+						
+						{
+							subdeduction();
+							
+							final Object j = second(left(proposition(-1)));
+							
+							{
+								subdeduction();
+								
+								final Object _j = forall("j");
+								
+								suppose($(_j, IN, $(N, "_", $("<", _n))));
+								
+								substitute(_X, map(_i, _j));
+								
+								{
+									final Object proposition = $(right(proposition(-1)), IN, R);
+									final PropositionDescription justication = justicationFor(proposition);
+									
+									rewriteRight(justication.getName(), name(-2));
+								}
+								
+								conclude();
+							}
+							
+							{
+								ebind("definition_of_forall_in", j, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", j)), "@", $()), IN, R));
+								
+								rewriteRight(name(-2), name(-1));
+							}
+							
+							conclude();
+						}
+						
+						eapply(name(-2));
+						
+						this.rules.applyTo($("to_java", _X));
+						
+						rewrite(name(-2), name(-1));
+						
+						conclude();
+					}
+					
+					return null;
+				}));
+			}
+			
+			{
+				final Variable vX = new Variable("X");
+				
+				this.rules.add(rule($("to_java", vX), (__, m) -> {
+					ebindTrim("definition_of_real_to_java", m.get(vX));
+					
+					return null;
+				}));
+			}
+		}
+		
+		public final void compute(final Object proposition) {
+			this.rules.applyTo(proposition);
+		}
+		
+		private static final long serialVersionUID = 8767164056521982370L;
 		
 	}
 	
