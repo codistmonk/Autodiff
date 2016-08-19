@@ -76,7 +76,7 @@ public final class BasicNumericVerification extends Proof.Abstract {
 						numberOrObject(list.get(0)), numberOrObject(list.get(2)));
 			}
 			
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("Failed to evaluate: " + expression);
 		}
 		
 		private static final long serialVersionUID = -9089588808047854990L;

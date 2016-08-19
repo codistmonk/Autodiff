@@ -18,6 +18,7 @@ import autodiff.rules.Variable;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -223,7 +224,7 @@ public final class Computation extends AbstractNode<Computation> {
 			supposeEliminationsOfCases();
 			testEliminationOfCases();
 			
-			supposeDefinitionOfSequenceAppend();
+			supposeDefinitionsForSequenceAppend();
 			testSequenceAppend();
 			
 			supposeTypeOfSingle();
@@ -1164,7 +1165,15 @@ public final class Computation extends AbstractNode<Computation> {
 			bind("try_cases_if_not", value, _y, condition);
 
 			// TODO autodetect required verification
-			evaluateStructuralFormula(second(condition(proposition(-1))));
+			final Object formula = second(condition(proposition(-1)));
+			
+			debugPrint(formula);
+			debugPrint(condition);
+			
+			verifyBasicNumericProposition(formula);
+			
+			abort();
+			evaluateStructuralFormula(formula);
 			
 			apply(name(-2), name(-1));
 			
@@ -1571,52 +1580,181 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 	}
 	
-	public static final void supposeDefinitionOfSequenceAppend() {
-		final Object _s = $new("s");
-		final Object _x = $new("x");
-		final Object _x0 = $new("x0");
-		final Object _x1 = $new("x1");
-		final Object _x2 = $new("x2");
-		final Object _y = $new("y");
+	/**
+	 * @author codistmonk (creation 2016-08-19)
+	 */
+	public static final class CaseDescription implements Serializable {
 		
+		private final Collection<Object> variables;
+		
+		private final Object condition;
+		
+		private final Object definition;
+		
+		public CaseDescription(final Collection<Object> variables, final Object condition, final Object definition) {
+			this.variables = variables;
+			this.condition = condition;
+			this.definition = definition;
+		}
+		
+		public final Collection<Object> getVariables() {
+			return this.variables;
+		}
+		
+		public final Object getCondition() {
+			return this.condition;
+		}
+		
+		public final Object getDefinition() {
+			return this.definition;
+		}
+		
+		public final CaseDescription instantiate() {
+			return this.instantiate("");
+		}
+		
+		public final CaseDescription instantiate(final String variableNamePostfix) {
+			final Map<Variable, Object> map = new LinkedHashMap<>();
+			
+			for (final Object v : this.getVariables()) {
+				map.put((Variable) v, $new(v.toString() + variableNamePostfix));
+			}
+			
+			return new CaseDescription(map.values(),
+					Variable.rewrite(this.getCondition(), map), Variable.rewrite(this.getDefinition(), map));
+		}
+		
+		private static final long serialVersionUID = -9131355470296079371L;
+		
+	}
+	
+	public static final CaseDescription newSequenceAppendCase0() {
+		final Object _s = new Variable("s");
+		final Object _x = new Variable("x");
+		final Object _y = new Variable("y");
+		
+		return new CaseDescription(Arrays.asList(_s, _x, _y),
+				$(_x, "=", $()),
+				$($("sequence_append", _s, _x, _y), "=", $1(_y)));
+	}
+	
+	public static final CaseDescription newSequenceAppendCase1() {
+		final Object _s = new Variable("s");
+		final Object _x = new Variable("x");
+		final Object _x0 = new Variable("x0");
+		final Object _y = new Variable("y");
+		
+		return new CaseDescription(Arrays.asList(_s, _x, _x0, _y),
+				$(_x, "=", $1(_x0)),
+				$($("sequence_append", _s, _x, _y), "=", $(_x0, $(_s, _y))));
+	}
+	
+	public static final CaseDescription newSequenceAppendCase2() {
+		final Object _s = new Variable("s");
+		final Object _x = new Variable("x");
+		final Object _x0 = new Variable("x0");
+		final Object _x1 = new Variable("x1");
+		final Object _y = new Variable("y");
+		final Object condition = $(_x, "=", $(_x0, _x1));
+		final Object value = $(_x0, $("sequence_subappend", _s, _x1, _y));
+		
+		return new CaseDescription(Arrays.asList(_s, _x, _x0, _x1, _y),
+				condition,
+				$($("sequence_append", _s, _x, _y), "=", value));
+	}
+	
+	public static final CaseDescription newSequenceSubappendCase0() {
+		final Object _s = new Variable("s");
+		final Object _x = new Variable("x");
+		final Object _x0 = new Variable("x0");
+		final Object _y = new Variable("y");
+		final Object condition = $(_x, "=", $(_s, _x0));
+		final Object value = $(_s, _x0, $(_s, _y));
+		
+		return new CaseDescription(Arrays.asList(_s, _x, _x0, _y),
+				condition,
+				$($("sequence_subappend", _s, _x, _y), "=", value));
+	}
+	
+	public static final CaseDescription newSequenceSubappendCase1() {
+		final Object _s = new Variable("s");
+		final Object _x = new Variable("x");
+		final Object _x0 = new Variable("x0");
+		final Object _x1 = new Variable("x1");
+		final Object _y = new Variable("y");
+		final Object condition = $(_x, "=", $(_s, _x0, _x1));
+		final Object value = $(_s, _x0, $("sequence_subappend", _s, _x1, _y));
+		
+		return new CaseDescription(Arrays.asList(_s, _x, _x0, _y),
+				condition,
+				$($("sequence_subappend", _s, _x, _y), "=", value));
+	}
+	
+	public static final void supposeDefinitionsForSequenceAppend() {
 		/*
 		 * 
-		 * []
-		 * [x0]
-		 * [x0 [, x1]]
-		 * [x0 [, x1 x2]]
-		 * [, x0]]
-		 * [, x0 x1]]
+		 * append s [] y      = [y]
+		 * append s [x0] y    = [x0 [s y]]
+		 * append s [x0 x1] y = [x0 (subappend s x1 y)]
+		 * 
+		 * subappend s [s x0] y    = [s x0 [s y]]
+		 * subappend s [s x0 x1] y = [s x0 (subappend s x1 y)]
 		 * 
 		 */
 		
-		final Object condition0 = $(_x, ":=:", $());
-		final Object value0 = $1(_y);
+		supposeDefinitions("sequence_append",
+				newSequenceAppendCase0(),
+				newSequenceAppendCase1(),
+				newSequenceAppendCase2());
 		
-		final Object condition1 = $(_x, ":=:", $1(_x0));
-		final Object value1 = $(_x0, $(_s, _y));
+		supposeDefinitions("sequence_subappend",
+				newSequenceSubappendCase0(),
+				newSequenceSubappendCase1());
 		
-		final Object condition2 = $(_x, ":=:", $(_x0, $(_s, _x1)));
-		final Object value2 = $(_x0, $(_s, _x1, $(_s, _y)));
+		abort();
+	}
+	
+	public static final void supposeDefinitions(final String definedName, final CaseDescription... descriptions) {
+		final int n = descriptions.length;
 		
-		final Object condition3 = $(_x, ":=:", $(_x0, $(_s, _x1, _x2)));
-		final Object value3 = $(_x0, $(_s, _x1, $("sequence_append", _s, _x2, _y)));
+		for (int i = 0; i < n; ++i) {
+			final CaseDescription caseDescription = descriptions[i].instantiate();
+			
+			suppose("definition_of_" + definedName + "_" + i,
+					$forall(append(caseDescription.getVariables().toArray(),
+							$rule(caseDescription.getCondition(), caseDescription.getDefinition()))));
+		}
 		
-		final Object condition4 = $(_x, ":=:", $(_s, _x0));
-		final Object value4 = $(_s, _x0, $(_s, _y));
-		
-		final Object condition5 = $(_x, ":=:", $(_s, _x0, _x1));
-		final Object value5 = $(_s, _x0, $("sequence_append", _s, _x1, _y));
-		
-		suppose("definition_of_sequence_append",
-				$forall(_s, _x, _x0, _x1, _x2, _y,
-						$($("sequence_append", _s, _x, _y), "=", cases(
-								$(value0, "if", condition0),
-								$(value1, "if", condition1),
-								$(value2, "if", condition2),
-								$(value3, "if", condition3),
-								$(value4, "if", condition4),
-								$(value5, "if", condition5)))));
+		for (int i = 0; i < n; ++i) {
+			{
+				final CaseDescription cI = descriptions[i].instantiate("_i");
+				final CaseDescription cJ = descriptions[i].instantiate("_j");
+				final Object[] variablesI = cI.getVariables().toArray();
+				final Object[] variablesJ = cJ.getVariables().toArray();
+				
+				for (int k = 0; k < variablesI.length; ++k) {
+					suppose("definition_of_" + definedName + "_inequality_" + i + "_" + i + "_" + k,
+							$forall(append(cI.getVariables().toArray(),
+									$rule(cI.getCondition(),
+											$forall(append(cJ.getVariables().toArray(),
+													$rule(cJ.getCondition(),
+															$(LNOT, $(variablesI[k], "=", variablesJ[k])),
+															$(LNOT, $(left(cI.getDefinition()), "=", left(cJ.getDefinition()))))))))));
+				}
+			}
+			
+			for (int j = i + 1; j < n; ++j) {
+				final CaseDescription cI = descriptions[i].instantiate("_i");
+				final CaseDescription cJ = descriptions[j].instantiate("_j");
+				
+				suppose("definition_of_" + definedName + "_inequality_" + i + "_" + j,
+						$forall(append(cI.getVariables().toArray(),
+								$rule(cI.getCondition(),
+										$forall(append(cJ.getVariables().toArray(),
+												$rule(cJ.getCondition(),
+														$(LNOT, $(left(cI.getDefinition()), "=", left(cJ.getDefinition()))))))))));
+			}
+		}
 	}
 	
 	public static final void testSequenceAppend() {
@@ -1884,12 +2022,6 @@ public final class Computation extends AbstractNode<Computation> {
 		PropositionDescription result = null;
 		
 		for (final PropositionDescription description : iterateBackward(deduction())) {
-			if ("[4]ones_bind.6.3".equals(description.getName())) {
-				debugPrint(description.getProposition());
-				debugPrint(proposition);
-				debugPrint(proposition.equals(description.getProposition()));
-				debugPrint(new Substitution.ExpressionEquality().apply(proposition, description.getProposition()));
-			}
 			if (new Substitution.ExpressionEquality().apply(proposition, description.getProposition())) {
 				result = description;
 				break;
@@ -1904,10 +2036,7 @@ public final class Computation extends AbstractNode<Computation> {
 			} else if(isCartesianProductity(proposition)) {
 				deduceCartesianProduct(left(right(proposition)), flattenSequence(",", left(proposition)).toArray());
 			} else {
-				debugError(proposition);
-				debugError(proposition("[4]ones_bind.6.3"));
-				
-				throw new IllegalStateException();
+				throw new IllegalStateException("Failed to justify: " + proposition);
 			}
 			
 			result = new PropositionDescription()
@@ -2381,22 +2510,23 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 		
 		private final void setConditionsAndValues() {
-			this.conditions[0] = $(this.x, ":=:", $());
+			final String eq = "=";
+			this.conditions[0] = $(this.x, eq, $());
 			this.values[0] = $1(this.y);
 			
-			this.conditions[1] = $(this.x, ":=:", $1(this.x0));
+			this.conditions[1] = $(this.x, eq, $1(this.x0));
 			this.values[1] = $(this.x0, $(this.s, this.y));
 			
-			this.conditions[2] = $(this.x, ":=:", $(this.x0, $(this.s, this.x1)));
+			this.conditions[2] = $(this.x, eq, $(this.x0, $(this.s, this.x1)));
 			this.values[2] = $(this.x0, $(this.s, this.x1, $(this.s, this.y)));
 			
-			this.conditions[3] = $(this.x, ":=:", $(this.x0, $(this.s, this.x1, this.x2)));
+			this.conditions[3] = $(this.x, eq, $(this.x0, $(this.s, this.x1, this.x2)));
 			this.values[3] = $(this.x0, $(this.s, this.x1, $("sequence_append", this.s, this.x2, this.y)));
 			
-			this.conditions[4] = $(this.x, ":=:", $(this.s, this.x0));
+			this.conditions[4] = $(this.x, eq, $(this.s, this.x0));
 			this.values[4] = $(this.s, this.x0, $(this.s, this.y));
 			
-			this.conditions[5] = $(this.x, ":=:", $(this.s, this.x0, this.x1));
+			this.conditions[5] = $(this.x, eq, $(this.s, this.x0, this.x1));
 			this.values[5] = $(this.s, this.x0, $("sequence_append", this.s, this.x1, this.y));
 		}
 		
