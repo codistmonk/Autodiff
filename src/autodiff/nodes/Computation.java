@@ -146,8 +146,6 @@ public final class Computation extends AbstractNode<Computation> {
 	
 	public static final Object EQUIV = $("⇔");
 	
-	public static final Object DEF = $("≝");
-	
 	public static final Object P = $("ℙ");
 	
 	public static final Object CROSS = $("×");
@@ -178,15 +176,6 @@ public final class Computation extends AbstractNode<Computation> {
 //			debugPrint(sequence(",", sequence(",", 1, 2), 3));
 //			debugPrint(sequence(",", 1, sequence(",", 2, 3), 4));
 //			debugPrint(sequence(",", 1, 2, 3, 4));
-			
-			{
-				final Object _X = $new("X");
-				final Object _Y = $new("Y");
-				
-				suppose("definition_of_definition",
-						$forall(_X, _Y,
-								$rule($(_X, DEF, _Y), $(_X, "=", _Y))));
-			}
 			
 			supposeEliminationOfParentheses();
 			supposeDefinitionOfForallIn();
@@ -303,8 +292,6 @@ public final class Computation extends AbstractNode<Computation> {
 								$($("sequence_append", ";", _p, app("read", str(_b), _j)),
 										"=", $("sequence_append", ";", $("sequence_append", ";", _p, app("allocate", str(_a), _n)), app("read", str(_b), _j)))));
 			}
-			
-			abort();
 		}
 		
 	}, 1);
@@ -832,7 +819,7 @@ public final class Computation extends AbstractNode<Computation> {
 		final Object _Y = $new("Y");
 		
 		suppose("definition_of_subset", $forall(_X, $(FORALL, _Y, IN, U,
-				$($(_X, SUBSET, _Y), DEF, $forall(_x, $rule($(_x, IN, _X), $(_x, IN, _Y)))))));
+				$($(_X, SUBSET, _Y), "=", $forall(_x, $rule($(_x, IN, _X), $(_x, IN, _Y)))))));
 	}
 	
 	public static final void supposeNaturalsSubsetReals() {
@@ -869,8 +856,6 @@ public final class Computation extends AbstractNode<Computation> {
 				subdeduction();
 				
 				ebindTrim("definition_of_subset", _X, _Y);
-				ebind("definition_of_definition", left(proposition(-1)), right(proposition(-1)));
-				eapplyLast();
 				rewrite(h1, name(-1));
 				bind(name(-1), _x);
 				
@@ -883,8 +868,6 @@ public final class Computation extends AbstractNode<Computation> {
 				subdeduction();
 				
 				ebindTrim("definition_of_subset", _Y, _Z);
-				ebind("definition_of_definition", left(proposition(-1)), right(proposition(-1)));
-				eapplyLast();
 				rewrite(h2, name(-1));
 				bind(name(-1), _x);
 				
@@ -900,8 +883,6 @@ public final class Computation extends AbstractNode<Computation> {
 			subdeduction();
 			
 			ebindTrim("definition_of_subset", _X, _Z);
-			ebind("definition_of_definition", left(proposition(-1)), right(proposition(-1)));
-			eapplyLast();
 			
 			conclude();
 		}
@@ -1066,7 +1047,6 @@ public final class Computation extends AbstractNode<Computation> {
 		subdeduction("positives_subset_naturals");
 		
 		ebindTrim("definition_of_subset", POS, N);
-		ebindTrim("definition_of_definition", left(proposition(-1)), right(proposition(-1)));
 		
 		{
 			subdeduction();
