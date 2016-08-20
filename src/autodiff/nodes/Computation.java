@@ -2125,6 +2125,17 @@ public final class Computation extends AbstractNode<Computation> {
 		 * 
 		 */
 		
+		supposeDefinitions("sequence_concatenate",
+				newSequenceConcatenateCase0(),
+				newSequenceConcatenateCase1(),
+				newSequenceConcatenateCase2(),
+				newSequenceConcatenateCase3(),
+				newSequenceConcatenateCase4());
+		
+		supposeDefinitions("sequence_subconcatenate",
+				newSequenceSubconcatenateCase0(),
+				newSequenceSubconcatenateCase1());
+		
 		abort();
 	}
 	
