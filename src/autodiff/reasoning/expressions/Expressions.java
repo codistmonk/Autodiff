@@ -40,6 +40,8 @@ public final class Expressions {
 	
 	public static final Object LAND = $("∧");
 	
+	public static final Object LOR = $("∨");
+	
 	public static final Object LNOT = $("¬");
 	
 	public static final Object $new(final String name) {
