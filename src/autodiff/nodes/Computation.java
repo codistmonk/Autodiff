@@ -2070,7 +2070,7 @@ public final class Computation extends AbstractNode<Computation> {
 		final List<Object> conditions = Arrays.asList(
 				$(_x, "=", $(_x0, _x1)),
 				$(_y, "=", $(_y0, _y1)));
-		final Object value = $(_x0, $("subconcatenate", _s, _x1, _y));
+		final Object value = $(_x0, $("sequence_subconcatenate", _s, _x1, _y));
 		
 		return new CaseDescription(Arrays.asList(_s, _x, _x0, _x1, _y, _y0, _y1),
 				conditions,
@@ -2092,7 +2092,7 @@ public final class Computation extends AbstractNode<Computation> {
 		
 		return new CaseDescription(Arrays.asList(_s, _x, _x0, _y, _y0, _y1),
 				conditions,
-				$($("sequence_concatenate", _s, _x, _y), "=", value));
+				$($("sequence_subconcatenate", _s, _x, _y), "=", value));
 	}
 	
 	public static final CaseDescription newSequenceSubconcatenateCase1() {
@@ -2104,11 +2104,11 @@ public final class Computation extends AbstractNode<Computation> {
 		
 		final List<Object> conditions = Arrays.asList(
 				$(_x, "=", $(_s, _x0, _x1)));
-		final Object value = $(_s, _x0, $("subconcatenate", _s, _x1, _y));
+		final Object value = $(_s, _x0, $("sequence_subconcatenate", _s, _x1, _y));
 		
 		return new CaseDescription(Arrays.asList(_s, _x, _x0, _x1, _y),
 				conditions,
-				$($("sequence_concatenate", _s, _x, _y), "=", value));
+				$($("sequence_subconcatenate", _s, _x, _y), "=", value));
 	}
 	
 	public static final void supposeDefinitionsForSequenceConcatenate() {
