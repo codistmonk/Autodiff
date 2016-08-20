@@ -4,7 +4,6 @@ import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.Stack.*;
 
 import autodiff.reasoning.proofs.Deduction;
-import autodiff.reasoning.proofs.Proof;
 
 import java.io.Serializable;
 
@@ -68,14 +67,12 @@ public final class Goal implements Serializable {
 			throw new IllegalStateException();
 		}
 		
-		final Proof proof = deduction.getParameters().isEmpty() && deduction.getPropositions().size() == 1 ?
-				deduction.getProofs().values().iterator().next() : deduction;
-		final Object provedProposition = proof.getProvedPropositionFor(deduction.getParent());
+		final Object provedProposition = deduction.getProvedPropositionFor(deduction.getParent());
 		
 		checkState(this.getInitialProposition().equals(provedProposition),
 				"Expected: " + this.getInitialProposition() + " but was: " + provedProposition);
 		
-		deduction().conclude(proof);
+		deduction().conclude(deduction);
 	}
 	
 	private static final long serialVersionUID = -6412523746037749196L;
