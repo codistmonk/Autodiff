@@ -1709,13 +1709,13 @@ public final class Computation extends AbstractNode<Computation> {
 		
 		private final List<Object> variables;
 		
-		private final Object condition;
+		private final List<Object> conditions;
 		
 		private final Object definition;
 		
-		public CaseDescription(final List<Object> variables, final Object condition, final Object definition) {
+		public CaseDescription(final List<Object> variables, final List<Object> conditions, final Object definition) {
 			this.variables = variables;
-			this.condition = condition;
+			this.conditions = conditions;
 			this.definition = definition;
 		}
 		
@@ -1723,8 +1723,8 @@ public final class Computation extends AbstractNode<Computation> {
 			return this.variables;
 		}
 		
-		public final Object getCondition() {
-			return this.condition;
+		public final List<Object> getConditions() {
+			return this.conditions;
 		}
 		
 		public final Object getDefinition() {
@@ -1743,7 +1743,7 @@ public final class Computation extends AbstractNode<Computation> {
 			}
 			
 			return new CaseDescription(new ArrayList<>(map.values()),
-					Variable.rewrite(this.getCondition(), map), Variable.rewrite(this.getDefinition(), map));
+					(List<Object>) Variable.rewrite(this.getConditions(), map), Variable.rewrite(this.getDefinition(), map));
 		}
 		
 		private static final long serialVersionUID = -9131355470296079371L;
@@ -1755,9 +1755,12 @@ public final class Computation extends AbstractNode<Computation> {
 		final Object _x = new Variable("x");
 		final Object _y = new Variable("y");
 		
+		final List<Object> conditions = Arrays.asList($(_x, "=", $()));
+		final Object value = $1(_y);
+		
 		return new CaseDescription(Arrays.asList(_s, _x, _y),
-				$(_x, "=", $()),
-				$($("sequence_append", _s, _x, _y), "=", $1(_y)));
+				conditions,
+				$($("sequence_append", _s, _x, _y), "=", value));
 	}
 	
 	public static final CaseDescription newSequenceAppendCase1() {
@@ -1766,9 +1769,12 @@ public final class Computation extends AbstractNode<Computation> {
 		final Object _x0 = new Variable("x0");
 		final Object _y = new Variable("y");
 		
+		final List<Object> conditions = Arrays.asList($(_x, "=", $1(_x0)));
+		final Object value = $(_x0, $(_s, _y));
+		
 		return new CaseDescription(Arrays.asList(_s, _x, _x0, _y),
-				$(_x, "=", $1(_x0)),
-				$($("sequence_append", _s, _x, _y), "=", $(_x0, $(_s, _y))));
+				conditions,
+				$($("sequence_append", _s, _x, _y), "=", value));
 	}
 	
 	public static final CaseDescription newSequenceAppendCase2() {
@@ -1777,11 +1783,12 @@ public final class Computation extends AbstractNode<Computation> {
 		final Object _x0 = new Variable("x0");
 		final Object _x1 = new Variable("x1");
 		final Object _y = new Variable("y");
-		final Object condition = $(_x, "=", $(_x0, _x1));
+		
+		final List<Object> conditions = Arrays.asList($(_x, "=", $(_x0, _x1)));
 		final Object value = $(_x0, $("sequence_subappend", _s, _x1, _y));
 		
 		return new CaseDescription(Arrays.asList(_s, _x, _x0, _x1, _y),
-				condition,
+				conditions,
 				$($("sequence_append", _s, _x, _y), "=", value));
 	}
 	
@@ -1790,11 +1797,12 @@ public final class Computation extends AbstractNode<Computation> {
 		final Object _x = new Variable("x");
 		final Object _x0 = new Variable("x0");
 		final Object _y = new Variable("y");
-		final Object condition = $(_x, "=", $(_s, _x0));
+		
+		final List<Object> conditions = Arrays.asList($(_x, "=", $(_s, _x0)));
 		final Object value = $(_s, _x0, $(_s, _y));
 		
 		return new CaseDescription(Arrays.asList(_s, _x, _x0, _y),
-				condition,
+				conditions,
 				$($("sequence_subappend", _s, _x, _y), "=", value));
 	}
 	
@@ -1804,11 +1812,12 @@ public final class Computation extends AbstractNode<Computation> {
 		final Object _x0 = new Variable("x0");
 		final Object _x1 = new Variable("x1");
 		final Object _y = new Variable("y");
-		final Object condition = $(_x, "=", $(_s, _x0, _x1));
+		
+		final List<Object> conditions = Arrays.asList($(_x, "=", $(_s, _x0, _x1)));
 		final Object value = $(_s, _x0, $("sequence_subappend", _s, _x1, _y));
 		
 		return new CaseDescription(Arrays.asList(_s, _x, _x0, _x1, _y),
-				condition,
+				conditions,
 				$($("sequence_subappend", _s, _x, _y), "=", value));
 	}
 	
@@ -1842,7 +1851,7 @@ public final class Computation extends AbstractNode<Computation> {
 		{
 			final CaseDescription c = newSequenceAppendCase0();
 			
-			rules.add(rule($(c.getVariables().get(0), c.getCondition(), last(c.getVariables())), (__, m) -> {
+			rules.add(rule($(first(c.getVariables()), first(c.getConditions()), last(c.getVariables())), (__, m) -> {
 				ebindTrim("definition_of_sequence_append_0", c.getVariables().stream().map(m::get).toArray());
 				
 				return null;
@@ -1852,7 +1861,7 @@ public final class Computation extends AbstractNode<Computation> {
 		{
 			final CaseDescription c = newSequenceAppendCase1();
 			
-			rules.add(rule($(c.getVariables().get(0), c.getCondition(), last(c.getVariables())), (__, m) -> {
+			rules.add(rule($(first(c.getVariables()), first(c.getConditions()), last(c.getVariables())), (__, m) -> {
 				ebindTrim("definition_of_sequence_append_1", c.getVariables().stream().map(m::get).toArray());
 				
 				return null;
@@ -1862,7 +1871,7 @@ public final class Computation extends AbstractNode<Computation> {
 		{
 			final CaseDescription c = newSequenceAppendCase2();
 			
-			rules.add(rule($(c.getVariables().get(0), c.getCondition(), last(c.getVariables())), (__, m) -> {
+			rules.add(rule($(first(c.getVariables()), first(c.getConditions()), last(c.getVariables())), (__, m) -> {
 				{
 					subdeduction();
 					
@@ -1890,7 +1899,7 @@ public final class Computation extends AbstractNode<Computation> {
 		{
 			final CaseDescription c = newSequenceSubappendCase0();
 			
-			rules.add(rule($(c.getVariables().get(0), c.getCondition(), last(c.getVariables())), (__, m) -> {
+			rules.add(rule($(first(c.getVariables()), first(c.getConditions()), last(c.getVariables())), (__, m) -> {
 				ebindTrim("definition_of_sequence_subappend_0", c.getVariables().stream().map(m::get).toArray());
 				
 				return null;
@@ -1900,7 +1909,7 @@ public final class Computation extends AbstractNode<Computation> {
 		{
 			final CaseDescription c = newSequenceSubappendCase1();
 			
-			rules.add(rule($(c.getVariables().get(0), c.getCondition(), last(c.getVariables())), (__, m) -> {
+			rules.add(rule($(first(c.getVariables()), first(c.getConditions()), last(c.getVariables())), (__, m) -> {
 				{
 					subdeduction();
 					
@@ -1930,7 +1939,7 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			suppose("definition_of_" + definedName + "_" + i,
 					$forall(append(caseDescription.getVariables().toArray(),
-							$rule(caseDescription.getCondition(), caseDescription.getDefinition()))));
+							$rule(append(caseDescription.getConditions().toArray(), caseDescription.getDefinition())))));
 		}
 		
 		for (int i = 0; i < n; ++i) {
@@ -1943,11 +1952,11 @@ public final class Computation extends AbstractNode<Computation> {
 				for (int k = 0; k < variablesI.length; ++k) {
 					suppose("definition_of_" + definedName + "_inequality_" + i + "_" + i + "_" + k,
 							$forall(append(cI.getVariables().toArray(),
-									$rule(cI.getCondition(),
+									$rule(append(cI.getConditions().toArray(),
 											$forall(append(cJ.getVariables().toArray(),
-													$rule(cJ.getCondition(),
+													$rule(append(cJ.getConditions().toArray(),
 															$(LNOT, $(variablesI[k], "=", variablesJ[k])),
-															$(LNOT, $(left(cI.getDefinition()), "=", left(cJ.getDefinition()))))))))));
+															$(LNOT, $(left(cI.getDefinition()), "=", left(cJ.getDefinition()))))))))))));
 				}
 			}
 			
@@ -1957,10 +1966,10 @@ public final class Computation extends AbstractNode<Computation> {
 				
 				suppose("definition_of_" + definedName + "_inequality_" + i + "_" + j,
 						$forall(append(cI.getVariables().toArray(),
-								$rule(cI.getCondition(),
+								$rule(append(cI.getConditions().toArray(),
 										$forall(append(cJ.getVariables().toArray(),
-												$rule(cJ.getCondition(),
-														$(LNOT, $(left(cI.getDefinition()), "=", left(cJ.getDefinition()))))))))));
+												$rule(append(cJ.getConditions().toArray(),
+														$(LNOT, $(left(cI.getDefinition()), "=", left(cJ.getDefinition()))))))))))));
 			}
 		}
 	}
@@ -1991,17 +2000,128 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 	}
 	
+	public static final CaseDescription newSequenceConcatenateCase0() {
+		final Object _s = new Variable("s");
+		final Object _x = new Variable("x");
+		final Object _y = new Variable("y");
+		
+		final List<Object> conditions = Arrays.asList($(_x, "=", $()));
+		final Object value = _y;
+		
+		return new CaseDescription(Arrays.asList(_s, _x, _y),
+				conditions,
+				$($("sequence_concatenate", _s, _x, _y), "=", value));
+	}
+	
+	public static final CaseDescription newSequenceConcatenateCase1() {
+		final Object _s = new Variable("s");
+		final Object _x = new Variable("x");
+		final Object _y = new Variable("y");
+		
+		final List<Object> conditions = Arrays.asList($(_y, "=", $()));
+		final Object value = _x;
+		
+		return new CaseDescription(Arrays.asList(_s, _x, _y),
+				conditions,
+				$($("sequence_concatenate", _s, _x, _y), "=", value));
+	}
+	
+	public static final CaseDescription newSequenceConcatenateCase2() {
+		final Object _s = new Variable("s");
+		final Object _x = new Variable("x");
+		final Object _y = new Variable("y");
+		final Object _y0 = new Variable("y0");
+		
+		final List<Object> conditions = Arrays.asList($(_y, "=", $1(_y0)));
+		final Object value = $("sequence_append", _s, _x, _y0);
+		
+		return new CaseDescription(Arrays.asList(_s, _x, _y, _y0),
+				conditions,
+				$($("sequence_concatenate", _s, _x, _y), "=", value));
+	}
+	
+	public static final CaseDescription newSequenceConcatenateCase3() {
+		final Object _s = new Variable("s");
+		final Object _x = new Variable("x");
+		final Object _x0 = new Variable("x0");
+		final Object _y = new Variable("y");
+		final Object _y0 = new Variable("y0");
+		final Object _y1 = new Variable("y1");
+		
+		final List<Object> conditions = Arrays.asList(
+				$(_x, "=", $1(_x0)),
+				$(_y, "=", $(_y0, _y1)));
+		final Object value = $(_x0, $(_s, _y0, _y1));
+		
+		return new CaseDescription(Arrays.asList(_s, _x, _x0, _y, _y0, _y1),
+				conditions,
+				$($("sequence_concatenate", _s, _x, _y), "=", value));
+	}
+	
+	public static final CaseDescription newSequenceConcatenateCase4() {
+		final Object _s = new Variable("s");
+		final Object _x = new Variable("x");
+		final Object _x0 = new Variable("x0");
+		final Object _x1 = new Variable("x1");
+		final Object _y = new Variable("y");
+		final Object _y0 = new Variable("y0");
+		final Object _y1 = new Variable("y1");
+		
+		final List<Object> conditions = Arrays.asList(
+				$(_x, "=", $(_x0, _x1)),
+				$(_y, "=", $(_y0, _y1)));
+		final Object value = $(_x0, $("subconcatenate", _s, _x1, _y));
+		
+		return new CaseDescription(Arrays.asList(_s, _x, _x0, _x1, _y, _y0, _y1),
+				conditions,
+				$($("sequence_concatenate", _s, _x, _y), "=", value));
+	}
+	
+	public static final CaseDescription newSequenceSubconcatenateCase0() {
+		final Object _s = new Variable("s");
+		final Object _x = new Variable("x");
+		final Object _x0 = new Variable("x0");
+		final Object _y = new Variable("y");
+		final Object _y0 = new Variable("y0");
+		final Object _y1 = new Variable("y1");
+		
+		final List<Object> conditions = Arrays.asList(
+				$(_x, "=", $(_s, _x0)),
+				$(_y, "=", $(_y0, _y1)));
+		final Object value = $(_s, _x0, $(_s, _y0, _y1));
+		
+		return new CaseDescription(Arrays.asList(_s, _x, _x0, _y, _y0, _y1),
+				conditions,
+				$($("sequence_concatenate", _s, _x, _y), "=", value));
+	}
+	
+	public static final CaseDescription newSequenceSubconcatenateCase1() {
+		final Object _s = new Variable("s");
+		final Object _x = new Variable("x");
+		final Object _x0 = new Variable("x0");
+		final Object _x1 = new Variable("x1");
+		final Object _y = new Variable("y");
+		
+		final List<Object> conditions = Arrays.asList(
+				$(_x, "=", $(_s, _x0, _x1)));
+		final Object value = $(_s, _x0, $("subconcatenate", _s, _x1, _y));
+		
+		return new CaseDescription(Arrays.asList(_s, _x, _x0, _x1, _y),
+				conditions,
+				$($("sequence_concatenate", _s, _x, _y), "=", value));
+	}
+	
 	public static final void supposeDefinitionsForSequenceConcatenate() {
 		/*
 		 * 
-		 * concatenate s [] y            = y
-		 * concatenate s x []            = x
-		 * concatenate s x [y0]          = append s x y0
-		 * concatenate s [x0] [y0 y1]    = [x0 [s y0 y1]]
-		 * concatenate s [x0 x1] [y0 y1] = [x0 (subconcatenate s x1 y)]
+		 * 0: concatenate s [] y            = y
+		 * 1: concatenate s x []            = x
+		 * 2: concatenate s x [y0]          = append s x y0
+		 * 3: concatenate s [x0] [y0 y1]    = [x0 [s y0 y1]]
+		 * 4: concatenate s [x0 x1] [y0 y1] = [x0 (subconcatenate s x1 y)]
 		 * 
-		 * subconcatenate s [s x0] [y0 y1] = [s x0 [s y0 y1]] 
-		 * subconcatenate s [s x0 x1] y = [s x0 (subconcatenate s x1 y)] 
+		 * 0: subconcatenate s [s x0] [y0 y1] = [s x0 [s y0 y1]] 
+		 * 1: subconcatenate s [s x0 x1] y = [s x0 (subconcatenate s x1 y)] 
 		 * 
 		 */
 		
