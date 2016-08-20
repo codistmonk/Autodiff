@@ -71,7 +71,7 @@ public final class NodeTest {
 	}
 	
 	@Test
-	public final void testComputation() {
+	public final void testComputation2() {
 		final Computation node = Computation.ones();
 		
 		node.set("s", new int[] { 2, 1, 3 });

@@ -2,7 +2,7 @@ package autodiff.reasoning.proofs;
 
 import static autodiff.reasoning.expressions.Expressions.*;
 import static java.util.stream.Collectors.toList;
-import static multij.tools.Tools.cast;
+import static multij.tools.Tools.*;
 
 import autodiff.reasoning.expressions.ExpressionZipper;
 
@@ -185,6 +185,9 @@ public final class Substitution extends Proof.Abstract {
 		}
 		
 		protected boolean postVisit(final Object expression1, final Object expression2) {
+			ignore(expression1);
+			ignore(expression2);
+			
 			return false;
 		}
 		

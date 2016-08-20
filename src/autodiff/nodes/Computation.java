@@ -18,7 +18,6 @@ import autodiff.rules.Variable;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -1176,7 +1175,7 @@ public final class Computation extends AbstractNode<Computation> {
 			verifyBasicNumericProposition(formula);
 			
 			abort();
-			evaluateStructuralFormula(formula);
+//			evaluateStructuralFormula(formula);
 			
 			apply(name(-2), name(-1));
 			
@@ -1197,7 +1196,9 @@ public final class Computation extends AbstractNode<Computation> {
 			bind("try_cases_if", value, condition);
 			
 			// TODO autodetect required verification
-			evaluateStructuralFormula(condition(proposition(-1)));
+//			evaluateStructuralFormula(condition(proposition(-1)));
+			
+			abort();
 			
 			apply(name(-2), name(-1));
 			
@@ -1218,7 +1219,9 @@ public final class Computation extends AbstractNode<Computation> {
 			bind("try_cases_if_stop", value, _y, condition);
 			
 			// TODO autodetect required verification
-			evaluateStructuralFormula(condition(proposition(-1)));
+//			evaluateStructuralFormula(condition(proposition(-1)));
+			abort();
+			
 			
 			apply(name(-2), name(-1));
 			
@@ -1852,7 +1855,6 @@ public final class Computation extends AbstractNode<Computation> {
 			final Object _x = sequence(",", 1);
 			final Object _y = 2;
 			
-//			new SequenceAppendHelper_(_s, _x, _y).compute("sequence_append.test1");
 			computeSequenceAppend(_s, _x, _y);
 		}
 		
@@ -1861,7 +1863,6 @@ public final class Computation extends AbstractNode<Computation> {
 			final Object _x = sequence(",", 1, 2);
 			final Object _y = 3;
 			
-//			new SequenceAppendHelper_(_s, _x, _y).compute("sequence_append.test2");
 			computeSequenceAppend(_s, _x, _y);
 		}
 		
@@ -1870,7 +1871,6 @@ public final class Computation extends AbstractNode<Computation> {
 			final Object _x = sequence(",", 1, 2, 3);
 			final Object _y = 4;
 			
-//			new SequenceAppendHelper_(_s, _x, _y).compute("sequence_append.test3");
 			computeSequenceAppend(_s, _x, _y);
 		}
 	}
@@ -1936,11 +1936,9 @@ public final class Computation extends AbstractNode<Computation> {
 			final List<?> _x = list(left(proposition(-1)));
 			final List<?> _X = list(right(proposition(-1)));
 			
-//			new SequenceAppendHelper_(_x.get(1), _x.get(2), _x.get(3)).compute();
 			computeSequenceAppend(_x.get(1), _x.get(2), _x.get(3));
 			rewrite(name(-2), name(-1));
 			
-//			new SequenceAppendHelper_(_X.get(1), _X.get(2), _X.get(3)).compute();
 			computeSequenceAppend(_X.get(1), _X.get(2), _X.get(3));
 			rewrite(name(-2), name(-1));
 			
@@ -1955,7 +1953,6 @@ public final class Computation extends AbstractNode<Computation> {
 				
 				ebindTrim("type_of_tuple_in_Uhm", $1(N), N);
 				
-//				new SequenceAppendHelper_(CROSS, $1(N), N).compute();
 				computeSequenceAppend(CROSS, $1(N), N);
 				rewrite(name(-2), name(-1));
 				
@@ -1967,11 +1964,9 @@ public final class Computation extends AbstractNode<Computation> {
 			final List<?> _x = list(left(proposition(-1)));
 			final List<?> _X = list(right(proposition(-1)));
 			
-//			new SequenceAppendHelper_(_x.get(1), _x.get(2), _x.get(3)).compute();
 			computeSequenceAppend(_x.get(1), _x.get(2), _x.get(3));
 			rewrite(name(-2), name(-1));
 			
-//			new SequenceAppendHelper_(_X.get(1), _X.get(2), _X.get(3)).compute();
 			computeSequenceAppend(_X.get(1), _X.get(2), _X.get(3));
 			rewrite(name(-2), name(-1));
 			
@@ -2480,232 +2475,6 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 		
 		private static final long serialVersionUID = -598430379891995844L;
-		
-	}
-	
-	/**
-	 * @author codistmonk (creation 2016-08-14)
-	 */
-	public static final class SequenceAppendHelper_ implements Serializable {
-		
-		private final Object s;
-		
-		private Object x;
-		
-		private Object x0;
-		
-		private Object x1;
-		
-		private Object x2;
-		
-		private final Object y;
-		
-		private final Object[] conditions;
-		
-		private final Object[] values;
-		
-		private boolean first;
-		
-		public SequenceAppendHelper_(final Object s, final Object x, final Object y) {
-			this(s, x, x0(s, x), x1(s, x), x2(s, x), y);
-		}
-		
-		public SequenceAppendHelper_(final Object s, final Object x, final Object x0,
-				final Object x1, final Object x2, final Object y) {
-			this.s = s;
-			this.x = x;
-			this.x0 = x0;
-			this.x1 = x1;
-			this.x2 = x2;
-			this.y = y;
-			this.first = true;
-			this.conditions = new Object[6];
-			this.values = new Object[6];
-			
-			this.setConditionsAndValues();
-		}
-		
-		public final void compute() {
-			this.compute(newName());
-		}
-		
-		public final void compute(final String name) {
-			subdeduction(name);
-			
-			int caseIndex;
-			
-			do {
-				caseIndex = -1;
-				final List<?> list = cast(List.class, this.x);
-				
-				if (list != null) {
-					if (0 == list.size()) {
-						caseIndex = 0;
-					} else if (1 == list.size()) {
-						caseIndex = 1;
-					} else if (2 == list.size()) {
-						if (this.s.equals(first(list))) {
-							caseIndex = 4;
-						} else {
-							final List<?> second = list(second(list));
-							
-							if (2 == second.size() && this.s.equals(first(second))) {
-								caseIndex = 2;
-							} else if (3 == second.size() && this.s.equals(first(second))) {
-								caseIndex = 3;
-							}
-						}
-					} else if (3 == list.size() && this.s.equals(first(list))) {
-						caseIndex = 5;
-					}
-				}
-				
-				this.compute(caseIndex);
-			} while (caseIndex == 3 || caseIndex == 5);
-			
-			conclude();
-		}
-		
-		public final void compute(final int caseIndex) {
-			if (caseIndex < 0 || 5 < caseIndex) {
-				throw new IllegalArgumentException("caseIndex: " + caseIndex);
-			}
-			
-			subdeduction();
-			
-			bind("definition_of_sequence_append", this.s, this.x, this.x0, this.x1, this.x2, this.y);
-			
-//			debugPrint(caseIndex, this.s, this.x, this.x0, this.x1, this.x2, this.y);
-			
-			new CasesHelper()
-			.addCase(this.values[0], this.conditions[0])
-			.addCase(this.values[1], this.conditions[1])
-			.addCase(this.values[2], this.conditions[2])
-			.addCase(this.values[3], this.conditions[3])
-			.addCase(this.values[4], this.conditions[4])
-			.addCase(this.values[5], this.conditions[5])
-			.selectCase(caseIndex);
-			
-			conclude();
-			
-			if (this.first) {
-				this.first = false;
-			} else {
-				rewrite(name(-2), name(-1));
-			}
-			
-			if (caseIndex == 3 || caseIndex == 5) {
-				if (caseIndex == 3) {
-					this.x = this.x2;
-				}
-				
-				if (caseIndex == 5) {
-					this.x = this.x1;
-				}
-				
-				this.setXi();
-				this.setConditionsAndValues();
-			}
-		}
-		
-		private final void setXi() {
-			this.x0 = x0(this.s, this.x);
-			this.x1 = x1(this.s, this.x);
-			this.x2 = x2(this.s, this.x);
-		}
-		
-		private final void setConditionsAndValues() {
-			final String eq = "=";
-			this.conditions[0] = $(this.x, eq, $());
-			this.values[0] = $1(this.y);
-			
-			this.conditions[1] = $(this.x, eq, $1(this.x0));
-			this.values[1] = $(this.x0, $(this.s, this.y));
-			
-			this.conditions[2] = $(this.x, eq, $(this.x0, $(this.s, this.x1)));
-			this.values[2] = $(this.x0, $(this.s, this.x1, $(this.s, this.y)));
-			
-			this.conditions[3] = $(this.x, eq, $(this.x0, $(this.s, this.x1, this.x2)));
-			this.values[3] = $(this.x0, $(this.s, this.x1, $("sequence_append", this.s, this.x2, this.y)));
-			
-			this.conditions[4] = $(this.x, eq, $(this.s, this.x0));
-			this.values[4] = $(this.s, this.x0, $(this.s, this.y));
-			
-			this.conditions[5] = $(this.x, eq, $(this.s, this.x0, this.x1));
-			this.values[5] = $(this.s, this.x0, $("sequence_append", this.s, this.x1, this.y));
-		}
-		
-		private static final long serialVersionUID = 1480975513598301733L;
-		
-		public static final Object x0(final Object s, final Object x) {
-			final List<?> list = cast(List.class, x);
-			
-			if (list != null) {
-				if (1 == list.size()) {
-					return first(list);
-				}
-				
-				if (2 == list.size()) {
-					if (s.equals(first(list))) {
-						return second(list);
-					}
-					
-					final List<?> second = cast(List.class, second(list));
-					
-					if (second != null) {
-						if (2 == second.size() && s.equals(first(second))) {
-							return first(list);
-						}
-						
-						if (3 == second.size() && s.equals(first(second))) {
-							return first(list);
-						}
-					}
-				}
-			}
-			
-			return $("()");
-		}
-		
-		public static final Object x1(final Object s, final Object x) {
-			final List<?> list = cast(List.class, x);
-			
-			if (list != null) {
-				if (2 == list.size()) {
-					final List<?> second = cast(List.class, second(list));
-					
-					if (second != null) {
-						if (2 == second.size() && s.equals(first(second))) {
-							return second(second);
-						}
-						
-						if (3 == second.size() && s.equals(first(second))) {
-							return second.get(1);
-						}
-					}
-				}
-				
-				if (3 == list.size() && s.equals(first(list))) {
-					return list.get(2);
-				}
-			}
-			
-			return $("()");
-		}
-		
-		public static final Object x2(final Object s, final Object x) {
-			final List<?> list = cast(List.class, x);
-			
-			if (list != null && 2 == list.size()) {
-				final List<?> second = cast(List.class, second(list));
-				
-				if (second != null && 3 == second.size() && s.equals(first(second))) {
-					return second.get(2);
-				}
-			}
-			
-			return $("()");
-		}
 		
 	}
 	

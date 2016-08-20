@@ -127,14 +127,6 @@ public final class Stack {
 		conclude(new BasicNumericVerification(propositionName, Arrays.asList("By basic numeric verification"), proposition));
 	}
 	
-	public static final void evaluateStructuralFormula(final Object proposition) {
-		evaluateStructuralFormula(newName(), proposition);
-	}
-	
-	public static final void evaluateStructuralFormula(final String propositionName, final Object proposition) {
-		conclude(new StructuralEvaluation(propositionName, Arrays.asList("By structural evaluation"), proposition));
-	}
-	
 	public static final void subdeduction() {
 		subdeduction(newName());
 	}
