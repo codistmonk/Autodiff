@@ -1585,19 +1585,19 @@ public final class Computation extends AbstractNode<Computation> {
 	 */
 	public static final class CaseDescription implements Serializable {
 		
-		private final Collection<Object> variables;
+		private final List<Object> variables;
 		
 		private final Object condition;
 		
 		private final Object definition;
 		
-		public CaseDescription(final Collection<Object> variables, final Object condition, final Object definition) {
+		public CaseDescription(final List<Object> variables, final Object condition, final Object definition) {
 			this.variables = variables;
 			this.condition = condition;
 			this.definition = definition;
 		}
 		
-		public final Collection<Object> getVariables() {
+		public final List<Object> getVariables() {
 			return this.variables;
 		}
 		
@@ -1620,7 +1620,7 @@ public final class Computation extends AbstractNode<Computation> {
 				map.put((Variable) v, $new(v.toString() + variableNamePostfix));
 			}
 			
-			return new CaseDescription(map.values(),
+			return new CaseDescription(new ArrayList<>(map.values()),
 					Variable.rewrite(this.getCondition(), map), Variable.rewrite(this.getDefinition(), map));
 		}
 		
@@ -1685,7 +1685,7 @@ public final class Computation extends AbstractNode<Computation> {
 		final Object condition = $(_x, "=", $(_s, _x0, _x1));
 		final Object value = $(_s, _x0, $("sequence_subappend", _s, _x1, _y));
 		
-		return new CaseDescription(Arrays.asList(_s, _x, _x0, _y),
+		return new CaseDescription(Arrays.asList(_s, _x, _x0, _x1, _y),
 				condition,
 				$($("sequence_subappend", _s, _x, _y), "=", value));
 	}
@@ -1711,7 +1711,97 @@ public final class Computation extends AbstractNode<Computation> {
 				newSequenceSubappendCase0(),
 				newSequenceSubappendCase1());
 		
+		computeSequenceAppend(",", sequence(",", 1, 2, 3), 4);
+		
 		abort();
+	}
+	
+	public static final void computeSequenceAppend(final Object s, final Object x, final Object y) {
+		final Rules<Object, Void> rules = new Rules<>();
+		
+		{
+			final CaseDescription c = newSequenceAppendCase0();
+			
+			rules.add(rule($(c.getVariables().get(0), c.getCondition(), last(c.getVariables())), (__, m) -> {
+				ebindTrim("definition_of_sequence_append_0", c.getVariables().stream().map(m::get).toArray());
+				
+				return null;
+			}));
+		}
+		
+		{
+			final CaseDescription c = newSequenceAppendCase1();
+			
+			rules.add(rule($(c.getVariables().get(0), c.getCondition(), last(c.getVariables())), (__, m) -> {
+				ebindTrim("definition_of_sequence_append_1", c.getVariables().stream().map(m::get).toArray());
+				
+				return null;
+			}));
+		}
+		
+		{
+			final CaseDescription c = newSequenceAppendCase2();
+			
+			rules.add(rule($(c.getVariables().get(0), c.getCondition(), last(c.getVariables())), (__, m) -> {
+				{
+					subdeduction();
+					
+					final Object[] values = c.getVariables().stream().map(m::get).toArray();
+					
+					ebindTrim("definition_of_sequence_append_2", values);
+					
+					computeSequenceSubappend(s, values[3], y);
+					
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				return null;
+			}));
+		}
+		
+		rules.applyTo($(s, $(x, "=", x), y));
+	}
+	
+	public static final void computeSequenceSubappend(final Object s, final Object x, final Object y) {
+		final Rules<Object, Void> rules = new Rules<>();
+		
+		{
+			final CaseDescription c = newSequenceSubappendCase0();
+			
+			rules.add(rule($(c.getVariables().get(0), c.getCondition(), last(c.getVariables())), (__, m) -> {
+				ebindTrim("definition_of_sequence_subappend_0", c.getVariables().stream().map(m::get).toArray());
+				
+				return null;
+			}));
+		}
+		
+		{
+			final CaseDescription c = newSequenceSubappendCase1();
+			
+			rules.add(rule($(c.getVariables().get(0), c.getCondition(), last(c.getVariables())), (__, m) -> {
+				{
+					subdeduction();
+					
+					final Object[] values = c.getVariables().stream().map(m::get).toArray();
+					
+					ebindTrim("definition_of_sequence_subappend_1", values);
+					
+					computeSequenceSubappend(s, values[3], y);
+					
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				return null;
+			}));
+		}
+		
+		debugPrint(s, x, y);
+		
+		rules.applyTo($(s, $(x, "=", x), y));
 	}
 	
 	public static final void supposeDefinitions(final String definedName, final CaseDescription... descriptions) {
@@ -2029,7 +2119,9 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 		
 		if (result == null) {
-			if (isPositivity(proposition)) {
+			if (isIdentity(proposition)) {
+				bind("identity", left(proposition));
+			} else if (isPositivity(proposition)) {
 				deducePositivity(left(proposition));
 			} else if(isNaturality(proposition) || isReality(proposition)) {
 				verifyBasicNumericProposition(proposition);
@@ -2046,6 +2138,12 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 		
 		return result;
+	}
+	
+	public static final boolean isIdentity(final Object expression) {
+		final List<?> list = cast(List.class, expression);
+		
+		return 3 == list.size() && "=".equals(operator(expression)) && left(expression).equals(right(expression));
 	}
 	
 	public static final void ebindLast(final Object... values) {
