@@ -643,7 +643,8 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			ebindTrim("type_of_tuple_in_Uhm", previousType, type);
 			
-			new SequenceAppendHelper(CROSS, previousType, type).compute();
+//			new SequenceAppendHelper(CROSS, previousType, type).compute();
+			computeSequenceAppend(CROSS, previousType, type);
 			rewrite(name(-2), name(-1));
 			
 			conclude();
@@ -656,10 +657,12 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			ebindTrim("type_of_tuple", previousType, type, previousValue, value);
 			
-			new SequenceAppendHelper(",", previousValue, value).compute();
+//			new SequenceAppendHelper(",", previousValue, value).compute();
+			computeSequenceAppend(",", previousValue, value);
 			rewrite(name(-2), name(-1));
 			
-			new SequenceAppendHelper(CROSS, previousType, type).compute();
+//			new SequenceAppendHelper(CROSS, previousType, type).compute();
+			computeSequenceAppend(CROSS, previousType, type);
 			rewrite(name(-2), name(-1));
 			
 			conclude();
@@ -1712,8 +1715,6 @@ public final class Computation extends AbstractNode<Computation> {
 				newSequenceSubappendCase1());
 		
 		computeSequenceAppend(",", sequence(",", 1, 2, 3), 4);
-		
-		abort();
 	}
 	
 	public static final void computeSequenceAppend(final Object s, final Object x, final Object y) {
@@ -1799,8 +1800,6 @@ public final class Computation extends AbstractNode<Computation> {
 			}));
 		}
 		
-		debugPrint(s, x, y);
-		
 		rules.applyTo($(s, $(x, "=", x), y));
 	}
 	
@@ -1853,7 +1852,8 @@ public final class Computation extends AbstractNode<Computation> {
 			final Object _x = sequence(",", 1);
 			final Object _y = 2;
 			
-			new SequenceAppendHelper(_s, _x, _y).compute("sequence_append.test1");
+//			new SequenceAppendHelper_(_s, _x, _y).compute("sequence_append.test1");
+			computeSequenceAppend(_s, _x, _y);
 		}
 		
 		{
@@ -1861,7 +1861,8 @@ public final class Computation extends AbstractNode<Computation> {
 			final Object _x = sequence(",", 1, 2);
 			final Object _y = 3;
 			
-			new SequenceAppendHelper(_s, _x, _y).compute("sequence_append.test2");
+//			new SequenceAppendHelper_(_s, _x, _y).compute("sequence_append.test2");
+			computeSequenceAppend(_s, _x, _y);
 		}
 		
 		{
@@ -1869,7 +1870,8 @@ public final class Computation extends AbstractNode<Computation> {
 			final Object _x = sequence(",", 1, 2, 3);
 			final Object _y = 4;
 			
-			new SequenceAppendHelper(_s, _x, _y).compute("sequence_append.test3");
+//			new SequenceAppendHelper_(_s, _x, _y).compute("sequence_append.test3");
+			computeSequenceAppend(_s, _x, _y);
 		}
 	}
 	
@@ -1934,10 +1936,12 @@ public final class Computation extends AbstractNode<Computation> {
 			final List<?> _x = list(left(proposition(-1)));
 			final List<?> _X = list(right(proposition(-1)));
 			
-			new SequenceAppendHelper(_x.get(1), _x.get(2), _x.get(3)).compute();
+//			new SequenceAppendHelper_(_x.get(1), _x.get(2), _x.get(3)).compute();
+			computeSequenceAppend(_x.get(1), _x.get(2), _x.get(3));
 			rewrite(name(-2), name(-1));
 			
-			new SequenceAppendHelper(_X.get(1), _X.get(2), _X.get(3)).compute();
+//			new SequenceAppendHelper_(_X.get(1), _X.get(2), _X.get(3)).compute();
+			computeSequenceAppend(_X.get(1), _X.get(2), _X.get(3));
 			rewrite(name(-2), name(-1));
 			
 			conclude();
@@ -1951,7 +1955,8 @@ public final class Computation extends AbstractNode<Computation> {
 				
 				ebindTrim("type_of_tuple_in_Uhm", $1(N), N);
 				
-				new SequenceAppendHelper(CROSS, $1(N), N).compute();
+//				new SequenceAppendHelper_(CROSS, $1(N), N).compute();
+				computeSequenceAppend(CROSS, $1(N), N);
 				rewrite(name(-2), name(-1));
 				
 				conclude();
@@ -1962,10 +1967,12 @@ public final class Computation extends AbstractNode<Computation> {
 			final List<?> _x = list(left(proposition(-1)));
 			final List<?> _X = list(right(proposition(-1)));
 			
-			new SequenceAppendHelper(_x.get(1), _x.get(2), _x.get(3)).compute();
+//			new SequenceAppendHelper_(_x.get(1), _x.get(2), _x.get(3)).compute();
+			computeSequenceAppend(_x.get(1), _x.get(2), _x.get(3));
 			rewrite(name(-2), name(-1));
 			
-			new SequenceAppendHelper(_X.get(1), _X.get(2), _X.get(3)).compute();
+//			new SequenceAppendHelper_(_X.get(1), _X.get(2), _X.get(3)).compute();
+			computeSequenceAppend(_X.get(1), _X.get(2), _X.get(3));
 			rewrite(name(-2), name(-1));
 			
 			conclude();
@@ -2479,7 +2486,7 @@ public final class Computation extends AbstractNode<Computation> {
 	/**
 	 * @author codistmonk (creation 2016-08-14)
 	 */
-	public static final class SequenceAppendHelper implements Serializable {
+	public static final class SequenceAppendHelper_ implements Serializable {
 		
 		private final Object s;
 		
@@ -2499,11 +2506,11 @@ public final class Computation extends AbstractNode<Computation> {
 		
 		private boolean first;
 		
-		public SequenceAppendHelper(final Object s, final Object x, final Object y) {
+		public SequenceAppendHelper_(final Object s, final Object x, final Object y) {
 			this(s, x, x0(s, x), x1(s, x), x2(s, x), y);
 		}
 		
-		public SequenceAppendHelper(final Object s, final Object x, final Object x0,
+		public SequenceAppendHelper_(final Object s, final Object x, final Object x0,
 				final Object x1, final Object x2, final Object y) {
 			this.s = s;
 			this.x = x;
@@ -2744,7 +2751,8 @@ public final class Computation extends AbstractNode<Computation> {
 				
 				final List<?> formula = list(right(proposition(-1)));
 				
-				new SequenceAppendHelper(this.s, formula.get(2), formula.get(3)).compute();
+//				new SequenceAppendHelper_(this.s, formula.get(2), formula.get(3)).compute();
+				computeSequenceAppend(this.s, formula.get(2), formula.get(3));
 				rewrite(name(-2), name(-1));
 				
 				conclude();
