@@ -1841,11 +1841,13 @@ public final class Computation extends AbstractNode<Computation> {
 		supposeDefinitions("sequence_subappend",
 				newSequenceSubappendCase0(),
 				newSequenceSubappendCase1());
-		
-		computeSequenceAppend(",", sequence(",", 1, 2, 3), 4);
 	}
 	
 	public static final void computeSequenceAppend(final Object s, final Object x, final Object y) {
+		computeSequenceAppend(newName(), s, x, y);
+	}
+	
+	public static final void computeSequenceAppend(final String propositionName, final Object s, final Object x, final Object y) {
 		final Rules<Object, Void> rules = new Rules<>();
 		
 		{
@@ -1890,7 +1892,13 @@ public final class Computation extends AbstractNode<Computation> {
 			}));
 		}
 		
-		rules.applyTo($(s, $(x, "=", x), y));
+		{
+			subdeduction(propositionName);
+			
+			rules.applyTo($(s, $(x, "=", x), y));
+			
+			conclude();
+		}
 	}
 	
 	public static final void computeSequenceSubappend(final Object s, final Object x, final Object y) {
@@ -1980,7 +1988,7 @@ public final class Computation extends AbstractNode<Computation> {
 			final Object _x = sequence(",", 1);
 			final Object _y = 2;
 			
-			computeSequenceAppend(_s, _x, _y);
+			computeSequenceAppend("sequence_append.test1", _s, _x, _y);
 		}
 		
 		{
@@ -1988,7 +1996,7 @@ public final class Computation extends AbstractNode<Computation> {
 			final Object _x = sequence(",", 1, 2);
 			final Object _y = 3;
 			
-			computeSequenceAppend(_s, _x, _y);
+			computeSequenceAppend("sequence_append.test2", _s, _x, _y);
 		}
 		
 		{
@@ -1996,7 +2004,7 @@ public final class Computation extends AbstractNode<Computation> {
 			final Object _x = sequence(",", 1, 2, 3);
 			final Object _y = 4;
 			
-			computeSequenceAppend(_s, _x, _y);
+			computeSequenceAppend("sequence_append.test3", _s, _x, _y);
 		}
 	}
 	
