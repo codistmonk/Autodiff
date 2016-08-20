@@ -226,6 +226,8 @@ public final class Computation extends AbstractNode<Computation> {
 			supposeDefinitionsForSequenceAppend();
 			testSequenceAppend();
 			
+			supposeDefinitionsForSequenceConcatenate();
+			
 			supposeTypeOfSingle();
 			supposeTypeOfSingleInUhm();
 			
@@ -1501,6 +1503,20 @@ public final class Computation extends AbstractNode<Computation> {
 						$forall(_a, _i, _n, _p, _q,
 								$rule($($(_n, IN, N)), $(valueAfter, "=", _n))));
 			}
+			
+			{
+				final Object _a = $new("a");
+				final Object _i = $new("i");
+				final Object _n = $new("n");
+				final Object _q = $new("q");
+				
+				final Object instruction = app("repeat", _n, _a, _i, block(_q));
+				final Object instruction2 = app("repeat", $(_n, "-", 1), _a, _i, block(_q));
+				
+				suppose("meaning_of_repeat_2",
+						$forall(_a, _i, _n, _q,
+								$rule($($(_n, IN, POS)), $(instruction, "=", $("sequence_concatenate", ";", $1(instruction2), _q)))));
+			}
 		}
 		
 		abort();
@@ -1973,6 +1989,23 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			computeSequenceAppend(_s, _x, _y);
 		}
+	}
+	
+	public static final void supposeDefinitionsForSequenceConcatenate() {
+		/*
+		 * 
+		 * concatenate s [] y            = y
+		 * concatenate s x []            = x
+		 * concatenate s x [y0]          = append s x y0
+		 * concatenate s [x0] [y0 y1]    = [x0 [s y0 y1]]
+		 * concatenate s [x0 x1] [y0 y1] = [x0 (subconcatenate s x1 y)]
+		 * 
+		 * subconcatenate s [s x0] [y0 y1] = [s x0 [s y0 y1]] 
+		 * subconcatenate s [s x0 x1] y = [s x0 (subconcatenate s x1 y)] 
+		 * 
+		 */
+		
+		abort();
 	}
 	
 	public static final void supposeTypeOfSingle() {
