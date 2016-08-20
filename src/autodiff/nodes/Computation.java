@@ -281,20 +281,87 @@ public final class Computation extends AbstractNode<Computation> {
 			supposeDefinitionsForCLCode();
 			
 			{
-				final Object _a = $new("a");
-				final Object _n = $new("n");
-				final Object _b = $new("b");
-				final Object _j = $new("j");
-				final Object _p = $new("p");
+				{
+					final Object _a = $new("a");
+					final Object _n = $new("n");
+					final Object _b = $new("b");
+					final Object _i = $new("i");
+					final Object _p = $new("p");
+					
+					final Object valueBefore = instructions(_p, app("read", str(_b), _i));
+					final Object instruction = app("allocate", _a, _n);
+					final Object valueAfter = instructions(_p, instruction, app("read", str(_b), _i));
+					
+					suppose("meaning_of_allocate_0",
+							$forall(_a, _n, _b, _i, _p,
+									$rule($(LNOT, $(_a, "=", _b)), $(valueBefore, "=", valueAfter))));
+				}
 				
-				suppose("meaning_of_allocate",
-						$forall(_a, _n, _b, _j, _p,
-								$($("sequence_append", ";", _p, app("read", str(_b), _j)),
-										"=", $("sequence_append", ";", $("sequence_append", ";", _p, app("allocate", str(_a), _n)), app("read", str(_b), _j)))));
+				{
+					final Object _a = $new("a");
+					final Object _n = $new("n");
+					final Object _i = $new("i");
+					final Object _p = $new("p");
+					
+					final Object instruction = app("allocate", _a, _n);
+					final Object valueAfter = instructions(_p, instruction, app("read", str(_a), _i));
+					
+					suppose("meaning_of_allocate_1",
+							$forall(_a, _n, _i, _p,
+									$rule($(_i, IN, $(N, "_", $("<", _n))),
+											$(valueAfter, IN, R))));
+				}
+				
+				{
+					final Object _a = $new("a");
+					final Object _i = $new("i");
+					final Object _b = $new("b");
+					final Object _j = $new("j");
+					final Object _x = $new("x");
+					final Object _p = $new("p");
+					
+					final Object valueBefore = instructions(_p, app("read", str(_b), _j));
+					final Object instruction = app("write", _a, _i, _x);
+					final Object valueAfter = instructions(_p, instruction, app("read", str(_b), _j));
+					
+					suppose("meaning_of_write_0",
+							$forall(_a, _i, _b, _j, _x, _p,
+									$rule($(LNOT, $(_a, "=", _b)),
+											$(valueBefore, "=", valueAfter))));
+				}
+				
+				{
+					final Object _a = $new("a");
+					final Object _i = $new("i");
+					final Object _x = $new("x");
+					final Object _p = $new("p");
+					
+					final Object valueBefore = instructions(_p, app("read", str(_a), _i));
+					final Object instruction = app("write", _a, _i, _x);
+					final Object valueAfter = instructions(_p, instruction, app("read", str(_a), _i));
+					
+					suppose("meaning_of_write_1",
+							$forall(_a, _i, _x, _p,
+									$rule($(_x, IN, R),
+											$(valueBefore, IN, R),
+											$(valueAfter, "=", _x))));
+				}
 			}
+			
+			abort();
 		}
 		
 	}, 1);
+	
+	public static final Object instructions(final Object instructionsBefore, final Object... newInstructions) {
+		Object result = instructionsBefore;
+		
+		for (final Object instruction : newInstructions) {
+			result = $("sequence_append", ";", result, instruction);
+		}
+		
+		return result;
+	}
 	
 	public static final Object block(final Object... arguments) {
 		return $("()->{", sequence(";", arguments), "}");
