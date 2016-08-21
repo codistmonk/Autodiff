@@ -1526,7 +1526,7 @@ public final class Computation extends AbstractNode<Computation> {
 				
 				suppose("repeat_in_javacode",
 						$forall(_n, _a, _i, _q,
-								$(app("repeat", _n, str(_a), _i, _q), IN, javacode)));
+								$(app("repeat", _n, str(_a), _i, $("()->{", _q, "}")), IN, javacode)));
 			}
 			
 			{
@@ -1538,7 +1538,7 @@ public final class Computation extends AbstractNode<Computation> {
 				final Object _q = $new("q");
 				
 				final Object valueBefore = instructions(_p, app("read", str(_b), _j));
-				final Object instruction = app("repeat", 0, str(_a), _i, block(_q));
+				final Object instruction = app("repeat", 0, str(_a), _i, $("()->{", _q, "}"));
 				final Object valueAfter = instructions(_p, instruction, app("read", str(_b), _j));
 				
 				suppose("meaning_of_repeat_0",
@@ -1554,7 +1554,7 @@ public final class Computation extends AbstractNode<Computation> {
 				final Object _p = $new("p");
 				final Object _q = $new("q");
 				
-				final Object instruction = app("repeat", _n, str(_a), _i, block(_q));
+				final Object instruction = app("repeat", _n, str(_a), _i, $("()->{", _q, "}"));
 				final Object valueAfter = instructions(_p, instruction, app("read", str(_a), _i));
 				
 				suppose("meaning_of_repeat_1",
@@ -1568,8 +1568,8 @@ public final class Computation extends AbstractNode<Computation> {
 				final Object _n = $new("n");
 				final Object _q = $new("q");
 				
-				final Object instruction = app("repeat", _n, str(_a), _i, block(_q));
-				final Object instruction2 = app("repeat", $(_n, "-", 1), str(_a), _i, block(_q));
+				final Object instruction = app("repeat", _n, str(_a), _i, $("()->{", _q, "}"));
+				final Object instruction2 = app("repeat", $(_n, "-", 1), str(_a), _i, $("()->{", _q, "}"));
 				
 				suppose("meaning_of_repeat_2",
 						$forall(_a, _i, _n, _q,
@@ -1689,7 +1689,7 @@ public final class Computation extends AbstractNode<Computation> {
 								final Variable va = new Variable("a");
 								final Variable vq = new Variable("q");
 								
-								if (Variable.match(sequence(";", app("allocate", str(va), 1), app("repeat", 1, str(va), 0, block(vq))), right(proposition(-1)))) {
+								if (Variable.match(sequence(";", app("allocate", str(va), 1), app("repeat", 1, str(va), 0, $("()->{", vq, "}"))), right(proposition(-1)))) {
 									final Object _a = va.get();
 									final Object _q = vq.get();
 									
@@ -1706,6 +1706,19 @@ public final class Computation extends AbstractNode<Computation> {
 						}
 						
 						rewrite(name(-2), name(-1));
+						
+						{
+							final Variable va = new Variable("a");
+							final Variable vb = new Variable("b");
+							final Variable vc = new Variable("c");
+							
+							if (Variable.match($(va, $(";", $("sequence_concatenate", ";", vb, vc))), right(proposition(-1)))) {
+								computeSequenceConcatenate(";", vb.get(), vc.get());
+								rewrite(name(-2), name(-1));
+							} else {
+								throw new IllegalStateException();
+							}
+						}
 						
 						conclude();
 					}
