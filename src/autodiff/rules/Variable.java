@@ -4,6 +4,7 @@ import static multij.tools.Tools.cast;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -15,12 +16,24 @@ public final class Variable implements Serializable {
 	
 	private final String name;
 	
+	private Object value;
+	
 	public Variable() {
 		this("" + nextId.getAndIncrement());
 	}
 	
 	public Variable(final String name) {
 		this.name = name;
+	}
+	
+	public final Object get() {
+		return this.value;
+	}
+	
+	public final Variable set(final Object value) {
+		this.value = value;
+		
+		return this;
 	}
 	
 	@Override
@@ -32,6 +45,10 @@ public final class Variable implements Serializable {
 	
 	private static final AtomicLong nextId = new AtomicLong(1L);
 	
+	public static boolean match(final Object pattern, final Object target) {
+		return match(pattern, target, new HashMap<>());
+	}
+	
 	public static boolean match(final Object pattern, final Object target, final Map<Variable, Object> mapping) {
 		final Variable variable = cast(Variable.class, pattern);
 		
@@ -40,6 +57,8 @@ public final class Variable implements Serializable {
 			
 			if (existing == null) {
 				mapping.put(variable, target);
+				
+				variable.set(target);
 				
 				return true;
 			}

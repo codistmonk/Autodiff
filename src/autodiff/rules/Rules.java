@@ -51,8 +51,12 @@ public final class Rules<T, R> implements Rule<T, R> {
 		final Map<Variable, Object> backup = new LinkedHashMap<>(mapping);
 		
 		for (final Rule<T, R> rule : this.rules) {
+			mapping.forEach((k, v) -> k.set(null));
+			
 			mapping.clear();
 			mapping.putAll(backup);
+			
+			mapping.forEach(Variable::set);
 			
 			if (rule.test(object, mapping)) {
 				return rule;

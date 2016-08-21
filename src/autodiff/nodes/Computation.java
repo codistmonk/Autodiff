@@ -1673,11 +1673,10 @@ public final class Computation extends AbstractNode<Computation> {
 							{
 								final Variable va = new Variable("a");
 								final Variable vq = new Variable("q");
-								final Map<Variable, Object> mapping = new LinkedHashMap<>();
 								
-								if (Variable.match(sequence(";", app("allocate", str(va), 1), app("repeat", 1, str(va), 0, block(vq))), right(proposition(-1)), mapping)) {
-									final Object _a = mapping.get(va);
-									final Object _q = mapping.get(vq);
+								if (Variable.match(sequence(";", app("allocate", str(va), 1), app("repeat", 1, str(va), 0, block(vq))), right(proposition(-1)))) {
+									final Object _a = va.get();
+									final Object _q = vq.get();
 									
 									ebindTrim("meaning_of_repeat_2", _a, 0, 1, _q);
 								} else {
