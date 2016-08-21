@@ -14,7 +14,9 @@ import autodiff.reasoning.proofs.BasicNumericVerification;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.proofs.Substitution;
 import autodiff.reasoning.tactics.Goal;
+import autodiff.rules.Rule;
 import autodiff.rules.Rules;
+import autodiff.rules.SimpleRule;
 import autodiff.rules.Variable;
 
 import java.io.Serializable;
@@ -1745,7 +1747,23 @@ public final class Computation extends AbstractNode<Computation> {
 						
 						matchOrFail(sequence(";", va, vb, vc), right(proposition(-1)));
 						
-						bind("meaning_of_read_in_arguments", sequence(";", va.get(), vb.get()), first(vc.get()), list(vc.get()).get(2), "i", 0);
+						{
+							subdeduction();
+							
+							bind("meaning_of_read_in_arguments", sequence(";", va.get(), vb.get()), first(vc.get()), list(vc.get()).get(2), "i", 0);
+							
+							final PatternProcessor simplifier = new PatternProcessor()
+							.add(newSequenceAppendSimplificationRule())
+							.add(rule(new Variable("*"), (e, m) -> false));
+							
+							while (simplifier.apply(proposition(-1))) {
+								// NOP
+							}
+							
+							conclude();
+						}
+						
+						rewrite(name(-2), name(-1));
 						
 						abort();
 					}
@@ -1787,6 +1805,83 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			goal.conclude();
 		}
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-21)
+	 */
+	public static final class PatternProcessor implements ExpressionVisitor<Boolean> {
+		
+		private final Rules<Object, Boolean> rules = new Rules<>();
+		
+		public final Rules<Object, Boolean> getRules() {
+			return this.rules;
+		}
+		
+		public final PatternProcessor add(final Rule<Object, Boolean> rule) {
+			this.getRules().add(rule);
+			
+			return this;
+		}
+		
+		@Override
+		public final Boolean visit(final Object expression) {
+			subdeduction();
+			
+			if (this.getRules().applyTo(expression)) {
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+				
+				return true;
+			}
+			
+			pop();
+			
+			return false;
+		}
+		
+		@Override
+		public final Boolean visit(final List<?> expression) {
+			subdeduction();
+			
+			if (this.getRules().applyTo(expression)) {
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+				
+				return true;
+			}
+			
+			boolean result = false;
+			
+			for (final Object subExpression : expression) {
+				result |= this.apply(subExpression);
+			}
+			
+			if (result) {
+				conclude();
+			} else {
+				pop();
+			}
+			
+			return result;
+		}
+		
+		private static final long serialVersionUID = -5429351197907942483L;
+		
+	}
+	
+	public static final SimpleRule<Object, Boolean> newSequenceAppendSimplificationRule() {
+		final Variable vs = new Variable("s");
+		final Variable vx = new Variable("x");
+		final Variable vy = new Variable("y");
+		
+		return rule($("sequence_append", vs, vx, vy), (e, m) -> {
+			computeSequenceAppend(vs.get(), vx.get(), vy.get());
+			
+			return true;
+		});
 	}
 	
 	public static final void supposeDefinitionsForCLCode() {

@@ -37,6 +37,8 @@ public final class PatternMatching extends AbstractExpressionEquality {
 			if (existing == null) {
 				this.getMapping().put(variable, expression2);
 				
+				variable.set(expression2);
+				
 				return true;
 			}
 			
