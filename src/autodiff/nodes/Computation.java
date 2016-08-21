@@ -1745,6 +1745,8 @@ public final class Computation extends AbstractNode<Computation> {
 						
 						matchOrFail(sequence(";", va, vb, vc), right(proposition(-1)));
 						
+						bind("meaning_of_read_in_arguments", sequence(";", va.get(), vb.get()), first(vc.get()), list(vc.get()).get(2), "i", 0);
+						
 						abort();
 					}
 					
