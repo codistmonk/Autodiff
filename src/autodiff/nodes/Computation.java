@@ -1590,6 +1590,21 @@ public final class Computation extends AbstractNode<Computation> {
 						$(FORALL, _p, ",", _q, IN, javacode,
 								$($(_q, "=", _r), "=", $forall(_p, _a, _i, $(valueAfterPQ, "=", valueAfterPR)))));
 			}
+			
+			{
+				final Object _p = $new("p");
+				final Object _f = $new("f");
+				final Object _x = $new("x");
+				final Object _a = $new("a");
+				final Object _i = $new("i");
+				
+				final Object valueAfterP = instructions(_p, app("read", str(_a), _i));
+				
+				suppose("meaning_of_read_in_arguments",
+						$forall(_p, _f, _x, _a, _i,
+								$(instructions(_p, $(_f, "(", _x, ")")),
+										"=", instructions(_p, $(_f, "(", $(_x, "|", $1($(app("read", str(_a), _i), "=", valueAfterP)), "@", $()), ")")))));
+			}
 		}
 		
 		{
@@ -1609,7 +1624,7 @@ public final class Computation extends AbstractNode<Computation> {
 			final Object _n = $new("n");
 			final Object _p = $new("p");
 			final Object _r = $(str("result"));
-			final Object _j = $new("j");
+			final Object _j = $(0); // TODO var in 0 .. n - 1
 			
 			final Goal goal = Goal.deduce("proof_of_to_java.test1",
 					$forall(_n, $rule(
