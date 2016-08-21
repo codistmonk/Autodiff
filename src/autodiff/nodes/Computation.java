@@ -1567,14 +1567,19 @@ public final class Computation extends AbstractNode<Computation> {
 				final Object _a = $new("a");
 				final Object _i = $new("i");
 				final Object _n = $new("n");
+				final Object _p = $new("p");
 				final Object _q = $new("q");
 				
-				final Object instruction = app("repeat", _n, str(_a), _i, $("()->{", _q, "}"));
-				final Object instruction2 = app("repeat", $(_n, "-", 1), str(_a), _i, $("()->{", _q, "}"));
+				final Object instruction = instructions(_p, app("repeat", _n, str(_a), _i, $("()->{", _q, "}")));
+				final Object instruction2 = $("sequence_concatenate", ";",
+						_p,
+						$("sequence_concatenate", ";",
+								$1(app("repeat", $(_n, "-", 1), str(_a), _i, $("()->{", _q, "}"))),
+								_q));
 				
 				suppose("meaning_of_repeat_2",
-						$forall(_a, _i, _n, _q,
-								$rule($($(_n, IN, POS)), $(instruction, "=", $("sequence_concatenate", ";", $1(instruction2), _q)))));
+						$forall(_p, _a, _i, _n, _q,
+								$rule($($(_n, IN, POS)), $(instruction, "=", instruction2))));
 			}
 			
 			{
@@ -1687,35 +1692,48 @@ public final class Computation extends AbstractNode<Computation> {
 							subdeduction();
 							
 							{
+								final Variable vp0 = new Variable("p0");
 								final Variable va = new Variable("a");
 								final Variable vq = new Variable("q");
 								
-								matchOrFail(sequence(";", app("allocate", str(va), 1), app("repeat", 1, str(va), 0, $("()->{", vq, "}"))), right(proposition(-1)));
+								matchOrFail(sequence(";", vp0, app("repeat", 1, str(va), 0, $("()->{", vq, "}"))), right(proposition(-1)));
 								
-								final Object _a = va.get();
-								final Object _q = vq.get();
-								
-								ebindTrim("meaning_of_repeat_2", _a, 0, 1, _q);
+								ebindTrim("meaning_of_repeat_2", $1(vp0.get()), va.get(), 0, 1, vq.get());
 							}
 							
 							verifyBasicNumericProposition($($(1, "-", 1), "=", 0));
 							rewrite(name(-2), name(-1));
 							
+							{
+								final Variable va = new Variable("a");
+								final Variable vb = new Variable("b");
+								final Variable vc = new Variable("c");
+								final Variable vd = new Variable("d");
+								
+								matchOrFail($($("sequence_append", ";", va, vb), "=",
+										$("sequence_concatenate", ";", va, $("sequence_concatenate", ";", vc, vd))), proposition(-1));
+								
+								computeSequenceAppend(";", va.get(), vb.get());
+								rewrite(name(-2), name(-1));
+								
+								computeSequenceConcatenate(";", vc.get(), vd.get());
+								rewrite(name(-2), name(-1));
+							}
+							
+							{
+								final Variable va = new Variable("a");
+								final Variable vb = new Variable("b");
+								
+								matchOrFail($("sequence_concatenate", ";", va, vb), right(proposition(-1)));
+								
+								computeSequenceConcatenate(";", va.get(), vb.get());
+								rewrite(name(-2), name(-1));
+							}
+							
 							conclude();
 						}
 						
 						rewrite(name(-2), name(-1));
-						
-						{
-							final Variable va = new Variable("a");
-							final Variable vb = new Variable("b");
-							final Variable vc = new Variable("c");
-							
-							matchOrFail($(va, $(";", $("sequence_concatenate", ";", vb, vc))), right(proposition(-1)));
-							
-							computeSequenceConcatenate(";", vb.get(), vc.get());
-							rewrite(name(-2), name(-1));
-						}
 						
 						conclude();
 					}
