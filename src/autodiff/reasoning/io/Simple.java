@@ -128,7 +128,6 @@ public final class Simple {
 					map.entrySet().stream().map(e -> collapse(e.getKey()) + "=" + collapse(e.getValue()))));
 		}
 		
-		@SuppressWarnings("unchecked")
 		final List<Object> expression = cast(List.class, object);
 		
 		if (expression == null) {

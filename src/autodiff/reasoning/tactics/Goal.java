@@ -6,6 +6,8 @@ import static autodiff.reasoning.proofs.Stack.*;
 import autodiff.reasoning.proofs.Deduction;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author codistmonk (creation 2015-04-12)
@@ -22,6 +24,8 @@ public final class Goal implements Serializable {
 		this.initialProposition = proposition;
 		this.proposition = proposition;
 		this.deduction = push(new Deduction(context, deductionName));
+		
+		activeGoals.put(this.getDeduction(), this);
 	}
 	
 	public final Object getInitialProposition() {
@@ -73,9 +77,21 @@ public final class Goal implements Serializable {
 				"Expected: " + this.getInitialProposition() + " but was: " + provedProposition);
 		
 		deduction().conclude(deduction);
+		
+		activeGoals.remove(deduction);
 	}
 	
 	private static final long serialVersionUID = -6412523746037749196L;
+	
+	private static final Map<Deduction, Goal> activeGoals = new HashMap<>();
+	
+	public static final Goal activeGoalFor(final Deduction deduction) {
+		return activeGoals.get(deduction);
+	}
+	
+	public static final Goal activeGoal() {
+		return activeGoalFor(deduction());
+	}
 	
 	public static final Goal deduce(final Object proposition) {
 		return deduce(newName(), proposition);

@@ -1521,7 +1521,117 @@ public final class Computation extends AbstractNode<Computation> {
 			}
 		}
 		
-		abort();
+		{
+			final Object _P = $new("P");
+			final Object _n = $new("n");
+			
+			suppose("induction_principle",
+					$forall(_P, _n,
+							$rule($(_P, "|", $1($(_n, "=", 0)), "@", $()),
+									$(FORALL, _n, IN, N, $rule(_P, $(_P, "|", $1($(_n, "=", $(_n, "+", 1))), "@", $()))),
+									$(FORALL, _n, IN, N, _P))));
+		}
+		
+		{
+			final Object _X = $(1);
+			final Object _i = $new("i");
+			final Object _n = $new("n");
+			final Object _p = $new("p");
+			final Object _r = $(str("result"));
+			final Object _j = $new("j");
+			
+			final Goal goal = Goal.deduce("proof_of_to_java.test1",
+					$forall(_n, $rule(
+							$(_n, IN, POS),
+							$forall(_p, $rule($($("to_java", $(p(_X), "_", $(_i, "<", _n))), "=", _p),
+									$(instructions(_p, app("read", _r, _j)), "=", $(_X, "|", $1($(_i, "=", _j)), "@", $())))))));
+			
+			goal.introduce();
+			
+			final Object _m = $new("m");
+			
+			bind("induction_principle", $(conclusion(goal.getProposition()), "|", $1($(_n, "=", $(1, "+", _m))), "@", $()), _m);
+			
+			{
+				final Goal subgoal = Goal.deduce(condition(proposition(-1)));
+				
+				{
+					subdeduction();
+					
+					{
+						subdeduction();
+						
+						substitute(target(subgoal.getProposition()), map(_m, 0));
+						
+						verifyBasicNumericProposition($($(1, "+", 0), "=", 1));
+						
+						rewrite(name(-2), name(-1));
+						
+						conclude();
+					}
+					
+					substitute(target(right(proposition(-1))), map(_n, 1));
+					rewrite(name(-2), name(-1));
+					
+					substitute(1, map(_i, _j));
+					rewrite(name(-2), name(-1), 1);
+					
+					conclude();
+				}
+				
+				{
+					final Goal subsubgoal = Goal.deduce(right(proposition(-1)));
+					
+					subsubgoal.intros();
+					
+					{
+						subdeduction();
+						
+						new ToJavaHelper().compute(left(proposition(-1)));
+						rewrite(name(-1), name(-2));
+						
+						conclude();
+					}
+					
+					abort();
+					
+					subsubgoal.conclude();
+				}
+				
+				
+				subgoal.conclude();
+			}
+			
+			abort();
+			
+//			goal.intros();
+//			
+//			{
+//				subdeduction();
+//				
+//				bind("definition_of_positives", _n);
+//				
+//				rewrite(name(-3), name(-1));
+//				
+//				deduceConjunctionLeft(name(-1));
+//				
+//				conclude();
+//			}
+//			
+//			{
+//				subdeduction();
+//				
+//				new ToJavaHelper().compute(left(proposition(-2)));
+//				
+//				rewrite(name(-1), name(-3));
+//				
+//				conclude();
+//			}
+//			
+//			abort();
+			
+			goal.conclude();
+		}
 	}
 	
 	public static final void supposeDefinitionsForCLCode() {
@@ -3268,11 +3378,11 @@ public final class Computation extends AbstractNode<Computation> {
 					final Object _i = m.get(vi);
 					final Object _n = m.get(vn);
 					
-					ebind("definition_of_vector_generator_to_java", _X, _i, _n);
-					eapplyLast();
-					
 					{
 						subdeduction();
+						
+						ebind("definition_of_vector_generator_to_java", _X, _i, _n);
+						eapplyLast();
 						
 						{
 							subdeduction();
@@ -3331,8 +3441,8 @@ public final class Computation extends AbstractNode<Computation> {
 			}
 		}
 		
-		public final void compute(final Object proposition) {
-			this.rules.applyTo(proposition);
+		public final void compute(final Object expression) {
+			this.rules.applyTo(expression);
 		}
 		
 		private static final long serialVersionUID = 8767164056521982370L;

@@ -7,10 +7,13 @@ import static multij.tools.Tools.*;
 
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
+import autodiff.reasoning.tactics.Goal;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import multij.tools.IllegalInstantiationException;
+import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2015-04-12)
@@ -152,12 +155,31 @@ public final class Standard {
 		} catch (final Throwable exception) {
 			Simple.print(deduction(), debugDepth);
 			
+			Deduction d = deduction();
+			int n = depth(d);
+			
+			while (d != null) {
+				final Goal activeGoal = Goal.activeGoalFor(d);
+				
+				if (activeGoal != null) {
+					System.out.println();
+					System.out.println(Tools.join("", Collections.nCopies(n, "\t")) + "Goal: " + Simple.collapse(activeGoal.getProposition()));
+				}
+				
+				d = d.getParent();
+				--n;
+			}
+			
 			return throwUnchecked(exception);
 		} finally {
 			while (result != pop()) {
 				// NOP
 			}
 		}
+	}
+	
+	public static final int depth(final Deduction deduction) {
+		return deduction.getParent() == null ? 0 : 1 + depth(deduction.getParent());
 	}
 	
 }
