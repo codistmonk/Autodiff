@@ -5,6 +5,7 @@ import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.BasicNumericVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
 import static autodiff.reasoning.tactics.PatternPredicate.rule;
+import static autodiff.rules.Variable.matchOrFail;
 import static multij.tools.Tools.*;
 
 import autodiff.reasoning.deductions.Standard;
@@ -1689,14 +1690,12 @@ public final class Computation extends AbstractNode<Computation> {
 								final Variable va = new Variable("a");
 								final Variable vq = new Variable("q");
 								
-								if (Variable.match(sequence(";", app("allocate", str(va), 1), app("repeat", 1, str(va), 0, $("()->{", vq, "}"))), right(proposition(-1)))) {
-									final Object _a = va.get();
-									final Object _q = vq.get();
-									
-									ebindTrim("meaning_of_repeat_2", _a, 0, 1, _q);
-								} else {
-									throw new IllegalStateException();
-								}
+								matchOrFail(sequence(";", app("allocate", str(va), 1), app("repeat", 1, str(va), 0, $("()->{", vq, "}"))), right(proposition(-1)));
+								
+								final Object _a = va.get();
+								final Object _q = vq.get();
+								
+								ebindTrim("meaning_of_repeat_2", _a, 0, 1, _q);
 							}
 							
 							verifyBasicNumericProposition($($(1, "-", 1), "=", 0));
@@ -1712,18 +1711,24 @@ public final class Computation extends AbstractNode<Computation> {
 							final Variable vb = new Variable("b");
 							final Variable vc = new Variable("c");
 							
-							if (Variable.match($(va, $(";", $("sequence_concatenate", ";", vb, vc))), right(proposition(-1)))) {
-								computeSequenceConcatenate(";", vb.get(), vc.get());
-								rewrite(name(-2), name(-1));
-							} else {
-								throw new IllegalStateException();
-							}
+							matchOrFail($(va, $(";", $("sequence_concatenate", ";", vb, vc))), right(proposition(-1)));
+							
+							computeSequenceConcatenate(";", vb.get(), vc.get());
+							rewrite(name(-2), name(-1));
 						}
 						
 						conclude();
 					}
 					
-					abort();
+					{
+						final Variable va = new Variable("a");
+						final Variable vb = new Variable("b");
+						final Variable vc = new Variable("c");
+						
+						matchOrFail(sequence(";", va, vb, vc), right(proposition(-1)));
+						
+						abort();
+					}
 					
 					subsubgoal.conclude();
 				}

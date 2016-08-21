@@ -45,11 +45,17 @@ public final class Variable implements Serializable {
 	
 	private static final AtomicLong nextId = new AtomicLong(1L);
 	
-	public static boolean match(final Object pattern, final Object target) {
+	public static final void matchOrFail(final Object pattern, final Object target) {
+		if (!match(pattern, target)) {
+			throw new IllegalArgumentException("Failed to match " + pattern + " with " + target);
+		}
+	}
+	
+	public static final boolean match(final Object pattern, final Object target) {
 		return match(pattern, target, new HashMap<>());
 	}
 	
-	public static boolean match(final Object pattern, final Object target, final Map<Variable, Object> mapping) {
+	public static final boolean match(final Object pattern, final Object target, final Map<Variable, Object> mapping) {
 		final Variable variable = cast(Variable.class, pattern);
 		
 		if (variable != null) {
