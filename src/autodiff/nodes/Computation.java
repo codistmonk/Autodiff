@@ -1561,7 +1561,7 @@ public final class Computation extends AbstractNode<Computation> {
 				final Object valueAfter = instructions(_p, instruction, app("read", str(_a), _i));
 				
 				suppose("meaning_of_repeat_1",
-						$forall(_a, _i, _n, _p, _q,
+						$forall(_p, _n, _a, _i, _q,
 								$rule($($(_n, IN, N)), $(valueAfter, "=", _n))));
 			}
 			
@@ -1765,6 +1765,26 @@ public final class Computation extends AbstractNode<Computation> {
 						
 						rewrite(name(-2), name(-1));
 						
+						{
+							subdeduction();
+							
+							ebindTrim("meaning_of_repeat_1", $1(app("allocate", str("i"), 1)), 0, "i", 0, $1(app("write", str("result"), app("read", str("i"), 0), 1)));
+							
+							final PatternProcessor simplifier = new PatternProcessor()
+									.add(newSequenceAppendSimplificationRule())
+									.add(rule(new Variable("*"), (e, m) -> false));
+							
+							while (simplifier.apply(proposition(-1))) {
+								// NOP
+							}
+							
+							debugPrint(deduction().getProvedPropositionName());
+							
+							conclude();
+						}
+						
+						rewrite(name(-2), name(-1));
+						
 						abort();
 					}
 					
@@ -1826,39 +1846,43 @@ public final class Computation extends AbstractNode<Computation> {
 		
 		@Override
 		public final Boolean visit(final Object expression) {
-			subdeduction();
-			
-			if (this.getRules().applyTo(expression)) {
-				rewrite(name(-2), name(-1));
-				
-				conclude();
-				
-				return true;
-			}
-			
-			pop();
-			
-			return false;
+			return this.end(this.tryRules(expression));
 		}
 		
 		@Override
 		public final Boolean visit(final List<?> expression) {
-			subdeduction();
+			boolean result = this.tryRules(expression);
 			
-			if (this.getRules().applyTo(expression)) {
-				rewrite(name(-2), name(-1));
-				
-				conclude();
-				
-				return true;
+			if (!result) {
+				for (final Object subExpression : expression) {
+					result |= this.apply(subExpression);
+				}
 			}
 			
-			boolean result = false;
+			return this.end(result);
+		}
+		
+		private final boolean tryRules(final Object expression) {
+			final Deduction deduction = subdeduction();
 			
-			for (final Object subExpression : expression) {
-				result |= this.apply(subExpression);
+			try {
+				if (this.getRules().applyTo(expression)) {
+					rewrite(name(-2), name(-1));
+					
+					return true;
+				}
+			} catch (final Exception exception) {
+				ignore(exception);
+			} finally {
+				while (deduction() != deduction) {
+					pop();
+				}
 			}
 			
+			return false;
+		}
+		
+		private final boolean end(final boolean result) {
 			if (result) {
 				conclude();
 			} else {

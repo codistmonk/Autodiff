@@ -127,12 +127,12 @@ public final class Stack {
 		conclude(new BasicNumericVerification(propositionName, Arrays.asList("By basic numeric verification"), proposition));
 	}
 	
-	public static final void subdeduction() {
-		subdeduction(newName());
+	public static final Deduction subdeduction() {
+		return subdeduction(newName());
 	}
 	
-	public static final void subdeduction(final String propositionName) {
-		push(new Deduction(deduction(), propositionName));
+	public static final Deduction subdeduction(final String propositionName) {
+		return push(new Deduction(deduction(), propositionName));
 	}
 	
 	public static final Deduction conclude() {
