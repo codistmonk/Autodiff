@@ -4,6 +4,7 @@ import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.Stack.*;
 
 import autodiff.reasoning.proofs.Deduction;
+import autodiff.reasoning.proofs.Substitution;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -73,7 +74,7 @@ public final class Goal implements Serializable {
 		
 		final Object provedProposition = deduction.getProvedPropositionFor(deduction.getParent());
 		
-		checkState(this.getInitialProposition().equals(provedProposition),
+		checkState(new Substitution.ExpressionEquality().apply(this.getInitialProposition(), provedProposition),
 				"Expected: " + this.getInitialProposition() + " but was: " + provedProposition);
 		
 		deduction().conclude(deduction);

@@ -1666,13 +1666,13 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			final Object _m = $new("m");
 			
-			bind("induction_principle", $(conclusion(goal.getProposition()), "|", $1($(_n, "=", $(1, "+", _m))), "@", $()), _m);
+			bind("full_induction", "induction_principle", $(conclusion(goal.getProposition()), "|", $1($(_n, "=", $(1, "+", _m))), "@", $()), _m);
 			
 			{
-				final Goal subgoal = Goal.deduce(condition(proposition(-1)));
+				final Goal subgoal = Goal.deduce("induction_condition_0", condition(proposition(-1)));
 				
 				{
-					subdeduction();
+					subdeduction("goal_simplification");
 					
 					{
 						subdeduction();
@@ -1696,110 +1696,27 @@ public final class Computation extends AbstractNode<Computation> {
 				}
 				
 				{
-					final Goal subsubgoal = Goal.deduce(right(proposition(-1)));
+					final Goal subsubgoal = Goal.deduce("simplified_goal", right(proposition(-1)));
 					
-					subsubgoal.intros();
-					
-					final String resultReality = name(-2);
+					subsubgoal.introduce();
 					
 					{
 						subdeduction();
 						
-						new ToJavaHelper().compute(left(proposition(-1)));
-						rewrite(name(-1), name(-2));
+						final Object p = forall("p");
 						
-						conclude();
-					}
-					
-					{
-						subdeduction();
+						suppose($(left(condition(scope(subsubgoal.getProposition()))), "=", p));
+						
+						final String resultReality = name(-2);
 						
 						{
 							subdeduction();
 							
-							{
-								final Variable vp0 = new Variable("p0");
-								final Variable va = new Variable("a");
-								final Variable vq = new Variable("q");
-								
-								matchOrFail(sequence(";", vp0, app("repeat", 1, str(va), 0, $("()->{", vq, "}"))), right(proposition(-1)));
-								
-								ebindTrim("meaning_of_repeat_2", $1(vp0.get()), va.get(), 0, 1, vq.get());
-							}
-							
-							verifyElementaryProposition($($(1, "-", 1), "=", 0));
-							rewrite(name(-2), name(-1));
-							
-							{
-								final Variable va = new Variable("a");
-								final Variable vb = new Variable("b");
-								final Variable vc = new Variable("c");
-								final Variable vd = new Variable("d");
-								
-								matchOrFail($($("sequence_append", ";", va, vb), "=",
-										$("sequence_concatenate", ";", va, $("sequence_concatenate", ";", vc, vd))), proposition(-1));
-								
-								computeSequenceAppend(";", va.get(), vb.get());
-								rewrite(name(-2), name(-1));
-								
-								computeSequenceConcatenate(";", vc.get(), vd.get());
-								rewrite(name(-2), name(-1));
-							}
-							
-							{
-								final Variable va = new Variable("a");
-								final Variable vb = new Variable("b");
-								
-								matchOrFail($("sequence_concatenate", ";", va, vb), right(proposition(-1)));
-								
-								computeSequenceConcatenate(";", va.get(), vb.get());
-								rewrite(name(-2), name(-1));
-							}
+							new ToJavaHelper().compute(left(proposition(-1)));
+							rewrite(name(-1), name(-2));
 							
 							conclude();
 						}
-						
-						rewrite(name(-2), name(-1));
-						
-						conclude();
-					}
-					
-					{
-						final Variable va = new Variable("a");
-						final Variable vb = new Variable("b");
-						final Variable vc = new Variable("c");
-						
-						matchOrFail(sequence(";", va, vb, vc), right(proposition(-1)));
-						
-						{
-							subdeduction();
-							
-							bind("meaning_of_read_in_arguments", sequence(";", va.get(), vb.get()), first(vc.get()), list(vc.get()).get(2), "i", 0);
-							
-							simplifySequenceAppendInLast();
-							
-							conclude();
-						}
-						
-						rewrite(name(-2), name(-1));
-						
-						{
-							subdeduction();
-							
-							ebindTrim("meaning_of_repeat_1", $1(app("allocate", str("i"), 1)), 0, "i", 0, $1(app("write", str("result"), app("read", str("i"), 0), 1)));
-							
-							simplifySequenceAppendInLast();
-							
-							debugPrint(deduction().getProvedPropositionName());
-							
-							conclude();
-						}
-						
-						rewrite(name(-2), name(-1));
-						
-						substitute(sequence(",", str("result"), app("read", str("i"), 0), 1), map(app("read", str("i"), 0), 0));
-						
-						rewrite(name(-2), name(-1));
 						
 						{
 							subdeduction();
@@ -1807,86 +1724,207 @@ public final class Computation extends AbstractNode<Computation> {
 							{
 								subdeduction();
 								
-								ebind("meaning_of_write_1", "result", 0, 0, sequence(";", app("allocate", str("i"), 1), app("repeat", 0, str("i"), 0, block(app("write", str("result"), app("read", str("i"), 0), 1)))));
-								eapplyLast();
+								{
+									final Variable vp0 = new Variable("p0");
+									final Variable va = new Variable("a");
+									final Variable vq = new Variable("q");
+									
+									matchOrFail(sequence(";", vp0, app("repeat", 1, str(va), 0, $("()->{", vq, "}"))), right(proposition(-1)));
+									
+									ebindTrim("meaning_of_repeat_2", $1(vp0.get()), va.get(), 0, 1, vq.get());
+								}
+								
+								verifyElementaryProposition($($(1, "-", 1), "=", 0));
+								rewrite(name(-2), name(-1));
+								
+								{
+									final Variable va = new Variable("a");
+									final Variable vb = new Variable("b");
+									final Variable vc = new Variable("c");
+									final Variable vd = new Variable("d");
+									
+									matchOrFail($($("sequence_append", ";", va, vb), "=",
+											$("sequence_concatenate", ";", va, $("sequence_concatenate", ";", vc, vd))), proposition(-1));
+									
+									computeSequenceAppend(";", va.get(), vb.get());
+									rewrite(name(-2), name(-1));
+									
+									computeSequenceConcatenate(";", vc.get(), vd.get());
+									rewrite(name(-2), name(-1));
+								}
+								
+								{
+									final Variable va = new Variable("a");
+									final Variable vb = new Variable("b");
+									
+									matchOrFail($("sequence_concatenate", ";", va, vb), right(proposition(-1)));
+									
+									computeSequenceConcatenate(";", va.get(), vb.get());
+									rewrite(name(-2), name(-1));
+								}
+								
+								conclude();
+							}
+							
+							rewrite(name(-2), name(-1));
+							
+							conclude();
+						}
+						
+						{
+							final Variable va = new Variable("a");
+							final Variable vb = new Variable("b");
+							final Variable vc = new Variable("c");
+							
+							matchOrFail(sequence(";", va, vb, vc), right(proposition(-1)));
+							
+							{
+								subdeduction();
+								
+								bind("meaning_of_read_in_arguments", sequence(";", va.get(), vb.get()), first(vc.get()), list(vc.get()).get(2), "i", 0);
 								
 								simplifySequenceAppendInLast();
 								
 								conclude();
 							}
 							
+							rewrite(name(-2), name(-1));
+							
 							{
 								subdeduction();
 								
-								bind("meaning_of_repeat_0",
-										$1(app("allocate", str("i"), 1)),
-										"i", 0, "result", 0,
-										$1(app("write", str("result"), app("read", str("i"), 0), 1)));
-								
-								ebindTrim("left_elimination_of_disjunction", left(condition(proposition(-1))), right(condition(proposition(-1))), conclusion(proposition(-1)));
+								ebindTrim("meaning_of_repeat_1", $1(app("allocate", str("i"), 1)), 0, "i", 0, $1(app("write", str("result"), app("read", str("i"), 0), 1)));
 								
 								simplifySequenceAppendInLast();
+								
+								debugPrint(deduction().getProvedPropositionName());
+								
+								conclude();
+							}
+							
+							rewrite(name(-2), name(-1));
+							
+							substitute(sequence(",", str("result"), app("read", str("i"), 0), 1), map(app("read", str("i"), 0), 0));
+							
+							rewrite(name(-2), name(-1));
+							
+							{
+								subdeduction();
 								
 								{
 									subdeduction();
 									
-									ebindTrim("meaning_of_allocate_0", $(), "i", 1, "result", 0);
+									ebind("meaning_of_write_1", "result", 0, 1, sequence(";", app("allocate", str("i"), 1), app("repeat", 0, str("i"), 0, block(app("write", str("result"), app("read", str("i"), 0), 1)))));
+									eapplyLast();
+									
 									simplifySequenceAppendInLast();
+									
+									conclude();
+								}
+								
+								{
+									subdeduction();
+									
+									bind("meaning_of_repeat_0",
+											$1(app("allocate", str("i"), 1)),
+											"i", 0, "result", 0,
+											$1(app("write", str("result"), app("read", str("i"), 0), 1)));
+									
+									ebindTrim("left_elimination_of_disjunction", left(condition(proposition(-1))), right(condition(proposition(-1))), conclusion(proposition(-1)));
+									
+									simplifySequenceAppendInLast();
+									
+									{
+										subdeduction();
+										
+										ebindTrim("meaning_of_allocate_0", $(), "i", 1, "result", 0);
+										simplifySequenceAppendInLast();
+										
+										
+										conclude();
+									}
+									
+									rewriteRight(name(-2), name(-1));
 									
 									conclude();
 								}
 								
 								rewriteRight(name(-2), name(-1));
 								
+								{
+									subdeduction();
+									
+									{
+										subdeduction();
+										
+										verifyElementaryProposition($(0, IN, N));
+										verifyElementaryProposition($(0, "<", 1));
+										ebindTrim("introduction_of_conjunction", proposition(-2), proposition(-1));
+										
+										ebindTrim("definition_of_range", 1, 0);
+										rewriteRight(name(-2), name(-1));
+										
+										conclude();
+									}
+									
+									ebindTrim(resultReality, 0);
+									
+									conclude();
+								}
+								
+								eapply(name(-2));
+								
+								final List<Object> l = flattenSequence(";", left(proposition(-1)));
+								
+								computeSequenceAppend(";", sequence(";", l.subList(0, l.size() - 1).toArray()), last(l));
+								
+								rewriteRight(name(-2), name(-1));
+								
 								conclude();
 							}
 							
-							rewriteRight(name(-2), name(-1));
-							
-							ebindTrim(resultReality, 0);
-							
-							abort();
-							
-							conclude();
+							rewriteRight(name(-1), name(-2));
 						}
 						
-						abort();
+						conclude();
 					}
 					
 					subsubgoal.conclude();
 				}
 				
+				rewriteRight(name(-1), name(-2));
+				
+				subgoal.conclude();
+			}
+			
+			{
+				subdeduction("remaining_induction");
+				
+				apply("full_induction", "induction_condition_0");
+				
+				bind("definition_of_forall_in",
+						list(condition(proposition(-1))).get(1),
+						list(condition(proposition(-1))).get(3),
+						list(condition(proposition(-1))).get(4));
+				
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+			}
+			
+			{
+				final Goal subgoal = Goal.deduce("induction_condition_n", condition(proposition(-1)));
+				
+				subgoal.introduce();
+				subgoal.introduce();
+				subgoal.introduce();
+				
+				abort();
 				
 				subgoal.conclude();
 			}
 			
 			abort();
-			
-//			goal.intros();
-//			
-//			{
-//				subdeduction();
-//				
-//				bind("definition_of_positives", _n);
-//				
-//				rewrite(name(-3), name(-1));
-//				
-//				deduceConjunctionLeft(name(-1));
-//				
-//				conclude();
-//			}
-//			
-//			{
-//				subdeduction();
-//				
-//				new ToJavaHelper().compute(left(proposition(-2)));
-//				
-//				rewrite(name(-1), name(-3));
-//				
-//				conclude();
-//			}
-//			
-//			abort();
 			
 			goal.conclude();
 		}

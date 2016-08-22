@@ -91,7 +91,11 @@ public final class Stack {
 	}
 	
 	public static final void bind(final String targetName, final Object... values) {
-		subdeduction();
+		bind(newName(), targetName, values);
+	}
+	
+	public static final void bind(final String propositionName, final String targetName, final Object... values) {
+		subdeduction(propositionName);
 		
 		final int n = values.length;
 		
