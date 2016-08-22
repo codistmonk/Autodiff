@@ -1477,7 +1477,7 @@ public final class Computation extends AbstractNode<Computation> {
 				final Object valueAfter = instructions(_p, instruction, app("read", str(_b), _i));
 				
 				suppose("meaning_of_allocate_0",
-						$forall(_a, _n, _b, _i, _p,
+						$forall(_p, _a, _n, _b, _i,
 								$rule($(LNOT, $(_a, "=", _b)), $(valueBefore, "=", valueAfter))));
 			}
 			
@@ -1776,13 +1776,7 @@ public final class Computation extends AbstractNode<Computation> {
 							
 							bind("meaning_of_read_in_arguments", sequence(";", va.get(), vb.get()), first(vc.get()), list(vc.get()).get(2), "i", 0);
 							
-							final PatternProcessor simplifier = new PatternProcessor()
-							.add(newSequenceAppendSimplificationRule())
-							.add(rule(new Variable("*"), (e, m) -> false));
-							
-							while (simplifier.apply(proposition(-1))) {
-								// NOP
-							}
+							simplifySequenceAppendInLast();
 							
 							conclude();
 						}
@@ -1794,13 +1788,7 @@ public final class Computation extends AbstractNode<Computation> {
 							
 							ebindTrim("meaning_of_repeat_1", $1(app("allocate", str("i"), 1)), 0, "i", 0, $1(app("write", str("result"), app("read", str("i"), 0), 1)));
 							
-							final PatternProcessor simplifier = new PatternProcessor()
-									.add(newSequenceAppendSimplificationRule())
-									.add(rule(new Variable("*"), (e, m) -> false));
-							
-							while (simplifier.apply(proposition(-1))) {
-								// NOP
-							}
+							simplifySequenceAppendInLast();
 							
 							debugPrint(deduction().getProvedPropositionName());
 							
@@ -1816,20 +1804,53 @@ public final class Computation extends AbstractNode<Computation> {
 						{
 							subdeduction();
 							
-							ebind("meaning_of_write_1", "result", 0, 0, sequence(";", app("allocate", str("i"), 1), app("repeat", 0, str("i"), 0, block(app("write", str("result"), app("read", str("i"), 0), 1)))));
-							eapplyLast();
+							{
+								subdeduction();
+								
+								ebind("meaning_of_write_1", "result", 0, 0, sequence(";", app("allocate", str("i"), 1), app("repeat", 0, str("i"), 0, block(app("write", str("result"), app("read", str("i"), 0), 1)))));
+								eapplyLast();
+								
+								simplifySequenceAppendInLast();
+								
+								conclude();
+							}
 							
-							bind("meaning_of_repeat_0",
-									$1(app("allocate", str("i"), 1)),
-									"i", 0, "result", 0,
-									app("write", str("result"), app("read", str("i"), 0), 1));
+							{
+								subdeduction();
+								
+								bind("meaning_of_repeat_0",
+										$1(app("allocate", str("i"), 1)),
+										"i", 0, "result", 0,
+										$1(app("write", str("result"), app("read", str("i"), 0), 1)));
+								
+								ebindTrim("left_elimination_of_disjunction", left(condition(proposition(-1))), right(condition(proposition(-1))), conclusion(proposition(-1)));
+								
+								simplifySequenceAppendInLast();
+								
+								{
+									subdeduction();
+									
+									ebindTrim("meaning_of_allocate_0", $(), "i", 1, "result", 0);
+									simplifySequenceAppendInLast();
+									
+									conclude();
+								}
+								
+								rewriteRight(name(-2), name(-1));
+								
+								conclude();
+							}
 							
-							ebindTrim("left_elimination_of_disjunction", left(condition(proposition(-1))), right(condition(proposition(-1))), conclusion(proposition(-1)));
+							rewriteRight(name(-2), name(-1));
+							
+							ebindTrim(resultReality, 0);
 							
 							abort();
 							
 							conclude();
 						}
+						
+						abort();
 					}
 					
 					subsubgoal.conclude();
@@ -1868,6 +1889,16 @@ public final class Computation extends AbstractNode<Computation> {
 //			abort();
 			
 			goal.conclude();
+		}
+	}
+	
+	public static final void simplifySequenceAppendInLast() {
+		final PatternProcessor simplifier = new PatternProcessor()
+				.add(newSequenceAppendSimplificationRule())
+				.add(rule(new Variable("*"), (e, m) -> false));
+		
+		while (simplifier.apply(proposition(-1))) {
+			// NOP
 		}
 	}
 	
