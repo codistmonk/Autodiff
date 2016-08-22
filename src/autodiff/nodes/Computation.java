@@ -1824,8 +1824,7 @@ public final class Computation extends AbstractNode<Computation> {
 									"i", 0, "result", 0,
 									app("write", str("result"), app("read", str("i"), 0), 1));
 							
-							bind("left_elimination_of_disjunction", left(condition(proposition(-1))), right(condition(proposition(-1))), conclusion(proposition(-1)));
-							eapplyLast();
+							ebindTrim("left_elimination_of_disjunction", left(condition(proposition(-1))), right(condition(proposition(-1))), conclusion(proposition(-1)));
 							
 							abort();
 							
@@ -3143,16 +3142,28 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 		
 		if (result == null) {
-			if (isIdentity(proposition)) {
-				bind("identity", left(proposition));
-			} else if (isPositivity(proposition)) {
-				deducePositivity(left(proposition));
-			} else if(isNaturality(proposition) || isReality(proposition)) {
-				verifyElementaryProposition(proposition);
-			} else if(isCartesianProductity(proposition)) {
-				deduceCartesianProduct(left(right(proposition)), flattenSequence(",", left(proposition)).toArray());
-			} else {
-				throw new IllegalStateException("Failed to justify: " + proposition);
+			{
+				final Deduction deduction = deduction();
+				
+				try {
+					verifyElementaryProposition(proposition);
+				} catch (final Exception exception) {
+					ignore(exception);
+					
+					while (deduction() != deduction) {
+						pop();
+					}
+					
+					if (isIdentity(proposition)) {
+						bind("identity", left(proposition));
+					} else if (isPositivity(proposition)) {
+						deducePositivity(left(proposition));
+					} else if(isCartesianProductity(proposition)) {
+						deduceCartesianProduct(left(right(proposition)), flattenSequence(",", left(proposition)).toArray());
+					} else {
+						throw new IllegalStateException("Failed to justify: " + proposition);
+					}
+				}
 			}
 			
 			result = new PropositionDescription()

@@ -9,13 +9,14 @@ import static multij.tools.Tools.ignore;
 import autodiff.reasoning.expressions.ExpressionRewriter;
 import autodiff.rules.Rules;
 import autodiff.rules.Variable;
-import multij.tools.Tools;
 
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2016-08-22)
@@ -434,7 +435,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 					final BigDecimal nx = cast(BigDecimal.class, numberOrObject(x));
 					final BigDecimal ny = cast(BigDecimal.class, numberOrObject(y));
 					
-					if (sx != null && ny != null || nx != null && sy != null) {
+					if (sx != null && (sy != null || ny != null) || nx != null && sy != null) {
 						return false;
 					}
 					
