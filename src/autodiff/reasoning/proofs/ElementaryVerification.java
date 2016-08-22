@@ -9,8 +9,10 @@ import static multij.tools.Tools.ignore;
 import autodiff.reasoning.expressions.ExpressionRewriter;
 import autodiff.rules.Rules;
 import autodiff.rules.Variable;
+import multij.tools.Tools;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -367,10 +369,16 @@ public final class ElementaryVerification extends Proof.Abstract {
 			{
 				final Variable vx = new Variable("x");
 				final Variable vy = new Variable("y");
+				final Collection<Object> knownSets = Tools.set(N, Z, Q, R, STRING);
 				
 				this.rules.add(rule($(vx, IN, vy), (e, m) -> {
 					final Object x = vx.get();
 					final Object y = vy.get();
+					
+					if (!knownSets.contains(y)) {
+						return null;
+					}
+						
 					final String sx = cast(String.class, x);
 					final BigDecimal nx = cast(BigDecimal.class, numberOrObject(x));
 					
