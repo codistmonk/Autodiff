@@ -186,6 +186,8 @@ public final class Computation extends AbstractNode<Computation> {
 			supposeDefinitionOfForallIn2();
 			supposeDefinitionOfForallIn3();
 			
+			supposeLeftEliminationOfDisjunction();
+			supposeRightEliminationOfDisjunction();
 			supposeIntroductionOfConjunction();
 			supposeLeftEliminationOfConjunction();
 			supposeRightEliminationOfConjunction();
@@ -953,6 +955,26 @@ public final class Computation extends AbstractNode<Computation> {
 		
 		suppose("definition_of_positives", $forall(_n,
 				$($(_n, IN, POS), "=", $($(_n, IN, N), LAND, $(0, "<", _n)))));
+	}
+	
+	public static final void supposeLeftEliminationOfDisjunction() {
+		final Object _X = $new("X");
+		final Object _Y = $new("Y");
+		final Object _Z = $new("Z");
+		
+		suppose("left_elimination_of_disjunction",
+				$forall(_X, _Y, _Z,
+						$rule($rule($(_X, LOR, _Y), _Z), _X, _Z)));
+	}
+	
+	public static final void supposeRightEliminationOfDisjunction() {
+		final Object _X = $new("X");
+		final Object _Y = $new("Y");
+		final Object _Z = $new("Z");
+		
+		suppose("right_elimination_of_disjunction",
+				$forall(_X, _Y, _Z,
+						$rule($rule($(_X, LOR, _Y), _Z), _Y, _Z)));
 	}
 	
 	public static final void supposeIntroductionOfConjunction() {
@@ -1803,6 +1825,13 @@ public final class Computation extends AbstractNode<Computation> {
 									$1(app("allocate", str("i"), 1)),
 									"i", 0, "result", 0,
 									app("write", str("result"), app("read", str("i"), 0), 1));
+							
+							debugPrint(condition(proposition(-1)));
+							debugPrint(left(condition(proposition(-1))));
+							debugPrint(conclusion(proposition(-1)));
+							bind("left_elimination_of_disjunction", left(condition(proposition(-1))), right(condition(proposition(-1))), conclusion(proposition(-1)));
+							eapplyLast();
+							
 							abort();
 							
 							conclude();
