@@ -3,12 +3,12 @@ package autodiff.reasoning.proofs;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static multij.tools.Tools.ignore;
 
+import autodiff.reasoning.expressions.ExpressionRewriter;
+
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import autodiff.reasoning.expressions.ExpressionRewriter;
 
 /**
  * @author codistmonk (creation 2016-01-30)
@@ -93,38 +93,38 @@ public final class BasicNumericVerification extends Proof.Abstract {
 		NEGATION {
 			
 			@Override
-			public BigDecimal compute(final BigDecimal operand) {
+			public final BigDecimal compute(final BigDecimal operand) {
 				return operand.negate();
 			}
 			
 		}, ABSOLUTE_VALUE {
 			
 			@Override
-			public BigDecimal compute(final BigDecimal operand) {
+			public final BigDecimal compute(final BigDecimal operand) {
 				return operand.abs();
 			}
 			
 		}, FLOOR {
 			
 			@Override
-			public BigDecimal compute(final BigDecimal operand) {
+			public final BigDecimal compute(final BigDecimal operand) {
 				return operand.setScale(0, BigDecimal.ROUND_FLOOR);
 			}
 			
 		}, CEILING {
 			
 			@Override
-			public BigDecimal compute(final BigDecimal operand) {
+			public final BigDecimal compute(final BigDecimal operand) {
 				return operand.setScale(0, BigDecimal.ROUND_CEILING);
 			}
 			
 		}, BITWISE_NEGATION {
-				
-				@Override
-				public BigDecimal compute(final BigDecimal operand) {
-					return new BigDecimal(operand.toBigIntegerExact().not());
-				}
-				
+			
+			@Override
+			public final BigDecimal compute(final BigDecimal operand) {
+				return new BigDecimal(operand.toBigIntegerExact().not());
+			}
+			
 		};
 		
 		public abstract Object compute(BigDecimal operand);

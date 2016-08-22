@@ -1826,9 +1826,6 @@ public final class Computation extends AbstractNode<Computation> {
 									"i", 0, "result", 0,
 									app("write", str("result"), app("read", str("i"), 0), 1));
 							
-							debugPrint(condition(proposition(-1)));
-							debugPrint(left(condition(proposition(-1))));
-							debugPrint(conclusion(proposition(-1)));
 							bind("left_elimination_of_disjunction", left(condition(proposition(-1))), right(condition(proposition(-1))), conclusion(proposition(-1)));
 							eapplyLast();
 							
