@@ -1545,7 +1545,7 @@ public final class Computation extends AbstractNode<Computation> {
 				final Object valueAfter = instructions(_p, instruction, app("read", str(_b), _j));
 				
 				suppose("meaning_of_repeat_0",
-						$forall(_a, _i, _p, _q,
+						$forall(_p, _a, _i, _b, _j, _q,
 								$rule($($(LNOT, $(_a, "=", _b)), LOR, $(LNOT, $(_i, "=", _j))),
 										$(valueBefore, "=", valueAfter))));
 			}
@@ -1633,10 +1633,12 @@ public final class Computation extends AbstractNode<Computation> {
 			final Object _p = $new("p");
 			final Object _r = $(str("result"));
 			final Object _j = $(0); // TODO var in 0 .. n - 1
+			final Object _k = $new("k"); // TODO var in 0 .. n - 1
 			
 			final Goal goal = Goal.deduce("proof_of_to_java.test1",
 					$forall(_n, $rule(
 							$(_n, IN, POS),
+							$(FORALL, _k, IN, $(N, "_", $("<", _n)), $($1(app("read", str("result"), _k)), IN, R)),
 							$forall(_p, $rule($($("to_java", $(p(_X), "_", $(_i, "<", _n))), "=", _p),
 									$(instructions(_p, app("read", _r, _j)), "=", $(_X, "|", $1($(_i, "=", _j)), "@", $())))))));
 			
@@ -1677,6 +1679,8 @@ public final class Computation extends AbstractNode<Computation> {
 					final Goal subsubgoal = Goal.deduce(right(proposition(-1)));
 					
 					subsubgoal.intros();
+					
+					final String resultReality = name(-2);
 					
 					{
 						subdeduction();
@@ -1795,6 +1799,10 @@ public final class Computation extends AbstractNode<Computation> {
 							ebind("meaning_of_write_1", "result", 0, 0, sequence(";", app("allocate", str("i"), 1), app("repeat", 0, str("i"), 0, block(app("write", str("result"), app("read", str("i"), 0), 1)))));
 							eapplyLast();
 							
+							bind("meaning_of_repeat_0",
+									$1(app("allocate", str("i"), 1)),
+									"i", 0, "result", 0,
+									app("write", str("result"), app("read", str("i"), 0), 1));
 							abort();
 							
 							conclude();
