@@ -1,8 +1,8 @@
 package autodiff.computing;
 
-import static autodiff.nodes.Computation.IN;
 import static autodiff.reasoning.expressions.Expressions.FORALL;
-import static autodiff.reasoning.proofs.BasicNumericVerification.R;
+import static autodiff.reasoning.expressions.Expressions.IN;
+import static autodiff.reasoning.proofs.ElementaryVerification.R;
 import static java.lang.Math.pow;
 import static java.util.Collections.synchronizedMap;
 import static java.util.Collections.unmodifiableSet;

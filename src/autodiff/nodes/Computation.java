@@ -2,7 +2,7 @@ package autodiff.nodes;
 
 import static autodiff.reasoning.deductions.Standard.*;
 import static autodiff.reasoning.expressions.Expressions.*;
-import static autodiff.reasoning.proofs.BasicNumericVerification.*;
+import static autodiff.reasoning.proofs.ElementaryVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
 import static autodiff.reasoning.tactics.PatternPredicate.rule;
 import static autodiff.rules.Variable.matchOrFail;
@@ -10,7 +10,7 @@ import static multij.tools.Tools.*;
 
 import autodiff.reasoning.deductions.Standard;
 import autodiff.reasoning.expressions.ExpressionVisitor;
-import autodiff.reasoning.proofs.BasicNumericVerification;
+import autodiff.reasoning.proofs.ElementaryVerification;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.proofs.Substitution;
 import autodiff.reasoning.tactics.Goal;
@@ -143,8 +143,6 @@ public final class Computation extends AbstractNode<Computation> {
 	private static final long serialVersionUID = 2834011599617369367L;
 	
 	public static final Object U = $("℧");
-	
-	public static final Object IN = $("∈");
 	
 	public static final Object SUBSET = $("⊂");
 	
@@ -364,7 +362,7 @@ public final class Computation extends AbstractNode<Computation> {
 					subdeduction();
 					
 					ebindTrim("definition_of_vector_access_i", elementType, sequenceLength(",", m.get(_x)), m.get(_i), m.get(_x));
-					simplifyBasicNumericExpression(name(-1), right(right(proposition(-1))));
+					simplifyElementaryExpression(name(-1), right(right(proposition(-1))));
 					
 					computeSequenceTail(",", m.get(_x));
 					rewrite(name(-2), name(-1));
@@ -419,7 +417,7 @@ public final class Computation extends AbstractNode<Computation> {
 							ebindTrim("definition_of_vector_reduction_by_product_2",
 									m.get(_s), m.get(_x0), m.get(_x1));
 							
-							simplifyBasicNumericExpression(name(-1), right(proposition(-1)));
+							simplifyElementaryExpression(name(-1), right(proposition(-1)));
 							
 							conclude();
 						}
@@ -446,7 +444,7 @@ public final class Computation extends AbstractNode<Computation> {
 							
 							rewrite(name(-2), name(-1));
 							
-							simplifyBasicNumericExpression(name(-1), right(proposition(-1)));
+							simplifyElementaryExpression(name(-1), right(proposition(-1)));
 							
 							conclude();
 						}
@@ -720,8 +718,8 @@ public final class Computation extends AbstractNode<Computation> {
 		{
 			subdeduction();
 			
-			verifyBasicNumericProposition($(target, IN, N));
-			verifyBasicNumericProposition($(0, "<", target));
+			verifyElementaryProposition($(target, IN, N));
+			verifyElementaryProposition($(0, "<", target));
 			
 			bind("introduction_of_conjunction", proposition(-2), proposition(-1));
 			eapplyLast();
@@ -1198,7 +1196,7 @@ public final class Computation extends AbstractNode<Computation> {
 			debugPrint(formula);
 			debugPrint(condition);
 			
-			verifyBasicNumericProposition(formula);
+			verifyElementaryProposition(formula);
 			
 			abort();
 //			evaluateStructuralFormula(formula);
@@ -1302,12 +1300,12 @@ public final class Computation extends AbstractNode<Computation> {
 		return result;
 	}
 	
-	public static final void simplifyBasicNumericExpression(final String targetName, final Object expression) {
+	public static final void simplifyElementaryExpression(final String targetName, final Object expression) {
 		subdeduction();
 		
-		final Object simplified = BasicNumericVerification.Verifier.INSTANCE.apply(expression);
+		final Object simplified = ElementaryVerification.Evaluator.INSTANCE.apply(expression);
 		
-		verifyBasicNumericProposition($(expression, "=", simplified));
+		verifyElementaryProposition($(expression, "=", simplified));
 		rewrite(targetName, name(-1));
 		
 		conclude();
@@ -1681,7 +1679,7 @@ public final class Computation extends AbstractNode<Computation> {
 						
 						substitute(target(subgoal.getProposition()), map(_m, 0));
 						
-						verifyBasicNumericProposition($($(1, "+", 0), "=", 1));
+						verifyElementaryProposition($($(1, "+", 0), "=", 1));
 						
 						rewrite(name(-2), name(-1));
 						
@@ -1729,7 +1727,7 @@ public final class Computation extends AbstractNode<Computation> {
 								ebindTrim("meaning_of_repeat_2", $1(vp0.get()), va.get(), 0, 1, vq.get());
 							}
 							
-							verifyBasicNumericProposition($($(1, "-", 1), "=", 0));
+							verifyElementaryProposition($($(1, "-", 1), "=", 0));
 							rewrite(name(-2), name(-1));
 							
 							{
@@ -2058,7 +2056,7 @@ public final class Computation extends AbstractNode<Computation> {
 				subdeduction();
 				
 				bind("try_cases_if_stop", 42, $("", $(24, "otherwise")), $(2, "=", 2));
-				verifyBasicNumericProposition($(2, "=", 2));
+				verifyElementaryProposition($(2, "=", 2));
 				apply(name(-2), name(-1));
 				
 				conclude();
@@ -2086,7 +2084,7 @@ public final class Computation extends AbstractNode<Computation> {
 					subdeduction();
 					
 					bind("try_cases_if_not", 42, $("", $(24, "if", $(1, "=", 2)), $("", $(0, "otherwise"))), $(2, "=", 3));
-					verifyBasicNumericProposition($(2, "=", 3));
+					verifyElementaryProposition($(2, "=", 3));
 					apply(name(-2), name(-1));
 					
 					conclude();
@@ -2104,7 +2102,7 @@ public final class Computation extends AbstractNode<Computation> {
 					subdeduction();
 					
 					bind("try_cases_if_not", 24, $("", $(0, "otherwise")), $(1, "=", 2));
-					verifyBasicNumericProposition($(1, "=", 2));
+					verifyElementaryProposition($(1, "=", 2));
 					apply(name(-2), name(-1));
 					
 					conclude();
@@ -2946,7 +2944,7 @@ public final class Computation extends AbstractNode<Computation> {
 			{
 				subdeduction();
 				
-				verifyBasicNumericProposition($(1, IN, N));
+				verifyElementaryProposition($(1, IN, N));
 				
 				ebindTrim("type_of_single", N, 1);
 				
@@ -3150,7 +3148,7 @@ public final class Computation extends AbstractNode<Computation> {
 			} else if (isPositivity(proposition)) {
 				deducePositivity(left(proposition));
 			} else if(isNaturality(proposition) || isReality(proposition)) {
-				verifyBasicNumericProposition(proposition);
+				verifyElementaryProposition(proposition);
 			} else if(isCartesianProductity(proposition)) {
 				deduceCartesianProduct(left(right(proposition)), flattenSequence(",", left(proposition)).toArray());
 			} else {
@@ -3537,7 +3535,7 @@ public final class Computation extends AbstractNode<Computation> {
 					subdeduction();
 					
 					ebindTrim("definition_of_repeat_n", this.s, this.x, this.n);
-					verifyBasicNumericProposition($($(this.n, "-", 1), "=", this.n - 1));
+					verifyElementaryProposition($($(this.n, "-", 1), "=", this.n - 1));
 					rewrite(name(-2), name(-1));
 					
 					conclude();

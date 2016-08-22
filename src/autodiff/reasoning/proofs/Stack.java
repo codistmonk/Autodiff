@@ -119,20 +119,12 @@ public final class Stack {
 		conclude(new Binding(propositionName, targetName, value));
 	}
 	
-	public static final void verifyBasicNumericProposition(final Object proposition) {
-		verifyBasicNumericProposition(newName(), proposition);
+	public static final void verifyElementaryProposition(final Object proposition) {
+		verifyElementaryProposition(newName(), proposition);
 	}
 	
-	public static final void verifyBasicNumericProposition(final String propositionName, final Object proposition) {
-		conclude(new BasicNumericVerification(propositionName, Arrays.asList("By basic numeric verification"), proposition));
-	}
-	
-	public static final void verifyBasicStringProposition(final Object proposition) {
-		verifyBasicStringProposition(newName(), proposition);
-	}
-	
-	public static final void verifyBasicStringProposition(final String propositionName, final Object proposition) {
-		conclude(new BasicStringVerification(propositionName, Arrays.asList("By basic string verification"), proposition));
+	public static final void verifyElementaryProposition(final String propositionName, final Object proposition) {
+		conclude(new ElementaryVerification(propositionName, Arrays.asList("By elementary verification"), proposition));
 	}
 	
 	public static final Deduction subdeduction() {

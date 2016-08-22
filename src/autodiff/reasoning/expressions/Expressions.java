@@ -44,6 +44,12 @@ public final class Expressions {
 	
 	public static final Object LNOT = $("¬");
 	
+	public static final Object IN = $("∈");
+	
+	public static final Object LE = $("≤");
+	
+	public static final Object GE = $("≥");
+	
 	public static final Object $new(final String name) {
 		return $(new Id(name));
 	}

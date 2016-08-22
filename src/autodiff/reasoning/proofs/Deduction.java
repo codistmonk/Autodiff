@@ -189,7 +189,7 @@ public final class Deduction extends Proof.Abstract {
 	@SuppressWarnings("unchecked")
 	public static final Collection<Class<? extends Proof>> PRIMITIVE_PROOFS = unmodifiableSet(Tools.set(
 			ModusPonens.class, Substitution.class, Binding.class,
-			BasicNumericVerification.class, BasicStringVerification.class,
+			ElementaryVerification.class,
 			Deduction.class));
 	
 }

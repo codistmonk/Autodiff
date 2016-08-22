@@ -1,10 +1,9 @@
 package autodiff.computing;
 
 import static autodiff.computing.Functions.*;
-import static autodiff.nodes.Computation.IN;
 import static autodiff.nodes.Computation.flattenSequence;
 import static autodiff.reasoning.expressions.Expressions.*;
-import static autodiff.reasoning.proofs.BasicNumericVerification.R;
+import static autodiff.reasoning.proofs.ElementaryVerification.R;
 import static autodiff.reasoning.proofs.Stack.proposition;
 import static autodiff.rules.PatternPredicate.rule;
 import static java.lang.Math.*;
