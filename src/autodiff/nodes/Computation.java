@@ -1785,7 +1785,20 @@ public final class Computation extends AbstractNode<Computation> {
 						
 						rewrite(name(-2), name(-1));
 						
-						abort();
+						substitute(sequence(",", str("result"), app("read", str("i"), 0), 1), map(app("read", str("i"), 0), 0));
+						
+						rewrite(name(-2), name(-1));
+						
+						{
+							subdeduction();
+							
+							ebind("meaning_of_write_1", "result", 0, 0, sequence(";", app("allocate", str("i"), 1), app("repeat", 0, str("i"), 0, block(app("write", str("result"), app("read", str("i"), 0), 1)))));
+							eapplyLast();
+							
+							abort();
+							
+							conclude();
+						}
 					}
 					
 					subsubgoal.conclude();
