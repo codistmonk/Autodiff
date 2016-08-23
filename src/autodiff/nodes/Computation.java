@@ -1669,11 +1669,12 @@ public final class Computation extends AbstractNode<Computation> {
 			bind("full_induction", "induction_principle", $(conclusion(goal.getProposition()), "|", $1($(_n, "=", $(1, "+", _m))), "@", $()), _m);
 			
 			{
-				subdeduction("induction_simplifier");
+				subdeduction("induction_simplification");
 				
 				bind("identity", proposition(-1));
 				
 				final PatternProcessor simplifier = new PatternProcessor(PatternProcessor.Mode.DEFINE)
+						.add(newElementarySimplificationRule())
 						.add(newSubstitutionSimplificationRule())
 						.add(rule(new Variable("*"), (e, m) -> false));
 				
@@ -2117,6 +2118,36 @@ public final class Computation extends AbstractNode<Computation> {
 			substitute(vx.get(), toMap(ve.get()), toInts(vi.get()));
 			
 			return true;
+		});
+	}
+	
+	public static final SimpleRule<Object, Boolean> newElementarySimplificationRule() {
+		return new SimpleRule<>((e, m) -> {
+			try {
+				final Object f = ElementaryVerification.Evaluator.INSTANCE.apply(e);
+				
+				return !f.equals(e) && !Substitution.deepContains(f, null);
+			} catch (final AbortException exception) {
+				throw exception;
+			} catch (final Exception exception) {
+				ignore(exception);
+			}
+			
+			return false;
+		}, (e, m) -> {
+			try {
+				final Object f = ElementaryVerification.Evaluator.INSTANCE.apply(e);
+				
+				verifyElementaryProposition($(e, "=", f));
+				
+				return true;
+			} catch (final AbortException exception) {
+				throw exception;
+			} catch (final Exception exception) {
+				ignore(exception);
+			}
+			
+			return false;
 		});
 	}
 	
