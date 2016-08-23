@@ -286,6 +286,15 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			testVectorReductionByProduct();
 			
+			{
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				
+				suppose("stability_of_addition_in_naturals",
+						$(FORALL, _x, ",", _y, IN, N,
+								$($(_x, "+", _y), IN, N)));
+			}
+			
 			supposeDefinitionsForJavaCode();
 			
 			supposeDefinitionsForCLCode();
@@ -1424,7 +1433,7 @@ public final class Computation extends AbstractNode<Computation> {
 									$rule($(FORALL, _j, IN, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", _j)), "@", $()), IN, R)),
 											$($("to_java", $(p(_X), "_", $(_i, "<", _n))), "=", sequence(";",
 													app("allocate", str("i"), 1),
-													app("repeat", _n, str("i"), 0,
+													app("repeat", $("to_java", _n), str("i"), 0,
 															block(app("write", str("result"), app("read", str("i"), 0) , $("to_java", _X))))))))));
 		}
 		
@@ -1783,8 +1792,6 @@ public final class Computation extends AbstractNode<Computation> {
 								conclude();
 							}
 							
-							// induction_condition_0.2.4.1
-							
 							{
 								subdeduction();
 								
@@ -1911,8 +1918,53 @@ public final class Computation extends AbstractNode<Computation> {
 				goal().introduce();
 				goal().introduce();
 				goal().introduce();
+				goal().introduce();
 				
-				abort();
+				{
+					subdeduction();
+					
+					final Object p = forall("p");
+					
+					suppose($(left(condition(scope(goal().getProposition()))), "=", p));
+					
+					final String resultReality = name(-2);
+					
+					final String definitionOfP = name(-1);
+					
+					{
+						subdeduction();
+						
+						{
+							subdeduction();
+							
+							ebindTrim("stability_of_addition_in_naturals", _m, 1);
+							ebindTrim("stability_of_addition_in_naturals", 1, $(_m, "+", 1));
+							
+							conclude();
+						}
+						
+						{
+							subdeduction();
+							
+							ebindTrim("definition_of_subset", N, R);
+							
+							rewrite("naturals_subset_reals", name(-1));
+							
+							ebindTrim(name(-1), $(1, "+", $(_m, "+", 1)));
+							
+							conclude();
+						}
+						
+						new ToJavaHelper().compute(left(proposition(definitionOfP)));
+						rewrite(name(-1), definitionOfP);
+						
+						conclude();
+					}
+					
+					abort();
+					
+					conclude();
+				}
 				
 				concludeGoal();
 			}
@@ -3947,9 +3999,17 @@ public final class Computation extends AbstractNode<Computation> {
 						
 						eapply(name(-2));
 						
-						this.rules.applyTo($("to_java", _X));
+						{
+							this.rules.applyTo($("to_java", _n));
+							
+							rewrite(name(-2), name(-1));
+						}
 						
-						rewrite(name(-2), name(-1));
+						{
+							this.rules.applyTo($("to_java", _X));
+							
+							rewrite(name(-2), name(-1));
+						}
 						
 						conclude();
 					}
@@ -3970,6 +4030,7 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 		
 		public final void compute(final Object expression) {
+			debugPrint(expression);
 			this.rules.applyTo(expression);
 		}
 		
