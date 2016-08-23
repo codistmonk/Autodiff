@@ -1653,7 +1653,7 @@ public final class Computation extends AbstractNode<Computation> {
 			final Object _p = $new("p");
 			final Object _r = $(str("result"));
 			final Object _j = $(0); // TODO var in 0 .. n - 1
-			final Object _k = $new("k"); // TODO var in 0 .. n - 1
+			final Object _k = $new("k");
 			
 			final Goal goal = Goal.deduce("proof_of_to_java.test1",
 					$forall(_n, $rule(
@@ -1667,6 +1667,26 @@ public final class Computation extends AbstractNode<Computation> {
 			final Object _m = $new("m");
 			
 			bind("full_induction", "induction_principle", $(conclusion(goal.getProposition()), "|", $1($(_n, "=", $(1, "+", _m))), "@", $()), _m);
+			
+			{
+				subdeduction("induction_simplifier");
+				
+				bind("identity", proposition(-1));
+				
+				final PatternProcessor simplifier = new PatternProcessor(PatternProcessor.Mode.DEFINE)
+						.add(newSubstitutionSimplificationRule())
+						.add(rule(new Variable("*"), (e, m) -> false));
+				
+				while (simplifier.apply(right(proposition(-1)))) {
+					// NOP
+				}
+				
+				conclude();
+			}
+			
+			rewrite("simplified_induction", name(-2), name(-1));
+			
+			abort();
 			
 			{
 				final Goal subgoal = Goal.deduce("induction_condition_0", condition(proposition(-1)));
@@ -1945,10 +1965,25 @@ public final class Computation extends AbstractNode<Computation> {
 	 */
 	public static final class PatternProcessor implements ExpressionVisitor<Boolean> {
 		
-		private final Rules<Object, Boolean> rules = new Rules<>();
+		private final Rules<Object, Boolean> rules;
+		
+		private final Mode mode;
+		
+		public PatternProcessor() {
+			this(Mode.REWRITE);
+		}
+		
+		public PatternProcessor(final Mode mode) {
+			this.rules = new Rules<>();
+			this.mode = mode;
+		}
 		
 		public final Rules<Object, Boolean> getRules() {
 			return this.rules;
+		}
+		
+		public final Mode getMode() {
+			return this.mode;
 		}
 		
 		public final PatternProcessor add(final Rule<Object, Boolean> rule) {
@@ -1959,53 +1994,105 @@ public final class Computation extends AbstractNode<Computation> {
 		
 		@Override
 		public final Boolean visit(final Object expression) {
-			return this.end(this.tryRules(expression));
+			return this.tryRules(expression);
 		}
 		
 		@Override
 		public final Boolean visit(final List<?> expression) {
-			boolean result = this.tryRules(expression);
-			
-			if (!result) {
-				for (final Object subExpression : expression) {
-					result |= this.apply(subExpression);
-				}
+			if (this.tryRules(expression)) {
+				return true;
 			}
 			
-			return this.end(result);
-		}
-		
-		private final boolean tryRules(final Object expression) {
-			final Deduction deduction = subdeduction();
+			boolean result = false;
 			
-			try {
-				if (this.getRules().applyTo(expression)) {
-					rewrite(name(-2), name(-1));
-					
-					return true;
-				}
-			} catch (final Exception exception) {
-				ignore(exception);
-			} finally {
-				while (deduction() != deduction) {
-					pop();
-				}
-			}
-			
-			return false;
-		}
-		
-		private final boolean end(final boolean result) {
-			if (result) {
-				conclude();
-			} else {
-				pop();
+			for (final Object subExpression : expression) {
+				result |= this.apply(subExpression);
 			}
 			
 			return result;
 		}
 		
+		private final boolean tryRules(final Object expression) {
+			subdeduction();
+			
+			try {
+				if (this.getRules().applyTo(expression)) {
+					if (Mode.DEFINE.equals(this.getMode())) {
+						final int targets = countIn(proposition(-2), left(proposition(-1)));
+						final int leftTargets = countIn(left(proposition(-2)), left(proposition(-1)));
+						
+						if (leftTargets < targets) {
+							final int[] rightTargets = new int[targets - leftTargets];
+							
+							for (int i = leftTargets; i < targets; ++i) {
+								rightTargets[i - leftTargets] = i;
+							}
+							
+							rewrite(name(-2), name(-1), rightTargets);
+						} else {
+							pop();
+							
+							return false;
+						}
+					} else {
+						rewrite(name(-2), name(-1));
+					}
+					
+					conclude();
+					
+					return true;
+				}
+			} catch (final AbortException exception) {
+				throw exception;
+			} catch (final Exception exception) {
+				ignore(exception);
+			}
+			
+			pop();
+			
+			return false;
+		}
+		
 		private static final long serialVersionUID = -5429351197907942483L;
+		
+		public static final void popTo(final Deduction deduction) {
+			while (deduction() != deduction) {
+				pop();
+			}
+		}
+		
+		public static final int countIn(final Object target, final Object pattern) {
+			return new ExpressionVisitor<Integer>() {
+				
+				@Override
+				public final Integer visit(final Object expression) {
+					if (new Substitution.ExpressionEquality().apply(pattern, expression)) {
+						return 1;
+					}
+					
+					return 0;
+				}
+				
+				@Override
+				public final Integer visit(final List<?> expression) {
+					final Integer result = this.visit((Object) expression);
+					
+					return 0 < result ? result : expression.stream().mapToInt(this::apply).sum();
+				}
+				
+				private static final long serialVersionUID = 2608876360859599240L;
+				
+			}.apply(target);
+		}
+		
+		/**
+		 * @author codistmonk (creation 2016-08-23)
+		 */
+		public static enum Mode {
+			
+			REWRITE, DEFINE;
+			
+		}
 		
 	}
 	
@@ -2019,6 +2106,32 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			return true;
 		});
+	}
+	
+	public static final SimpleRule<Object, Boolean> newSubstitutionSimplificationRule() {
+		final Variable vx = new Variable("x");
+		final Variable ve = new Variable("e");
+		final Variable vi = new Variable("i");
+		
+		return rule($(vx, "|", ve, "@", vi), (e, m) -> {
+			substitute(vx.get(), toMap(ve.get()), toInts(vi.get()));
+			
+			return true;
+		});
+	}
+	
+	public static final int[] toInts(final Object indices) {
+		return list(indices).stream().mapToInt(i -> ((Number) i).intValue()).toArray(); 
+	}
+	
+	public static final Map<Object, Object> toMap(final Object equalities) {
+		final Map<Object, Object> result = new LinkedHashMap<>();
+		
+		for (final Object equality : list(equalities)) {
+			result.put(left(equality), right(equality));
+		}
+		
+		return result;
 	}
 	
 	public static final void supposeDefinitionsForCLCode() {

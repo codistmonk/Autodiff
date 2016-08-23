@@ -230,7 +230,20 @@ public final class Stack {
 	}
 	
 	public static final void abort() {
-		throw new RuntimeException("Aborted");
+		throw new AbortException();
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-23)
+	 */
+	public static final class AbortException extends RuntimeException {
+		
+		public AbortException() {
+			super("Aborted");
+		}
+		
+		private static final long serialVersionUID = -3683176562496539944L;
+		
 	}
 	
 }
