@@ -4,6 +4,9 @@ import static autodiff.reasoning.deductions.Standard.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
+import static autodiff.reasoning.tactics.Goal.concludeGoal;
+import static autodiff.reasoning.tactics.Goal.goal;
+import static autodiff.reasoning.tactics.Goal.newGoal;
 import static autodiff.reasoning.tactics.PatternPredicate.rule;
 import static autodiff.rules.Variable.matchOrFail;
 import static multij.tools.Tools.*;
@@ -1285,17 +1288,21 @@ public final class Computation extends AbstractNode<Computation> {
 	}
 	
 	public static final Object sequence(final Object separator, final Object... elements) {
-		if (elements.length <= 1) {
-			return Arrays.asList(elements);
+		if (elements.length == 0) {
+			return $();
 		}
 		
-		List<Object> result = Arrays.asList(separator, elements[elements.length - 1]);
+		if (elements.length == 1) {
+			return $1(elements[0]);
+		}
+		
+		List<Object> result = list($(separator, elements[elements.length - 1]));
 		
 		for (int i = elements.length - 2; 0 < i; --i) {
-			result = Arrays.asList(separator, elements[i], result);
+			result = list($(separator, elements[i], result));
 		}
 		
-		result = Arrays.asList(elements[0], result);
+		result = list($(elements[0], result));
 		
 		return result;
 	}
@@ -1655,149 +1662,116 @@ public final class Computation extends AbstractNode<Computation> {
 			final Object _j = $(0); // TODO var in 0 .. n - 1
 			final Object _k = $new("k");
 			
-			final Goal goal = Goal.deduce("proof_of_to_java.test1",
+			newGoal("proof_of_to_java.test1",
 					$forall(_n, $rule(
 							$(_n, IN, POS),
 							$(FORALL, _k, IN, $(N, "_", $("<", _n)), $($1(app("read", str("result"), _k)), IN, R)),
 							$forall(_p, $rule($($("to_java", $(p(_X), "_", $(_i, "<", _n))), "=", _p),
 									$(instructions(_p, app("read", _r, _j)), "=", $(_X, "|", $1($(_i, "=", _j)), "@", $())))))));
 			
-			goal.introduce();
+			goal().introduce();
 			
 			final Object _m = $new("m");
 			
-			bind("full_induction", "induction_principle", $(conclusion(goal.getProposition()), "|", $1($(_n, "=", $(1, "+", _m))), "@", $()), _m);
+			bind("full_induction", "induction_principle", $(conclusion(goal().getProposition()), "|", $1($(_n, "=", $(1, "+", _m))), "@", $()), _m);
 			
 			{
 				subdeduction("induction_simplification");
 				
 				bind("identity", proposition(-1));
 				
-				final PatternProcessor simplifier = new PatternProcessor(PatternProcessor.Mode.DEFINE)
-						.add(newElementarySimplificationRule())
-						.add(newSubstitutionSimplificationRule())
-						.add(rule(new Variable("*"), (e, m) -> false));
-				
-				while (simplifier.apply(right(proposition(-1)))) {
-					// NOP
-				}
+				simplifySubstitutionsAndElementaryInLast();
 				
 				conclude();
 			}
 			
 			rewrite("simplified_induction", name(-2), name(-1));
 			
-			abort();
-			
 			{
-				final Goal subgoal = Goal.deduce("induction_condition_0", condition(proposition(-1)));
+				newGoal("induction_condition_0", condition(proposition(-1)));
+				
+				goal().introduce();
 				
 				{
-					subdeduction("goal_simplification");
+					subdeduction();
+					
+					final Object p = forall("p");
+					
+					suppose($(left(condition(scope(goal().getProposition()))), "=", p));
+					
+					final String resultReality = name(-2);
 					
 					{
 						subdeduction();
 						
-						substitute(target(subgoal.getProposition()), map(_m, 0));
+						new ToJavaHelper().compute(left(proposition(-1)));
+						rewrite(name(-1), name(-2));
 						
-						verifyElementaryProposition($($(1, "+", 0), "=", 1));
+						conclude();
+					}
+					
+					{
+						subdeduction("replacement_of_repeat_1_q_with_repeat_0_q_q");
+						
+						{
+							subdeduction();
+							
+							{
+								final Variable vp0 = new Variable("p0");
+								final Variable va = new Variable("a");
+								final Variable vq = new Variable("q");
+								
+								matchOrFail(sequence(";", vp0, app("repeat", 1, str(va), 0, $("()->{", vq, "}"))), right(proposition(-1)));
+								
+								ebindTrim("meaning_of_repeat_2", $1(vp0.get()), va.get(), 0, 1, vq.get());
+							}
+							
+							verifyElementaryProposition($($(1, "-", 1), "=", 0));
+							rewrite(name(-2), name(-1));
+							
+							{
+								final Variable va = new Variable("a");
+								final Variable vb = new Variable("b");
+								final Variable vc = new Variable("c");
+								final Variable vd = new Variable("d");
+								
+								matchOrFail($($("sequence_append", ";", va, vb), "=",
+										$("sequence_concatenate", ";", va, $("sequence_concatenate", ";", vc, vd))), proposition(-1));
+								
+								computeSequenceAppend(";", va.get(), vb.get());
+								rewrite(name(-2), name(-1));
+								
+								computeSequenceConcatenate(";", vc.get(), vd.get());
+								rewrite(name(-2), name(-1));
+							}
+							
+							{
+								final Variable va = new Variable("a");
+								final Variable vb = new Variable("b");
+								
+								matchOrFail($("sequence_concatenate", ";", va, vb), right(proposition(-1)));
+								
+								computeSequenceConcatenate(";", va.get(), vb.get());
+								rewrite(name(-2), name(-1));
+							}
+							
+							conclude();
+						}
 						
 						rewrite(name(-2), name(-1));
 						
 						conclude();
 					}
 					
-					substitute(target(right(proposition(-1))), map(_n, 1));
-					rewrite(name(-2), name(-1));
-					
-					substitute(1, map(_i, _j));
-					rewrite(name(-2), name(-1), 1);
-					
-					conclude();
-				}
-				
-				{
-					final Goal subsubgoal = Goal.deduce("simplified_goal", right(proposition(-1)));
-					
-					subsubgoal.introduce();
-					
 					{
-						subdeduction();
+						final Variable va = new Variable("a");
+						final Variable vb = new Variable("b");
+						final Variable vc = new Variable("c");
 						
-						final Object p = forall("p");
-						
-						suppose($(left(condition(scope(subsubgoal.getProposition()))), "=", p));
-						
-						final String resultReality = name(-2);
+						matchOrFail(sequence(";", va, vb, vc), right(proposition(-1)));
 						
 						{
 							subdeduction();
-							
-							new ToJavaHelper().compute(left(proposition(-1)));
-							rewrite(name(-1), name(-2));
-							
-							conclude();
-						}
-						
-						{
-							subdeduction();
-							
-							{
-								subdeduction();
-								
-								{
-									final Variable vp0 = new Variable("p0");
-									final Variable va = new Variable("a");
-									final Variable vq = new Variable("q");
-									
-									matchOrFail(sequence(";", vp0, app("repeat", 1, str(va), 0, $("()->{", vq, "}"))), right(proposition(-1)));
-									
-									ebindTrim("meaning_of_repeat_2", $1(vp0.get()), va.get(), 0, 1, vq.get());
-								}
-								
-								verifyElementaryProposition($($(1, "-", 1), "=", 0));
-								rewrite(name(-2), name(-1));
-								
-								{
-									final Variable va = new Variable("a");
-									final Variable vb = new Variable("b");
-									final Variable vc = new Variable("c");
-									final Variable vd = new Variable("d");
-									
-									matchOrFail($($("sequence_append", ";", va, vb), "=",
-											$("sequence_concatenate", ";", va, $("sequence_concatenate", ";", vc, vd))), proposition(-1));
-									
-									computeSequenceAppend(";", va.get(), vb.get());
-									rewrite(name(-2), name(-1));
-									
-									computeSequenceConcatenate(";", vc.get(), vd.get());
-									rewrite(name(-2), name(-1));
-								}
-								
-								{
-									final Variable va = new Variable("a");
-									final Variable vb = new Variable("b");
-									
-									matchOrFail($("sequence_concatenate", ";", va, vb), right(proposition(-1)));
-									
-									computeSequenceConcatenate(";", va.get(), vb.get());
-									rewrite(name(-2), name(-1));
-								}
-								
-								conclude();
-							}
-							
-							rewrite(name(-2), name(-1));
-							
-							conclude();
-						}
-						
-						{
-							final Variable va = new Variable("a");
-							final Variable vb = new Variable("b");
-							final Variable vc = new Variable("c");
-							
-							matchOrFail(sequence(";", va, vb, vc), right(proposition(-1)));
 							
 							{
 								subdeduction();
@@ -1809,7 +1783,7 @@ public final class Computation extends AbstractNode<Computation> {
 								conclude();
 							}
 							
-							rewrite(name(-2), name(-1));
+							// induction_condition_0.2.4.1
 							
 							{
 								subdeduction();
@@ -1825,103 +1799,101 @@ public final class Computation extends AbstractNode<Computation> {
 							
 							rewrite(name(-2), name(-1));
 							
-							substitute(sequence(",", str("result"), app("read", str("i"), 0), 1), map(app("read", str("i"), 0), 0));
+							simplifySubstitutionsAndElementaryInLast();
 							
-							rewrite(name(-2), name(-1));
+							conclude();
+						}
+						
+						rewrite(name(-2), name(-1));
+						
+						{
+							subdeduction();
 							
 							{
 								subdeduction();
 								
+								ebind("meaning_of_write_1", "result", 0, 1, sequence(";", app("allocate", str("i"), 1), app("repeat", 0, str("i"), 0, block(app("write", str("result"), app("read", str("i"), 0), 1)))));
+								eapplyLast();
+								
+								simplifySequenceAppendInLast();
+								
+								conclude();
+							}
+							
+							{
+								subdeduction();
+								
+								bind("meaning_of_repeat_0",
+										$1(app("allocate", str("i"), 1)),
+										"i", 0, "result", 0,
+										$1(app("write", str("result"), app("read", str("i"), 0), 1)));
+								
+								ebindTrim("left_elimination_of_disjunction", left(condition(proposition(-1))), right(condition(proposition(-1))), conclusion(proposition(-1)));
+								
+								simplifySequenceAppendInLast();
+								
 								{
 									subdeduction();
 									
-									ebind("meaning_of_write_1", "result", 0, 1, sequence(";", app("allocate", str("i"), 1), app("repeat", 0, str("i"), 0, block(app("write", str("result"), app("read", str("i"), 0), 1)))));
-									eapplyLast();
-									
+									ebindTrim("meaning_of_allocate_0", $(), "i", 1, "result", 0);
 									simplifySequenceAppendInLast();
 									
-									conclude();
-								}
-								
-								{
-									subdeduction();
-									
-									bind("meaning_of_repeat_0",
-											$1(app("allocate", str("i"), 1)),
-											"i", 0, "result", 0,
-											$1(app("write", str("result"), app("read", str("i"), 0), 1)));
-									
-									ebindTrim("left_elimination_of_disjunction", left(condition(proposition(-1))), right(condition(proposition(-1))), conclusion(proposition(-1)));
-									
-									simplifySequenceAppendInLast();
-									
-									{
-										subdeduction();
-										
-										ebindTrim("meaning_of_allocate_0", $(), "i", 1, "result", 0);
-										simplifySequenceAppendInLast();
-										
-										
-										conclude();
-									}
-									
-									rewriteRight(name(-2), name(-1));
 									
 									conclude();
 								}
-								
-								rewriteRight(name(-2), name(-1));
-								
-								{
-									subdeduction();
-									
-									{
-										subdeduction();
-										
-										verifyElementaryProposition($(0, IN, N));
-										verifyElementaryProposition($(0, "<", 1));
-										ebindTrim("introduction_of_conjunction", proposition(-2), proposition(-1));
-										
-										ebindTrim("definition_of_range", 1, 0);
-										rewriteRight(name(-2), name(-1));
-										
-										conclude();
-									}
-									
-									ebindTrim(resultReality, 0);
-									
-									conclude();
-								}
-								
-								eapply(name(-2));
-								
-								final List<Object> l = flattenSequence(";", left(proposition(-1)));
-								
-								computeSequenceAppend(";", sequence(";", l.subList(0, l.size() - 1).toArray()), last(l));
 								
 								rewriteRight(name(-2), name(-1));
 								
 								conclude();
 							}
 							
-							rewriteRight(name(-1), name(-2));
+							rewriteRight(name(-2), name(-1));
+							
+							{
+								subdeduction("result_element_is_real");
+								
+								{
+									subdeduction();
+									
+									verifyElementaryProposition($(0, IN, N));
+									verifyElementaryProposition($(0, "<", 1));
+									ebindTrim("introduction_of_conjunction", proposition(-2), proposition(-1));
+									
+									ebindTrim("definition_of_range", 1, 0);
+									rewriteRight(name(-2), name(-1));
+									
+									conclude();
+								}
+								
+								ebindTrim(resultReality, 0);
+								
+								conclude();
+							}
+							
+							eapply(name(-2));
+							
+							final List<Object> l = flattenSequence(";", left(proposition(-1)));
+							
+							computeSequenceAppend(";", sequence(";", l.subList(0, l.size() - 1).toArray()), last(l));
+							
+							rewriteRight(name(-2), name(-1));
+							
+							conclude();
 						}
 						
-						conclude();
+						rewriteRight(name(-1), name(-2));
 					}
 					
-					subsubgoal.conclude();
+					conclude();
 				}
 				
-				rewriteRight(name(-1), name(-2));
-				
-				subgoal.conclude();
+				concludeGoal();
 			}
 			
 			{
 				subdeduction("remaining_induction");
 				
-				apply("full_induction", "induction_condition_0");
+				apply("simplified_induction", "induction_condition_0");
 				
 				bind("definition_of_forall_in",
 						list(condition(proposition(-1))).get(1),
@@ -1934,20 +1906,31 @@ public final class Computation extends AbstractNode<Computation> {
 			}
 			
 			{
-				final Goal subgoal = Goal.deduce("induction_condition_n", condition(proposition(-1)));
+				newGoal("induction_condition_n", condition(proposition(-1)));
 				
-				subgoal.introduce();
-				subgoal.introduce();
-				subgoal.introduce();
+				goal().introduce();
+				goal().introduce();
+				goal().introduce();
 				
 				abort();
 				
-				subgoal.conclude();
+				concludeGoal();
 			}
 			
 			abort();
 			
-			goal.conclude();
+			concludeGoal();
+		}
+	}
+	
+	public static final void simplifySubstitutionsAndElementaryInLast() {
+		final PatternProcessor simplifier = new PatternProcessor(PatternProcessor.Mode.DEFINE)
+				.add(newElementarySimplificationRule())
+				.add(newSubstitutionSimplificationRule())
+				.add(rule(new Variable("*"), (e, m) -> false));
+		
+		while (simplifier.apply(right(proposition(-1)))) {
+			// NOP
 		}
 	}
 	
@@ -2014,7 +1997,7 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 		
 		private final boolean tryRules(final Object expression) {
-			subdeduction();
+			final Deduction deduction = subdeduction();
 			
 			try {
 				if (this.getRules().applyTo(expression)) {
@@ -2031,7 +2014,8 @@ public final class Computation extends AbstractNode<Computation> {
 							
 							rewrite(name(-2), name(-1), rightTargets);
 						} else {
-							pop();
+							popTo(deduction.getParent());
+//							pop();
 							
 							return false;
 						}
@@ -2049,7 +2033,8 @@ public final class Computation extends AbstractNode<Computation> {
 				ignore(exception);
 			}
 			
-			pop();
+			popTo(deduction.getParent());
+//			pop();
 			
 			return false;
 		}
@@ -2404,7 +2389,7 @@ public final class Computation extends AbstractNode<Computation> {
 		final Object _x = new Variable("x");
 		final Object _y = new Variable("y");
 		
-		final List<Object> conditions = Arrays.asList($(_x, "=", $()));
+		final List<Object> conditions = $1($(_x, "=", $()));
 		final Object value = $1(_y);
 		
 		return new CaseDescription(
@@ -2422,7 +2407,7 @@ public final class Computation extends AbstractNode<Computation> {
 		final Object _x0 = new Variable("x0");
 		final Object _y = new Variable("y");
 		
-		final List<Object> conditions = Arrays.asList($(_x, "=", $1(_x0)));
+		final List<Object> conditions = $1($(_x, "=", $1(_x0)));
 		final Object value = $(_x0, $(_s, _y));
 		
 		return new CaseDescription(
@@ -2442,7 +2427,7 @@ public final class Computation extends AbstractNode<Computation> {
 		final Object _x1 = new Variable("x1");
 		final Object _y = new Variable("y");
 		
-		final List<Object> conditions = Arrays.asList($(_x, "=", $(_x0, _x1)));
+		final List<Object> conditions = $1($(_x, "=", $(_x0, _x1)));
 		final Object value = $(_x0, $("sequence_subappend", _s, _x1, _y));
 		
 		return new CaseDescription(
@@ -2874,7 +2859,7 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			{
 				final Object expectedValue = sequence(_s, append(flattenSequence(_s, _x).toArray(), flattenSequence(_s, _y).toArray()));
-				final Goal goal = Goal.deduce("sequence_concatenate.test1",
+				final Goal goal = Goal.newGoal("sequence_concatenate.test1",
 						$($("sequence_concatenate", _s, _x, _y), "=", expectedValue));
 				
 				computeSequenceConcatenate(_s, _x, _y);
@@ -2889,7 +2874,7 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			{
 				final Object expectedValue = sequence(_s, append(flattenSequence(_s, _x).toArray(), flattenSequence(_s, _y).toArray()));
-				final Goal goal = Goal.deduce("sequence_concatenate.test2",
+				final Goal goal = Goal.newGoal("sequence_concatenate.test2",
 						$($("sequence_concatenate", _s, _x, _y), "=", expectedValue));
 				
 				computeSequenceConcatenate(_s, _x, _y);
@@ -2904,7 +2889,7 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			{
 				final Object expectedValue = sequence(_s, append(flattenSequence(_s, _x).toArray(), flattenSequence(_s, _y).toArray()));
-				final Goal goal = Goal.deduce("sequence_concatenate.test3",
+				final Goal goal = Goal.newGoal("sequence_concatenate.test3",
 						$($("sequence_concatenate", _s, _x, _y), "=", expectedValue));
 				
 				computeSequenceConcatenate(_s, _x, _y);
@@ -2919,7 +2904,7 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			{
 				final Object expectedValue = sequence(_s, append(flattenSequence(_s, _x).toArray(), flattenSequence(_s, _y).toArray()));
-				final Goal goal = Goal.deduce("sequence_concatenate.test4",
+				final Goal goal = Goal.newGoal("sequence_concatenate.test4",
 						$($("sequence_concatenate", _s, _x, _y), "=", expectedValue));
 				
 				computeSequenceConcatenate(_s, _x, _y);
@@ -2934,7 +2919,7 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			{
 				final Object expectedValue = sequence(_s, append(flattenSequence(_s, _x).toArray(), flattenSequence(_s, _y).toArray()));
-				final Goal goal = Goal.deduce("sequence_concatenate.test5",
+				final Goal goal = Goal.newGoal("sequence_concatenate.test5",
 						$($("sequence_concatenate", _s, _x, _y), "=", expectedValue));
 				
 				computeSequenceConcatenate(_s, _x, _y);
@@ -2949,7 +2934,7 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			{
 				final Object expectedValue = sequence(_s, append(flattenSequence(_s, _x).toArray(), flattenSequence(_s, _y).toArray()));
-				final Goal goal = Goal.deduce("sequence_concatenate.test6",
+				final Goal goal = Goal.newGoal("sequence_concatenate.test6",
 						$($("sequence_concatenate", _s, _x, _y), "=", expectedValue));
 				
 				computeSequenceConcatenate(_s, _x, _y);

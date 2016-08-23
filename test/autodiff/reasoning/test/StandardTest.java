@@ -26,7 +26,7 @@ public final class StandardTest {
 				
 				suppose($equality("a", "b"));
 				
-				final Goal goal = Goal.deduce($equality("b", "b"));
+				final Goal goal = Goal.newGoal($equality("b", "b"));
 				
 				rewrite(name(-1), name(-1));
 				
@@ -45,7 +45,7 @@ public final class StandardTest {
 			
 			suppose($equality("a", "b"));
 			
-			final Goal goal = Goal.deduce($equality("a", "a"));
+			final Goal goal = Goal.newGoal($equality("a", "a"));
 			
 			rewriteRight(name(-1), name(-1));
 			
@@ -59,7 +59,7 @@ public final class StandardTest {
 			supposeRewrite();
 			deduceIdentity();
 			
-			final Goal goal = Goal.deduce($equality("a", "a"));
+			final Goal goal = Goal.newGoal($equality("a", "a"));
 			
 			bind("identity", $("a"));
 			
@@ -76,7 +76,7 @@ public final class StandardTest {
 			
 			suppose($("a"));
 			
-			final Goal goal = Goal.deduce($rule("a", "a"));
+			final Goal goal = Goal.newGoal($rule("a", "a"));
 			
 			bind("recall", $("a"));
 			

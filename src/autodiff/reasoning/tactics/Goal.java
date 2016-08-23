@@ -90,15 +90,27 @@ public final class Goal implements Serializable {
 		return activeGoals.get(deduction);
 	}
 	
-	public static final Goal activeGoal() {
-		return activeGoalFor(deduction());
+	public static final void concludeGoal() {
+		goal().conclude();
 	}
 	
-	public static final Goal deduce(final Object proposition) {
-		return deduce(newName(), proposition);
+	public static final Goal goal() {
+		Deduction deduction = deduction();
+		Goal result = activeGoalFor(deduction);
+		
+		while (result == null) {
+			deduction = deduction.getParent();
+			result = activeGoalFor(deduction);
+		}
+		
+		return result;
 	}
 	
-	public static final Goal deduce(final String propositionName, final Object proposition) {
+	public static final Goal newGoal(final Object proposition) {
+		return newGoal(newName(), proposition);
+	}
+	
+	public static final Goal newGoal(final String propositionName, final Object proposition) {
 		return new Goal(proposition, deduction(), propositionName);
 	}
 	

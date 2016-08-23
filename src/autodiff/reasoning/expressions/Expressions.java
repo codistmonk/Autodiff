@@ -4,9 +4,11 @@ import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static multij.tools.Tools.cast;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -56,18 +58,33 @@ public final class Expressions {
 	
 	public static final Object $(final Object... objects) {
 		if (objects.length == 1) {
-			return objects[0];
+			return $n(objects[0]);
 		}
 		
-		if (objects.length <= 1) {
-			return Arrays.asList(objects);
+		if (objects.length == 0) {
+			return Collections.emptyList();
 		}
 		
 		return Arrays.stream(objects).map(Expressions::$).collect(toList());
 	}
 	
-	public static final Object $1(final Object object) {
-		return Arrays.asList(object);
+	@SuppressWarnings("unchecked")
+	public static final <T> T $n(final Object object) {
+		if (object instanceof BigDecimal) {
+			return (T) object;
+		}
+		
+		if (object instanceof Number) {
+			return (T) new BigDecimal(object.toString());
+		}
+		
+		return (T) object;
+	}
+	
+	public static final List<Object> $1(final Object object) {
+		final Object o = $n(object);
+		
+		return Arrays.asList(o);
 	}
 	
 	public static final List<Object> $forall(final Object variableOrName) {

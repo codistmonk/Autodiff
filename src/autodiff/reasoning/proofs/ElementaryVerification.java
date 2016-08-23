@@ -53,19 +53,6 @@ public final class ElementaryVerification extends Proof.Abstract {
 	
 	public static final Object STRING = $("String");
 	
-	@SuppressWarnings("unchecked")
-	public static final <T> T numberOrObject(final Object object) {
-		if (object instanceof BigDecimal) {
-			return (T) object;
-		}
-		
-		if (object instanceof Number) {
-			return (T) new BigDecimal(object.toString());
-		}
-		
-		return (T) object;
-	}
-	
 	public static final Object norm(final Object expression) {
 		return $("|", expression, "|");
 	}
@@ -92,8 +79,8 @@ public final class ElementaryVerification extends Proof.Abstract {
 						return sx + sy;
 					}
 					
-					final BigDecimal nx = cast(BigDecimal.class, numberOrObject(x));
-					final BigDecimal ny = cast(BigDecimal.class, numberOrObject(y));
+					final BigDecimal nx = cast(BigDecimal.class, $n(x));
+					final BigDecimal ny = cast(BigDecimal.class, $n(y));
 					
 					if (nx != null && ny != null) {
 						return nx.add(ny);
@@ -116,8 +103,8 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vy = new Variable("y");
 				
 				this.rules.add(rule($(vx, "-", vy), (e, m) -> {
-					final BigDecimal nx = numberOrObject(vx.get());
-					final BigDecimal ny = numberOrObject(vy.get());
+					final BigDecimal nx = $n(vx.get());
+					final BigDecimal ny = $n(vy.get());
 					
 					return nx.subtract(ny);
 				}));
@@ -128,8 +115,8 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vy = new Variable("y");
 				
 				this.rules.add(rule($(vx, "*", vy), (e, m) -> {
-					final BigDecimal nx = numberOrObject(vx.get());
-					final BigDecimal ny = numberOrObject(vy.get());
+					final BigDecimal nx = $n(vx.get());
+					final BigDecimal ny = $n(vy.get());
 					
 					return nx.multiply(ny);
 				}));
@@ -140,8 +127,8 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vy = new Variable("y");
 				
 				this.rules.add(rule($(vx, "/", vy), (e, m) -> {
-					final BigDecimal nx = numberOrObject(vx.get());
-					final BigDecimal ny = numberOrObject(vy.get());
+					final BigDecimal nx = $n(vx.get());
+					final BigDecimal ny = $n(vy.get());
 					
 					return nx.divide(ny);
 				}));
@@ -152,8 +139,8 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vy = new Variable("y");
 				
 				this.rules.add(rule($(vx, "^", vy), (e, m) -> {
-					final BigDecimal nx = numberOrObject(vx.get());
-					final BigDecimal ny = numberOrObject(vy.get());
+					final BigDecimal nx = $n(vx.get());
+					final BigDecimal ny = $n(vy.get());
 					
 					return nx.pow(ny.intValueExact());
 				}));
@@ -164,8 +151,8 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vy = new Variable("y");
 				
 				this.rules.add(rule($(vx, "%", vy), (e, m) -> {
-					final BigDecimal nx = numberOrObject(vx.get());
-					final BigDecimal ny = numberOrObject(vy.get());
+					final BigDecimal nx = $n(vx.get());
+					final BigDecimal ny = $n(vy.get());
 					
 					return nx.remainder(ny);
 				}));
@@ -176,8 +163,8 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vy = new Variable("y");
 				
 				this.rules.add(rule($(vx, "<<", vy), (e, m) -> {
-					final BigDecimal nx = numberOrObject(vx.get());
-					final BigDecimal ny = numberOrObject(vy.get());
+					final BigDecimal nx = $n(vx.get());
+					final BigDecimal ny = $n(vy.get());
 					
 					return new BigDecimal(nx.toBigIntegerExact().shiftLeft(ny.intValueExact()));
 				}));
@@ -188,8 +175,8 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vy = new Variable("y");
 				
 				this.rules.add(rule($(vx, ">>", vy), (e, m) -> {
-					final BigDecimal nx = numberOrObject(vx.get());
-					final BigDecimal ny = numberOrObject(vy.get());
+					final BigDecimal nx = $n(vx.get());
+					final BigDecimal ny = $n(vy.get());
 					
 					return new BigDecimal(nx.toBigIntegerExact().shiftRight(ny.intValueExact()));
 				}));
@@ -200,8 +187,8 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vy = new Variable("y");
 				
 				this.rules.add(rule($(vx, "|", vy), (e, m) -> {
-					final BigDecimal nx = numberOrObject(vx.get());
-					final BigDecimal ny = numberOrObject(vy.get());
+					final BigDecimal nx = $n(vx.get());
+					final BigDecimal ny = $n(vy.get());
 					
 					return new BigDecimal(nx.toBigIntegerExact().or(ny.toBigIntegerExact()));
 				}));
@@ -212,8 +199,8 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vy = new Variable("y");
 				
 				this.rules.add(rule($(vx, "&", vy), (e, m) -> {
-					final BigDecimal nx = numberOrObject(vx.get());
-					final BigDecimal ny = numberOrObject(vy.get());
+					final BigDecimal nx = $n(vx.get());
+					final BigDecimal ny = $n(vy.get());
 					
 					return new BigDecimal(nx.toBigIntegerExact().and(ny.toBigIntegerExact()));
 				}));
@@ -224,8 +211,8 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vy = new Variable("y");
 				
 				this.rules.add(rule($(vx, "¨", vy), (e, m) -> {
-					final BigDecimal nx = numberOrObject(vx.get());
-					final BigDecimal ny = numberOrObject(vy.get());
+					final BigDecimal nx = $n(vx.get());
+					final BigDecimal ny = $n(vy.get());
 					
 					return new BigDecimal(nx.toBigIntegerExact().xor(ny.toBigIntegerExact()));
 				}));
@@ -236,8 +223,8 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vy = new Variable("y");
 				
 				this.rules.add(rule($(vx, "<", vy), (e, m) -> {
-					final BigDecimal nx = numberOrObject(vx.get());
-					final BigDecimal ny = numberOrObject(vy.get());
+					final BigDecimal nx = $n(vx.get());
+					final BigDecimal ny = $n(vy.get());
 					
 					return nx.compareTo(ny) < 0;
 				}));
@@ -248,8 +235,8 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vy = new Variable("y");
 				
 				this.rules.add(rule($(vx, "<=", vy), (e, m) -> {
-					final BigDecimal nx = numberOrObject(vx.get());
-					final BigDecimal ny = numberOrObject(vy.get());
+					final BigDecimal nx = $n(vx.get());
+					final BigDecimal ny = $n(vy.get());
 					
 					return nx.compareTo(ny) <= 0;
 				}));
@@ -260,8 +247,8 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vy = new Variable("y");
 				
 				this.rules.add(rule($(vx, LE, vy), (e, m) -> {
-					final BigDecimal nx = numberOrObject(vx.get());
-					final BigDecimal ny = numberOrObject(vy.get());
+					final BigDecimal nx = $n(vx.get());
+					final BigDecimal ny = $n(vy.get());
 					
 					return nx.compareTo(ny) <= 0;
 				}));
@@ -272,8 +259,8 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vy = new Variable("y");
 				
 				this.rules.add(rule($(vx, ">", vy), (e, m) -> {
-					final BigDecimal nx = numberOrObject(vx.get());
-					final BigDecimal ny = numberOrObject(vy.get());
+					final BigDecimal nx = $n(vx.get());
+					final BigDecimal ny = $n(vy.get());
 					
 					return nx.compareTo(ny) > 0;
 				}));
@@ -284,8 +271,8 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vy = new Variable("y");
 				
 				this.rules.add(rule($(vx, ">=", vy), (e, m) -> {
-					final BigDecimal nx = numberOrObject(vx.get());
-					final BigDecimal ny = numberOrObject(vy.get());
+					final BigDecimal nx = $n(vx.get());
+					final BigDecimal ny = $n(vy.get());
 					
 					return nx.compareTo(ny) >= 0;
 				}));
@@ -296,8 +283,8 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vy = new Variable("y");
 				
 				this.rules.add(rule($(vx, GE, vy), (e, m) -> {
-					final BigDecimal nx = numberOrObject(vx.get());
-					final BigDecimal ny = numberOrObject(vy.get());
+					final BigDecimal nx = $n(vx.get());
+					final BigDecimal ny = $n(vy.get());
 					
 					return nx.compareTo(ny) >= 0;
 				}));
@@ -307,7 +294,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vx = new Variable("x");
 				
 				this.rules.add(rule($("-", vx), (e, m) -> {
-					final BigDecimal nx = numberOrObject(vx.get());
+					final BigDecimal nx = $n(vx.get());
 					
 					return nx.negate();
 				}));
@@ -317,7 +304,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vx = new Variable("x");
 				
 				this.rules.add(rule($("floor", vx), (e, m) -> {
-					final BigDecimal nx = numberOrObject(vx.get());
+					final BigDecimal nx = $n(vx.get());
 					
 					return nx.setScale(0, BigDecimal.ROUND_FLOOR);
 				}));
@@ -327,7 +314,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vx = new Variable("x");
 				
 				this.rules.add(rule($("ceiling", vx), (e, m) -> {
-					final BigDecimal nx = numberOrObject(vx.get());
+					final BigDecimal nx = $n(vx.get());
 					
 					return nx.setScale(0, BigDecimal.ROUND_CEILING);
 				}));
@@ -337,7 +324,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vx = new Variable("x");
 				
 				this.rules.add(rule($("~", vx), (e, m) -> {
-					final BigDecimal nx = numberOrObject(vx.get());
+					final BigDecimal nx = $n(vx.get());
 					
 					return new BigDecimal(nx.toBigIntegerExact().not());
 				}));
@@ -353,7 +340,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 						return BigDecimal.valueOf(sx.length());
 					}
 					
-					final BigDecimal nx = numberOrObject(vx.get());
+					final BigDecimal nx = $n(vx.get());
 					
 					return nx.abs();
 				}));
@@ -381,7 +368,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 					}
 						
 					final String sx = cast(String.class, x);
-					final BigDecimal nx = cast(BigDecimal.class, numberOrObject(x));
+					final BigDecimal nx = cast(BigDecimal.class, $n(x));
 					
 					if (sx == null && nx == null) {
 						return null;
@@ -432,8 +419,8 @@ public final class ElementaryVerification extends Proof.Abstract {
 					
 					final String sx = cast(String.class, x);
 					final String sy = cast(String.class, y);
-					final BigDecimal nx = cast(BigDecimal.class, numberOrObject(x));
-					final BigDecimal ny = cast(BigDecimal.class, numberOrObject(y));
+					final BigDecimal nx = cast(BigDecimal.class, $n(x));
+					final BigDecimal ny = cast(BigDecimal.class, $n(y));
 					
 					if (sx != null && (sy != null || ny != null) || nx != null && sy != null) {
 						return false;
