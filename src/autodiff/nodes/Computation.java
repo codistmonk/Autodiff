@@ -255,7 +255,6 @@ public final class Computation extends AbstractNode<Computation> {
 			supposeDefinitionsForRepeat();
 			
 			supposeSimplificationOfTypeOfTuple();
-			
 			testSimplificationOfTypeOfTuple();
 			
 			supposeDefinitionOfProductLoop0();
@@ -273,17 +272,13 @@ public final class Computation extends AbstractNode<Computation> {
 			}
 			
 			supposeDefinitionsForSequenceHead();
-			
 			supposeDefinitonsForSequenceTail();
-			
 			testSequenceHead();
 			
 			supposeDefinitionsForVectorAccess();
-			
 			testVectorAccess();
 			
 			supposeDefinitionOfVectorReductionByProduct();
-			
 			testVectorReductionByProduct();
 			
 			{
@@ -295,8 +290,70 @@ public final class Computation extends AbstractNode<Computation> {
 								$($(_x, "+", _y), IN, N)));
 			}
 			
-			supposeDefinitionsForJavaCode();
+			{
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				final Object _z = $new("z");
+				
+				suppose("transitivity_of_<",
+						$(FORALL, _x, ",", _y, ",", _z, IN, R,
+								$rule($(_x, "<", _y), $(_y, "<", _z), $(_x, "<", _z))));
+			}
 			
+			{
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				final Object _z = $new("z");
+				
+				suppose("preservation_of_<_under_addition",
+						$(FORALL, _x, ",", _y, ",", _z, IN, R,
+								$rule($(_x, "<", _y), $($(_x, "+", _z), "<", $(_y, "+", _z)))));
+			}
+			
+			{
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				
+				suppose("preservation_of_<_under_multiplication",
+						$(FORALL, _x, ",", _y, IN, R,
+								$rule($(0, "<", _x), $(0, "<", _y), $(0, "<", $(_x, "*", _y)))));
+			}
+			
+			{
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				
+				suppose("commutativity_of_addition",
+						$(FORALL, _x, ",", _y, IN, R,
+								$($(_x, "+", _y), "=", $(_y, "+", _x))));
+			}
+			
+			{
+				final Object _x = $new("x");
+				
+				suppose("neutrality_of_0",
+						$(FORALL, _x, IN, R,
+								$($(_x, "+", 0), "=", _x)));
+			}
+			
+			{
+				final Object _x = $new("x");
+				
+				suppose("neutrality_of_1",
+						$(FORALL, _x, IN, R,
+								$($(_x, "*", 1), "=", _x)));
+			}
+			
+			{
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				
+				suppose("commutativity_of_multiplication",
+						$(FORALL, _x, ",", _y, IN, R,
+								$($(_x, "*", _y), "=", $(_y, "*", _x))));
+			}
+			
+			supposeDefinitionsForJavaCode();
 			supposeDefinitionsForCLCode();
 		}
 		
@@ -745,6 +802,12 @@ public final class Computation extends AbstractNode<Computation> {
 		conclude();
 	}
 	
+	public static final void canonicalizeForallIn(final Object target) {
+		final List<Object> list = list(target);
+		
+		bind("definition_of_forall_in", list.get(1), list.get(3), list.get(4));
+	}
+	
 	public static final void canonicalizeForallIn(final String targetName) {
 		final List<Object> list = list(proposition(targetName));
 		
@@ -756,12 +819,34 @@ public final class Computation extends AbstractNode<Computation> {
 		conclude();
 	}
 	
+	public static final void compactForallIn(final String targetName) {
+		final Object target = proposition(targetName);
+		
+		subdeduction();
+		
+		bind("definition_of_forall_in", variable(target), right(condition(scope(target))), conclusion(scope(target)));
+		rewriteRight(targetName, name(-1));
+		
+		conclude();
+	}
+	
 	public static final void canonicalizeForallIn2(final String targetName) {
 		final List<Object> list = list(proposition(targetName));
 		
 		subdeduction();
 		
 		bind("definition_of_forall_in_2", list.get(1), list.get(3), list.get(5), list.get(6));
+		rewrite(targetName, name(-1));
+		
+		conclude();
+	}
+	
+	public static final void canonicalizeForallIn3(final String targetName) {
+		final List<Object> list = list(proposition(targetName));
+		
+		subdeduction();
+		
+		bind("definition_of_forall_in_3", list.get(1), list.get(3), list.get(5), list.get(7), list.get(8));
 		rewrite(targetName, name(-1));
 		
 		conclude();
@@ -955,7 +1040,7 @@ public final class Computation extends AbstractNode<Computation> {
 		final Object _X = $new("X");
 		final Object _P = $new("P");
 		
-		suppose("definition_of_forall_in_3", $forall(_x, _y, _X, _P,
+		suppose("definition_of_forall_in_3", $forall(_x, _y, _z, _X, _P,
 				$($(FORALL, _x, ",", _y, ",", _z, IN, _X, _P),
 						"=", $forall(_x, $rule($(_x, IN, _X), $forall(_y, $rule($(_y, IN, _X), $forall(_z, $rule($(_z, IN, _X), _P)))))))));
 	}
@@ -1934,16 +2019,12 @@ public final class Computation extends AbstractNode<Computation> {
 					ebindTrim("stability_of_addition_in_naturals", 1, m);
 					
 					{
-						subdeduction();
-						
-						ebindTrim("definition_of_subset", N, R);
-						
-						rewrite("naturals_subset_reals", name(-1));
-						
-						ebindTrim(name(-1), $(1, "+", $(m, "+", 1)));
-						
-						conclude();
+						deduceNaturalIsReal(m);
 					}
+					
+					deduceNaturalIsReal($(m, "+", 1));
+					deduceNaturalIsReal($(1, "+", m));
+					deduceNaturalIsReal($(1, "+", $(m, "+", 1)));
 					
 					{
 						subdeduction();
@@ -1957,36 +2038,80 @@ public final class Computation extends AbstractNode<Computation> {
 					{
 						subdeduction();
 						
-						final Object k = forall("k");
-						
-						suppose($(k, IN, $(N, "_", $("<", $(1, "+", m)))));
-						
-						canonicalizeForallIn("induction_condition_n.3");
-						
-						bind(name(-1), k);
-						
 						{
 							subdeduction();
 							
-							ebindTrim("definition_of_range", $(1, "+", $(m, "+", 1)), k);
+							final Object k = forall("k");
+							
+							suppose($(k, IN, $(N, "_", $("<", $(1, "+", m)))));
+							
+							final String h = name(-1);
+							
+							canonicalizeForallIn("induction_condition_n.3");
+							
+							bind(name(-1), k);
 							
 							{
 								subdeduction();
 								
-								ebindTrim("definition_of_range", $(1, "+", m), k);
-								rewrite("induction_condition_n.4.7.1", name(-1));
-								breakConjunction(name(-1));
+								ebindTrim("definition_of_range", $(1, "+", $(m, "+", 1)), k);
 								
-								abort();
+								{
+									subdeduction();
+									
+									ebindTrim("definition_of_range", $(1, "+", m), k);
+									rewrite(h, name(-1));
+									breakConjunction(name(-1));
+									
+									{
+										subdeduction();
+										
+										ebindTrim("preservation_of_<_under_addition", 0, 1, m);
+										ebindTrim("commutativity_of_addition", 0, m);
+										rewrite(name(-2), name(-1));
+										ebindTrim("commutativity_of_addition", 1, m);
+										rewrite(name(-2), name(-1));
+										ebindTrim("neutrality_of_0", m);
+										rewrite(name(-2), name(-1));
+										
+										ebindTrim("preservation_of_<_under_addition", m, $(m, "+", 1), 1);
+										ebindTrim("commutativity_of_addition", m, 1);
+										rewrite(name(-2), name(-1), 0);
+										ebindTrim("commutativity_of_addition", $(m, "+", 1), 1);
+										rewrite(name(-2), name(-1));
+										
+										deduceNaturalIsReal(k);
+										
+										ebindTrim("transitivity_of_<", k, $(1, "+", m), $(1, "+", $(m, "+", 1)));
+										
+										conclude();
+									}
+									
+									ebindTrim("introduction_of_conjunction", proposition(-3), proposition(-1));
+									
+									conclude();
+								}
+								
+								rewriteRight(name(-1), name(-2));
 								
 								conclude();
 							}
 							
+							eapply(name(-2));
+							
 							conclude();
 						}
 						
+						canonicalizeForallIn(condition(proposition("induction_condition_n.2")));
+						
+						rewriteRight(name(-2), name(-1));
+						
+						eapply("induction_condition_n.2");
+						
 						conclude();
 					}
+					
+					abort();
 					
 					conclude();
 				}
@@ -1998,6 +2123,18 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			concludeGoal();
 		}
+	}
+
+	public static void deduceNaturalIsReal(final Object value) {
+		subdeduction();
+		
+		ebindTrim("definition_of_subset", N, R);
+		
+		rewrite("naturals_subset_reals", name(-1));
+		
+		ebindTrim(name(-1), value);
+		
+		conclude();
 	}
 	
 	public static final void simplifySubstitutionsAndElementaryInLast() {
@@ -3502,6 +3639,10 @@ public final class Computation extends AbstractNode<Computation> {
 				canonicalizeForallIn2(newTarget);
 				newTarget = name(-1);
 				done = false;
+			} else if (isForallIn3(proposition(newTarget))) {
+				canonicalizeForallIn3(newTarget);
+				newTarget = name(-1);
+				done = false;
 			} else if (trim(newTarget)) {
 				newTarget = name(-1);
 				done = false;
@@ -3581,6 +3722,13 @@ public final class Computation extends AbstractNode<Computation> {
 		
 		return list != null && 7 == list.size()
 				&& FORALL.equals(list.get(0)) && ",".equals(list.get(2)) && IN.equals(list.get(4));
+	}
+	
+	public static final boolean isForallIn3(final Object proposition) {
+		final List<?> list = cast(List.class, proposition);
+		
+		return list != null && 9 == list.size()
+				&& FORALL.equals(list.get(0)) && ",".equals(list.get(2)) && ",".equals(list.get(4)) && IN.equals(list.get(6));
 	}
 	
 	public static final Iterable<PropositionDescription> iterateBackward(final Deduction deduction) {
