@@ -1799,8 +1799,6 @@ public final class Computation extends AbstractNode<Computation> {
 								
 								simplifySequenceAppendInLast();
 								
-								debugPrint(deduction().getProvedPropositionName());
-								
 								conclude();
 							}
 							
@@ -1915,7 +1913,7 @@ public final class Computation extends AbstractNode<Computation> {
 			{
 				newGoal("induction_condition_n", condition(proposition(-1)));
 				
-				goal().introduce();
+				final Object m = goal().introduce();
 				goal().introduce();
 				goal().introduce();
 				goal().introduce();
@@ -1931,29 +1929,24 @@ public final class Computation extends AbstractNode<Computation> {
 					
 					final String definitionOfP = name(-1);
 					
+					ebindTrim("stability_of_addition_in_naturals", m, 1);
+					ebindTrim("stability_of_addition_in_naturals", 1, $(m, "+", 1));
+					ebindTrim("stability_of_addition_in_naturals", 1, m);
+					
 					{
 						subdeduction();
 						
-						{
-							subdeduction();
-							
-							ebindTrim("stability_of_addition_in_naturals", _m, 1);
-							ebindTrim("stability_of_addition_in_naturals", 1, $(_m, "+", 1));
-							
-							conclude();
-						}
+						ebindTrim("definition_of_subset", N, R);
 						
-						{
-							subdeduction();
-							
-							ebindTrim("definition_of_subset", N, R);
-							
-							rewrite("naturals_subset_reals", name(-1));
-							
-							ebindTrim(name(-1), $(1, "+", $(_m, "+", 1)));
-							
-							conclude();
-						}
+						rewrite("naturals_subset_reals", name(-1));
+						
+						ebindTrim(name(-1), $(1, "+", $(m, "+", 1)));
+						
+						conclude();
+					}
+					
+					{
+						subdeduction();
 						
 						new ToJavaHelper().compute(left(proposition(definitionOfP)));
 						rewrite(name(-1), definitionOfP);
@@ -1961,7 +1954,39 @@ public final class Computation extends AbstractNode<Computation> {
 						conclude();
 					}
 					
-					abort();
+					{
+						subdeduction();
+						
+						final Object k = forall("k");
+						
+						suppose($(k, IN, $(N, "_", $("<", $(1, "+", m)))));
+						
+						canonicalizeForallIn("induction_condition_n.3");
+						
+						bind(name(-1), k);
+						
+						{
+							subdeduction();
+							
+							ebindTrim("definition_of_range", $(1, "+", $(m, "+", 1)), k);
+							
+							{
+								subdeduction();
+								
+								ebindTrim("definition_of_range", $(1, "+", m), k);
+								rewrite("induction_condition_n.4.7.1", name(-1));
+								breakConjunction(name(-1));
+								
+								abort();
+								
+								conclude();
+							}
+							
+							conclude();
+						}
+						
+						conclude();
+					}
 					
 					conclude();
 				}
@@ -4030,7 +4055,6 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 		
 		public final void compute(final Object expression) {
-			debugPrint(expression);
 			this.rules.applyTo(expression);
 		}
 		
