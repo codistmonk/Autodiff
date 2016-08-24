@@ -2108,8 +2108,16 @@ public final class Computation extends AbstractNode<Computation> {
 						
 						eapply("induction_condition_n.2");
 						
+						new ToJavaHelper().compute(left(condition(scope(proposition(-1)))));
+						ebindTrim(name(-2), right(proposition(-1)));
+						simplifySequenceAppendInLast();
+						
 						conclude();
 					}
+					
+					ebindTrim("meaning_of_repeat_2",
+							sequence(";", app("allocate", str("i"), 1)), "i", 0, $(1, "+", $(m, "+", 1)),
+							sequence(";", app("write", str("result"), app("read", str("i"), 0), 1)));
 					
 					abort();
 					
@@ -4203,6 +4211,7 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 		
 		public final void compute(final Object expression) {
+			debugPrint(expression);
 			this.rules.applyTo(expression);
 		}
 		
