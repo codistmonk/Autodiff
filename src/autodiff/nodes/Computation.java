@@ -345,6 +345,24 @@ public final class Computation extends AbstractNode<Computation> {
 								$rule($(_x, "<", _y), $(_y, LE, _z), $(_x, "<", _z))));
 			}
 			
+			for (final Object operator : array("<", ">")) {
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				
+				suppose(operator + "_implies_not_equal",
+						$(FORALL, _x, ",", _y, IN, R,
+								$rule($(_x, operator, _y), $(LNOT, $(_x, "=", _y)))));
+			}
+			
+			{
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				
+				suppose("conversion<>",
+						$(FORALL, _x, ",", _y, IN, R,
+								$($(_x, "<", _y), "=", $(_y, ">", _x))));
+			}
+			
 			{
 				final Object _x = $new("x");
 				
@@ -1676,8 +1694,8 @@ public final class Computation extends AbstractNode<Computation> {
 				final Object valueAfter = instructions(_p, instruction, app("read", str(_b), _j));
 				
 				suppose("meaning_of_write_0",
-						$forall(_a, _i, _b, _j, _x, _p,
-								$rule($(LNOT, $(_a, "=", _b)),
+						$forall(_p, _a, _i, _b, _j, _x, 
+								$rule($($(LNOT, $(_a, "=", _b)), LOR, $(LNOT, $(_i, "=", _j))),
 										$(valueBefore, "=", valueAfter))));
 			}
 			
@@ -2165,6 +2183,68 @@ public final class Computation extends AbstractNode<Computation> {
 					}
 					
 					{
+						subdeduction();
+						
+						computeSequenceAppend(";", right(proposition(-1)), app("read", str("result"), 0));
+						
+						rewriteRight(name(-1), name(-2));
+						
+						conclude();
+					}
+					
+					{
+						subdeduction();
+						
+						final Variable vp0 = new Variable("p0");
+						final Variable vp1 = new Variable("p1");
+						final Variable va = new Variable("a");
+						final Variable vi = new Variable("i");
+						
+						matchOrFail($(sequence(";", vp0, vp1, app("write", str(va), vi, 1))), right(proposition(-2)));
+						
+						ebind("meaning_of_write_0",
+								sequence(";", vp0.get(), vp1.get()),
+								va.get(),
+								vi.get(),
+								va.get(),
+								0,
+								1);
+						
+						simplifySequenceAppendInLast();
+						
+						{
+							subdeduction();
+							
+							ebindTrim("nonnegativity_of_naturals", m);
+							ebindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), 1);
+							ebindTrim("transitivity_of_<" + LE, 0, left(proposition(-1)), right(proposition(-1)));
+							ebindTrim("commutativity_of_addition", left(right(proposition(-1))), right(right(proposition(-1))));
+							rewrite(name(-2), name(-1));
+							ebindTrim("conversion<>", left(proposition(-1)), right(proposition(-1)));
+							rewrite(name(-2), name(-1));
+							ebindTrim(">_implies_not_equal", left(proposition(-1)), right(proposition(-1)));
+							
+							conclude();
+						}
+						
+						{
+							final Variable vx = new Variable("x");
+							final Variable vy = new Variable("y");
+							final Variable vz = new Variable("z");
+							
+							matchOrFail($rule($(vx, LOR, vy), vz), proposition(-2));
+							
+							ebindTrim("right_elimination_of_disjunction", vx.get(), vy.get(), vz.get());
+						}
+						
+						ebindTrim("commutativity_of_equality", left(proposition(-1)), right(proposition(-1)));
+						
+						conclude();
+					}
+					
+					rewrite(name(-2), name(-1));
+					
+					{
 						subdeduction("meaning_of_prefix");
 						
 						{
@@ -2244,13 +2324,15 @@ public final class Computation extends AbstractNode<Computation> {
 						conclude();
 					}
 					
-					abort();
+					rewrite(name(-2), name(-1));
 					
 					conclude();
 				}
 				
 				concludeGoal();
 			}
+			
+			eapply(name(-2));
 			
 			abort();
 			
