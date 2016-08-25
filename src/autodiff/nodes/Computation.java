@@ -8,6 +8,7 @@ import static autodiff.reasoning.tactics.Goal.concludeGoal;
 import static autodiff.reasoning.tactics.Goal.goal;
 import static autodiff.reasoning.tactics.Goal.newGoal;
 import static autodiff.reasoning.tactics.PatternPredicate.rule;
+import static autodiff.rules.Variable.match;
 import static autodiff.rules.Variable.matchOrFail;
 import static multij.tools.Tools.*;
 
@@ -345,15 +346,6 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			{
 				final Object _x = $new("x");
-				final Object _y = $new("y");
-				
-				suppose("commutativity_of_addition",
-						$(FORALL, _x, ",", _y, IN, R,
-								$($(_x, "+", _y), "=", $(_y, "+", _x))));
-			}
-			
-			{
-				final Object _x = $new("x");
 				
 				suppose("neutrality_of_0",
 						$(FORALL, _x, IN, R,
@@ -368,13 +360,37 @@ public final class Computation extends AbstractNode<Computation> {
 								$($(_x, "*", 1), "=", _x)));
 			}
 			
+			for (final Map.Entry<Object, Object> entry : map("addition", $("+"), "multiplication", $("*")).entrySet()) {
+				{
+					final Object _x = $new("x");
+					final Object _y = $new("y");
+					final Object op = entry.getValue();
+					
+					suppose("commutativity_of_" + entry.getKey(),
+							$(FORALL, _x, ",", _y, IN, R,
+									$($(_x, op, _y), "=", $(_y, op, _x))));
+				}
+				
+				{
+					final Object _x = $new("x");
+					final Object _y = $new("y");
+					final Object _z = $new("z");
+					final Object op = entry.getValue();
+					
+					suppose("associativity_of_" + entry.getKey(),
+							$(FORALL, _x, ",", _y, ",", _z, IN, R,
+									$($($(_x, op, _y), op, _z), "=", $(_x, op, $(_y, op, _z)))));
+				}
+			}
+			
 			{
 				final Object _x = $new("x");
 				final Object _y = $new("y");
+				final Object _z = $new("z");
 				
-				suppose("commutativity_of_multiplication",
-						$(FORALL, _x, ",", _y, IN, R,
-								$($(_x, "*", _y), "=", $(_y, "*", _x))));
+				suppose("associativity_of_+-",
+						$(FORALL, _x, ",", _y, ",", _z, IN, R,
+								$($($(_x, "+", _y), "-", _z), "=", $(_x, "+", $(_y, "-", _z)))));
 			}
 			
 			{
@@ -2168,6 +2184,9 @@ public final class Computation extends AbstractNode<Computation> {
 						
 						simplifySequenceAppendInLast();
 						simplifySequenceConcatenateInLast();
+						simplifyArithmeticInLast();
+						
+						abort();
 						
 						conclude();
 					}
@@ -2203,34 +2222,146 @@ public final class Computation extends AbstractNode<Computation> {
 	}
 	
 	public static final void simplifySubstitutionsAndElementaryInLast(final Simplifier.Mode mode) {
-		final Simplifier simplifier = new Simplifier(mode)
+		new Simplifier(mode)
 				.add(newElementarySimplificationRule())
 				.add(newSubstitutionSimplificationRule())
-				.add(rule(new Variable("*"), (e, m) -> false));
-		
-		while (simplifier.apply(proposition(-1))) {
-			// NOP
-		}
+				.add(rule(new Variable("*"), (e, m) -> false))
+				.simplifyCompletely(proposition(-1));
 	}
 	
 	public static final void simplifySequenceAppendInLast() {
-		final Simplifier simplifier = new Simplifier()
+		new Simplifier()
 				.add(newSequenceAppendSimplificationRule())
-				.add(rule(new Variable("*"), (e, m) -> false));
-		
-		while (simplifier.apply(proposition(-1))) {
-			// NOP
-		}
+				.add(rule(new Variable("*"), (e, m) -> false))
+				.simplifyCompletely(proposition(-1));
 	}
 	
 	public static final void simplifySequenceConcatenateInLast() {
-		final Simplifier simplifier = new Simplifier()
+		new Simplifier()
 				.add(newSequenceConcatenateSimplificationRule())
-				.add(rule(new Variable("*"), (e, m) -> false));
+				.add(rule(new Variable("*"), (e, m) -> false))
+				.simplifyCompletely(proposition(-1));
+	}
+	
+	public static final void simplifyArithmeticInLast() {
+		final Simplifier simplifier = new Simplifier();
 		
-		while (simplifier.apply(proposition(-1))) {
-			// NOP
+		simplifier.add(newElementarySimplificationRule());
+		
+		{
+			final Variable vx = new Variable("x");
+			final Variable vy = new Variable("y");
+			final Variable vz = new Variable("z");
+			
+			simplifier.add(new SimpleRule<>(
+					(e, m) -> {
+						if (match($($(vx, "+", vy), "+", vz), e)) {
+							final Object y = vy.get();
+							final Object z = vz.get();
+							final Number ny = cast(Number.class, y);
+							final Number nz = cast(Number.class, z);
+							
+							if (ny == null && nz != null) {
+								return true;
+							}
+							
+							if (ny == null && nz == null && y.toString().compareTo(z.toString()) > 0) {
+								return true;
+							}
+						}
+						
+						return false;
+					}, (e, m) -> {
+						{
+							subdeduction();	
+							
+							ebindTrim("associativity_of_addition", vx.get(), vy.get(), vz.get());
+							ebindTrim("commutativity_of_addition", vy.get(), vz.get());
+							rewrite(name(-2), name(-1));
+							
+							conclude();
+						}
+						
+						return true;
+					}));
 		}
+		
+		{
+			final Variable vx = new Variable("x");
+			final Variable vy = new Variable("y");
+			final Variable vz = new Variable("z");
+			
+			simplifier.add(new SimpleRule<>(
+					(e, m) -> {
+						if (match($(vx, "+", $(vy, "+", vz)), e)) {
+							return true;
+						}
+						
+						return false;
+					}, (e, m) -> {
+						{
+							subdeduction();	
+							
+							ebindTrim("associativity_of_addition", vx.get(), vy.get(), vz.get());
+							ebindTrim("commutativity_of_equality", left(proposition(-1)), right(proposition(-1)));
+							
+							conclude();	
+						}
+						
+						return true;
+					}));
+		}
+		
+//		
+//		{
+//			final Variable vx = new Variable("x");
+//			final Variable vy = new Variable("y");
+//			final Variable vz = new Variable("z");
+//			
+//			simplifier.add(new SimpleRule<>(
+//					(e, m) -> match($($(vx, "+", vy), "-", vz), e)
+//					&& (vy.get() instanceof Number && vz.get() instanceof Number),
+//					
+//					(e, m) -> {
+//						debugPrint();
+//						ebindTrim("associativity_of_+-", vx.get(), vy.get(), vz.get());
+//						
+//						return true;
+//					}));
+//		}
+		
+		{
+			final Variable vx = new Variable("x");
+			final Variable vy = new Variable("y");
+			
+			simplifier.add(new SimpleRule<>(
+					(e, m) -> {
+						if (match($($(vx, "+", vy)), e)) {
+							final Object x = vx.get();
+							final Object y = vy.get();
+							final Number nx = cast(Number.class, x);
+							final Number ny = cast(Number.class, y);
+							
+							if (nx == null && ny != null) {
+								return true;
+							}
+							
+							if (nx == null && ny == null && x.toString().compareTo(y.toString()) > 0) {
+								return true;
+							}
+						}
+						
+						return false;
+					}, (e, m) -> {
+						ebindTrim("commutativity_of_addition", vx.get(), vy.get());
+						
+						return true;
+					}));
+		}
+		
+		simplifier.add(rule(new Variable("*"), (e, m) -> false));
+		
+		simplifier.simplifyCompletely(proposition(-1));
 	}
 	
 	/**
@@ -2263,6 +2394,20 @@ public final class Computation extends AbstractNode<Computation> {
 			this.getRules().add(rule);
 			
 			return this;
+		}
+		
+		public final void simplifyCompletely(final Object expression) {
+			subdeduction();
+			
+			if (this.apply(expression)) {
+				while (this.apply(proposition(-1))) {
+					// NOP
+				}
+			} else {
+				pop();
+			}
+			
+			conclude();
 		}
 		
 		@Override
@@ -2304,7 +2449,6 @@ public final class Computation extends AbstractNode<Computation> {
 							rewrite(name(-2), name(-1), rightTargets);
 						} else {
 							popTo(deduction.getParent());
-//							pop();
 							
 							return false;
 						}
@@ -2323,7 +2467,6 @@ public final class Computation extends AbstractNode<Computation> {
 			}
 			
 			popTo(deduction.getParent());
-//			pop();
 			
 			return false;
 		}
@@ -4290,7 +4433,6 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 		
 		public final void compute(final Object expression) {
-			debugPrint(expression);
 			this.rules.applyTo(expression);
 		}
 		
