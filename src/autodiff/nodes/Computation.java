@@ -290,14 +290,37 @@ public final class Computation extends AbstractNode<Computation> {
 								$($(_x, "+", _y), IN, N)));
 			}
 			
-			{
-				final Object _x = $new("x");
-				final Object _y = $new("y");
-				final Object _z = $new("z");
+			for (final Object operator : array($("<"), $("<="), LE, ">", ">=", GE)) {
+				{
+					final Object _x = $new("x");
+					final Object _y = $new("y");
+					final Object _z = $new("z");
+					
+					suppose("transitivity_of_" + operator,
+							$(FORALL, _x, ",", _y, ",", _z, IN, R,
+									$rule($(_x, operator, _y), $(_y, operator, _z), $(_x, operator, _z))));
+				}
 				
-				suppose("transitivity_of_<",
-						$(FORALL, _x, ",", _y, ",", _z, IN, R,
-								$rule($(_x, "<", _y), $(_y, "<", _z), $(_x, "<", _z))));
+				{
+					final Object _x = $new("x");
+					final Object _y = $new("y");
+					final Object _z = $new("z");
+					
+					suppose("preservation_of_" + operator + "_under_addition",
+							$(FORALL, _x, ",", _y, ",", _z, IN, R,
+									$rule($(_x, operator, _y), $($(_x, "+", _z), operator, $(_y, "+", _z)))));
+				}
+			}
+			
+			for (final Object operator : array($("<"), $("<="), LE)) {
+				{
+					final Object _x = $new("x");
+					final Object _y = $new("y");
+					
+					suppose("preservation_of_" + operator + "_under_multiplication",
+							$(FORALL, _x, ",", _y, IN, R,
+									$rule($(0, operator, _x), $(0, operator, _y), $(0, operator, $(_x, "*", _y)))));
+				}
 			}
 			
 			{
@@ -305,18 +328,19 @@ public final class Computation extends AbstractNode<Computation> {
 				final Object _y = $new("y");
 				final Object _z = $new("z");
 				
-				suppose("preservation_of_<_under_addition",
+				suppose("transitivity_of_" + LE + "<",
 						$(FORALL, _x, ",", _y, ",", _z, IN, R,
-								$rule($(_x, "<", _y), $($(_x, "+", _z), "<", $(_y, "+", _z)))));
+								$rule($(_x, LE, _y), $(_y, "<", _z), $(_x, "<", _z))));
 			}
 			
 			{
 				final Object _x = $new("x");
 				final Object _y = $new("y");
+				final Object _z = $new("z");
 				
-				suppose("preservation_of_<_under_multiplication",
-						$(FORALL, _x, ",", _y, IN, R,
-								$rule($(0, "<", _x), $(0, "<", _y), $(0, "<", $(_x, "*", _y)))));
+				suppose("transitivity_of_<" + LE,
+						$(FORALL, _x, ",", _y, ",", _z, IN, R,
+								$rule($(_x, "<", _y), $(_y, LE, _z), $(_x, "<", _z))));
 			}
 			
 			{
@@ -351,6 +375,14 @@ public final class Computation extends AbstractNode<Computation> {
 				suppose("commutativity_of_multiplication",
 						$(FORALL, _x, ",", _y, IN, R,
 								$($(_x, "*", _y), "=", $(_y, "*", _x))));
+			}
+			
+			{
+				final Object _x = $new("x");
+				
+				suppose("nonnegativity_of_naturals",
+						$(FORALL, _x, IN, N,
+								$(0, LE, _x)));
 			}
 			
 			supposeDefinitionsForJavaCode();
@@ -787,12 +819,10 @@ public final class Computation extends AbstractNode<Computation> {
 		{
 			subdeduction();
 			
-			verifyElementaryProposition($(target, IN, N));
-			verifyElementaryProposition($(0, "<", target));
+			final PropositionDescription j1 = justicationFor($(target, IN, N));
+			final PropositionDescription j2 = justicationFor($(0, "<", target));
 			
-			bind("introduction_of_conjunction", proposition(-2), proposition(-1));
-			eapplyLast();
-			eapplyLast();
+			ebindTrim("introduction_of_conjunction", j1.getProposition(), j2.getProposition());
 			
 			conclude();
 		}
@@ -2115,9 +2145,32 @@ public final class Computation extends AbstractNode<Computation> {
 						conclude();
 					}
 					
-					ebindTrim("meaning_of_repeat_2",
-							sequence(";", app("allocate", str("i"), 1)), "i", 0, $(1, "+", $(m, "+", 1)),
-							sequence(";", app("write", str("result"), app("read", str("i"), 0), 1)));
+					{
+						subdeduction();
+						
+						{
+							subdeduction();
+							
+							ebindTrim("nonnegativity_of_naturals", m);
+							ebindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), 1);
+							ebindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), 1);
+							ebindTrim("commutativity_of_addition", left(right(proposition(-1))), right(right(proposition(-1))));
+							rewrite(name(-2), name(-1));
+							simplifySubstitutionsAndElementaryInLast(Simplifier.Mode.REWRITE);
+							ebindTrim("transitivity_of_<" + LE, 0, left(proposition(-1)), right(proposition(-1)));
+							
+							conclude();
+						}
+						
+						ebindTrim("meaning_of_repeat_2",
+								sequence(";", app("allocate", str("i"), 1)), "i", 0, $(1, "+", $(m, "+", 1)),
+								sequence(";", app("write", str("result"), app("read", str("i"), 0), 1)));
+						
+						simplifySequenceAppendInLast();
+						simplifySequenceConcatenateInLast();
+						
+						conclude();
+					}
 					
 					abort();
 					
@@ -2146,19 +2199,33 @@ public final class Computation extends AbstractNode<Computation> {
 	}
 	
 	public static final void simplifySubstitutionsAndElementaryInLast() {
-		final PatternProcessor simplifier = new PatternProcessor(PatternProcessor.Mode.DEFINE)
+		simplifySubstitutionsAndElementaryInLast(Simplifier.Mode.DEFINE);
+	}
+	
+	public static final void simplifySubstitutionsAndElementaryInLast(final Simplifier.Mode mode) {
+		final Simplifier simplifier = new Simplifier(mode)
 				.add(newElementarySimplificationRule())
 				.add(newSubstitutionSimplificationRule())
 				.add(rule(new Variable("*"), (e, m) -> false));
 		
-		while (simplifier.apply(right(proposition(-1)))) {
+		while (simplifier.apply(proposition(-1))) {
 			// NOP
 		}
 	}
 	
 	public static final void simplifySequenceAppendInLast() {
-		final PatternProcessor simplifier = new PatternProcessor()
+		final Simplifier simplifier = new Simplifier()
 				.add(newSequenceAppendSimplificationRule())
+				.add(rule(new Variable("*"), (e, m) -> false));
+		
+		while (simplifier.apply(proposition(-1))) {
+			// NOP
+		}
+	}
+	
+	public static final void simplifySequenceConcatenateInLast() {
+		final Simplifier simplifier = new Simplifier()
+				.add(newSequenceConcatenateSimplificationRule())
 				.add(rule(new Variable("*"), (e, m) -> false));
 		
 		while (simplifier.apply(proposition(-1))) {
@@ -2169,17 +2236,17 @@ public final class Computation extends AbstractNode<Computation> {
 	/**
 	 * @author codistmonk (creation 2016-08-21)
 	 */
-	public static final class PatternProcessor implements ExpressionVisitor<Boolean> {
+	public static final class Simplifier implements ExpressionVisitor<Boolean> {
 		
 		private final Rules<Object, Boolean> rules;
 		
 		private final Mode mode;
 		
-		public PatternProcessor() {
+		public Simplifier() {
 			this(Mode.REWRITE);
 		}
 		
-		public PatternProcessor(final Mode mode) {
+		public Simplifier(final Mode mode) {
 			this.rules = new Rules<>();
 			this.mode = mode;
 		}
@@ -2192,7 +2259,7 @@ public final class Computation extends AbstractNode<Computation> {
 			return this.mode;
 		}
 		
-		public final PatternProcessor add(final Rule<Object, Boolean> rule) {
+		public final Simplifier add(final Rule<Object, Boolean> rule) {
 			this.getRules().add(rule);
 			
 			return this;
@@ -2311,6 +2378,18 @@ public final class Computation extends AbstractNode<Computation> {
 		
 		return rule($("sequence_append", vs, vx, vy), (e, m) -> {
 			computeSequenceAppend(vs.get(), vx.get(), vy.get());
+			
+			return true;
+		});
+	}
+	
+	public static final SimpleRule<Object, Boolean> newSequenceConcatenateSimplificationRule() {
+		final Variable vs = new Variable("s");
+		final Variable vx = new Variable("x");
+		final Variable vy = new Variable("y");
+		
+		return rule($("sequence_concatenate", vs, vx, vy), (e, m) -> {
+			computeSequenceConcatenate(vs.get(), vx.get(), vy.get());
 			
 			return true;
 		});
