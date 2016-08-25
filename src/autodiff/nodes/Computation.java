@@ -2159,9 +2159,7 @@ public final class Computation extends AbstractNode<Computation> {
 							conclude();
 						}
 						
-						// XXX read result at 0 for now...
-						
-						abort();
+						rewrite(name(-2), name(-1));
 						
 						conclude();
 					}
