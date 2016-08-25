@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -51,6 +52,24 @@ public final class Expressions {
 	public static final Object LE = $("≤");
 	
 	public static final Object GE = $("≥");
+	
+	private static final Map<Object, Object> globals = new IdentityHashMap<>();
+	
+	@Deprecated
+	public static final void setGlobal(final Object key, final Object value) {
+		globals.put(key, value);
+	}
+	
+	@Deprecated
+	public static final Object getGlobal(final Object key) {
+		return globals.get(key);
+	}
+	
+	public static final boolean asBoolean(final Object object) {
+		final Boolean b = cast(Boolean.class, object);
+		
+		return b != null && b;
+	}
 	
 	public static final Object $new(final String name) {
 		return $(new Id(name));

@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import multij.tools.Pair;
+import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2016-08-09)
@@ -282,13 +283,13 @@ public final class Computation extends AbstractNode<Computation> {
 			supposeDefinitionOfVectorReductionByProduct();
 			testVectorReductionByProduct();
 			
-			{
+			for (final Object type : array(R, N)) {
 				final Object _x = $new("x");
 				final Object _y = $new("y");
 				
-				suppose("stability_of_addition_in_naturals",
-						$(FORALL, _x, ",", _y, IN, N,
-								$($(_x, "+", _y), IN, N)));
+				suppose("stability_of_addition_in_" + type,
+						$(FORALL, _x, ",", _y, IN, type,
+								$($(_x, "+", _y), IN, type)));
 			}
 			
 			for (final Object operator : array($("<"), $("<="), LE, ">", ">=", GE)) {
@@ -381,6 +382,15 @@ public final class Computation extends AbstractNode<Computation> {
 							$(FORALL, _x, ",", _y, ",", _z, IN, R,
 									$($($(_x, op, _y), op, _z), "=", $(_x, op, $(_y, op, _z)))));
 				}
+			}
+			
+			{
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				
+				suppose("definition_of_subtraction",
+						$(FORALL, _x, ",", _y, IN, R,
+								$($(_x, "-", _y), "=", $(_x, "+", $(-1, "*", _y)))));
 			}
 			
 			{
@@ -2060,9 +2070,9 @@ public final class Computation extends AbstractNode<Computation> {
 					
 					final String definitionOfP = name(-1);
 					
-					ebindTrim("stability_of_addition_in_naturals", m, 1);
-					ebindTrim("stability_of_addition_in_naturals", 1, $(m, "+", 1));
-					ebindTrim("stability_of_addition_in_naturals", 1, m);
+					ebindTrim("stability_of_addition_in_" + N, m, 1);
+					ebindTrim("stability_of_addition_in_" + N, 1, $(m, "+", 1));
+					ebindTrim("stability_of_addition_in_" + N, 1, m);
 					
 					{
 						deduceNaturalIsReal(m);
@@ -2312,23 +2322,25 @@ public final class Computation extends AbstractNode<Computation> {
 					}));
 		}
 		
-//		
-//		{
-//			final Variable vx = new Variable("x");
-//			final Variable vy = new Variable("y");
-//			final Variable vz = new Variable("z");
-//			
-//			simplifier.add(new SimpleRule<>(
-//					(e, m) -> match($($(vx, "+", vy), "-", vz), e)
-//					&& (vy.get() instanceof Number && vz.get() instanceof Number),
-//					
-//					(e, m) -> {
-//						debugPrint();
-//						ebindTrim("associativity_of_+-", vx.get(), vy.get(), vz.get());
-//						
-//						return true;
-//					}));
-//		}
+		{
+			final Variable vx = new Variable("x");
+			final Variable vy = new Variable("y");
+			
+			simplifier.add(new SimpleRule<>(
+					(e, m) -> {
+						if (match($($(vx, "-", vy)), e)) {
+							return true;
+						}
+						
+						return false;
+					}, (e, m) -> {
+						debugPrint(vx.get(), vy.get());
+						
+						ebindTrim("definition_of_subtraction", vx.get(), vy.get());
+						
+						return true;
+					}));
+		}
 		
 		{
 			final Variable vx = new Variable("x");
@@ -2421,13 +2433,13 @@ public final class Computation extends AbstractNode<Computation> {
 				return true;
 			}
 			
-			boolean result = false;
-			
 			for (final Object subExpression : expression) {
-				result |= this.apply(subExpression);
+				if (this.apply(subExpression)) {
+					return true;
+				}
 			}
 			
-			return result;
+			return false;
 		}
 		
 		private final boolean tryRules(final Object expression) {
@@ -3774,14 +3786,7 @@ public final class Computation extends AbstractNode<Computation> {
 	}
 	
 	public static final PropositionDescription justicationFor(final Object proposition) {
-		PropositionDescription result = null;
-		
-		for (final PropositionDescription description : iterateBackward(deduction())) {
-			if (new Substitution.ExpressionEquality().apply(proposition, description.getProposition())) {
-				result = description;
-				break;
-			}
-		}
+		PropositionDescription result = existingJustificationFor(proposition);
 		
 		if (result == null) {
 			{
@@ -3798,6 +3803,8 @@ public final class Computation extends AbstractNode<Computation> {
 					
 					if (isIdentity(proposition)) {
 						bind("identity", left(proposition));
+					} else if (isArithmeticTyping(proposition)) {
+						return justifyArithmeticTyping(proposition);
 					} else if (isPositivity(proposition)) {
 						deducePositivity(left(proposition));
 					} else if(isCartesianProductity(proposition)) {
@@ -3813,6 +3820,73 @@ public final class Computation extends AbstractNode<Computation> {
 			.setName(name(-1))
 			.setProposition(proposition(-1));
 		}
+		
+		return result;
+	}
+	
+	public static final PropositionDescription existingJustificationFor(final Object proposition) {
+		for (final PropositionDescription description : iterateBackward(deduction())) {
+			if (new Substitution.ExpressionEquality().apply(proposition, description.getProposition())) {
+				return description;
+			}
+		}
+		
+		return null;
+	}
+	
+	public static final PropositionDescription justifyArithmeticTyping(final Object proposition) {
+		PropositionDescription result = existingJustificationFor(proposition);
+		
+		if (result != null) {
+			return result;
+		}
+		
+		try {
+			verifyElementaryProposition(proposition);
+			
+			result = new PropositionDescription().setIndex(-1).setName(name(-1)).setProposition(proposition(-1));
+		} catch (final AbortException exception) {
+			throw exception;
+		} catch (final Exception exception) {
+			ignore(exception);
+		}
+		
+		if (result != null) {
+			return result;
+		}
+		
+		final Rules<Object, Void> rules = new Rules<>();
+		final Object type = right(proposition);
+		
+		{
+			final Variable vx = new Variable("x");
+			final Variable vy = new Variable("y");
+			
+			rules.add(rule($(vx, "+", vy), (e, m) -> {
+				{
+					subdeduction();
+					
+					final Object x = vx.get();
+					final Object y = vy.get();
+					final PropositionDescription jx = justifyArithmeticTyping($(x, IN, type));
+					final PropositionDescription jy = justifyArithmeticTyping($(y, IN, type));
+					
+					if (jx != null && jy != null) {
+						ebindTrim("stability_of_addition_in_" + type, x, y);
+						
+						conclude();
+					} else {
+						pop();
+					}
+				}
+				
+				return null;
+			}));
+		}
+		
+		rules.applyTo(left(proposition));
+		
+		result = new PropositionDescription().setIndex(-1).setName(name(-1)).setProposition(proposition(-1));
 		
 		return result;
 	}
@@ -3914,6 +3988,16 @@ public final class Computation extends AbstractNode<Computation> {
 			final List<?> type = cast(List.class, right(list));
 			
 			return type != null && "^".equals(middle(type));
+		}
+		
+		return false;
+	}
+	
+	public static final boolean isArithmeticTyping(final Object proposition) {
+		final Variable vt = new Variable("T");
+		
+		if (match($(new Variable("*"), IN, vt), proposition)) {
+			return Tools.set(N, R).contains(vt.get());
 		}
 		
 		return false;
