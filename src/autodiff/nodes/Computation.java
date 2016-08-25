@@ -2070,29 +2070,60 @@ public final class Computation extends AbstractNode<Computation> {
 					
 					final String definitionOfP = name(-1);
 					
-					ebindTrim("stability_of_addition_in_" + N, m, 1);
-					ebindTrim("stability_of_addition_in_" + N, 1, $(m, "+", 1));
-					ebindTrim("stability_of_addition_in_" + N, 1, m);
-					
-					{
-						deduceNaturalIsReal(m);
-					}
-					
-					deduceNaturalIsReal($(m, "+", 1));
-					deduceNaturalIsReal($(1, "+", m));
-					deduceNaturalIsReal($(1, "+", $(m, "+", 1)));
+					deduceNaturalIsReal(m);
 					
 					{
 						subdeduction();
 						
 						new ToJavaHelper().compute(left(proposition(definitionOfP)));
 						rewrite(name(-1), definitionOfP);
+						simplifyArithmeticInLast();
 						
 						conclude();
 					}
 					
 					{
 						subdeduction();
+						
+						{
+							subdeduction();
+							
+							{
+								subdeduction();
+								
+								ebindTrim("nonnegativity_of_naturals", m);
+								ebindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), 1);
+								ebindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), 1);
+								ebindTrim("commutativity_of_addition", left(right(proposition(-1))), right(right(proposition(-1))));
+								rewrite(name(-2), name(-1));
+								simplifySubstitutionsAndElementaryInLast(Simplifier.Mode.REWRITE);
+								ebindTrim("transitivity_of_<" + LE, 0, left(proposition(-1)), right(proposition(-1)));
+								
+								conclude();
+							}
+							
+							ebindTrim("meaning_of_repeat_2",
+									sequence(";", app("allocate", str("i"), 1)), "i", 0, $(1, "+", $(m, "+", 1)),
+									sequence(";", app("write", str("result"), app("read", str("i"), 0), 1)));
+							
+							simplifySequenceAppendInLast();
+							simplifySequenceConcatenateInLast();
+							simplifyArithmeticInLast();
+							
+							conclude();
+						}
+						
+						rewrite(name(-2), name(-1));
+						
+						// TODO meaning of read in arguments
+						
+						abort();
+						
+						conclude();
+					}
+					
+					{
+						subdeduction("meaning_of_prefix");
 						
 						{
 							subdeduction();
@@ -2167,36 +2198,6 @@ public final class Computation extends AbstractNode<Computation> {
 						new ToJavaHelper().compute(left(condition(scope(proposition(-1)))));
 						ebindTrim(name(-2), right(proposition(-1)));
 						simplifySequenceAppendInLast();
-						
-						conclude();
-					}
-					
-					{
-						subdeduction();
-						
-						{
-							subdeduction();
-							
-							ebindTrim("nonnegativity_of_naturals", m);
-							ebindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), 1);
-							ebindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), 1);
-							ebindTrim("commutativity_of_addition", left(right(proposition(-1))), right(right(proposition(-1))));
-							rewrite(name(-2), name(-1));
-							simplifySubstitutionsAndElementaryInLast(Simplifier.Mode.REWRITE);
-							ebindTrim("transitivity_of_<" + LE, 0, left(proposition(-1)), right(proposition(-1)));
-							
-							conclude();
-						}
-						
-						ebindTrim("meaning_of_repeat_2",
-								sequence(";", app("allocate", str("i"), 1)), "i", 0, $(1, "+", $(m, "+", 1)),
-								sequence(";", app("write", str("result"), app("read", str("i"), 0), 1)));
-						
-						simplifySequenceAppendInLast();
-						simplifySequenceConcatenateInLast();
-						simplifyArithmeticInLast();
-						
-						abort();
 						
 						conclude();
 					}
