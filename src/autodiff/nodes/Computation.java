@@ -2117,6 +2117,50 @@ public final class Computation extends AbstractNode<Computation> {
 						
 						// TODO meaning of read in arguments
 						
+						{
+							subdeduction();
+							
+							final Variable vp0 = new Variable("p0");
+							final Variable vp1 = new Variable("p1");
+							final Variable vf = new Variable("f");
+							final Variable vx = new Variable("x");
+							
+							matchOrFail(sequence(";", vp0, vp1, $(vf, "(", vx, ")")), right(proposition(-1)));
+							
+							final Object pp = sequence(";", vp0.get(), vp1.get());
+							
+							bind("meaning_of_read_in_arguments",
+									pp,
+									vf.get(),
+									vx.get(),
+									"i",
+									0);
+							
+							simplifySequenceAppendInLast();
+							
+							{
+								subdeduction();
+								
+								ebindTrim("meaning_of_repeat_1",
+										sequence(";", vp0.get()),
+										$(1, "+", m),
+										"i",
+										0,
+										sequence(";", $(vf.get(), "(", vx.get(), ")")));
+								simplifySequenceAppendInLast();
+								
+								conclude();
+							}
+							
+							rewrite(name(-2), name(-1));
+							
+							simplifySubstitutionsAndElementaryInLast();
+							
+							conclude();
+						}
+						
+						// XXX read result at 0 for now...
+						
 						abort();
 						
 						conclude();
@@ -2335,8 +2379,6 @@ public final class Computation extends AbstractNode<Computation> {
 						
 						return false;
 					}, (e, m) -> {
-						debugPrint(vx.get(), vy.get());
-						
 						ebindTrim("definition_of_subtraction", vx.get(), vy.get());
 						
 						return true;
