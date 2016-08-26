@@ -2350,7 +2350,15 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			rewriteRight("induction_condition_n", "induction_simplified_condition_n", "induction_condition_n_simplification");
 			
+			goal().introduce();
+			
 			trim("full_induction");
+			
+			canonicalizeForallIn(proposition(-1));
+			
+			rewrite(name(-2), name(-1));
+			
+			bind(name(-1), $(_n, "-", 1));
 			
 			abort();
 			
