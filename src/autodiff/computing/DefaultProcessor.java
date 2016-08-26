@@ -256,9 +256,9 @@ public final class DefaultProcessor implements NodeProcessor {
 			}
 		}
 		
-		public final void allocate(final String name, final int n) {
+		public final void allocate(final String name, final Number n) {
 			this.buffers.put(name,
-					ByteBuffer.allocateDirect(n * Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer());
+					ByteBuffer.allocateDirect(n.intValue() * Float.BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer());
 		}
 		
 		public final void write(final String targetName, final Number index, final Number value) {

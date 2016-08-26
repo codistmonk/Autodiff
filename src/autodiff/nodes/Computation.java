@@ -423,10 +423,38 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			{
 				final Object _x = $new("x");
+				final Object _y = $new("y");
+				
+				suppose("equality_<" + LE,
+						$(FORALL, _x, ",", _y, IN, Z,
+								$($(_x, "<", _y), "=", $($(_x, "+", 1), LE, _y))));
+			}
+			
+			{
+				final Object _x = $new("x");
 				
 				suppose("nonnegativity_of_naturals",
 						$(FORALL, _x, IN, N,
 								$(0, LE, _x)));
+			}
+			
+			{
+				suppose("naturals_subset_relatives",
+						$(N, SUBSET, Z));
+			}
+			
+			{
+				suppose("relatives_in_Uhm",
+						$(Z, IN, U));
+			}
+			
+			{
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				
+				suppose("subtraction_in_naturals",
+						$(FORALL, _x, ",", _y, IN, Z,
+								$rule($(_y, LE, _x), $($(_x, "-", _y), IN, N))));
 			}
 			
 			supposeDefinitionsForJavaCode();
@@ -1843,18 +1871,6 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			bind("full_induction", "induction_principle", $(conclusion(goal().getProposition()), "|", $1($(_n, "=", $(1, "+", _m))), "@", $()), _m);
 			
-//			{
-//				subdeduction("induction_simplification");
-//				
-//				bind("identity", proposition(-1));
-//				
-//				simplifySubstitutionsAndElementaryInLast();
-//				
-//				conclude();
-//			}
-//			
-//			rewrite("simplified_induction", name(-2), name(-1));
-			
 			{
 				subdeduction("induction_condition_0_simplification");
 				
@@ -2062,21 +2078,6 @@ public final class Computation extends AbstractNode<Computation> {
 				
 				concludeGoal();
 			}
-			
-//			{
-//				subdeduction("remaining_induction");
-//				
-//				apply("simplified_induction", "induction_condition_0");
-//				
-//				bind("definition_of_forall_in",
-//						list(condition(proposition(-1))).get(1),
-//						list(condition(proposition(-1))).get(3),
-//						list(condition(proposition(-1))).get(4));
-//				
-//				rewrite(name(-2), name(-1));
-//				
-//				conclude();
-//			}
 			
 			rewriteRight("induction_condition_0", "induction_simplified_condition_0", "induction_condition_0_simplification");
 			
@@ -2352,15 +2353,95 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			goal().introduce();
 			
-			trim("full_induction");
+			{
+				subdeduction();
+				
+				ebindTrim("definition_of_positives", _n);
+				rewrite(last(deduction().getParent().getConditionNames()), name(-1));
+				
+				conclude();
+			}
 			
-			canonicalizeForallIn(proposition(-1));
+			breakConjunction(name(-1));
 			
-			rewrite(name(-2), name(-1));
+			{
+				subdeduction("n_is_relative");
+				
+				ebindTrim("definition_of_subset", N, Z);
+				rewrite("naturals_subset_relatives", name(-1));
+				ebindTrim(name(-1), _n);
+				
+				conclude();
+			}
 			
-			bind(name(-1), $(_n, "-", 1));
+			{
+				subdeduction();
+				
+				{
+					subdeduction();
+					
+					ebindTrim("definition_of_subset", N, Z);
+					rewrite("naturals_subset_relatives", name(-1));
+					ebindTrim(name(-1), _n);
+					
+					ebindTrim("equality_<" + LE, 0, _n);
+					
+//					simplifyArithmeticInLast(); // FIXME stack pops too far
+					
+					conclude();
+				}
+				
+				rewrite(name(-3), name(-1));
+				simplifyArithmeticInLast();
+				
+				conclude();
+			}
 			
-			abort();
+			{
+				subdeduction("n_is_real");
+				
+				ebindTrim("definition_of_subset", N, R);
+				rewrite("naturals_subset_reals", name(-1));
+				ebindTrim(name(-1), _n);
+				
+				conclude();
+			}
+			
+			{
+				subdeduction();
+				
+				trim("full_induction");
+				
+				canonicalizeForallIn(proposition(-1));
+				
+				rewrite(name(-2), name(-1));
+				
+				bind(name(-1), $(_n, "-", 1));
+				
+				ebindTrim("subtraction_in_naturals", _n, 1);
+				
+				eapply(name(-2));
+				
+				simplifyArithmeticInLast();
+				
+				ebindTrim("commutativity_of_addition", 0, _n);
+				rewrite(name(-2), name(-1));
+				
+				ebindTrim("neutrality_of_0", _n);
+				rewrite(name(-2), name(-1));
+				
+				{
+					final Variable vX = new Variable("X");
+					final Variable ve = new Variable("e");
+					
+					matchOrFail($(vX, "|", ve, "@", $()), proposition(-1));
+					
+					substitute(vX.get(), toMap(ve.get()));
+					rewrite(name(-2), name(-1));
+				}
+				
+				conclude();
+			}
 			
 			concludeGoal();
 		}
@@ -4054,8 +4135,33 @@ public final class Computation extends AbstractNode<Computation> {
 			return result;
 		}
 		
-		final Rules<Object, Void> rules = new Rules<>();
 		final Object type = right(proposition);
+		
+//		if (R.equals(type)) {
+//			subdeduction();
+//			
+//			PropositionDescription tmp = justifyArithmeticTyping($(left(proposition), IN, Q));
+//			
+//			if (tmp != null) {
+//				try {
+//					subdeduction();
+//					
+//					ebindTrim("definition_of_subset", Q, R);
+//					rewrite("rationals_subset_reals", name(-1));
+//					ebindTrim(name(-1), left(proposition));
+//					
+//					conclude();
+//				} catch (final AbortException exception) {
+//					throw exception;
+//				} catch (final Exception exception) {
+//					ignore(exception);
+//					
+//					pop();
+//				}
+//			}
+//		}
+		
+		final Rules<Object, Void> rules = new Rules<>();
 		
 		{
 			final Variable vx = new Variable("x");
