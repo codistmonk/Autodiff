@@ -1843,20 +1843,29 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			bind("full_induction", "induction_principle", $(conclusion(goal().getProposition()), "|", $1($(_n, "=", $(1, "+", _m))), "@", $()), _m);
 			
+//			{
+//				subdeduction("induction_simplification");
+//				
+//				bind("identity", proposition(-1));
+//				
+//				simplifySubstitutionsAndElementaryInLast();
+//				
+//				conclude();
+//			}
+//			
+//			rewrite("simplified_induction", name(-2), name(-1));
+			
 			{
-				subdeduction("induction_simplification");
+				subdeduction("induction_condition_0_simplification");
 				
-				bind("identity", proposition(-1));
-				
-				simplifySubstitutionsAndElementaryInLast();
+				bind("identity", condition(proposition("full_induction")));
+				simplifySubstitutionsAndForallInsAndElementary(proposition(-1), Simplifier.Mode.DEFINE);
 				
 				conclude();
 			}
 			
-			rewrite("simplified_induction", name(-2), name(-1));
-			
 			{
-				newGoal("induction_condition_0", condition(proposition(-1)));
+				newGoal("induction_simplified_condition_0", right(proposition("induction_condition_0_simplification")));
 				
 				goal().introduce();
 				
@@ -2054,23 +2063,34 @@ public final class Computation extends AbstractNode<Computation> {
 				concludeGoal();
 			}
 			
+//			{
+//				subdeduction("remaining_induction");
+//				
+//				apply("simplified_induction", "induction_condition_0");
+//				
+//				bind("definition_of_forall_in",
+//						list(condition(proposition(-1))).get(1),
+//						list(condition(proposition(-1))).get(3),
+//						list(condition(proposition(-1))).get(4));
+//				
+//				rewrite(name(-2), name(-1));
+//				
+//				conclude();
+//			}
+			
+			rewriteRight("induction_condition_0", "induction_simplified_condition_0", "induction_condition_0_simplification");
+			
 			{
-				subdeduction("remaining_induction");
+				subdeduction("induction_condition_n_simplification");
 				
-				apply("simplified_induction", "induction_condition_0");
-				
-				bind("definition_of_forall_in",
-						list(condition(proposition(-1))).get(1),
-						list(condition(proposition(-1))).get(3),
-						list(condition(proposition(-1))).get(4));
-				
-				rewrite(name(-2), name(-1));
+				bind("identity", condition(conclusion(proposition("full_induction"))));
+				simplifySubstitutionsAndForallInsAndElementary(proposition(-1), Simplifier.Mode.DEFINE);
 				
 				conclude();
 			}
 			
 			{
-				newGoal("induction_condition_n", condition(proposition(-1)));
+				newGoal("induction_simplified_condition_n", right(proposition("induction_condition_n_simplification")));
 				
 				final Object m = goal().introduce();
 				goal().introduce();
@@ -2132,8 +2152,6 @@ public final class Computation extends AbstractNode<Computation> {
 						}
 						
 						rewrite(name(-2), name(-1));
-						
-						// TODO meaning of read in arguments
 						
 						{
 							subdeduction();
@@ -2256,9 +2274,7 @@ public final class Computation extends AbstractNode<Computation> {
 							
 							final String h = name(-1);
 							
-							canonicalizeForallIn("induction_condition_n.3");
-							
-							bind(name(-1), k);
+							bind("induction_simplified_condition_n.3", k);
 							
 							{
 								subdeduction();
@@ -2311,11 +2327,11 @@ public final class Computation extends AbstractNode<Computation> {
 							conclude();
 						}
 						
-						canonicalizeForallIn(condition(proposition("induction_condition_n.2")));
+//						canonicalizeForallIn(condition(proposition("induction_condition_n.2")));
+//						
+//						rewriteRight(name(-2), name(-1));
 						
-						rewriteRight(name(-2), name(-1));
-						
-						eapply("induction_condition_n.2");
+						eapply("induction_simplified_condition_n.2");
 						
 						new ToJavaHelper().compute(left(condition(scope(proposition(-1)))));
 						ebindTrim(name(-2), right(proposition(-1)));
@@ -2332,7 +2348,9 @@ public final class Computation extends AbstractNode<Computation> {
 				concludeGoal();
 			}
 			
-			eapply(name(-2));
+			rewriteRight("induction_condition_n", "induction_simplified_condition_n", "induction_condition_n_simplification");
+			
+			trim("full_induction");
 			
 			abort();
 			
@@ -2350,6 +2368,17 @@ public final class Computation extends AbstractNode<Computation> {
 		ebindTrim(name(-1), value);
 		
 		conclude();
+	}
+	
+	public static final void simplifySubstitutionsAndForallInsAndElementary(final Object expression, final Simplifier.Mode mode) {
+		new Simplifier(mode)
+		.add(newElementarySimplificationRule())
+		.add(newSubstitutionSimplificationRule())
+		.add(newForallInSimplificationRule())
+		.add(newForallIn2SimplificationRule())
+		.add(newForallIn3SimplificationRule())
+		.add(rule(new Variable("*"), (e, m) -> false))
+		.simplifyCompletely(expression);
 	}
 	
 	public static final void simplifySubstitutionsAndElementaryInLast() {
@@ -2680,6 +2709,45 @@ public final class Computation extends AbstractNode<Computation> {
 		
 		return rule($(vx, "|", ve, "@", vi), (e, m) -> {
 			substitute(vx.get(), toMap(ve.get()), toInts(vi.get()));
+			
+			return true;
+		});
+	}
+	
+	public static final SimpleRule<Object, Boolean> newForallInSimplificationRule() {
+		final Variable vx = new Variable("x");
+		final Variable vX = new Variable("X");
+		final Variable vP = new Variable("P");
+		
+		return rule($(FORALL, vx, IN, vX, vP), (e, m) -> {
+			bind("definition_of_forall_in", vx.get(), vX.get(), vP.get());
+			
+			return true;
+		});
+	}
+	
+	public static final SimpleRule<Object, Boolean> newForallIn2SimplificationRule() {
+		final Variable vx = new Variable("x");
+		final Variable vy = new Variable("y");
+		final Variable vX = new Variable("X");
+		final Variable vP = new Variable("P");
+		
+		return rule($(FORALL, vx, ",", vy, IN, vX, vP), (e, m) -> {
+			bind("definition_of_forall_in_2", vx.get(), vy.get(), vX.get(), vP.get());
+			
+			return true;
+		});
+	}
+	
+	public static final SimpleRule<Object, Boolean> newForallIn3SimplificationRule() {
+		final Variable vx = new Variable("x");
+		final Variable vy = new Variable("y");
+		final Variable vz = new Variable("z");
+		final Variable vX = new Variable("X");
+		final Variable vP = new Variable("P");
+		
+		return rule($(FORALL, vx, ",", vy, ",", vz, IN, vX, vP), (e, m) -> {
+			bind("definition_of_forall_in_3", vx.get(), vy.get(), vz.get(), vX.get(), vP.get());
 			
 			return true;
 		});
