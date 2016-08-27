@@ -14,7 +14,7 @@ public final class ElementaryVerificationTest {
 	
 	@Test
 	public final void testOK1() {
-		StandardTest.build(new Runnable() {
+		BasicsTest.build(new Runnable() {
 			
 			@Override
 			public final void run() {
@@ -54,7 +54,7 @@ public final class ElementaryVerificationTest {
 	
 	@Test
 	public final void testOK2() {
-		StandardTest.build(new Runnable() {
+		BasicsTest.build(new Runnable() {
 			
 			@Override
 			public final void run() {
@@ -76,7 +76,7 @@ public final class ElementaryVerificationTest {
 	
 	@Test
 	public final void testKO1() {
-		StandardTest.build(new Runnable() {
+		BasicsTest.build(new Runnable() {
 			
 			@Override
 			public final void run() {
@@ -92,7 +92,7 @@ public final class ElementaryVerificationTest {
 	
 	@Test
 	public final void testKO2() {
-		StandardTest.build(new Runnable() {
+		BasicsTest.build(new Runnable() {
 			
 			@Override
 			public final void run() {
@@ -108,7 +108,7 @@ public final class ElementaryVerificationTest {
 	
 	@Test
 	public final void testKO3() {
-		StandardTest.build(new Runnable() {
+		BasicsTest.build(new Runnable() {
 			
 			@Override
 			public final void run() {

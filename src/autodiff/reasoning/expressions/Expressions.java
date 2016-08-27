@@ -41,6 +41,8 @@ public final class Expressions {
 	
 	public static final Object AT = $("@");
 	
+	public static final Object EQUIV = $("⇔");
+	
 	public static final Object LAND = $("∧");
 	
 	public static final Object LOR = $("∨");

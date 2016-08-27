@@ -1,11 +1,11 @@
 package autodiff.reasoning.test;
 
-import static autodiff.reasoning.deductions.Standard.*;
+import static autodiff.reasoning.deductions.Basics.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.Stack.*;
 import static multij.tools.Tools.*;
 
-import autodiff.reasoning.deductions.Standard;
+import autodiff.reasoning.deductions.Basics;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.tactics.Goal;
 
@@ -14,7 +14,7 @@ import org.junit.Test;
 /**
  * @author codistmonk (creation 2015-04-13)
  */
-public final class StandardTest {
+public final class BasicsTest {
 	
 	@Test
 	public final void testRewrite() {
@@ -89,7 +89,7 @@ public final class StandardTest {
 	}
 	
 	public static final Deduction build(final String deductionName, final Runnable deductionBuilder, final int debugDepth) {
-		return Standard.build(deductionName, deductionBuilder, debugDepth);
+		return Basics.build(deductionName, deductionBuilder, debugDepth);
 	}
 	
 }

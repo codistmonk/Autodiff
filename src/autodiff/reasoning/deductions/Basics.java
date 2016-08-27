@@ -18,9 +18,9 @@ import multij.tools.Tools;
 /**
  * @author codistmonk (creation 2015-04-12)
  */
-public final class Standard {
+public final class Basics {
 	
-	private Standard() {
+	private Basics() {
 		throw new IllegalInstantiationException();
 	}
 	

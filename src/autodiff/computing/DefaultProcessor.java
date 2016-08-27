@@ -1,7 +1,7 @@
 package autodiff.computing;
 
 import static autodiff.computing.Functions.*;
-import static autodiff.nodes.Computation.flattenSequence;
+import static autodiff.reasoning.deductions.Sets.flattenSequence;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.R;
 import static autodiff.reasoning.proofs.Stack.proposition;
@@ -16,7 +16,7 @@ import autodiff.nodes.Node;
 import autodiff.nodes.NodeVisitor;
 import autodiff.nodes.Zipping;
 import autodiff.nodes.Computation.ToJavaHelper;
-import autodiff.reasoning.deductions.Standard;
+import autodiff.reasoning.deductions.Basics;
 import autodiff.reasoning.expressions.ExpressionRewriter;
 import autodiff.reasoning.expressions.Expressions;
 import autodiff.reasoning.proofs.Deduction;
@@ -198,7 +198,7 @@ public final class DefaultProcessor implements NodeProcessor {
 			timer.tic();
 			
 			final Object javaCode = getComputationCodes().computeIfAbsent(node, __ -> {
-				final Deduction javaCodeDeduction = Standard.build(new Deduction(node.getBoundForm(), node.getName() + "_to_java"), new Runnable() {
+				final Deduction javaCodeDeduction = Basics.build(new Deduction(node.getBoundForm(), node.getName() + "_to_java"), new Runnable() {
 					
 					@Override
 					public final void run() {
