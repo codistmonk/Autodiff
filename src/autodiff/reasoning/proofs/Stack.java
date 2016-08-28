@@ -3,12 +3,15 @@ package autodiff.reasoning.proofs;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static multij.tools.Tools.last;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import autodiff.reasoning.expressions.ExpressionVisitor;
 import multij.tools.IllegalInstantiationException;
 
 /**
@@ -44,12 +47,10 @@ public final class Stack {
 		return stack().remove(stack().size() - 1);
 	}
 	
-	public static final Deduction pop(final Deduction deduction) {
-		while (deduction != pop()) {
-			// NOP;
+	public static final void popTo(final Deduction deduction) {
+		while (deduction() != deduction) {
+			pop();
 		}
-		
-		return deduction;
 	}
 	
 	public static final Deduction deduction() {
@@ -229,6 +230,30 @@ public final class Stack {
 		return (List<Object>) result;
 	}
 	
+	public static final int countIn(final Object target, final Object pattern) {
+		return new ExpressionVisitor<Integer>() {
+			
+			@Override
+			public final Integer visit(final Object expression) {
+				if (new Substitution.ExpressionEquality().apply(pattern, expression)) {
+					return 1;
+				}
+				
+				return 0;
+			}
+			
+			@Override
+			public final Integer visit(final List<?> expression) {
+				final Integer result = this.visit((Object) expression);
+				
+				return 0 < result ? result : expression.stream().mapToInt(this::apply).sum();
+			}
+			
+			private static final long serialVersionUID = 2608876360859599240L;
+			
+		}.apply(target);
+	}
+	
 	public static final void abort() {
 		throw new AbortException();
 	}
@@ -243,6 +268,116 @@ public final class Stack {
 		}
 		
 		private static final long serialVersionUID = -3683176562496539944L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-12)
+	 */
+	public static final class PropositionDescription implements Serializable {
+		
+		private int index;
+		
+		private String name;
+		
+		private Object proposition;
+		
+		public final int getIndex() {
+			return this.index;
+		}
+		
+		public final PropositionDescription setIndex(final int index) {
+			this.index = index;
+			
+			return this;
+		}
+		
+		public final String getName() {
+			return this.name;
+		}
+		
+		public final PropositionDescription setName(final String name) {
+			this.name = name;
+			
+			return this;
+		}
+		
+		public final Object getProposition() {
+			return this.proposition;
+		}
+		
+		public final PropositionDescription setProposition(final Object proposition) {
+			this.proposition = proposition;
+			
+			return this;
+		}
+		
+		@Override
+		public final String toString() {
+			return this.getIndex() + ": " + this.getName() + ": " + this.getProposition();
+		}
+		
+		private static final long serialVersionUID = -3590873676651429520L;
+		
+		public static final Iterable<PropositionDescription> iterateBackward(final Deduction deduction) {
+			return new Iterable<PropositionDescription>() {
+				
+				@Override
+				public final Iterator<PropositionDescription> iterator() {
+					return new Iterator<PropositionDescription>() {
+						
+						private final PropositionDescription result = new PropositionDescription();
+						
+						private Deduction currentDeduction = deduction;
+						
+						private int i = this.currentDeduction.getPropositionNames().size();
+						
+						@Override
+						public final boolean hasNext() {
+							return 0 < this.i || !isEmpty(this.currentDeduction.getParent());
+						}
+						
+						@Override
+						public final PropositionDescription next() {
+							if (--this.i < 0) {
+								this.currentDeduction = this.currentDeduction.getParent();
+								
+								while (this.currentDeduction.getPropositionNames().isEmpty()) {
+									this.currentDeduction = this.currentDeduction.getParent();
+								}
+								
+								this.i = this.currentDeduction.getPropositionNames().size() - 1;
+							}
+							
+							final String name = this.currentDeduction.getPropositionNames().get(this.i);
+							
+							return this.result
+									.setIndex(this.result.getIndex() - 1)
+									.setName(name)
+									.setProposition(this.currentDeduction.getPropositions().get(name));
+						}
+						
+					};
+				}
+				
+			};
+		}
+		
+		public static final PropositionDescription existingJustificationFor(final Object proposition) {
+			for (final PropositionDescription description : iterateBackward(deduction())) {
+				if (new Substitution.ExpressionEquality().apply(proposition, description.getProposition())) {
+					return description;
+				}
+			}
+			
+			return null;
+		}
+		
+		public static final boolean isEmpty(final Deduction deduction) {
+			return deduction == null
+					|| (deduction.getPropositionNames().isEmpty()
+							&& (deduction.getParent() == null || isEmpty(deduction.getParent())));
+		}
 		
 	}
 	

@@ -2,11 +2,6 @@ package autodiff.reasoning.deductions;
 
 import static autodiff.reasoning.deductions.Basics.*;
 import static autodiff.reasoning.deductions.Sequences.*;
-import static autodiff.reasoning.deductions.Sets.POS;
-import static autodiff.reasoning.deductions.Sets.SUBSET;
-import static autodiff.reasoning.deductions.Sets.U;
-import static autodiff.reasoning.deductions.Sets.ebindTrim;
-import static autodiff.reasoning.deductions.Sets.supposeDefinitionOfPositives;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
@@ -16,13 +11,10 @@ import static multij.tools.Tools.*;
 
 import autodiff.nodes.Computation.RepeatHelper;
 import autodiff.reasoning.proofs.Deduction;
-import autodiff.reasoning.proofs.Substitution;
 import autodiff.reasoning.proofs.Stack.AbortException;
 import autodiff.rules.Rules;
 import autodiff.rules.Variable;
 
-import java.io.Serializable;
-import java.util.Iterator;
 import java.util.List;
 
 import multij.tools.IllegalInstantiationException;
@@ -611,7 +603,7 @@ public final class Sets {
 	}
 	
 	public static final PropositionDescription justicationFor(final Object proposition) {
-		PropositionDescription result = existingJustificationFor(proposition);
+		PropositionDescription result = PropositionDescription.existingJustificationFor(proposition);
 		
 		if (result == null) {
 			{
@@ -736,18 +728,8 @@ public final class Sets {
 		conclude();
 	}
 	
-	public static final PropositionDescription existingJustificationFor(final Object proposition) {
-		for (final PropositionDescription description : iterateBackward(deduction())) {
-			if (new Substitution.ExpressionEquality().apply(proposition, description.getProposition())) {
-				return description;
-			}
-		}
-		
-		return null;
-	}
-	
 	public static final PropositionDescription justifyArithmeticTyping(final Object proposition) {
-		PropositionDescription result = existingJustificationFor(proposition);
+		PropositionDescription result = PropositionDescription.existingJustificationFor(proposition);
 		
 		if (result != null) {
 			return result;
@@ -898,50 +880,6 @@ public final class Sets {
 				&& FORALL.equals(list.get(0)) && ",".equals(list.get(2)) && ",".equals(list.get(4)) && IN.equals(list.get(6));
 	}
 	
-	public static final Iterable<PropositionDescription> iterateBackward(final Deduction deduction) {
-		return new Iterable<PropositionDescription>() {
-			
-			@Override
-			public final Iterator<PropositionDescription> iterator() {
-				return new Iterator<PropositionDescription>() {
-					
-					private final PropositionDescription result = new PropositionDescription();
-					
-					private Deduction currentDeduction = deduction;
-					
-					private int i = this.currentDeduction.getPropositionNames().size();
-					
-					@Override
-					public final boolean hasNext() {
-						return 0 < this.i || !isEmpty(this.currentDeduction.getParent());
-					}
-					
-					@Override
-					public final PropositionDescription next() {
-						if (--this.i < 0) {
-							this.currentDeduction = this.currentDeduction.getParent();
-							
-							while (this.currentDeduction.getPropositionNames().isEmpty()) {
-								this.currentDeduction = this.currentDeduction.getParent();
-							}
-							
-							this.i = this.currentDeduction.getPropositionNames().size() - 1;
-						}
-						
-						final String name = this.currentDeduction.getPropositionNames().get(this.i);
-						
-						return this.result
-								.setIndex(this.result.getIndex() - 1)
-								.setName(name)
-								.setProposition(this.currentDeduction.getPropositions().get(name));
-					}
-					
-				};
-			}
-			
-		};
-	}
-	
 	public static final void deducePositivity(final Object target) {
 		subdeduction();
 		
@@ -1011,62 +949,6 @@ public final class Sets {
 		rewrite(targetName, name(-1));
 		
 		conclude();
-	}
-	
-	public static final boolean isEmpty(final Deduction deduction) {
-		return deduction == null
-				|| (deduction.getPropositionNames().isEmpty()
-						&& (deduction.getParent() == null || isEmpty(deduction.getParent())));
-	}
-	
-	/**
-	 * @author codistmonk (creation 2016-08-12)
-	 */
-	public static final class PropositionDescription implements Serializable {
-		
-		private int index;
-		
-		private String name;
-		
-		private Object proposition;
-		
-		public final int getIndex() {
-			return this.index;
-		}
-		
-		public final PropositionDescription setIndex(final int index) {
-			this.index = index;
-			
-			return this;
-		}
-		
-		public final String getName() {
-			return this.name;
-		}
-		
-		public final PropositionDescription setName(final String name) {
-			this.name = name;
-			
-			return this;
-		}
-		
-		public final Object getProposition() {
-			return this.proposition;
-		}
-		
-		public final PropositionDescription setProposition(final Object proposition) {
-			this.proposition = proposition;
-			
-			return this;
-		}
-		
-		@Override
-		public final String toString() {
-			return this.getIndex() + ": " + this.getName() + ": " + this.getProposition();
-		}
-		
-		private static final long serialVersionUID = -3590873676651429520L;
-		
 	}
 	
 }

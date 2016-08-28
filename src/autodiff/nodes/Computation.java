@@ -463,7 +463,7 @@ public final class Computation extends AbstractNode<Computation> {
 	public static final List<Pair<String, Map<Variable, Object>>> findConclusions(final Object pattern) {
 		final List<Pair<String, Map<Variable, Object>>> result = new ArrayList<>();
 		
-		for (final PropositionDescription description : iterateBackward(deduction())) {
+		for (final PropositionDescription description : PropositionDescription.iterateBackward(deduction())) {
 			final LinkedHashMap<Variable, Object> mapping = new LinkedHashMap<>();
 			
 			if (Variable.match(pattern, eultimate(description.getProposition()), mapping)) {
@@ -1899,36 +1899,6 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 		
 		private static final long serialVersionUID = -5429351197907942483L;
-		
-		public static final void popTo(final Deduction deduction) {
-			while (deduction() != deduction) {
-				pop();
-			}
-		}
-		
-		public static final int countIn(final Object target, final Object pattern) {
-			return new ExpressionVisitor<Integer>() {
-				
-				@Override
-				public final Integer visit(final Object expression) {
-					if (new Substitution.ExpressionEquality().apply(pattern, expression)) {
-						return 1;
-					}
-					
-					return 0;
-				}
-				
-				@Override
-				public final Integer visit(final List<?> expression) {
-					final Integer result = this.visit((Object) expression);
-					
-					return 0 < result ? result : expression.stream().mapToInt(this::apply).sum();
-				}
-				
-				private static final long serialVersionUID = 2608876360859599240L;
-				
-			}.apply(target);
-		}
 		
 		/**
 		 * @author codistmonk (creation 2016-08-23)
