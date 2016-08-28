@@ -290,6 +290,26 @@ public final class Sequences {
 		return result;
 	}
 	
+	public static final int sequenceLength(final Object separator, final Object sequence) {
+		final List<?> list = list(sequence);
+		
+		if (list.size() <= 1) {
+			return list.size();
+		}
+		
+		final List<?> second = list(second(sequence));
+		
+		if (2 == second.size() && separator.equals(first(second))) {
+			return 2;
+		}
+		
+		if (3 == second.size() && separator.equals(first(second))) {
+			return 1 + sequenceLength(separator, $(second(second), third(second)));
+		}
+		
+		throw new IllegalArgumentException();
+	}
+	
 	public static final void computeSequenceAppend(final Object s, final Object x, final Object y) {
 		computeSequenceAppend(newName(), s, x, y);
 	}

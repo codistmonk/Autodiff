@@ -7,6 +7,7 @@ import static multij.tools.Tools.*;
 
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
+import autodiff.reasoning.proofs.ElementaryVerification;
 import autodiff.reasoning.tactics.Goal;
 
 import java.util.Arrays;
@@ -135,6 +136,17 @@ public final class Basics {
 			}
 			conclude();
 		}
+	}
+	
+	public static final void simplifyElementaryExpression(final String targetName, final Object expression) {
+		subdeduction();
+		
+		final Object simplified = ElementaryVerification.Evaluator.INSTANCE.apply(expression);
+		
+		verifyElementaryProposition($(expression, "=", simplified));
+		rewrite(targetName, name(-1));
+		
+		conclude();
 	}
 	
 	public static final Deduction subbuild(final String deductionName, final Runnable deductionBuilder, final int debugDepth) {

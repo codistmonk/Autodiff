@@ -2,6 +2,11 @@ package autodiff.reasoning.deductions;
 
 import static autodiff.reasoning.deductions.Basics.*;
 import static autodiff.reasoning.deductions.Sequences.*;
+import static autodiff.reasoning.deductions.Sets.POS;
+import static autodiff.reasoning.deductions.Sets.SUBSET;
+import static autodiff.reasoning.deductions.Sets.U;
+import static autodiff.reasoning.deductions.Sets.ebindTrim;
+import static autodiff.reasoning.deductions.Sets.supposeDefinitionOfPositives;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
 import static autodiff.reasoning.proofs.Stack.*;
@@ -50,6 +55,69 @@ public final class Sets {
 		supposeDefinitionOfSubset();
 		supposeDefinitionOfPowerset();
 		supposeSubsetInUhm();
+		
+		deduceTransitivityOfSubset();
+		
+		supposeVectorTypeInUhm();
+		
+		supposeTypeOfSingle();
+		supposeTypeOfSingleInUhm();
+		
+		supposeTypeOfTuple();
+		supposeTypeOfTupleInUhm();
+		
+		supposeRealsInUhm();
+		supposeNaturalsSubsetReals();
+		deduceNaturalsInUhm();
+		supposeDefinitionOfPositives();
+		
+		{
+			suppose("reals_single_in_Uhm",
+					$($1(R), IN, U));
+		}
+		
+		{
+			subdeduction("single_N_in_Uhm");
+			
+			ebindTrim("type_of_single_in_Uhm", N);
+			
+			conclude();
+		}
+		
+		testTypeOfTuple();
+		
+		supposeDefinitionsForRepeat();
+		
+		supposeSimplificationOfTypeOfTuple();
+		testSimplificationOfTypeOfTuple();
+		
+		supposeDefinitionsForVectorAccess();
+		testVectorAccess();
+	}
+	
+	public static final void supposeRealsInUhm() {
+		suppose("reals_in_Uhm",
+				$(R, IN, U));
+	}
+	
+	public static final void supposeNaturalsSubsetReals() {
+		suppose("naturals_subset_reals",
+				$(N, SUBSET, R));
+	}
+	
+	public static final void deduceNaturalsInUhm() {
+		subdeduction("naturals_in_Uhm");
+		
+		ebindTrim("subset_in_Uhm", N, R);
+		
+		conclude();
+	}
+	
+	public static final void supposeDefinitionOfPositives() {
+		final Object _n = $new("n");
+		
+		suppose("definition_of_positives", $forall(_n,
+				$($(_n, IN, POS), "=", $($(_n, IN, N), LAND, $(0, "<", _n)))));
 	}
 	
 	public static final void supposeDefinitionOfForallIn() {
@@ -108,6 +176,328 @@ public final class Sets {
 				$forall(_X,
 						$(FORALL, _Y, IN, U,
 								$rule($(_X, SUBSET, _Y), $(_X, IN, U)))));
+	}
+	
+	public static final void deduceTransitivityOfSubset() {
+		subdeduction("transitivity_of_subset");
+		
+		final Object _X = forall("X");
+		final Object _Y = forall("Y");
+		final Object _Z = forall("Z");
+		
+		suppose($(_X, IN, U));
+		suppose($(_Y, IN, U));
+		suppose($(_Z, IN, U));
+		suppose($(_X, SUBSET, _Y));
+		suppose($(_Y, SUBSET, _Z));
+		
+		final String h1 = name(-2);
+		final String h2 = name(-1);
+		
+		{
+			subdeduction();
+			
+			final Object _x = forall("x");
+			
+			suppose($(_x, IN, _X));
+			
+			final String h3 = name(-1);
+			
+			{
+				subdeduction();
+				
+				ebindTrim("definition_of_subset", _X, _Y);
+				rewrite(h1, name(-1));
+				bind(name(-1), _x);
+				
+				conclude();
+			}
+			
+			apply(name(-1), h3);
+			
+			{
+				subdeduction();
+				
+				ebindTrim("definition_of_subset", _Y, _Z);
+				rewrite(h2, name(-1));
+				bind(name(-1), _x);
+				
+				conclude();
+			}
+			
+			apply(name(-1), name(-2));
+			
+			conclude();
+		}
+		
+		{
+			subdeduction();
+			
+			ebindTrim("definition_of_subset", _X, _Z);
+			
+			conclude();
+		}
+		
+		rewriteRight(name(-2), name(-1));
+		
+		conclude();
+	}
+	
+	public static final void supposeVectorTypeInUhm() {
+		final Object _X = $new("X");
+		final Object _n = $new("n");
+		
+		suppose("vector_type_in_Uhm",
+				
+				$(FORALL, _X, IN, U,
+						$(FORALL, _n, IN, N,
+								$($(_X, "^", _n), IN, U))));
+	}
+	
+	public static final void supposeTypeOfSingle() {
+		final Object _X = $new("X");
+		final Object _x = $new("x");
+		
+		suppose("type_of_single",
+				$(FORALL, _X, IN, U,
+						$forall(_x,
+								$($(_x, IN, _X), "=", $($1(_x), IN, $1(_X))))));
+	}
+	
+	public static final void supposeTypeOfSingleInUhm() {
+		final Object _X = $new("X");
+		
+		suppose("type_of_single_in_Uhm",
+				$(FORALL, _X, IN, U,
+						$($1(_X), IN, U)));
+	}
+	
+	public static final void supposeTypeOfTuple() {
+		final Object _X = $new("X");
+		final Object _Y = $new("Y");
+		final Object _x = $new("x");
+		final Object _y = $new("y");
+		
+		suppose("type_of_tuple",
+				$(FORALL, _X, ",", _Y, IN, U,
+						$(FORALL, _x, IN, _X,
+								$(FORALL, _y, IN, _Y,
+										$($("sequence_append", ",", _x, _y), IN, $("sequence_append", CROSS, _X, _Y))))));
+	}
+	
+	public static final void supposeTypeOfTupleInUhm() {
+		final Object _X = $new("X");
+		final Object _Y = $new("Y");
+		
+		suppose("type_of_tuple_in_Uhm",
+				$(FORALL, _X, ",", _Y, IN, U,
+						$($("sequence_append", CROSS, _X, _Y), IN, U)));
+	}
+	
+	public static final void testTypeOfTuple() {
+		{
+			subdeduction("type_of_tuple.test1");
+			
+			{
+				subdeduction();
+				
+				verifyElementaryProposition($(1, IN, N));
+				
+				ebindTrim("type_of_single", N, 1);
+				
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+			}
+			
+			ebindTrim("type_of_tuple", $1(N), N, $1(1), 2);
+			
+			final List<?> _x = list(left(proposition(-1)));
+			final List<?> _X = list(right(proposition(-1)));
+			
+			computeSequenceAppend(_x.get(1), _x.get(2), _x.get(3));
+			rewrite(name(-2), name(-1));
+			
+			computeSequenceAppend(_X.get(1), _X.get(2), _X.get(3));
+			rewrite(name(-2), name(-1));
+			
+			conclude();
+		}
+		
+		{
+			subdeduction("type_of_tuple.test2");
+			
+			{
+				subdeduction();
+				
+				ebindTrim("type_of_tuple_in_Uhm", $1(N), N);
+				
+				computeSequenceAppend(CROSS, $1(N), N);
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+			}
+			
+			ebindTrim("type_of_tuple", sequence(CROSS, N, N), N, sequence(",", 1, 2), 3);
+			
+			final List<?> _x = list(left(proposition(-1)));
+			final List<?> _X = list(right(proposition(-1)));
+			
+			computeSequenceAppend(_x.get(1), _x.get(2), _x.get(3));
+			rewrite(name(-2), name(-1));
+			
+			computeSequenceAppend(_X.get(1), _X.get(2), _X.get(3));
+			rewrite(name(-2), name(-1));
+			
+			conclude();
+		}
+	}
+	
+	public static final void supposeDefinitionsForRepeat() {
+		{
+			final Object _s = $new("s");
+			final Object _x = $new("x");
+			
+			suppose("definition_of_repeat_0",
+					$forall(_s, _x,
+							$($("repeat", _s, _x, 0), "=", $())));
+		}
+		
+		{
+			final Object _s = $new("s");
+			final Object _x = $new("x");
+			final Object _n = $new("n");
+			
+			suppose("definition_of_repeat_n",
+					$forall(_s, _x,
+							$(FORALL, _n, IN, POS,
+									$($("repeat", _s, _x, _n), "=", $("sequence_append", _s, $("repeat", _s, _x, $(_n, "-", 1)), _x)))));
+		}
+	}
+	
+	public static final void supposeSimplificationOfTypeOfTuple() {
+		final Object _n = $new("n");
+		final Object _X = $new("X");
+		
+		suppose("simplification_of_type_of_tuple",
+				$(FORALL, _X, IN, U,
+						$(FORALL, _n, IN, N,
+								$($("repeat", CROSS, _X, _n), "=", $(_X, "^", _n)))));
+	}
+	
+	public static final void testSimplificationOfTypeOfTuple() {
+		{
+			subdeduction("simplification_of_type_of_tuple.test1");
+			
+			ebindTrim("simplification_of_type_of_tuple", N, 3);
+			
+			new RepeatHelper(CROSS, N, 3).compute();
+			rewrite(name(-2), name(-1));
+			
+			conclude();
+		}
+		
+		{
+			subdeduction("simplification_of_type_of_tuple.test2");
+			
+			rewrite("type_of_tuple.test2", "simplification_of_type_of_tuple.test1");
+			
+			conclude();
+		}
+	}
+	
+	public static final void supposeDefinitionsForVectorAccess() {
+		{
+			final Object _x = $new("x");
+			final Object _X = $new("X");
+			final Object _n = $new("n");
+			
+			suppose("definition_of_vector_access_0",
+					$(FORALL, _X, IN, U,
+							$(FORALL, _n, IN, POS,
+									$(FORALL, _x, IN, $(_X, "^", _n),
+											$($(_x, "_", 0), "=", $("sequence_head", _x))))));
+		}
+		
+		{
+			final Object _x = $new("x");
+			final Object _X = $new("X");
+			final Object _n = $new("n");
+			final Object _i = $new("i");
+			
+			suppose("definition_of_vector_access_i",
+					$(FORALL, _X, IN, U,
+							$(FORALL, _n, ",", _i, IN, POS,
+									$(FORALL, _x, IN, $(_X, "^", _n),
+											$($(_x, "_", _i), "=", $($("sequence_tail", ",", _x), "_", $(_i, "-", 1)))))));
+		}
+	}
+	
+	public static final void testVectorAccess() {
+		{
+			subdeduction("vector_access.test1");
+			
+			computeVectorAccess(R, $(sequence(",", 1, 2, 3), "_", 1));
+			
+			conclude();
+		}
+	}
+	
+	
+	public static final void supposeDefinitionOfSingleton() {
+		final Object _X = $new("X");
+		
+		suppose("definition_of_singleton",
+				$forall(_X,
+						$(_X, IN, c(_X))));
+	}
+	
+	public static final void computeVectorAccess(final Object elementType, final Object formula) {
+		final Rules<Object, Void> rules = new Rules<>();
+		
+		{
+			final Variable _x = new Variable("x");
+			
+			rules.add(rule($(_x, "_", 0), (__, m) -> {
+				{
+					subdeduction();
+					
+					ebindTrim("definition_of_vector_access_0", elementType, sequenceLength(",", m.get(_x)), m.get(_x));
+					computeSequenceHead(m.get(_x));
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				return null;
+			}));
+		}
+		
+		{
+			final Variable _x = new Variable("x");
+			final Variable _i = new Variable("i");
+			
+			rules.add(rule($(_x, "_", _i), (__, m) -> {
+				{
+					subdeduction();
+					
+					ebindTrim("definition_of_vector_access_i", elementType, sequenceLength(",", m.get(_x)), m.get(_i), m.get(_x));
+					simplifyElementaryExpression(name(-1), right(right(proposition(-1))));
+					
+					computeSequenceTail(",", m.get(_x));
+					rewrite(name(-2), name(-1));
+					
+					computeVectorAccess(elementType, right(proposition(-1)));
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				return null;
+			}));
+		}
+		
+		rules.applyTo(formula);
 	}
 	
 	public static final Object pp(final Object... set) {
