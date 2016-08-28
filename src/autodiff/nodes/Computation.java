@@ -1279,8 +1279,6 @@ public final class Computation extends AbstractNode<Computation> {
 					
 					suppose($(left(condition(scope(goal().getProposition()))), "=", p));
 					
-					final String resultReality = name(-2);
-					
 					final String definitionOfP = name(-1);
 					
 					deduceNaturalIsReal(m);

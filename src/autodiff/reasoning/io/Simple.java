@@ -128,7 +128,7 @@ public final class Simple {
 					map.entrySet().stream().map(e -> collapse(e.getKey()) + "=" + collapse(e.getValue()))));
 		}
 		
-		final List<Object> expression = cast(List.class, object);
+		final List<?> expression = cast(List.class, object);
 		
 		if (expression == null) {
 			return "" + object;
