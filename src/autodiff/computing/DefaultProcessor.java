@@ -1,7 +1,6 @@
 package autodiff.computing;
 
 import static autodiff.computing.Functions.*;
-import static autodiff.reasoning.deductions.Sets.flattenSequence;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.R;
 import static autodiff.reasoning.proofs.Stack.proposition;
@@ -17,6 +16,7 @@ import autodiff.nodes.NodeVisitor;
 import autodiff.nodes.Zipping;
 import autodiff.nodes.Computation.ToJavaHelper;
 import autodiff.reasoning.deductions.Basics;
+import autodiff.reasoning.deductions.Sequences;
 import autodiff.reasoning.expressions.ExpressionRewriter;
 import autodiff.reasoning.expressions.Expressions;
 import autodiff.reasoning.proofs.Deduction;
@@ -316,7 +316,7 @@ public final class DefaultProcessor implements NodeProcessor {
 					final autodiff.rules.Variable x = new autodiff.rules.Variable("x");
 					
 					this.rules.add(rule(Expressions.$(f, "(", x, ")"), (__, m) -> {
-						final List<Object> arguments = flattenSequence(",", this.apply(m.get(x)));
+						final List<Object> arguments = Sequences.flattenSequence(",", this.apply(m.get(x)));
 						
 						return invoke(JavaCodeContext.this, m.get(f).toString(), arguments.toArray());
 					}));

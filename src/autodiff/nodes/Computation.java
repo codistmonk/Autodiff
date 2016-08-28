@@ -2,6 +2,7 @@ package autodiff.nodes;
 
 import static autodiff.reasoning.deductions.Basics.*;
 import static autodiff.reasoning.deductions.Propositions.*;
+import static autodiff.reasoning.deductions.Sequences.*;
 import static autodiff.reasoning.deductions.Sets.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
@@ -14,6 +15,7 @@ import static multij.tools.Tools.*;
 
 import autodiff.reasoning.deductions.Basics;
 import autodiff.reasoning.deductions.Propositions;
+import autodiff.reasoning.deductions.Sequences;
 import autodiff.reasoning.deductions.Sets;
 import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.proofs.ElementaryVerification;
@@ -164,6 +166,9 @@ public final class Computation extends AbstractNode<Computation> {
 		@Override
 		public final void run() {
 			Basics.setup();
+			Sequences.setup();
+			Sets.setup();
+			Propositions.setup();
 			
 //			debugPrint(sequence(",", $(1, 2, 3)));
 //			debugPrint(sequence(",", 1));
@@ -176,8 +181,6 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			supposeEliminationOfParentheses();
 			
-			Sets.setup();
-			Propositions.setup();
 			
 			supposeDefinitionOfSubset();
 			supposeDefinitionOfPowerset();
