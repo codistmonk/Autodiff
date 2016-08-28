@@ -1,7 +1,7 @@
 package autodiff.reasoning.deductions;
 
 import static autodiff.reasoning.expressions.Expressions.*;
-import static autodiff.reasoning.proofs.Stack.*;
+import static autodiff.reasoning.tactics.Stack.*;
 import static java.util.Arrays.asList;
 import static multij.tools.Tools.*;
 

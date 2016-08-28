@@ -3,7 +3,7 @@ package autodiff.computing;
 import static autodiff.computing.Functions.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.R;
-import static autodiff.reasoning.proofs.Stack.*;
+import static autodiff.reasoning.tactics.Stack.*;
 import static autodiff.rules.PatternPredicate.rule;
 import static java.lang.Math.max;
 import static multij.tools.Tools.cast;

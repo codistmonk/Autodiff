@@ -1,7 +1,6 @@
 package autodiff.reasoning.proofs;
 
 import static autodiff.reasoning.expressions.Expressions.*;
-import static autodiff.reasoning.proofs.Stack.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -35,7 +34,7 @@ public final class Binding extends Proof.Abstract {
 	
 	@Override
 	public final Object getProvedPropositionFor(final Deduction context) {
-		final List<Object> block = list(checkBlock(this.getBlockName(), context));
+		final List<Object> block = list(context.checkBlock(this.getBlockName()));
 		
 		return Substitution.substituteIn(scope(block), map(variable(block), this.getValue()), indices());
 	}

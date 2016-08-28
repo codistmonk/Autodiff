@@ -1,7 +1,15 @@
-package autodiff.reasoning.proofs;
+package autodiff.reasoning.tactics;
 
 import static autodiff.reasoning.expressions.Expressions.*;
 import static multij.tools.Tools.last;
+
+import autodiff.reasoning.expressions.ExpressionVisitor;
+import autodiff.reasoning.proofs.Binding;
+import autodiff.reasoning.proofs.Deduction;
+import autodiff.reasoning.proofs.ElementaryVerification;
+import autodiff.reasoning.proofs.ModusPonens;
+import autodiff.reasoning.proofs.Proof;
+import autodiff.reasoning.proofs.Substitution;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -11,7 +19,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import autodiff.reasoning.expressions.ExpressionVisitor;
 import multij.tools.IllegalInstantiationException;
 
 /**
@@ -167,28 +174,11 @@ public final class Stack {
 	}
 	
 	public static final Object checkProposition(final String name) {
-		return checkProposition(name, deduction());
-	}
-	
-	public static final Object checkProposition(final String name, final Deduction context) {
-		final Object result = context.getProposition(name);
-		
-		checkArgument(result != null, "Missing proposition: " + name);
-		
-		return result;
+		return deduction().checkProposition(name);
 	}
 	
 	public static final List<Object> checkRule(final String name) {
-		return checkRule(name, deduction());
-	}
-	
-	@SuppressWarnings("unchecked")
-	public static final List<Object> checkRule(final String name, final Deduction context) {
-		final Object result = checkProposition(name, context);
-		
-		checkArgument(isRule(result), "Not a rule: " + result);
-		
-		return (List<Object>) result;
+		return deduction().checkRule(name);
 	}
 	
 	public static final List<Object> checkEquality(final String name) {
@@ -197,7 +187,7 @@ public final class Stack {
 	
 	@SuppressWarnings("unchecked")
 	public static final List<Object> checkEquality(final String name, final Deduction context) {
-		final Object result = checkProposition(name, context);
+		final Object result = context.checkProposition(name);
 		
 		checkArgument(isEquality(result), "Not an equality: " + result);
 		
@@ -210,7 +200,7 @@ public final class Stack {
 	
 	@SuppressWarnings("unchecked")
 	public static final List<Object> checkSubstitution(final String name, final Deduction context) {
-		final Object result = checkProposition(name, context);
+		final Object result = context.checkProposition(name);
 		
 		checkArgument(isSubstitution(result), "Not a substitution: " + result);
 		
@@ -218,16 +208,7 @@ public final class Stack {
 	}
 	
 	public static final List<Object> checkBlock(final String name) {
-		return checkBlock(name, deduction());
-	}
-	
-	@SuppressWarnings("unchecked")
-	public static final List<Object> checkBlock(final String name, final Deduction context) {
-		final Object result = checkProposition(name, context);
-		
-		checkArgument(isBlock(result), "Not a block: " + result);
-		
-		return (List<Object>) result;
+		return deduction().checkBlock(name);
 	}
 	
 	public static final int countIn(final Object target, final Object pattern) {

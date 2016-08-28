@@ -4,14 +4,14 @@ import static autodiff.reasoning.deductions.Basics.*;
 import static autodiff.reasoning.deductions.Sequences.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
-import static autodiff.reasoning.proofs.Stack.*;
 import static autodiff.reasoning.tactics.PatternPredicate.rule;
+import static autodiff.reasoning.tactics.Stack.*;
 import static autodiff.rules.Variable.match;
 import static multij.tools.Tools.*;
 
 import autodiff.nodes.Computation.RepeatHelper;
 import autodiff.reasoning.proofs.Deduction;
-import autodiff.reasoning.proofs.Stack.AbortException;
+import autodiff.reasoning.tactics.Stack.AbortException;
 import autodiff.rules.Rules;
 import autodiff.rules.Variable;
 

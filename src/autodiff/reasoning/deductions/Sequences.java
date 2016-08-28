@@ -4,8 +4,8 @@ import static autodiff.reasoning.deductions.Basics.rewrite;
 import static autodiff.reasoning.deductions.Sets.ebind;
 import static autodiff.reasoning.deductions.Sets.ebindTrim;
 import static autodiff.reasoning.expressions.Expressions.*;
-import static autodiff.reasoning.proofs.Stack.*;
 import static autodiff.reasoning.tactics.PatternPredicate.rule;
+import static autodiff.reasoning.tactics.Stack.*;
 import static multij.tools.Tools.append;
 
 import autodiff.reasoning.tactics.Goal;

@@ -184,6 +184,32 @@ public final class Deduction extends Proof.Abstract {
 		return result;
 	}
 	
+	public final Object checkProposition(final String name) {
+		final Object result = this.getProposition(name);
+		
+		checkArgument(result != null, "Missing proposition: " + name);
+		
+		return result;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public final List<Object> checkBlock(final String name) {
+		final Object result = this.checkProposition(name);
+		
+		checkArgument(isBlock(result), "Not a block: " + result);
+		
+		return (List<Object>) result;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public final List<Object> checkRule(final String name) {
+		final Object result = this.checkProposition(name);
+		
+		checkArgument(isRule(result), "Not a rule: " + result);
+		
+		return (List<Object>) result;
+	}
+	
 	private static final long serialVersionUID = -1040410980387761070L;
 	
 	@SuppressWarnings("unchecked")

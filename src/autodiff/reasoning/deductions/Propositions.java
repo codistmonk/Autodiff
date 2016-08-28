@@ -3,7 +3,7 @@ package autodiff.reasoning.deductions;
 import static autodiff.reasoning.deductions.Basics.rewrite;
 import static autodiff.reasoning.deductions.Sets.*;
 import static autodiff.reasoning.expressions.Expressions.*;
-import static autodiff.reasoning.proofs.Stack.*;
+import static autodiff.reasoning.tactics.Stack.*;
 
 import multij.tools.IllegalInstantiationException;
 

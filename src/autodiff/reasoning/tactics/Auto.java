@@ -2,11 +2,11 @@ package autodiff.reasoning.tactics;
 
 import static autodiff.reasoning.deductions.Basics.*;
 import static autodiff.reasoning.expressions.Expressions.*;
-import static autodiff.reasoning.proofs.Stack.*;
+import static autodiff.reasoning.tactics.Stack.*;
 import static multij.tools.Tools.ignore;
 
 import autodiff.reasoning.proofs.Deduction;
-import autodiff.reasoning.proofs.Stack.AbortException;
+import autodiff.reasoning.tactics.Stack.AbortException;
 import autodiff.rules.Rule;
 import autodiff.rules.Rules;
 import autodiff.rules.Variable;

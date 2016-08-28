@@ -2,7 +2,7 @@ package autodiff.reasoning.test;
 
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
-import static autodiff.reasoning.proofs.Stack.*;
+import static autodiff.reasoning.tactics.Stack.*;
 
 import org.junit.Assert;
 import org.junit.Test;

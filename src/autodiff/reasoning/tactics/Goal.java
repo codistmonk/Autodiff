@@ -1,7 +1,7 @@
 package autodiff.reasoning.tactics;
 
 import static autodiff.reasoning.expressions.Expressions.*;
-import static autodiff.reasoning.proofs.Stack.*;
+import static autodiff.reasoning.tactics.Stack.*;
 
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.proofs.Substitution;
