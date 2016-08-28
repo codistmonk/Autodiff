@@ -18,9 +18,7 @@ import autodiff.rules.Variable;
 
 import java.io.Serializable;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import multij.tools.IllegalInstantiationException;
 import multij.tools.Tools;
@@ -34,6 +32,10 @@ public final class Sets {
 		throw new IllegalInstantiationException();
 	}
 	
+	public static final Object U = $("℧");
+	
+	public static final Object P = $("ℙ");
+	
 	public static final Object POS = $(N, "_", $(">", 0));
 	
 	public static final Object SUBSET = $("⊂");
@@ -44,6 +46,10 @@ public final class Sets {
 		supposeDefinitionOfForallIn();
 		supposeDefinitionOfForallIn2();
 		supposeDefinitionOfForallIn3();
+		
+		supposeDefinitionOfSubset();
+		supposeDefinitionOfPowerset();
+		supposeSubsetInUhm();
 	}
 	
 	public static final void supposeDefinitionOfForallIn() {
@@ -75,6 +81,45 @@ public final class Sets {
 		suppose("definition_of_forall_in_3", $forall(_x, _y, _z, _X, _P,
 				$($(FORALL, _x, ",", _y, ",", _z, IN, _X, _P),
 						"=", $forall(_x, $rule($(_x, IN, _X), $forall(_y, $rule($(_y, IN, _X), $forall(_z, $rule($(_z, IN, _X), _P)))))))));
+	}
+	
+	public static final void supposeDefinitionOfSubset() {
+		final Object _x = $new("x");
+		final Object _X = $new("X");
+		final Object _Y = $new("Y");
+		
+		suppose("definition_of_subset", $forall(_X, $(FORALL, _Y, IN, U,
+				$($(_X, SUBSET, _Y), "=", $forall(_x, $rule($(_x, IN, _X), $(_x, IN, _Y)))))));
+	}
+	
+	public static final void supposeDefinitionOfPowerset() {
+		final Object _X = $new("X");
+		final Object _Y = $new("Y");
+		
+		suppose("definition_of_powerset", $forall(_X, _Y,
+				$($(_X, IN, pp(_Y)), "=", $(_X, SUBSET, _Y))));
+	}
+	
+	public static final void supposeSubsetInUhm() {
+		final Object _X = $new("X");
+		final Object _Y = $new("Y");
+		
+		suppose("subset_in_Uhm",
+				$forall(_X,
+						$(FORALL, _Y, IN, U,
+								$rule($(_X, SUBSET, _Y), $(_X, IN, U)))));
+	}
+	
+	public static final Object pp(final Object... set) {
+		return $(P, p(set));
+	}
+	
+	public static final List<Object> p(final Object... objects) {
+		return list($("(", $(objects), ")"));
+	}
+	
+	public static final List<Object> c(final Object... objects) {
+		return list($("{", $(objects), "}"));
 	}
 	
 	public static final void ebindLast(final Object... values) {
@@ -631,60 +676,6 @@ public final class Sets {
 		}
 		
 		private static final long serialVersionUID = -3590873676651429520L;
-		
-	}
-	
-	/**
-	 * @author codistmonk (creation 2016-08-19)
-	 */
-	public static final class CaseDescription implements Serializable {
-		
-		private final Map<String, Object> variables;
-		
-		private final List<Object> conditions;
-		
-		private final Object definition;
-		
-		public CaseDescription(final Map<String, Object> variables, final List<Object> conditions, final Object definition) {
-			this.variables = variables;
-			this.conditions = conditions;
-			this.definition = definition;
-		}
-		
-		public final Map<String, Object> getVariables() {
-			return this.variables;
-		}
-		
-		public final List<Object> getConditions() {
-			return this.conditions;
-		}
-		
-		public final Object getDefinition() {
-			return this.definition;
-		}
-		
-		public final CaseDescription instantiate() {
-			return this.instantiate("");
-		}
-		
-		@SuppressWarnings("unchecked")
-		public final CaseDescription instantiate(final String variableNamePostfix) {
-			final Map<Variable, Object> map = new LinkedHashMap<>();
-			final Map<String, Object> newVariables = new LinkedHashMap<>();
-			
-			for (final Map.Entry<String, ?> entry : this.getVariables().entrySet()) {
-				final String newName = entry.getKey() + variableNamePostfix;
-				final Object newValue = $new(newName);
-				
-				map.put((Variable) entry.getValue(), newValue);
-				newVariables.put(newName, newValue);
-			}
-			
-			return new CaseDescription(newVariables,
-					(List<Object>) Variable.rewrite(this.getConditions(), map), Variable.rewrite(this.getDefinition(), map));
-		}
-		
-		private static final long serialVersionUID = -9131355470296079371L;
 		
 	}
 	

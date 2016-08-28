@@ -1,21 +1,22 @@
 package autodiff.reasoning.deductions;
 
 import static autodiff.reasoning.deductions.Basics.rewrite;
+import static autodiff.reasoning.deductions.Sets.ebind;
 import static autodiff.reasoning.deductions.Sets.ebindTrim;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.Stack.*;
 import static autodiff.reasoning.tactics.PatternPredicate.rule;
 import static multij.tools.Tools.append;
-import static multij.tools.Tools.array;
 
-import autodiff.reasoning.deductions.Sets.CaseDescription;
 import autodiff.reasoning.tactics.Goal;
 import autodiff.rules.Rules;
 import autodiff.rules.Variable;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -46,8 +47,9 @@ public final class Sequences {
 		supposeDefinitionsForSequenceConcatenate();
 		testSequenceConcatenate();
 		
-		supposeEliminationsOfCases();
-		testEliminationOfCases();
+		supposeDefinitionsForSequenceHead();
+		supposeDefinitionsForSequenceTail();
+		testSequenceHead();
 	}
 	
 	public static final List<Object> flattenSequence(final Object separator, final Object sequence) {
@@ -387,142 +389,6 @@ public final class Sequences {
 		}
 		
 		rules.applyTo($(s, $1($(x, "=", x)), y));
-	}
-	
-	public static void supposeEliminationsOfCases() {
-		{
-			final Object _x = $new("x");
-			
-			suppose("try_cases_otherwise",
-					$forall(_x,
-							$(cases($(_x, "otherwise")), "=", _x)));
-		}
-		
-		{
-			final Object _x = $new("x");
-			final Object _c = $new("c");
-			
-			suppose("try_cases_if",
-					$forall(_x, _c,
-							$rule(_c, $(cases($(_x, "if", _c)), "=", _x))));
-		}
-		
-		{
-			final Object _x = $new("x");
-			final Object _y = $new("y");
-			final Object _c = $new("c");
-			
-			suppose("try_cases_if_stop",
-					$forall(_x, _y, _c,
-							$rule(_c,
-									$($("cases", $("", $(_x, "if", _c), _y)), "=", _x))));
-		}
-		
-		{
-			final Object _x = $new("x");
-			final Object _y = $new("y");
-			final Object _c = $new("c");
-			
-			suppose("try_cases_if_not",
-					$forall(_x, _y, _c,
-							$rule($(LNOT, _c),
-									$($("cases", $("", $(_x, "if", _c), _y)), "=", $("cases", _y)))));
-		}
-	}
-
-	public static void testEliminationOfCases() {
-		{
-			subdeduction("try_cases.test1");
-			
-			final Object _x = forall("x");
-			
-			suppose($(_x, "=", cases(
-					$(42, "if", $(2, "=", 2)),
-					$(24, "otherwise"))));
-			
-			{
-				subdeduction();
-				
-				bind("try_cases_if_stop", 42, $("", $(24, "otherwise")), $(2, "=", 2));
-				verifyElementaryProposition($(2, "=", 2));
-				apply(name(-2), name(-1));
-				
-				conclude();
-			}
-			
-			rewrite(name(-2), name(-1));
-			
-			conclude();
-		}
-		
-		{
-			subdeduction("try_cases.test2");
-			
-			final Object _x = forall("x");
-			
-			suppose($(_x, "=", cases(
-					$(42, "if", $(2, "=", 3)),
-					$(24, "if", $(1, "=", 2)),
-					$(0, "otherwise"))));
-			
-			{
-				subdeduction();
-				
-				{
-					subdeduction();
-					
-					bind("try_cases_if_not", 42, $("", $(24, "if", $(1, "=", 2)), $("", $(0, "otherwise"))), $(2, "=", 3));
-					verifyElementaryProposition($(2, "=", 3));
-					apply(name(-2), name(-1));
-					
-					conclude();
-				}
-				
-				rewrite(name(-2), name(-1));
-				
-				conclude();
-			}
-			
-			{
-				subdeduction();
-				
-				{
-					subdeduction();
-					
-					bind("try_cases_if_not", 24, $("", $(0, "otherwise")), $(1, "=", 2));
-					verifyElementaryProposition($(1, "=", 2));
-					apply(name(-2), name(-1));
-					
-					conclude();
-				}
-				
-				rewrite(name(-2), name(-1));
-				
-				conclude();
-			}
-			
-			{
-				subdeduction();
-				
-				{
-					subdeduction();
-					
-					bind("try_cases_otherwise", 0);
-					
-					conclude();
-				}
-				
-				rewrite(name(-2), name(-1));
-				
-				conclude();
-			}
-			
-			conclude();
-		}
-	}
-	
-	public static final Object cases(final Object... cases) {
-		return sequence("", append(array((Object) "cases"), cases));
 	}
 	
 	public static final CaseDescription newSequenceConcatenateCase0() {
@@ -945,6 +811,162 @@ public final class Sequences {
 			
 			conclude();
 		}
+	}
+	
+	public static final void supposeDefinitionsForSequenceHead() {
+		{
+			final Object _x0 = $new("x0");
+			
+			suppose("definition_of_sequence_head_1",
+					$forall(_x0,
+							$($("sequence_head", $1(_x0)), "=", _x0)));
+		}
+		
+		{
+			final Object _x0 = $new("x0");
+			final Object _x1 = $new("x1");
+			
+			suppose("definition_of_sequence_head_2",
+					$forall(_x0, _x1,
+							$($("sequence_head", $(_x0, _x1)), "=", _x0)));
+		}
+	}
+	
+	public static final void supposeDefinitionsForSequenceTail() {
+		{
+			final Object _s = $new("s");
+			final Object _x0 = $new("x0");
+			final Object _x1 = $new("x1");
+			
+			suppose("definition_of_sequence_tail_1",
+					$forall(_s, _x0, _x1,
+							$($("sequence_tail", _s, $(_x0, $(_s, _x1))), "=", $1(_x1))));
+		}
+		
+		{
+			final Object _s = $new("s");
+			final Object _x0 = $new("x0");
+			final Object _x1 = $new("x1");
+			final Object _x2 = $new("x2");
+			
+			suppose("definition_of_sequence_tail_2",
+					$forall(_s, _x0, _x1, _x2,
+							$($("sequence_tail", _s, $(_x0, $(_s, _x1, _x2))), "=", $(_x1, _x2))));
+		}
+	}
+	
+	public static final void testSequenceHead() {
+		{
+			subdeduction("sequence_head.test1");
+			
+			computeSequenceHead(sequence(",", 1, 2, 3));
+			
+			conclude();
+		}
+		
+		{
+			subdeduction("sequence_tail.test1");
+			
+			computeSequenceTail(",", sequence(",", 1, 2, 3));
+			
+			conclude();
+		}
+	}
+	
+	public static final void computeSequenceHead(final Object x) {
+		final List<?> list = list(x);
+		
+		if (1 == list.size()) {
+			ebind("definition_of_sequence_head_1", first(list));
+			
+			return;
+		}
+		
+		if (2 == list.size()) {
+			ebind("definition_of_sequence_head_2", first(list), second(list));
+			
+			return;
+		}
+		
+		throw new IllegalArgumentException();
+	}
+	
+	public static final void computeSequenceTail(final Object separator, final Object x) {
+		final List<?> list = list(x);
+		
+		if (2 == list.size()) {
+			final List<?> second = list(second(list));
+			
+			if (separator.equals(first(second))) {
+				if (2 == second.size()) {
+					ebind("definition_of_sequence_tail_1", separator, first(list), second(second));
+					
+					return;
+				}
+				
+				if (3 == second.size()) {
+					ebind("definition_of_sequence_tail_2", separator, first(list), second(second), third(second));
+					
+					return;
+				}
+			}
+		}
+		
+		throw new IllegalArgumentException();
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-19)
+	 */
+	public static final class CaseDescription implements Serializable {
+		
+		private final Map<String, Object> variables;
+		
+		private final List<Object> conditions;
+		
+		private final Object definition;
+		
+		public CaseDescription(final Map<String, Object> variables, final List<Object> conditions, final Object definition) {
+			this.variables = variables;
+			this.conditions = conditions;
+			this.definition = definition;
+		}
+		
+		public final Map<String, Object> getVariables() {
+			return this.variables;
+		}
+		
+		public final List<Object> getConditions() {
+			return this.conditions;
+		}
+		
+		public final Object getDefinition() {
+			return this.definition;
+		}
+		
+		public final CaseDescription instantiate() {
+			return this.instantiate("");
+		}
+		
+		@SuppressWarnings("unchecked")
+		public final CaseDescription instantiate(final String variableNamePostfix) {
+			final Map<Variable, Object> map = new LinkedHashMap<>();
+			final Map<String, Object> newVariables = new LinkedHashMap<>();
+			
+			for (final Map.Entry<String, ?> entry : this.getVariables().entrySet()) {
+				final String newName = entry.getKey() + variableNamePostfix;
+				final Object newValue = $new(newName);
+				
+				map.put((Variable) entry.getValue(), newValue);
+				newVariables.put(newName, newValue);
+			}
+			
+			return new CaseDescription(newVariables,
+					(List<Object>) Variable.rewrite(this.getConditions(), map), Variable.rewrite(this.getDefinition(), map));
+		}
+		
+		private static final long serialVersionUID = -9131355470296079371L;
+		
 	}
 	
 }

@@ -21,7 +21,6 @@ import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.proofs.ElementaryVerification;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.proofs.Substitution;
-import autodiff.reasoning.tactics.Goal;
 import autodiff.rules.Rule;
 import autodiff.rules.Rules;
 import autodiff.rules.SimpleRule;
@@ -29,7 +28,6 @@ import autodiff.rules.Variable;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -149,12 +147,6 @@ public final class Computation extends AbstractNode<Computation> {
 	
 	private static final long serialVersionUID = 2834011599617369367L;
 	
-	public static final Object U = $("℧");
-	
-	public static final Object P = $("ℙ");
-	
-	public static final Object UML = $("¨");
-	
 	public static final Object PI = $("Π");
 	
 	public static final Deduction AUTODIFF = Basics.build("autodiff", new Runnable() {
@@ -168,9 +160,6 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			supposeEliminationOfParentheses();
 			
-			supposeDefinitionOfSubset();
-			supposeDefinitionOfPowerset();
-			supposeSubsetInUhm();
 			supposeTypeOfPowersetOfReals();
 			supposeRealsInUhm();
 			supposeNaturalsSubsetReals();
@@ -222,10 +211,6 @@ public final class Computation extends AbstractNode<Computation> {
 				suppose("reals_single_in_Uhm",
 						$($1(R), IN, U));
 			}
-			
-			supposeDefinitionsForSequenceHead();
-			supposeDefinitonsForSequenceTail();
-			testSequenceHead();
 			
 			supposeDefinitionsForVectorAccess();
 			testVectorAccess();
@@ -611,48 +596,6 @@ public final class Computation extends AbstractNode<Computation> {
 		return expression;
 	}
 	
-	public static final void computeSequenceHead(final Object x) {
-		final List<?> list = list(x);
-		
-		if (1 == list.size()) {
-			ebind("definition_of_sequence_head_1", first(list));
-			
-			return;
-		}
-		
-		if (2 == list.size()) {
-			ebind("definition_of_sequence_head_2", first(list), second(list));
-			
-			return;
-		}
-		
-		throw new IllegalArgumentException();
-	}
-	
-	public static final void computeSequenceTail(final Object separator, final Object x) {
-		final List<?> list = list(x);
-		
-		if (2 == list.size()) {
-			final List<?> second = list(second(list));
-			
-			if (separator.equals(first(second))) {
-				if (2 == second.size()) {
-					ebind("definition_of_sequence_tail_1", separator, first(list), second(second));
-					
-					return;
-				}
-				
-				if (3 == second.size()) {
-					ebind("definition_of_sequence_tail_2", separator, first(list), second(second), third(second));
-					
-					return;
-				}
-			}
-		}
-		
-		throw new IllegalArgumentException();
-	}
-	
 	public static final Computation ones() {
 		final Computation result = new Computation().setTypeName("ones");
 		
@@ -756,14 +699,6 @@ public final class Computation extends AbstractNode<Computation> {
 		return new FlattenBinaryTree().apply(binaryTree);
 	}
 	
-	public static final List<Object> p(final Object... objects) {
-		return list($("(", $(objects), ")"));
-	}
-	
-	public static final List<Object> c(final Object... objects) {
-		return list($("{", $(objects), "}"));
-	}
-	
 	public static final String deepJoin(final String separator, final Iterable<?> objects) {
 		final StringBuilder resultBuilder = new StringBuilder();
 		boolean first = true;
@@ -787,24 +722,11 @@ public final class Computation extends AbstractNode<Computation> {
 		return $(CROSS, "_", $(_j, "<", _n), $(N, "_", $("<", $(_s, "_", _j))));
 	}
 	
-	public static final Object pp(final Object... set) {
-		return $(P, p(set));
-	}
-	
 	public static final void supposeEliminationOfParentheses() {
 		final Object _X = $new("X");
 		
 		suppose("elimination_of_parentheses", $forall(_X,
 				$(p(_X), "=", _X)));
-	}
-	
-	public static final void supposeDefinitionOfSubset() {
-		final Object _x = $new("x");
-		final Object _X = $new("X");
-		final Object _Y = $new("Y");
-		
-		suppose("definition_of_subset", $forall(_X, $(FORALL, _Y, IN, U,
-				$($(_X, SUBSET, _Y), "=", $forall(_x, $rule($(_x, IN, _X), $(_x, IN, _Y)))))));
 	}
 	
 	public static final void supposeNaturalsSubsetReals() {
@@ -875,14 +797,6 @@ public final class Computation extends AbstractNode<Computation> {
 		rewriteRight(name(-2), name(-1));
 		
 		conclude();
-	}
-	
-	public static final void supposeDefinitionOfPowerset() {
-		final Object _X = $new("X");
-		final Object _Y = $new("Y");
-		
-		suppose("definition_of_powerset", $forall(_X, _Y,
-				$($(_X, IN, pp(_Y)), "=", $(_X, SUBSET, _Y))));
 	}
 	
 	public static final void supposeTypeOfPowersetOfReals() {
@@ -996,104 +910,10 @@ public final class Computation extends AbstractNode<Computation> {
 								$($(PI, _v), "=", $(PI, "_", $(_i, "<", _n), $(_v, "_", _i))))));
 	}
 	
-	public static final void supposeSubsetInUhm() {
-		final Object _X = $new("X");
-		final Object _Y = $new("Y");
-		
-		suppose("subset_in_Uhm",
-				$forall(_X,
-						$(FORALL, _Y, IN, U,
-								$rule($(_X, SUBSET, _Y), $(_X, IN, U)))));
-	}
-	
 	public static final void deduceNaturalsInUhm() {
 		subdeduction("naturals_in_Uhm");
 		
 		ebindTrim("subset_in_Uhm", N, R);
-		
-		conclude();
-	}
-	
-	public static final void tryCasesIfNot(final Object condition, final Object value, final Object _y) {
-		subdeduction();
-		
-		{
-			subdeduction();
-			
-			bind("try_cases_if_not", value, _y, condition);
-
-			// TODO autodetect required verification
-			final Object formula = second(condition(proposition(-1)));
-			
-			debugPrint(formula);
-			debugPrint(condition);
-			
-			verifyElementaryProposition(formula);
-			
-			abort();
-//			evaluateStructuralFormula(formula);
-			
-			apply(name(-2), name(-1));
-			
-			conclude();
-		}
-		
-		rewrite(name(-2), name(-1));
-		
-		conclude();
-	}
-	
-	public static final void tryCasesIf(final Object condition, final Object value) {
-		subdeduction();
-		
-		{
-			subdeduction();
-			
-			bind("try_cases_if", value, condition);
-			
-			// TODO autodetect required verification
-//			evaluateStructuralFormula(condition(proposition(-1)));
-			
-			abort();
-			
-			apply(name(-2), name(-1));
-			
-			conclude();
-		}
-		
-		rewrite(name(-2), name(-1));
-		
-		conclude();
-	}
-	
-	public static final void tryCasesIfStop(final Object condition, final Object value, final Object _y) {
-		subdeduction();
-		
-		{
-			subdeduction();
-			
-			bind("try_cases_if_stop", value, _y, condition);
-			
-			// TODO autodetect required verification
-//			evaluateStructuralFormula(condition(proposition(-1)));
-			abort();
-			
-			
-			apply(name(-2), name(-1));
-			
-			conclude();
-		}
-		
-		rewrite(name(-2), name(-1));
-		
-		conclude();
-	}
-	
-	public static final void tryCasesOtherwise(final Object value) {
-		subdeduction();
-		
-		bind("try_cases_otherwise", value);
-		rewrite(name(-2), name(-1));
 		
 		conclude();
 	}
@@ -1107,24 +927,6 @@ public final class Computation extends AbstractNode<Computation> {
 		rewrite(targetName, name(-1));
 		
 		conclude();
-	}
-	
-	public static final void testSequenceHead() {
-		{
-			subdeduction("sequence_head.test1");
-			
-			computeSequenceHead(sequence(",", 1, 2, 3));
-			
-			conclude();
-		}
-		
-		{
-			subdeduction("sequence_tail.test1");
-			
-			computeSequenceTail(",", sequence(",", 1, 2, 3));
-			
-			conclude();
-		}
 	}
 	
 	public static final void testVectorAccess() {
@@ -2681,48 +2483,6 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 	}
 	
-	public static final void supposeDefinitionsForSequenceHead() {
-		{
-			final Object _x0 = $new("x0");
-			
-			suppose("definition_of_sequence_head_1",
-					$forall(_x0,
-							$($("sequence_head", $1(_x0)), "=", _x0)));
-		}
-		
-		{
-			final Object _x0 = $new("x0");
-			final Object _x1 = $new("x1");
-			
-			suppose("definition_of_sequence_head_2",
-					$forall(_x0, _x1,
-							$($("sequence_head", $(_x0, _x1)), "=", _x0)));
-		}
-	}
-	
-	public static final void supposeDefinitonsForSequenceTail() {
-		{
-			final Object _s = $new("s");
-			final Object _x0 = $new("x0");
-			final Object _x1 = $new("x1");
-			
-			suppose("definition_of_sequence_tail_1",
-					$forall(_s, _x0, _x1,
-							$($("sequence_tail", _s, $(_x0, $(_s, _x1))), "=", $1(_x1))));
-		}
-		
-		{
-			final Object _s = $new("s");
-			final Object _x0 = $new("x0");
-			final Object _x1 = $new("x1");
-			final Object _x2 = $new("x2");
-			
-			suppose("definition_of_sequence_tail_2",
-					$forall(_s, _x0, _x1, _x2,
-							$($("sequence_tail", _s, $(_x0, $(_s, _x1, _x2))), "=", $(_x1, _x2))));
-		}
-	}
-	
 	public static final void supposeDefinitionsForVectorAccess() {
 		{
 			final Object _x = $new("x");
@@ -2768,61 +2528,6 @@ public final class Computation extends AbstractNode<Computation> {
 			ignore(key);
 			ignore(value);
 		}
-		
-	}
-	
-	/**
-	 * @author codistmonk (creation 2016-08-14)
-	 */
-	public static final class CasesHelper implements Serializable {
-		
-		private final List<Pair<Object, Object>> cases = new ArrayList<>();
-		
-		public final CasesHelper addCase(final Object value) {
-			return this.addCase(value, null);
-		}
-		
-		public final CasesHelper addCase(final Object value, final Object condition) {
-			this.cases.add(new Pair<>(value, condition));
-			
-			return this;
-		}
-		
-		public final void selectCase(final int index) {
-			final int n = this.cases.size();
-			final Object[] continuations = new Object[n];
-			
-			for (int i = n - 2; 0 <= i; --i) {
-				final Pair<Object, Object> nextCase = this.cases.get(i + 1);
-				final Object nextItem = nextCase.getSecond() == null
-						? $(nextCase.getFirst(), "otherwise")
-								: $(nextCase.getFirst(), "if", nextCase.getSecond());
-				
-				if (i == n - 2) {
-					continuations[i] = $("", nextItem);
-				} else {
-					continuations[i] = $("", nextItem, continuations[i + 1]);
-				}
-			}
-			
-			for (int i = 0; i < index; ++i) {
-				final Pair<Object, Object> c = this.cases.get(i);
-				
-				tryCasesIfNot(c.getSecond(), c.getFirst(), continuations[i]);
-			}
-			
-			final Pair<Object, Object> c = this.cases.get(index);
-			
-			if (c.getSecond() == null) {
-				tryCasesOtherwise(c.getFirst());
-			} else if (continuations[index] == null) {
-				tryCasesIf(c.getSecond(), c.getFirst());
-			} else {
-				tryCasesIfStop(c.getSecond(), c.getFirst(), continuations[index]);
-			}
-		}
-		
-		private static final long serialVersionUID = -598430379891995844L;
 		
 	}
 	
