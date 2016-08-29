@@ -73,6 +73,8 @@ public final class Auto {
 						autodeduceRules.get(d).applyTo(proposition);
 						
 						conclude();
+						
+						return;
 					} catch (final AbortException exception2) {
 						throw exception2;
 					} catch (final Exception exception2) {

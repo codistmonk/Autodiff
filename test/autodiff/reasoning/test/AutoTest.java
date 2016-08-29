@@ -1,7 +1,8 @@
 package autodiff.reasoning.test;
 
+import static autodiff.reasoning.deductions.Sets.*;
 import static autodiff.reasoning.expressions.Expressions.*;
-import static autodiff.reasoning.proofs.ElementaryVerification.N;
+import static autodiff.reasoning.proofs.ElementaryVerification.*;
 import static autodiff.reasoning.tactics.Auto.*;
 import static autodiff.reasoning.tactics.Goal.*;
 import static autodiff.reasoning.tactics.Stack.*;
@@ -38,6 +39,30 @@ public final class AutoTest {
 					newGoal($rule("a", "a"));
 					
 					goal().introduce();
+					
+					autodeduce(goal().getProposition());
+					
+					concludeGoal();
+				}
+			}
+			
+		});
+	}
+	
+	@Test
+	public final void testAutodeduce2() {
+		BasicsTest.build(new Runnable() {
+			
+			@Override
+			public final void run() {
+				Basics.setup();
+				
+				Sequences.setup();
+				Propositions.setup();
+				Sets.setup();
+				
+				{
+					newGoal($(N, SUBSET, R));
 					
 					autodeduce(goal().getProposition());
 					

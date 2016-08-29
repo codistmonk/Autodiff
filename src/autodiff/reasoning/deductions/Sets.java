@@ -4,6 +4,7 @@ import static autodiff.reasoning.deductions.Basics.*;
 import static autodiff.reasoning.deductions.Sequences.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
+import static autodiff.reasoning.tactics.Auto.*;
 import static autodiff.reasoning.tactics.PatternPredicate.rule;
 import static autodiff.reasoning.tactics.Stack.*;
 import static autodiff.rules.Variable.match;
@@ -11,11 +12,17 @@ import static multij.tools.Tools.*;
 
 import autodiff.nodes.Computation.RepeatHelper;
 import autodiff.reasoning.proofs.Deduction;
-import autodiff.reasoning.tactics.Auto;
+import autodiff.reasoning.tactics.PatternMatching;
 import autodiff.reasoning.tactics.Stack.AbortException;
+import autodiff.reasoning.tactics.Stack.PropositionDescription;
 import autodiff.rules.Rules;
 import autodiff.rules.Variable;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import multij.tools.IllegalInstantiationException;
@@ -45,13 +52,15 @@ public final class Sets {
 		supposeDefinitionOfForallIn2();
 		supposeDefinitionOfForallIn3();
 		
+		supposeDefinitionOfSubset();
+		supposeSubsetInUhm();
+		deduceTransitivityOfSubset();
+		
+		supposeNumbersInclusions();
+		
 		setupAutoHints();
 		
-		supposeDefinitionOfSubset();
 		supposeDefinitionOfPowerset();
-		supposeSubsetInUhm();
-		
-		deduceTransitivityOfSubset();
 		
 		supposeVectorTypeInUhm();
 		
@@ -62,6 +71,9 @@ public final class Sets {
 		supposeTypeOfTupleInUhm();
 		
 		supposeRealsInUhm();
+		
+		// TODO use auto tactics in proofs
+		
 		supposeNaturalsSubsetReals();
 		deduceNaturalsInUhm();
 		supposeDefinitionOfPositives();
@@ -90,13 +102,22 @@ public final class Sets {
 		testVectorAccess();
 	}
 	
+	public static final void supposeNumbersInclusions() {
+		suppose("naturals_subset_relatives",
+				$(N, SUBSET, Z));
+		suppose("relatives_subset_rationals",
+				$(Z, SUBSET, Q));
+		suppose("rational_subset_reals",
+				$(Q, SUBSET, R));
+	}
+	
 	public static final void setupAutoHints() {
 		{
 			final Variable vx = new Variable("x");
 			final Variable vX = new Variable("X");
 			final Variable vP = new Variable("P");
 			
-			Auto.hintAutobind(rule($(FORALL, vx, IN, vX, vP), (e, m) -> {
+			hintAutobind(rule($(FORALL, vx, IN, vX, vP), (e, m) -> {
 				bind("definition_of_forall_in", vx.get(), vX.get(), vP.get());
 				
 				return null;
@@ -109,7 +130,7 @@ public final class Sets {
 			final Variable vX = new Variable("X");
 			final Variable vP = new Variable("P");
 			
-			Auto.hintAutobind(rule($(FORALL, vx, ",", vy, IN, vX, vP), (e, m) -> {
+			hintAutobind(rule($(FORALL, vx, ",", vy, IN, vX, vP), (e, m) -> {
 				bind("definition_of_forall_in_2", vx.get(), vy.get(), vX.get(), vP.get());
 				
 				return null;
@@ -123,12 +144,69 @@ public final class Sets {
 			final Variable vX = new Variable("X");
 			final Variable vP = new Variable("P");
 			
-			Auto.hintAutobind(rule($(FORALL, vx, ",", vy, ",", vz, IN, vX, vP), (e, m) -> {
+			hintAutobind(rule($(FORALL, vx, ",", vy, ",", vz, IN, vX, vP), (e, m) -> {
 				bind("definition_of_forall_in_3", vx.get(), vy.get(), vz.get(), vX.get(), vP.get());
 				
 				return null;
 			}));
 		}
+		
+		{
+			final Variable vX = new Variable("X");
+			final Variable vY = new Variable("Y");
+			
+			hintAutodeduce(rule($(vX, SUBSET, vY), (e, m) -> {
+				final List<PropositionDescription> inclusionPath = inclusionPath(vX.get(), vY.get(), new HashSet<>());
+				subdeduction();
+				
+				for (int i = inclusionPath.size() - 1; 0 <= i; --i) {
+					final PropositionDescription d = inclusionPath.get(i);
+					
+					autobind("subset_in_Uhm", left(d.getProposition()), right(d.getProposition()));
+					autoapply(name(-1));
+				}
+				
+				for (int i = 1; i < inclusionPath.size(); ++i) {
+					final PropositionDescription d = inclusionPath.get(i);
+					
+					autobind("transitivity_of_subset", vX.get(), left(d.getProposition()), right(d.getProposition()));
+					autoapply(name(-1));
+				}
+				
+				conclude();
+				
+				return null;
+			}));
+		}
+	}
+	
+	public static final List<PropositionDescription> inclusionPath(final Object origin, final Object target, final Collection<Object> ignore) {
+		final Variable right = new Variable("?");
+		
+		for (final PropositionDescription d : PropositionDescription.iterateBackward(deduction())) {
+			if (new PatternMatching().apply($(origin, SUBSET, right), d.getProposition())) {
+				if (ignore.add(right.get())) {
+					if (target.equals(right.get())) {
+						return Arrays.asList(d);
+					}
+					
+					{
+						final List<PropositionDescription> subresult = inclusionPath(right.get(), target, ignore);
+						
+						if (!subresult.isEmpty()) {
+							final List<PropositionDescription> result = new ArrayList<>();
+							
+							result.add(d);
+							result.addAll(subresult);
+							
+							return result;
+						}
+					}
+				}
+			}
+		}
+		
+		return Collections.emptyList();
 	}
 	
 	public static final void supposeRealsInUhm() {
