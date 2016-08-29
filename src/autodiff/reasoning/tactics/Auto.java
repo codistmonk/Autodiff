@@ -3,18 +3,22 @@ package autodiff.reasoning.tactics;
 import static autodiff.reasoning.deductions.Basics.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.tactics.Stack.*;
+import static autodiff.reasoning.tactics.Stack.PropositionDescription.potentialJustificationsFor;
 import static multij.tools.Tools.ignore;
 
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.tactics.Stack.AbortException;
+import autodiff.reasoning.tactics.Stack.PropositionDescription;
 import autodiff.rules.Rule;
 import autodiff.rules.Rules;
 import autodiff.rules.Variable;
 
+import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
 import multij.tools.IllegalInstantiationException;
+import multij.tools.Pair;
 
 /**
  * @author codistmonk (creation 2016-08-28)
@@ -85,13 +89,39 @@ public final class Auto {
 		String lastName = targetName;
 		
 		for (final Object object : objects) {
+			{
+				final String tmp = name(-1);
+				
+				autoapply(lastName);
+				
+				if (!tmp.equals(name(-1))) {
+					lastName = name(-1);
+				}
+			}
 			
 			final Variable vX = new Variable("X");
 			final Variable vP = new Variable("P");
+			final List<Object> pattern = $forall(vX, vP);
 			
-			autodeduce($(proposition(lastName), "=", $forall(vX, vP)));
-			rewrite(lastName, name(-1));
-			bind(name(-1), object);
+			if (new PatternMatching().apply(pattern, proposition(lastName))) {
+				bind(lastName, object);
+			} else {
+				final List<Pair<PropositionDescription, PatternMatching>> potentialJustifications =
+						potentialJustificationsFor($(proposition(lastName), "=", pattern));
+				
+				for (final Pair<PropositionDescription, PatternMatching> pair : potentialJustifications) {
+					// TODO
+					
+					pair.getSecond().getMapping().forEach(Variable::set);
+					autodeduce($(proposition(lastName), "=", $forall(vX.get(), vP.get())));
+					rewrite(lastName, name(-1));
+					bind(name(-1), object);
+					
+					break;
+				}
+			}
+			
+			lastName = name(-1);
 		}
 	}
 	
@@ -104,7 +134,7 @@ public final class Auto {
 		String currentTargetName = targetName;
 		boolean concludeNeeded = false;
 		
-		while (Variable.match(pattern, currentTargetName)) {
+		while (Variable.match(pattern, proposition(currentTargetName))) {
 			autodeduce(vX.get());
 			apply(currentTargetName, name(-1));
 			currentTargetName = name(-1);

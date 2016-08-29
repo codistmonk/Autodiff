@@ -2,6 +2,7 @@ package autodiff.reasoning.tactics;
 
 import static autodiff.reasoning.expressions.Expressions.*;
 import static multij.tools.Tools.last;
+import static multij.tools.Tools.unchecked;
 
 import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.proofs.Binding;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import multij.tools.IllegalInstantiationException;
+import multij.tools.Pair;
 
 /**
  * @author codistmonk (creation 2015-04-11)
@@ -255,13 +257,22 @@ public final class Stack {
 	/**
 	 * @author codistmonk (creation 2016-08-12)
 	 */
-	public static final class PropositionDescription implements Serializable {
+	public static final class PropositionDescription implements Serializable, Cloneable {
 		
 		private int index;
 		
 		private String name;
 		
 		private Object proposition;
+		
+		@Override
+		public final PropositionDescription clone() {
+			try {
+				return (PropositionDescription) super.clone();
+			} catch (final CloneNotSupportedException exception) {
+				throw unchecked(exception);
+			}
+		}
 		
 		public final int getIndex() {
 			return this.index;
@@ -352,6 +363,32 @@ public final class Stack {
 			}
 			
 			return null;
+		}
+		
+		public static final List<Pair<PropositionDescription, PatternMatching>> potentialJustificationsFor(final Object propositionPattern) {
+			final List<Pair<PropositionDescription, PatternMatching>> result = new ArrayList<>();
+			
+			for (final PropositionDescription description : iterateBackward(deduction())) {
+				Object target = description.getProposition();
+				
+				while (target != null) {
+					final PatternMatching patternMatching = new PatternMatching();
+					
+					if (patternMatching.apply(propositionPattern, target)) {
+						result.add(new Pair<>(description.clone(), patternMatching));
+					}
+					
+					if (isRule(target)) {
+						target = conclusion(target);
+					} else if (isBlock(target)) {
+						target = scope(target);
+					} else {
+						target = null;
+					}
+				}
+			}
+			
+			return result;
 		}
 		
 		public static final boolean isEmpty(final Deduction deduction) {
