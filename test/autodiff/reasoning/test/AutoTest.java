@@ -76,4 +76,55 @@ public final class AutoTest {
 		});
 	}
 	
+	@Test
+	public final void testAutoapplyOnce1() {
+		BasicsTest.build(new Runnable() {
+			
+			@Override
+			public final void run() {
+				Basics.setup();
+				
+				suppose(newName(), "condition1");
+				suppose(newName(), "condition2");
+				
+				suppose($rule("condition1", "condition2", "conclusion1"));
+				
+				{
+					newGoal("conclusion1");
+					
+					autoapplyOnce(name(-1));
+					autoapplyOnce(name(-1));
+					
+					concludeGoal();
+				}
+			}
+			
+		});
+	}
+	
+	@Test
+	public final void testAutoapply1() {
+		BasicsTest.build(new Runnable() {
+			
+			@Override
+			public final void run() {
+				Basics.setup();
+				
+				suppose(newName(), "condition1");
+				suppose(newName(), "condition2");
+				
+				suppose($rule("condition1", "condition2", "conclusion1"));
+				
+				{
+					newGoal("conclusion1");
+					
+					autoapply(name(-1));
+					
+					concludeGoal();
+				}
+			}
+			
+		});
+	}
+	
 }

@@ -134,7 +134,7 @@ public final class Auto {
 		String currentTargetName = targetName;
 		boolean concludeNeeded = false;
 		
-		while (Variable.match(pattern, proposition(currentTargetName))) {
+		while (new PatternMatching().apply(pattern, proposition(currentTargetName))) {
 			autodeduce(vX.get());
 			apply(currentTargetName, name(-1));
 			currentTargetName = name(-1);
@@ -146,6 +146,23 @@ public final class Auto {
 		} else {
 			pop();
 		}
+	}
+	
+	public static final void autoapplyOnce(final String targetName) {
+		final Variable vX = new Variable("X");
+		final Variable vY = new Variable("Y");
+		final Object pattern = $rule(vX, vY);
+		
+		if (!new PatternMatching().apply(pattern, proposition(targetName))) {
+			throw new IllegalArgumentException();
+		}
+		
+		subdeduction();
+		
+		autodeduce(vX.get());
+		apply(targetName, name(-1));
+		
+		conclude();
 	}
 	
 }
