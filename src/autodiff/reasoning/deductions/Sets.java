@@ -11,6 +11,7 @@ import static multij.tools.Tools.*;
 
 import autodiff.nodes.Computation.RepeatHelper;
 import autodiff.reasoning.proofs.Deduction;
+import autodiff.reasoning.tactics.Auto;
 import autodiff.reasoning.tactics.Stack.AbortException;
 import autodiff.rules.Rules;
 import autodiff.rules.Variable;
@@ -43,6 +44,8 @@ public final class Sets {
 		supposeDefinitionOfForallIn();
 		supposeDefinitionOfForallIn2();
 		supposeDefinitionOfForallIn3();
+		
+		setupAutoHints();
 		
 		supposeDefinitionOfSubset();
 		supposeDefinitionOfPowerset();
@@ -85,6 +88,47 @@ public final class Sets {
 		
 		supposeDefinitionsForVectorAccess();
 		testVectorAccess();
+	}
+	
+	public static final void setupAutoHints() {
+		{
+			final Variable vx = new Variable("x");
+			final Variable vX = new Variable("X");
+			final Variable vP = new Variable("P");
+			
+			Auto.hintAutobind(rule($(FORALL, vx, IN, vX, vP), (e, m) -> {
+				bind("definition_of_forall_in", vx.get(), vX.get(), vP.get());
+				
+				return null;
+			}));
+		}
+		
+		{
+			final Variable vx = new Variable("x");
+			final Variable vy = new Variable("y");
+			final Variable vX = new Variable("X");
+			final Variable vP = new Variable("P");
+			
+			Auto.hintAutobind(rule($(FORALL, vx, ",", vy, IN, vX, vP), (e, m) -> {
+				bind("definition_of_forall_in_2", vx.get(), vy.get(), vX.get(), vP.get());
+				
+				return null;
+			}));
+		}
+		
+		{
+			final Variable vx = new Variable("x");
+			final Variable vy = new Variable("y");
+			final Variable vz = new Variable("z");
+			final Variable vX = new Variable("X");
+			final Variable vP = new Variable("P");
+			
+			Auto.hintAutobind(rule($(FORALL, vx, ",", vy, ",", vz, IN, vX, vP), (e, m) -> {
+				bind("definition_of_forall_in_3", vx.get(), vy.get(), vz.get(), vX.get(), vP.get());
+				
+				return null;
+			}));
+		}
 	}
 	
 	public static final void supposeRealsInUhm() {

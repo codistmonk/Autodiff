@@ -1,13 +1,17 @@
 package autodiff.reasoning.test;
 
 import static autodiff.reasoning.expressions.Expressions.*;
+import static autodiff.reasoning.proofs.ElementaryVerification.N;
 import static autodiff.reasoning.tactics.Auto.*;
 import static autodiff.reasoning.tactics.Goal.*;
 import static autodiff.reasoning.tactics.Stack.*;
 
-import org.junit.Test;
-
 import autodiff.reasoning.deductions.Basics;
+import autodiff.reasoning.deductions.Propositions;
+import autodiff.reasoning.deductions.Sequences;
+import autodiff.reasoning.deductions.Sets;
+
+import org.junit.Test;
 
 /**
  * @author codistmonk (creation 2016-08-28)
@@ -68,6 +72,53 @@ public final class AutoTest {
 					newGoal("conclusion1");
 					
 					autobind(name(-1), 1, 2);
+					
+					concludeGoal();
+				}
+			}
+			
+		});
+	}
+	
+	@Test
+	public final void testAutobind2() {
+		BasicsTest.build(new Runnable() {
+			
+			@Override
+			public final void run() {
+				Basics.setup();
+				
+				Sequences.setup();
+				Propositions.setup();
+				Sets.setup();
+				
+				{
+					final Object x = $new("x");
+					
+					suppose($(FORALL, x, IN, N, "conclusion1"));
+				}
+				
+				{
+					newGoal("conclusion1");
+					
+					autobind(name(-1), 42);
+					autoapply(name(-1));
+					
+					concludeGoal();
+				}
+				
+				{
+					final Object x = $new("x");
+					final Object y = $new("y");
+					
+					suppose($(FORALL, x, ",", y, IN, N, "conclusion2"));
+				}
+				
+				{
+					newGoal("conclusion2");
+					
+					autobind(name(-1), 42, 43);
+					autoapply(name(-1));
 					
 					concludeGoal();
 				}

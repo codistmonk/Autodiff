@@ -32,17 +32,6 @@ public final class Basics {
 		deduceRecall();
 	}
 	
-	public static final void deduceIdentity() {
-		subdeduction("identity");
-		
-		final Object x = forall("X");
-		
-		substitute(x, map());
-		rewrite(name(-1), name(-1));
-		
-		conclude();
-	}
-	
 	public static final void supposeRewrite() {
 		final Object p = $new("P");
 		final Object q = $new("Q");
@@ -54,6 +43,17 @@ public final class Basics {
 		suppose("rewrite", $forall(p, $rule(p,
 				$forall(x, $forall(y, $rule($equality(x, y),
 						$forall(i, $forall(q, $rule($equality($(p, GIVEN, asList($equality(x, y)), AT, i), q), q)))))))));
+	}
+	
+	public static final void deduceIdentity() {
+		subdeduction("identity");
+		
+		final Object x = forall("X");
+		
+		substitute(x, map());
+		rewrite(name(-1), name(-1));
+		
+		conclude();
 	}
 	
 	public static final void rewrite(final String targetName, final String equalityName, final int... indices) {
