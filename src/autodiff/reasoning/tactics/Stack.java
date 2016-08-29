@@ -22,7 +22,6 @@ import java.util.Map;
 
 import multij.tools.IllegalInstantiationException;
 import multij.tools.Pair;
-import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2015-04-11)
@@ -369,18 +368,10 @@ public final class Stack {
 		public static final List<Pair<PropositionDescription, PatternMatching>> potentialJustificationsFor(final Object propositionPattern) {
 			final List<Pair<PropositionDescription, PatternMatching>> result = new ArrayList<>();
 			
-			Tools.debugPrint(propositionPattern);
-			
 			for (final PropositionDescription description : iterateBackward(deduction())) {
 				Object target = description.getProposition();
 				
-				
-				Tools.debugPrint(description);
-				Tools.debugPrint(propositionPattern);
-				
 				while (target != null) {
-					Tools.debugPrint(target);
-					
 					final PatternMatching patternMatching = new PatternMatching();
 					
 					if (patternMatching.apply(propositionPattern, target)) {

@@ -68,6 +68,18 @@ public final class AutoTest {
 					
 					concludeGoal();
 				}
+				
+				{
+					final Object _x = $new("x");
+					
+					newGoal($rule($(_x, IN, N), $(_x, IN, Q)));
+					
+					goal().introduce();
+					
+					autodeduce(goal().getProposition());
+					
+					concludeGoal();
+				}
 			}
 			
 		});

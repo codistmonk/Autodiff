@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import multij.tools.IllegalInstantiationException;
+import multij.tools.Pair;
 import multij.tools.Tools;
 
 /**
@@ -157,20 +158,47 @@ public final class Sets {
 			
 			hintAutodeduce(rule($(vX, SUBSET, vY), (e, m) -> {
 				final List<PropositionDescription> inclusionPath = inclusionPath(vX.get(), vY.get(), new HashSet<>());
-				subdeduction();
 				
-				for (int i = inclusionPath.size() - 1; 0 <= i; --i) {
-					final PropositionDescription d = inclusionPath.get(i);
-					
-					autobind("subset_in_Uhm", left(d.getProposition()), right(d.getProposition()));
-					autoapply(name(-1));
-				}
+				subdeduction();
 				
 				for (int i = 1; i < inclusionPath.size(); ++i) {
 					final PropositionDescription d = inclusionPath.get(i);
 					
 					autobind("transitivity_of_subset", vX.get(), left(d.getProposition()), right(d.getProposition()));
 					autoapply(name(-1));
+				}
+				
+				conclude();
+				
+				return null;
+			}));
+		}
+		
+		{
+			final Variable vx = new Variable("x");
+			final Variable vX = new Variable("X");
+			
+			hintAutodeduce(rule($(vx, IN, vX), (e, m) -> {
+				final Variable vY = new Variable("Y");
+				final List<Pair<PropositionDescription, PatternMatching>> candidates = PropositionDescription.potentialJustificationsFor($(vx.get(), IN, vY));
+				final Deduction deduction = subdeduction();
+				
+				for (final Pair<PropositionDescription, PatternMatching> pair : candidates) {
+					pair.getSecond().getMapping().forEach(Variable::set);
+					
+					try {
+						autodeduce($(vY.get(), SUBSET, vX.get()));
+						autobind("definition_of_subset", vY.get(), vX.get());
+						rewrite(name(-2), name(-1));
+						bind(name(-1), vx.get());
+						autoapplyOnce(name(-1));
+					} catch (final AbortException exception) {
+						throw exception;
+					} catch (final Exception exception) {
+						ignore(exception);
+						
+						popTo(deduction);
+					}
 				}
 				
 				conclude();
@@ -270,8 +298,8 @@ public final class Sets {
 		final Object _X = $new("X");
 		final Object _Y = $new("Y");
 		
-		suppose("definition_of_subset", $forall(_X, $(FORALL, _Y, IN, U,
-				$($(_X, SUBSET, _Y), "=", $forall(_x, $rule($(_x, IN, _X), $(_x, IN, _Y)))))));
+		suppose("definition_of_subset", $forall(_X, _Y,
+				$($(_X, SUBSET, _Y), "=", $forall(_x, $rule($(_x, IN, _X), $(_x, IN, _Y))))));
 	}
 	
 	public static final void supposeDefinitionOfPowerset() {
@@ -299,9 +327,9 @@ public final class Sets {
 		final Object _Y = forall("Y");
 		final Object _Z = forall("Z");
 		
-		suppose($(_X, IN, U));
-		suppose($(_Y, IN, U));
-		suppose($(_Z, IN, U));
+//		suppose($(_X, IN, U));
+//		suppose($(_Y, IN, U));
+//		suppose($(_Z, IN, U));
 		suppose($(_X, SUBSET, _Y));
 		suppose($(_Y, SUBSET, _Z));
 		
