@@ -337,10 +337,10 @@ public final class Computation extends AbstractNode<Computation> {
 								$(0, LE, _x)));
 			}
 			
-			{
-				suppose("naturals_subset_relatives",
-						$(N, SUBSET, Z));
-			}
+//			{
+//				suppose("naturals_subset_relatives",
+//						$(N, SUBSET, Z));
+//			}
 			
 			{
 				suppose("relatives_in_Uhm",
