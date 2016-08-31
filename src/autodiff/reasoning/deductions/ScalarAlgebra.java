@@ -7,6 +7,7 @@ import static autodiff.reasoning.tactics.PatternPredicate.rule;
 import static autodiff.reasoning.tactics.Stack.*;
 import static multij.tools.Tools.array;
 
+import autodiff.reasoning.tactics.PatternMatching;
 import autodiff.rules.Variable;
 
 import multij.tools.IllegalInstantiationException;
@@ -84,59 +85,61 @@ public final class ScalarAlgebra {
 			final Variable vx = new Variable("x");
 			final Variable vy = new Variable("y");
 			
-			hintAutodeduce(rule(
-					$($(vx, "+", vy), IN, R),
-					(e, m) -> {
-						Tools.debugPrint();
-						abort();
-						subdeduction();
-						
-						autobind("stability_of_+_in_" + R, vx.get(), vy.get());
-						autoapply(name(-1));
-						
-						conclude();
-						
-						return null;
-					}));
+			hintAutodeduce((e, m) -> {
+				if (!new PatternMatching().apply($($(vx, "+", vy), IN, R), e)) {
+					return false;
+				}
+				
+				Tools.debugPrint();
+				abort();
+				subdeduction();
+				
+				autobind("stability_of_+_in_" + R, vx.get(), vy.get());
+				autoapply(name(-1));
+				
+				conclude();
+				
+				return true;
+			});
 		}
 		
 		{
 			final Variable vx = new Variable("x");
 			final Variable vy = new Variable("y");
 			
-			hintAutodeduce(rule(
-					$($(vx, "-", vy), IN, R),
-					(e, m) -> {
-						subdeduction();
-						
-						autobind("stability_of_+_in_" + R, vx.get(), vy.get());
-						autoapply(name(-1));
-						
-						conclude();
-						
-						return null;
-					}));
+			hintAutodeduce((e, m) -> {
+				if (!new PatternMatching().apply($($(vx, "-", vy), IN, R), e)) {
+					return false;
+				}
+				subdeduction();
+				
+				autobind("stability_of_+_in_" + R, vx.get(), vy.get());
+				autoapply(name(-1));
+				
+				conclude();
+				
+				return true;
+			});
 		}
 		
 		{
 			final Variable vx = new Variable("x");
 			final Variable vy = new Variable("y");
 			
-			hintAutodeduce(rule(
-					$($(vx, "*", vy), IN, R),
-					(e, m) -> {
-						subdeduction();
-						
-						autobind("stability_of_+_in_" + R, vx.get(), vy.get());
-						autoapply(name(-1));
-						
-						conclude();
-						
-						return null;
-					}));
+			hintAutodeduce((e, m) -> {
+				if (!new PatternMatching().apply($($(vx, "*", vy), IN, R), e)) {
+					return false;
+				}
+				subdeduction();
+				
+				autobind("stability_of_+_in_" + R, vx.get(), vy.get());
+				autoapply(name(-1));
+				
+				conclude();
+				
+				return true;
+			});
 		}
-		
-		Tools.debugPrint();
 	}
 	
 }

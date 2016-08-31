@@ -156,7 +156,11 @@ public final class Sets {
 			final Variable vX = new Variable("X");
 			final Variable vY = new Variable("Y");
 			
-			hintAutodeduce(rule($(vX, SUBSET, vY), (e, m) -> {
+			hintAutodeduce((e, m) -> {
+				if (!new PatternMatching().apply($(vX, SUBSET, vY), e)) {
+					return false;
+				}
+				
 				final List<PropositionDescription> inclusionPath = inclusionPath(vX.get(), vY.get(), new HashSet<>());
 				
 				subdeduction();
@@ -170,15 +174,19 @@ public final class Sets {
 				
 				conclude();
 				
-				return null;
-			}));
+				return true;
+			});
 		}
 		
 		{
 			final Variable vx = new Variable("x");
 			final Variable vX = new Variable("X");
 			
-			hintAutodeduce(rule($(vx, IN, vX), (e, m) -> {
+			hintAutodeduce((e, m) -> {
+				if (!new PatternMatching().apply($(vx, IN, vX), e)) {
+					return false;
+				}
+				
 				final Variable vY = new Variable("Y");
 				final List<Pair<PropositionDescription, PatternMatching>> candidates = PropositionDescription.potentialJustificationsFor($(vx.get(), IN, vY));
 				final Deduction deduction = subdeduction();
@@ -203,8 +211,8 @@ public final class Sets {
 				
 				conclude();
 				
-				return null;
-			}));
+				return true;
+			});
 		}
 	}
 	

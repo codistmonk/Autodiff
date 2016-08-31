@@ -11,6 +11,7 @@ import autodiff.reasoning.tactics.Stack.AbortException;
 import autodiff.reasoning.tactics.Stack.PropositionDescription;
 import autodiff.rules.Rule;
 import autodiff.rules.Rules;
+import autodiff.rules.TryRule;
 import autodiff.rules.Variable;
 
 import java.util.HashMap;
@@ -19,7 +20,6 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 import multij.tools.IllegalInstantiationException;
-import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2016-08-28)
@@ -34,7 +34,7 @@ public final class Auto {
 	
 	private static final Map<Deduction, Rules<Object, Void>> autobindRules = new WeakHashMap<>();
 	
-	public static final void hintAutodeduce(final Rule<Object, Void> rule) {
+	public static final void hintAutodeduce(final TryRule<Object> rule) {
 		autodeduceRules.computeIfAbsent(deduction(), __ -> new Rules<>()).add(rule);
 	}
 	
@@ -67,13 +67,10 @@ public final class Auto {
 			} catch (final AbortException exception) {
 				throw exception;
 			} catch (final Exception exception) {
-				Tools.debugPrint(proposition);
-				
 				popTo(deduction);
 				
 				for (Deduction d = deduction(); d != null; d = d.getParent()) {
 					try {
-						Tools.debugPrint(d.hashCode());
 						autodeduceRules.get(d).applyTo(proposition);
 						
 						conclude();

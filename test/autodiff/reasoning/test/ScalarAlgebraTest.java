@@ -12,7 +12,6 @@ import autodiff.reasoning.deductions.ScalarAlgebra;
 import autodiff.reasoning.deductions.Sets;
 import autodiff.reasoning.deductions.Sequences;
 import autodiff.reasoning.tactics.Goal;
-import multij.tools.Tools;
 
 import org.junit.Test;
 
@@ -33,8 +32,6 @@ public final class ScalarAlgebraTest {
 				Sets.setup();
 				ScalarAlgebra.setup();
 				
-				Tools.debugPrint(deduction().hashCode());
-
 				final Object _a = $new("a");
 				
 				suppose($(_a, IN, R));
