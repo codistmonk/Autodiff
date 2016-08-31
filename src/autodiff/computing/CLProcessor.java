@@ -22,6 +22,7 @@ import autodiff.nodes.NodeVisitor;
 import autodiff.nodes.Zipping;
 import autodiff.nodes.Computation.ToCLHelper;
 import autodiff.reasoning.deductions.Basics;
+import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.rules.Rules;
 import autodiff.rules.PatternPredicate;
@@ -336,7 +337,7 @@ public final class CLProcessor implements NodeProcessor {
 						new ToCLHelper().compute($("to_CL", valuesExpression));
 					}
 					
-				}, 1);
+				}, new Simple(1));
 				
 				String programSource = "";
 				

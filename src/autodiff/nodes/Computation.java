@@ -16,6 +16,7 @@ import static multij.tools.Tools.*;
 import autodiff.reasoning.deductions.Basics;
 import autodiff.reasoning.deductions.Sets;
 import autodiff.reasoning.expressions.ExpressionVisitor;
+import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.ElementaryVerification;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.proofs.Substitution;
@@ -137,7 +138,7 @@ public final class Computation extends AbstractNode<Computation> {
 	public final Deduction getBoundForm() {
 		if (this.boundForm == null) {
 			this.boundForm = Basics.build(new Deduction(
-					AUTODIFF, this.getName() + "_bind"), this.getBinder(), 1);
+					AUTODIFF, this.getName() + "_bind"), this.getBinder(), new Simple(1));
 		}
 		
 		return this.boundForm;
@@ -358,7 +359,7 @@ public final class Computation extends AbstractNode<Computation> {
 			supposeDefinitionsForCLCode();
 		}
 		
-	}, 1);
+	}, new Simple(1));
 	
 	public static final Object instructions(final Object instructionsBefore, final Object... newInstructions) {
 		Object result = instructionsBefore;

@@ -4,6 +4,7 @@ import static autodiff.reasoning.expressions.Expressions.*;
 import static java.util.Collections.nCopies;
 import static java.util.stream.Collectors.toList;
 import static multij.tools.Tools.*;
+
 import autodiff.reasoning.expressions.Expressions;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.proofs.Proof;
@@ -13,17 +14,25 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import multij.tools.IllegalInstantiationException;
 import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2015-04-12)
  */
-public final class Simple {
+public final class Simple implements Deduction.Processor {
 	
-	private Simple() {
-		throw new IllegalInstantiationException();
+	private final int proofDepth;
+	
+	public Simple(final int proofDepth) {
+		this.proofDepth = proofDepth;
 	}
+	
+	@Override
+	public final void process(final Deduction deduction) {
+		print(deduction, this.proofDepth);
+	}
+	
+	private static final long serialVersionUID = -6240445329864424260L;
 	
 	private static Object groupStart = "(";
 	

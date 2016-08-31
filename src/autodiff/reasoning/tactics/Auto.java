@@ -211,7 +211,7 @@ public final class Auto {
 		return (e, m) -> {
 			try {
 				return new PatternMatching().apply(pattern, e)
-						&& predicateContinuation.test(e, m);
+					&& predicateContinuation.test(e, m);
 			} catch (final AbortException exception) {
 				throw exception;
 			} catch (final Exception exception) {

@@ -19,6 +19,7 @@ import autodiff.reasoning.deductions.Basics;
 import autodiff.reasoning.deductions.Sequences;
 import autodiff.reasoning.expressions.ExpressionRewriter;
 import autodiff.reasoning.expressions.Expressions;
+import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.rules.Rules;
 import autodiff.rules.PatternPredicate;
@@ -208,7 +209,7 @@ public final class DefaultProcessor implements NodeProcessor {
 						new ToJavaHelper().compute($$("to_java", valuesExpression));
 					}
 					
-				}, 1);
+				}, new Simple(1));
 				
 				return right(javaCodeDeduction.getProposition(javaCodeDeduction.getPropositionName(-1)));
 			});

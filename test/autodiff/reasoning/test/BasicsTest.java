@@ -6,6 +6,7 @@ import static autodiff.reasoning.tactics.Stack.*;
 import static multij.tools.Tools.*;
 
 import autodiff.reasoning.deductions.Basics;
+import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.tactics.Goal;
 
@@ -85,11 +86,15 @@ public final class BasicsTest {
 	}
 	
 	public static final Deduction build(final Runnable deductionBuilder) {
-		return build(getCallerMethodName(), deductionBuilder, 1);
+		return build(getCallerMethodName(), deductionBuilder, new Simple(1));
 	}
 	
-	public static final Deduction build(final String deductionName, final Runnable deductionBuilder, final int debugDepth) {
-		return Basics.build(deductionName, deductionBuilder, debugDepth);
+	public static final Deduction build(final Runnable deductionBuilder, final Deduction.Processor printer) {
+		return build(getCallerMethodName(), deductionBuilder, printer);
+	}
+	
+	public static final Deduction build(final String deductionName, final Runnable deductionBuilder, final Deduction.Processor printer) {
+		return Basics.build(deductionName, deductionBuilder, printer);
 	}
 	
 }

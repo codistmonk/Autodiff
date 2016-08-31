@@ -26,6 +26,8 @@ public final class ScalarAlgebra {
 	public static final Object[] RATIONAL_TYPES = { Q, R };
 	
 	public static final void load() {
+		Sets.load();
+		
 		for (final Object type : NUMERIC_TYPES) {
 			for (final Object operator : array($("+"), $("*"))) {
 				final Object _x = $new("x");
@@ -78,6 +80,10 @@ public final class ScalarAlgebra {
 							$rule($(0, LE, _x), $(_x, IN, N))));
 		}
 		
+		loadAutoHints();
+	}
+	
+	public static final void loadAutoHints() {
 		{
 			final Variable vx = new Variable("x");
 			final Variable vy = new Variable("y");

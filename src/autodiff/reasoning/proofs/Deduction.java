@@ -5,6 +5,7 @@ import static autodiff.reasoning.proofs.Substitution.compare;
 import static java.util.Collections.unmodifiableSet;
 import static multij.tools.Tools.last;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -222,5 +223,14 @@ public final class Deduction extends Proof.Abstract {
 			ModusPonens.class, Substitution.class, Binding.class,
 			ElementaryVerification.class,
 			Deduction.class));
+	
+	/**
+	 * @author codistmonk (creation 2016-08-31)
+	 */
+	public static abstract interface Processor extends Serializable {
+		
+		public abstract void process(Deduction deduction);
+		
+	}
 	
 }

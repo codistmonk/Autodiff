@@ -149,15 +149,15 @@ public final class Basics {
 		conclude();
 	}
 	
-	public static final Deduction subbuild(final String deductionName, final Runnable deductionBuilder, final int debugDepth) {
-		return build(new Deduction(deduction(), deductionName), deductionBuilder, debugDepth);
+	public static final Deduction subbuild(final String deductionName, final Runnable deductionBuilder, final Deduction.Processor printer) {
+		return build(new Deduction(deduction(), deductionName), deductionBuilder, printer);
 	}
 	
-	public static final Deduction build(final String deductionName, final Runnable deductionBuilder, final int debugDepth) {
-		return build(new Deduction(null, deductionName), deductionBuilder, debugDepth);
+	public static final Deduction build(final String deductionName, final Runnable deductionBuilder, final Deduction.Processor printer) {
+		return build(new Deduction(null, deductionName), deductionBuilder, printer);
 	}
 	
-	public static final Deduction build(final Deduction deduction, final Runnable deductionBuilder, final int debugDepth) {
+	public static final Deduction build(final Deduction deduction, final Runnable deductionBuilder, final Deduction.Processor printer) {
 		final Deduction result = push(deduction);
 		
 		try {
@@ -165,7 +165,7 @@ public final class Basics {
 			
 			return result.conclude();
 		} catch (final Throwable exception) {
-			Simple.print(deduction(), debugDepth);
+			printer.process(deduction());
 			
 			Deduction d = deduction();
 			int n = depth(d);
