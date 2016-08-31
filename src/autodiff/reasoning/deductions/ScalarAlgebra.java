@@ -26,7 +26,7 @@ public final class ScalarAlgebra {
 	
 	public static final Object[] RATIONAL_TYPES = { Q, R };
 	
-	public static final void setup() {
+	public static final void load() {
 		for (final Object type : NUMERIC_TYPES) {
 			for (final Object operator : array($("+"), $("*"))) {
 				final Object _x = $new("x");

@@ -31,7 +31,7 @@ public final class Sequences {
 		throw new IllegalInstantiationException();
 	}
 	
-	public static final void setup() {
+	public static final void load() {
 //		debugPrint(sequence(",", $(1, 2, 3)));
 //		debugPrint(sequence(",", 1));
 //		debugPrint(sequence(",", 1, 2));

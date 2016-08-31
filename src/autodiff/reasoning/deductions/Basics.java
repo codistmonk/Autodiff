@@ -25,7 +25,7 @@ public final class Basics {
 		throw new IllegalInstantiationException();
 	}
 	
-	public static final void setup() {
+	public static final void load() {
 		supposeRewrite();
 		deduceIdentity();
 		deduceCommutativityOfEquality();

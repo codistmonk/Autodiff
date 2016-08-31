@@ -16,7 +16,7 @@ public final class Propositions {
 		throw new IllegalInstantiationException();
 	}
 	
-	public static final void setup() {
+	public static final void load() {
 		supposeLeftEliminationOfDisjunction();
 		supposeRightEliminationOfDisjunction();
 		supposeIntroductionOfConjunction();

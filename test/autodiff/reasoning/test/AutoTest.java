@@ -25,7 +25,7 @@ public final class AutoTest {
 			
 			@Override
 			public final void run() {
-				Basics.setup();
+				Basics.load();
 				
 				{
 					newGoal($($(1, "+", 1), "=", 2));
@@ -55,11 +55,11 @@ public final class AutoTest {
 			
 			@Override
 			public final void run() {
-				Basics.setup();
+				Basics.load();
 				
-				Sequences.setup();
-				Propositions.setup();
-				Sets.setup();
+				Sequences.load();
+				Propositions.load();
+				Sets.load();
 				
 				{
 					newGoal($(N, SUBSET, R));
@@ -91,7 +91,7 @@ public final class AutoTest {
 			
 			@Override
 			public final void run() {
-				Basics.setup();
+				Basics.load();
 				
 				suppose(newName(), "condition1");
 				
@@ -123,11 +123,11 @@ public final class AutoTest {
 			
 			@Override
 			public final void run() {
-				Basics.setup();
+				Basics.load();
 				
-				Sequences.setup();
-				Propositions.setup();
-				Sets.setup();
+				Sequences.load();
+				Propositions.load();
+				Sets.load();
 				
 				{
 					final Object x = $new("x");
@@ -170,7 +170,7 @@ public final class AutoTest {
 			
 			@Override
 			public final void run() {
-				Basics.setup();
+				Basics.load();
 				
 				suppose(newName(), "condition1");
 				suppose(newName(), "condition2");
@@ -196,7 +196,7 @@ public final class AutoTest {
 			
 			@Override
 			public final void run() {
-				Basics.setup();
+				Basics.load();
 				
 				suppose(newName(), "condition1");
 				suppose(newName(), "condition2");

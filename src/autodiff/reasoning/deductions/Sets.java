@@ -48,7 +48,7 @@ public final class Sets {
 	
 	public static final Object CROSS = $("×");
 	
-	public static final void setup() {
+	public static final void load() {
 		supposeDefinitionOfForallIn();
 		supposeDefinitionOfForallIn2();
 		supposeDefinitionOfForallIn3();

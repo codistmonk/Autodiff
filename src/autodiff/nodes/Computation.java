@@ -153,10 +153,10 @@ public final class Computation extends AbstractNode<Computation> {
 		
 		@Override
 		public final void run() {
-			Basics.setup();
-			Sequences.setup();
-			Propositions.setup();
-			Sets.setup();
+			Basics.load();
+			Sequences.load();
+			Propositions.load();
+			Sets.load();
 			
 			supposeEliminationOfParentheses();
 			
