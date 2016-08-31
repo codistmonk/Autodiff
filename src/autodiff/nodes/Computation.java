@@ -27,12 +27,9 @@ import autodiff.rules.Variable;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import multij.tools.Pair;
 
 /**
  * @author codistmonk (creation 2016-08-09)
@@ -457,38 +454,6 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 		
 		rules.applyTo(formula);
-	}
-	
-	public static final List<Pair<String, Map<Variable, Object>>> findConclusions(final Object pattern) {
-		final List<Pair<String, Map<Variable, Object>>> result = new ArrayList<>();
-		
-		for (final PropositionDescription description : PropositionDescription.iterateBackward(deduction())) {
-			final LinkedHashMap<Variable, Object> mapping = new LinkedHashMap<>();
-			
-			if (Variable.match(pattern, eultimate(description.getProposition()), mapping)) {
-				result.add(new Pair<>(description.getName(), mapping));
-			}
-		}
-		
-		Collections.reverse(result);
-		
-		return result;
-	}
-	
-	public static final Object eultimate(final Object expression) {
-		if (isForallIn(expression) || isForallIn2(expression)) {
-			return eultimate(last(list(expression)));
-		}
-		
-		if (isBlock(expression)) {
-			return eultimate(scope(expression));
-		}
-		
-		if (isRule(expression)) {
-			return eultimate(conclusion(expression));
-		}
-		
-		return expression;
 	}
 	
 	public static final Computation ones() {
