@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 import multij.tools.IllegalInstantiationException;
+import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2016-08-28)
@@ -66,10 +67,13 @@ public final class Auto {
 			} catch (final AbortException exception) {
 				throw exception;
 			} catch (final Exception exception) {
+				Tools.debugPrint(proposition);
+				
 				popTo(deduction);
 				
 				for (Deduction d = deduction(); d != null; d = d.getParent()) {
 					try {
+						Tools.debugPrint(d.hashCode());
 						autodeduceRules.get(d).applyTo(proposition);
 						
 						conclude();
