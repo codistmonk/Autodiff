@@ -1,6 +1,7 @@
 package autodiff.reasoning.tactics;
 
 import static autodiff.reasoning.expressions.Expressions.*;
+import static autodiff.reasoning.proofs.Substitution.compare;
 import static multij.tools.Tools.last;
 import static multij.tools.Tools.unchecked;
 
@@ -218,7 +219,7 @@ public final class Stack {
 			
 			@Override
 			public final Integer visit(final Object expression) {
-				if (new Substitution.ExpressionEquality().apply(pattern, expression)) {
+				if (compare(pattern, expression)) {
 					return 1;
 				}
 				
@@ -357,7 +358,7 @@ public final class Stack {
 		
 		public static final PropositionDescription existingJustificationFor(final Object proposition) {
 			for (final PropositionDescription description : iterateBackward(deduction())) {
-				if (new Substitution.ExpressionEquality().apply(proposition, description.getProposition())) {
+				if (compare(proposition, description.getProposition())) {
 					return description;
 				}
 			}

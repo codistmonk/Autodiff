@@ -1,10 +1,10 @@
 package autodiff.reasoning.tactics;
 
 import static autodiff.reasoning.expressions.Expressions.*;
+import static autodiff.reasoning.proofs.Substitution.compare;
 import static autodiff.reasoning.tactics.Stack.*;
 
 import autodiff.reasoning.proofs.Deduction;
-import autodiff.reasoning.proofs.Substitution;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -74,7 +74,7 @@ public final class Goal implements Serializable {
 		
 		final Object provedProposition = deduction.getProvedPropositionFor(deduction.getParent());
 		
-		checkState(new Substitution.ExpressionEquality().apply(this.getInitialProposition(), provedProposition),
+		checkState(compare(this.getInitialProposition(), provedProposition),
 				"Expected: " + this.getInitialProposition() + " but was: " + provedProposition);
 		
 		deduction().conclude(deduction);

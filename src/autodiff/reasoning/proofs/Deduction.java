@@ -1,6 +1,7 @@
 package autodiff.reasoning.proofs;
 
 import static autodiff.reasoning.expressions.Expressions.*;
+import static autodiff.reasoning.proofs.Substitution.compare;
 import static java.util.Collections.unmodifiableSet;
 import static multij.tools.Tools.last;
 
@@ -105,7 +106,11 @@ public final class Deduction extends Proof.Abstract {
 	
 	public final Deduction suppose(final String propositionName, final Object proposition) {
 		checkArgument(propositionName != null, "Invalid proposition name: " + propositionName);
-		checkArgument(this.getProposition(propositionName) == null, "Duplicate proposition name: " + propositionName);
+		
+		final Object existingProposition = this.getProposition(propositionName);
+		
+		checkArgument(existingProposition == null
+				|| compare(proposition, existingProposition), "Duplicate proposition name: " + propositionName);
 		
 		this.getPropositions().put(propositionName, proposition);
 		this.getPropositionNames().add(propositionName);

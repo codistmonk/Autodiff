@@ -102,12 +102,16 @@ public final class Substitution extends Proof.Abstract {
 		return false;
 	}
 	
+	public static final boolean compare(final Object expression1, final Object expression2) {
+		return new ExpressionEquality().apply(expression1, expression2);
+	}
+	
 	private static final Object substituteIn(final Object target,
 			final Map<Object, Object> equalities, final Collection<Integer> indices, final int[] index) {
 		Object replacement = null;
 		
 		for (final Map.Entry<Object, Object> entry : equalities.entrySet()) {
-			if (new ExpressionEquality().apply(entry.getKey(), target)) {
+			if (compare(entry.getKey(), target)) {
 				replacement = entry.getValue();
 				break;
 			}
