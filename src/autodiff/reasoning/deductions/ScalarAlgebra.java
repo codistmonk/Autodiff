@@ -7,6 +7,7 @@ import static autodiff.reasoning.tactics.PatternPredicate.rule;
 import static autodiff.reasoning.tactics.Stack.*;
 import static multij.tools.Tools.array;
 
+import autodiff.reasoning.tactics.Auto;
 import autodiff.reasoning.tactics.PatternMatching;
 import autodiff.rules.Variable;
 
@@ -85,11 +86,7 @@ public final class ScalarAlgebra {
 			final Variable vx = new Variable("x");
 			final Variable vy = new Variable("y");
 			
-			hintAutodeduce((e, m) -> {
-				if (!new PatternMatching().apply($($(vx, "+", vy), IN, R), e)) {
-					return false;
-				}
-				
+			hintAutodeduce(matchWith($($(vx, "+", vy), IN, R), (e, m) -> {
 				Tools.debugPrint();
 				abort();
 				subdeduction();
@@ -100,17 +97,14 @@ public final class ScalarAlgebra {
 				conclude();
 				
 				return true;
-			});
+			}));
 		}
 		
 		{
 			final Variable vx = new Variable("x");
 			final Variable vy = new Variable("y");
 			
-			hintAutodeduce((e, m) -> {
-				if (!new PatternMatching().apply($($(vx, "-", vy), IN, R), e)) {
-					return false;
-				}
+			hintAutodeduce(matchWith($($(vx, "-", vy), IN, R), (e, m) -> {
 				subdeduction();
 				
 				autobind("stability_of_+_in_" + R, vx.get(), vy.get());
@@ -119,17 +113,14 @@ public final class ScalarAlgebra {
 				conclude();
 				
 				return true;
-			});
+			}));
 		}
 		
 		{
 			final Variable vx = new Variable("x");
 			final Variable vy = new Variable("y");
 			
-			hintAutodeduce((e, m) -> {
-				if (!new PatternMatching().apply($($(vx, "*", vy), IN, R), e)) {
-					return false;
-				}
+			hintAutodeduce(matchWith($($(vx, "*", vy), IN, R), (e, m) -> {
 				subdeduction();
 				
 				autobind("stability_of_+_in_" + R, vx.get(), vy.get());
@@ -138,7 +129,7 @@ public final class ScalarAlgebra {
 				conclude();
 				
 				return true;
-			});
+			}));
 		}
 	}
 	

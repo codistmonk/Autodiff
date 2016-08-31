@@ -11,6 +11,7 @@ import autodiff.reasoning.tactics.Stack.AbortException;
 import autodiff.reasoning.tactics.Stack.PropositionDescription;
 import autodiff.rules.Rule;
 import autodiff.rules.Rules;
+import autodiff.rules.SimpleRule;
 import autodiff.rules.TryRule;
 import autodiff.rules.Variable;
 
@@ -205,6 +206,11 @@ public final class Auto {
 		apply(targetName, name(-1));
 		
 		conclude();
+	}
+	
+	public static final <T> TryRule<T> matchWith(final Object pattern, SimpleRule.Predicate<T> predicateContinuation) {
+		return (e, m) -> new PatternMatching().apply(pattern, e)
+					&& predicateContinuation.test(e, m);
 	}
 	
 }
