@@ -6,11 +6,8 @@ import static autodiff.reasoning.tactics.Auto.autodeduce;
 import static autodiff.reasoning.tactics.Stack.*;
 import static autodiff.reasoning.test.BasicsTest.build;
 
-import autodiff.reasoning.deductions.Basics;
-import autodiff.reasoning.deductions.Propositions;
 import autodiff.reasoning.deductions.ScalarAlgebra;
 import autodiff.reasoning.deductions.Sets;
-import autodiff.reasoning.deductions.Sequences;
 import autodiff.reasoning.tactics.Goal;
 
 import org.junit.Test;
@@ -26,10 +23,7 @@ public final class ScalarAlgebraTest {
 			
 			@Override
 			public final void run() {
-//				Basics.load();
-//				Sequences.load();
-//				Propositions.load();
-//				Sets.load();
+				Sets.load();
 				ScalarAlgebra.load();
 				
 				final Object _a = $new("a");

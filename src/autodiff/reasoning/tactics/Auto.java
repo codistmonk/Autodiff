@@ -208,8 +208,16 @@ public final class Auto {
 	}
 	
 	public static final <T> TryRule<T> tryMatch(final Object pattern, SimpleRule.Predicate<T> predicateContinuation) {
-		return (e, m) -> new PatternMatching().apply(pattern, e)
-					&& predicateContinuation.test(e, m);
+		return (e, m) -> {
+			try {
+				return new PatternMatching().apply(pattern, e)
+						&& predicateContinuation.test(e, m);
+			} catch (final AbortException exception) {
+				throw exception;
+			} catch (final Exception exception) {
+				return false;
+			}
+		};
 	}
 	
 }

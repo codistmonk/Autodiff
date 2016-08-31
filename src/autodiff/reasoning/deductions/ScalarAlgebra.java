@@ -9,7 +9,6 @@ import static multij.tools.Tools.array;
 import autodiff.rules.Variable;
 
 import multij.tools.IllegalInstantiationException;
-import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2016-08-31)
@@ -84,8 +83,6 @@ public final class ScalarAlgebra {
 			final Variable vy = new Variable("y");
 			
 			hintAutodeduce(tryMatch($($(vx, "+", vy), IN, R), (e, m) -> {
-				Tools.debugPrint();
-				abort();
 				subdeduction();
 				
 				autobind("stability_of_+_in_" + R, vx.get(), vy.get());
