@@ -17,6 +17,8 @@ public final class Propositions {
 	}
 	
 	public static final void load() {
+		Basics.load();
+		
 		supposeLeftEliminationOfDisjunction();
 		supposeRightEliminationOfDisjunction();
 		supposeIntroductionOfConjunction();

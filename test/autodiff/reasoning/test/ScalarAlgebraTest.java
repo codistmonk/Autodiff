@@ -26,10 +26,10 @@ public final class ScalarAlgebraTest {
 			
 			@Override
 			public final void run() {
-				Basics.load();
-				Sequences.load();
-				Propositions.load();
-				Sets.load();
+//				Basics.load();
+//				Sequences.load();
+//				Propositions.load();
+//				Sets.load();
 				ScalarAlgebra.load();
 				
 				final Object _a = $new("a");

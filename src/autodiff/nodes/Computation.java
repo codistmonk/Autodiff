@@ -14,8 +14,6 @@ import static autodiff.rules.Variable.matchOrFail;
 import static multij.tools.Tools.*;
 
 import autodiff.reasoning.deductions.Basics;
-import autodiff.reasoning.deductions.Propositions;
-import autodiff.reasoning.deductions.Sequences;
 import autodiff.reasoning.deductions.Sets;
 import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.proofs.ElementaryVerification;
@@ -153,9 +151,9 @@ public final class Computation extends AbstractNode<Computation> {
 		
 		@Override
 		public final void run() {
-			Basics.load();
-			Sequences.load();
-			Propositions.load();
+//			Basics.load();
+//			Sequences.load();
+//			Propositions.load();
 			Sets.load();
 			
 			supposeEliminationOfParentheses();

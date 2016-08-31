@@ -41,6 +41,8 @@ public final class Sequences {
 //		debugPrint(sequence(",", 1, sequence(",", 2, 3), 4));
 //		debugPrint(sequence(",", 1, 2, 3, 4));
 		
+		Basics.load();
+		
 		supposeDefinitionsForSequenceAppend();
 		testSequenceAppend();
 		

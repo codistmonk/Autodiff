@@ -49,6 +49,9 @@ public final class Sets {
 	public static final Object CROSS = $("×");
 	
 	public static final void load() {
+		Propositions.load();
+		Sequences.load();
+		
 		supposeDefinitionOfForallIn();
 		supposeDefinitionOfForallIn2();
 		supposeDefinitionOfForallIn3();

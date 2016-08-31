@@ -54,8 +54,8 @@ public final class Deduction extends Proof.Abstract {
 		
 		checkArgument(provedPropositionName != null,
 				"Invalid proposition name: " + provedPropositionName);
-		checkArgument(parent == null || parent.getProposition(provedPropositionName) == null,
-				"Duplicate proposition name: " + provedPropositionName);
+//		checkArgument(parent == null || parent.getProposition(provedPropositionName) == null,
+//				"Duplicate proposition name: " + provedPropositionName);
 	}
 	
 	public final Deduction getParent() {
