@@ -1,7 +1,7 @@
 package autodiff.reasoning.proofs;
 
 import static autodiff.reasoning.expressions.Expressions.*;
-import static autodiff.reasoning.proofs.Substitution.compare;
+import static autodiff.reasoning.proofs.Substitution.equal;
 
 import java.util.Arrays;
 import java.util.List;
@@ -39,7 +39,7 @@ public final class ModusPonens extends Proof.Abstract {
 		final Object expectedCondition = condition(rule);
 		final Object condition = context.checkProposition(this.getConditionName());
 		
-		checkArgument(compare(expectedCondition, condition), "Expected condition: " + expectedCondition + " but was: " + condition);
+		checkArgument(equal(expectedCondition, condition), "Expected condition: " + expectedCondition + " but was: " + condition);
 		
 		return rule.get(2);
 	}

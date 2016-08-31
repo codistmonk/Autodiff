@@ -2,6 +2,7 @@ package autodiff.reasoning.tactics;
 
 import static autodiff.reasoning.deductions.Basics.*;
 import static autodiff.reasoning.expressions.Expressions.*;
+import static autodiff.reasoning.tactics.PatternMatching.match;
 import static autodiff.reasoning.tactics.Stack.*;
 import static multij.tools.Tools.ignore;
 
@@ -120,7 +121,7 @@ public final class Auto {
 			final Variable vP = new Variable("P");
 			final List<Object> pattern = $forall(vX, vP);
 			
-			if (new PatternMatching().apply(pattern, proposition(lastName))) {
+			if (match(pattern, proposition(lastName))) {
 				bind(lastName, object);
 			} else {
 				for (Deduction d = deduction(); d != null; d = d.getParent()) {
@@ -172,7 +173,7 @@ public final class Auto {
 		String currentTargetName = targetName;
 		boolean concludeNeeded = false;
 		
-		while (new PatternMatching().apply(pattern, proposition(currentTargetName))) {
+		while (match(pattern, proposition(currentTargetName))) {
 			autodeduce(vX.get());
 			apply(currentTargetName, name(-1));
 			currentTargetName = name(-1);
@@ -195,7 +196,7 @@ public final class Auto {
 		final Variable vY = new Variable("Y");
 		final Object pattern = $rule(vX, vY);
 		
-		if (!new PatternMatching().apply(pattern, proposition(targetName))) {
+		if (!match(pattern, proposition(targetName))) {
 			throw new IllegalArgumentException();
 		}
 		
@@ -210,7 +211,7 @@ public final class Auto {
 	public static final <T> TryRule<T> tryMatch(final Object pattern, SimpleRule.Predicate<T> predicateContinuation) {
 		return (e, m) -> {
 			try {
-				return new PatternMatching().apply(pattern, e)
+				return match(pattern, e)
 					&& predicateContinuation.test(e, m);
 			} catch (final AbortException exception) {
 				throw exception;

@@ -102,7 +102,7 @@ public final class Substitution extends Proof.Abstract {
 		return false;
 	}
 	
-	public static final boolean compare(final Object expression1, final Object expression2) {
+	public static final boolean equal(final Object expression1, final Object expression2) {
 		return new ExpressionEquality().apply(expression1, expression2);
 	}
 	
@@ -111,7 +111,7 @@ public final class Substitution extends Proof.Abstract {
 		Object replacement = null;
 		
 		for (final Map.Entry<Object, Object> entry : equalities.entrySet()) {
-			if (compare(entry.getKey(), target)) {
+			if (equal(entry.getKey(), target)) {
 				replacement = entry.getValue();
 				break;
 			}

@@ -2,11 +2,11 @@ package autodiff.reasoning.tactics;
 
 import static multij.tools.Tools.cast;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import autodiff.reasoning.proofs.Substitution.AbstractExpressionEquality;
 import autodiff.rules.Variable;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * @author codistmonk (creation 2016-08-16)
@@ -49,5 +49,9 @@ public final class PatternMatching extends AbstractExpressionEquality {
 	}
 	
 	private static final long serialVersionUID = 988081600699862962L;
+	
+	public static final boolean match(final Object pattern, final Object target) {
+		return new PatternMatching().apply(pattern, target);
+	}
 	
 }

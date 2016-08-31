@@ -1,7 +1,7 @@
 package autodiff.reasoning.tactics;
 
 import static autodiff.reasoning.expressions.Expressions.*;
-import static autodiff.reasoning.proofs.Substitution.compare;
+import static autodiff.reasoning.proofs.Substitution.equal;
 import static autodiff.reasoning.tactics.Stack.*;
 
 import autodiff.reasoning.proofs.Deduction;
@@ -74,7 +74,7 @@ public final class Goal implements Serializable {
 		
 		final Object provedProposition = deduction.getProvedPropositionFor(deduction.getParent());
 		
-		checkState(compare(this.getInitialProposition(), provedProposition),
+		checkState(equal(this.getInitialProposition(), provedProposition),
 				"Expected: " + this.getInitialProposition() + " but was: " + provedProposition);
 		
 		deduction().conclude(deduction);
