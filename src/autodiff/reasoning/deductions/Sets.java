@@ -118,10 +118,10 @@ public final class Sets {
 			final Variable vX = new Variable("X");
 			final Variable vP = new Variable("P");
 			
-			hintAutobind(rule($(FORALL, vx, IN, vX, vP), (e, m) -> {
+			hintAutobind(tryMatch($(FORALL, vx, IN, vX, vP), (e, m) -> {
 				bind("definition_of_forall_in", vx.get(), vX.get(), vP.get());
 				
-				return null;
+				return true;
 			}));
 		}
 		
@@ -131,10 +131,10 @@ public final class Sets {
 			final Variable vX = new Variable("X");
 			final Variable vP = new Variable("P");
 			
-			hintAutobind(rule($(FORALL, vx, ",", vy, IN, vX, vP), (e, m) -> {
+			hintAutobind(tryMatch($(FORALL, vx, ",", vy, IN, vX, vP), (e, m) -> {
 				bind("definition_of_forall_in_2", vx.get(), vy.get(), vX.get(), vP.get());
 				
-				return null;
+				return true;
 			}));
 		}
 		
@@ -145,10 +145,10 @@ public final class Sets {
 			final Variable vX = new Variable("X");
 			final Variable vP = new Variable("P");
 			
-			hintAutobind(rule($(FORALL, vx, ",", vy, ",", vz, IN, vX, vP), (e, m) -> {
+			hintAutobind(tryMatch($(FORALL, vx, ",", vy, ",", vz, IN, vX, vP), (e, m) -> {
 				bind("definition_of_forall_in_3", vx.get(), vy.get(), vz.get(), vX.get(), vP.get());
 				
-				return null;
+				return true;
 			}));
 		}
 		
@@ -156,7 +156,7 @@ public final class Sets {
 			final Variable vX = new Variable("X");
 			final Variable vY = new Variable("Y");
 			
-			hintAutodeduce(matchWith($(vX, SUBSET, vY), (e, m) -> {
+			hintAutodeduce(tryMatch($(vX, SUBSET, vY), (e, m) -> {
 				final List<PropositionDescription> inclusionPath = inclusionPath(vX.get(), vY.get(), new HashSet<>());
 				
 				subdeduction();
@@ -178,7 +178,7 @@ public final class Sets {
 			final Variable vx = new Variable("x");
 			final Variable vX = new Variable("X");
 			
-			hintAutodeduce(matchWith($(vx, IN, vX), (e, m) -> {
+			hintAutodeduce(tryMatch($(vx, IN, vX), (e, m) -> {
 				final Variable vY = new Variable("Y");
 				final List<Pair<PropositionDescription, PatternMatching>> candidates = PropositionDescription.potentialJustificationsFor($(vx.get(), IN, vY));
 				final Deduction deduction = subdeduction();

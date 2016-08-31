@@ -9,7 +9,6 @@ import autodiff.reasoning.expressions.ExpressionRewriter;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.tactics.Stack.AbortException;
 import autodiff.reasoning.tactics.Stack.PropositionDescription;
-import autodiff.rules.Rule;
 import autodiff.rules.Rules;
 import autodiff.rules.SimpleRule;
 import autodiff.rules.TryRule;
@@ -39,7 +38,7 @@ public final class Auto {
 		autodeduceRules.computeIfAbsent(deduction(), __ -> new Rules<>()).add(rule);
 	}
 	
-	public static final void hintAutobind(final Rule<Object, Void> rule) {
+	public static final void hintAutobind(final TryRule<Object> rule) {
 		autobindRules.computeIfAbsent(deduction(), __ -> new Rules<>()).add(rule);
 	}
 	
@@ -208,7 +207,7 @@ public final class Auto {
 		conclude();
 	}
 	
-	public static final <T> TryRule<T> matchWith(final Object pattern, SimpleRule.Predicate<T> predicateContinuation) {
+	public static final <T> TryRule<T> tryMatch(final Object pattern, SimpleRule.Predicate<T> predicateContinuation) {
 		return (e, m) -> new PatternMatching().apply(pattern, e)
 					&& predicateContinuation.test(e, m);
 	}
