@@ -40,6 +40,7 @@ public final class HTML implements Deduction.Processor {
 			this.println("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />");
 			this.println("<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />");
 			this.println("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />");
+			this.println("<link rel=\"stylesheet\" href=\"lib/js/jQuery-UI/jquery-ui.min.css\"></link>");
 			this.println("<script type=\"text/x-mathjax-config\">");
 			this.println("  MathJax.Hub.Config({");
 			this.println("    extensions: [\"tex2jax.js\"],");
@@ -47,7 +48,9 @@ public final class HTML implements Deduction.Processor {
 			this.println("    tex2jax: {inlineMath: [[\"$\",\"$\"],[\"\\(\",\"\\)\"]]}");
 			this.println("  });");
 			this.println("</script>");
-			this.println("<script type=\"text/javascript\" src=\"../lib/MathJax/MathJax.js\"></script>");
+			this.println("<script type=\"text/javascript\" src=\"lib/js/jQuery/jquery-3.1.0.min.js\"></script>");
+			this.println("<script type=\"text/javascript\" src=\"lib/js/jQuery-UI/jquery-ui.min.js\"></script>");
+			this.println("<script type=\"text/javascript\" src=\"lib/js/MathJax/MathJax.js\"></script>");
 			this.println("<style>");
 			this.println("h1 {text-align:center}");
 			this.println("h2 {");
@@ -59,9 +62,20 @@ public final class HTML implements Deduction.Processor {
 			this.println("  border-bottom: 2px solid #999999;");
 			this.println("}");
 			this.println("</style>");
+			this.println("<script>");
+			this.println("  $( function() {");
+			this.println("    $( \".accordion\" ).accordion({");
+			this.println("      collapsible: true,");
+			this.println("      active: false,");
+			this.println("      heightStyle: \"content\"");
+			this.println("    });");
+			this.println("  } );");
+			this.println("</script>");
 			this.println("</head>");
 			this.println("<body>");
 			this.println("<blockquote>");
+			this.println("<h1>Deduction</h1>");
+			this.println("<div class=\"accordion\">");
 		}
 		
 		this.process(deduction.getProvedPropositionName(), "", deduction);
@@ -69,6 +83,7 @@ public final class HTML implements Deduction.Processor {
 		--this.depth;
 		
 		if (this.depth == 0) {
+			this.println("</div>");
 			this.println("</blockquote>");
 			this.println("</body>");
 			this.println("</html>");
@@ -76,30 +91,52 @@ public final class HTML implements Deduction.Processor {
 	}
 	
 	private final void process(final String propositionName, final Object proposition, final Proof proof) {
-		this.println("<h2>" + propositionName + "</h2>");
 		this.println("<div>");
+		this.println("<span>" + propositionName + "</span>");
+		this.println("<p style=\"text-align: center\">" + proposition + "</p>");
+		this.println("</div>");
+		this.println("<div class=\"accordion\">");
 		
-		this.println("<p>" + proposition + "</p>");
-		this.println("<p>" + proof.getMessage() + "</p>");
+		this.println("<h2>" + proof.getMessage() + "</h2>");
+		this.println("<div class=\"accordion\">");
 		
 		{
 			final Deduction deduction = Tools.cast(Deduction.class, proof);
 			
 			if (deduction != null) {
 				if (!deduction.getParameters().isEmpty()) {
-					this.println("<p>" + FORALL + deduction.getParameters() + "</p>");
+					this.println("<h3>" + FORALL + deduction.getParameters() + "</h3>");
+					this.println("<div></div>");
 				}
 				
-				for (final String name : deduction.getConditionNames()) {
-					this.println("<h2>" + name + "</h2>");
-					this.println("<p>" + deduction.getProposition(name) + "</p>");
+				if (!deduction.getConditionNames().isEmpty()) {
+					this.println("<h3>Conditions</h3>");
+					this.println("<div class=\"accordion\">");
+					
+					for (final String name : deduction.getConditionNames()) {
+//						this.println("<h2>" + name + ": " + deduction.getProposition(name) + "</h2>");
+						this.println("<div>");
+						this.println("<span>" + name + "</span>");
+						this.println("<p style=\"text-align: center\">" + deduction.getProposition(name) + "</p>");
+						this.println("</div>");
+						this.println("<div></div>");
+					}
+					
+					this.println("</div>");
 				}
+				
+				this.println("<h3>Conclusions</h3>");
+				this.println("<div class=\"accordion\">");
 				
 				for (final String name : deduction.getConclusionNames()) {
 					this.process(name, deduction.getProposition(name), deduction.getProofs().get(name));
 				}
+				
+				this.println("</div>");
 			}
 		}
+		
+		this.println("</div>");
 		
 		this.println("</div>");
 	}
