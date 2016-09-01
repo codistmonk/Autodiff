@@ -28,11 +28,37 @@ public final class ScalarAlgebraTest {
 				
 				suppose($(_a, IN, R));
 				
-				final Goal goal = Goal.newGoal($($(_a, "+", 1), IN, R));
+				{
+					final Goal goal = Goal.newGoal($($(_a, "+", 1), IN, R));
+					
+					autodeduce(goal.getProposition());
+					
+					goal.conclude();
+				}
 				
-				autodeduce(goal.getProposition());
+				{
+					final Goal goal = Goal.newGoal($($(_a, "*", 1), IN, R));
+					
+					autodeduce(goal.getProposition());
+					
+					goal.conclude();
+				}
 				
-				goal.conclude();
+				{
+					final Goal goal = Goal.newGoal($($(_a, "-", 1), IN, R));
+					
+					autodeduce(goal.getProposition());
+					
+					goal.conclude();
+				}
+				
+				{
+					final Goal goal = Goal.newGoal($($(_a, "/", 1), IN, R));
+					
+					autodeduce(goal.getProposition());
+					
+					goal.conclude();
+				}
 			}
 			
 		});
@@ -51,6 +77,30 @@ public final class ScalarAlgebraTest {
 				suppose($(_a, IN, N));
 				
 				final Goal goal = Goal.newGoal($($(_a, "+", 1), IN, R));
+				
+				autodeduce(goal.getProposition());
+				
+				goal.conclude();
+			}
+			
+		});
+	}
+	
+	@Test
+	public final void test3() {
+		build(new Runnable() {
+			
+			@Override
+			public final void run() {
+				ScalarAlgebra.load();
+				
+				final Object _a = $new("a");
+				final Object _b = $new("b");
+				
+				suppose($(_a, IN, R));
+				suppose($(_b, IN, N));
+				
+				final Goal goal = Goal.newGoal($($($($(_a, "+", 1), "*", $(_b, "-", 2)), "/", 6), IN, R));
 				
 				autodeduce(goal.getProposition());
 				

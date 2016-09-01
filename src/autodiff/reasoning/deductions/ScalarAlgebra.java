@@ -107,7 +107,7 @@ public final class ScalarAlgebra {
 			hintAutodeduce(tryMatch($($(vx, "-", vy), IN, R), (e, m) -> {
 				subdeduction();
 				
-				autobind("stability_of_+_in_" + R, vx.get(), vy.get());
+				autobind("stability_of_-_in_" + R, vx.get(), vy.get());
 				autoapply(name(-1));
 				
 				conclude();
@@ -123,7 +123,23 @@ public final class ScalarAlgebra {
 			hintAutodeduce(tryMatch($($(vx, "*", vy), IN, R), (e, m) -> {
 				subdeduction();
 				
-				autobind("stability_of_+_in_" + R, vx.get(), vy.get());
+				autobind("stability_of_*_in_" + R, vx.get(), vy.get());
+				autoapply(name(-1));
+				
+				conclude();
+				
+				return true;
+			}));
+		}
+		
+		{
+			final Variable vx = new Variable("x");
+			final Variable vy = new Variable("y");
+			
+			hintAutodeduce(tryMatch($($(vx, "/", vy), IN, R), (e, m) -> {
+				subdeduction();
+				
+				autobind("stability_of_/_in_" + R, vx.get(), vy.get());
 				autoapply(name(-1));
 				
 				conclude();
