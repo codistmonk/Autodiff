@@ -559,25 +559,6 @@ public final class Computation extends AbstractNode<Computation> {
 		return new FlattenBinaryTree().apply(binaryTree);
 	}
 	
-	public static final String deepJoin(final String separator, final Iterable<?> objects) {
-		final StringBuilder resultBuilder = new StringBuilder();
-		boolean first = true;
-		
-		for (final Object object : objects) {
-			final Iterable<?> subobjects = cast(Iterable.class, object);
-			
-			if (first) {
-				first = false;
-			} else {
-				resultBuilder.append(separator);
-			}
-			
-			resultBuilder.append(subobjects == null ? object : deepJoin(separator, subobjects));
-		}
-		
-		return resultBuilder.toString();
-	}
-	
 	public static final Object cartesian(final Object _s, final Object _j, final Object _n) {
 		return $(CROSS, "_", $(_j, "<", _n), $(N, "_", $("<", $(_s, "_", _j))));
 	}

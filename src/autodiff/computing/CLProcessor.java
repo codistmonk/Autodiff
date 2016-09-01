@@ -343,8 +343,8 @@ public final class CLProcessor implements NodeProcessor {
 				
 				programSource += "__kernel void " + kernelName + "(";
 				programSource += "__global float * const result) {\n";
-				programSource += Computation.deepJoin("",
-						(Iterable<?>) right(clCodeDeduction.getProposition(clCodeDeduction.getPropositionName(-1))));
+				programSource += deepJoin("",
+						right(clCodeDeduction.getProposition(clCodeDeduction.getPropositionName(-1))));
 				programSource += "}\n";
 				
 				return getContext().createAndBuildProgram(programSource).createKernel(kernelName);

@@ -358,4 +358,29 @@ public final class Expressions {
         return toCollection(TreeSet::new);
     }
 	
+	public static final String deepJoin(final String separator, final Object object) {
+		final Iterable<?> objects = cast(Iterable.class, object);
+		
+		if (objects == null) {
+			return "" + object;
+		}
+		
+		final StringBuilder resultBuilder = new StringBuilder();
+		boolean first = true;
+		
+		for (final Object o : objects) {
+			final Iterable<?> subobjects = cast(Iterable.class, o);
+			
+			if (first) {
+				first = false;
+			} else {
+				resultBuilder.append(separator);
+			}
+			
+			resultBuilder.append(subobjects == null ? o : deepJoin(separator, subobjects));
+		}
+		
+		return resultBuilder.toString();
+	}
+	
 }
