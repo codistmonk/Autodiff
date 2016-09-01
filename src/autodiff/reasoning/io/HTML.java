@@ -98,34 +98,32 @@ public final class HTML implements Deduction.Processor {
 		this.println("<div class=\"accordion\">");
 		
 		this.println("<h2>" + proof.getMessage() + "</h2>");
-		this.println("<div class=\"accordion\">");
+		this.println("<div>");
 		
 		{
 			final Deduction deduction = Tools.cast(Deduction.class, proof);
 			
 			if (deduction != null) {
 				if (!deduction.getParameters().isEmpty()) {
-					this.println("<h3>" + FORALL + deduction.getParameters() + "</h3>");
+					this.println("<h3 style=\"text-align: center\">" + FORALL + deduction.getParameters() + "</h3>");
 					this.println("<div></div>");
 				}
 				
 				if (!deduction.getConditionNames().isEmpty()) {
-					this.println("<h3>Conditions</h3>");
-					this.println("<div class=\"accordion\">");
+					this.println("<h3 style=\"text-align: center\">Conditions</h3>");
+					this.println("<div>");
+					this.println("</div>");
 					
 					for (final String name : deduction.getConditionNames()) {
-//						this.println("<h2>" + name + ": " + deduction.getProposition(name) + "</h2>");
 						this.println("<div>");
 						this.println("<span>" + name + "</span>");
 						this.println("<p style=\"text-align: center\">" + deduction.getProposition(name) + "</p>");
 						this.println("</div>");
 						this.println("<div></div>");
 					}
-					
-					this.println("</div>");
 				}
 				
-				this.println("<h3>Conclusions</h3>");
+				this.println("<h3 style=\"text-align: center\">Conclusions</h3>");
 				this.println("<div class=\"accordion\">");
 				
 				for (final String name : deduction.getConclusionNames()) {
