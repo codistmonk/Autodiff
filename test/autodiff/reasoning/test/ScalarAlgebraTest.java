@@ -5,8 +5,15 @@ import static autodiff.reasoning.proofs.ElementaryVerification.*;
 import static autodiff.reasoning.tactics.Auto.autodeduce;
 import static autodiff.reasoning.tactics.Stack.*;
 import static autodiff.reasoning.test.BasicsTest.build;
+import static multij.tools.Tools.*;
+
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
 
 import autodiff.reasoning.deductions.ScalarAlgebra;
+import autodiff.reasoning.io.HTML;
+import autodiff.reasoning.io.Simple;
+import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.tactics.Goal;
 
 import org.junit.Test;
@@ -108,6 +115,37 @@ public final class ScalarAlgebraTest {
 			}
 			
 		});
+	}
+	
+	@Test
+	public final void testCanonicalize1() throws FileNotFoundException {
+		if (false) {
+			final Deduction.Processor printer = new HTML().setOutput(new PrintStream(getThisMethodName() + ".html"));
+		}
+		
+		final Deduction.Processor printer = new Simple(1);
+		final Deduction deduction = build(new Runnable() {
+			
+			@Override
+			public final void run() {
+				ScalarAlgebra.load();
+				
+				final Object _a = $new("a");
+				final Object _b = $new("b");
+				
+				suppose($(_a, IN, R));
+				suppose($(_b, IN, N));
+				
+				final Goal goal = Goal.newGoal($($($($(_a, "+", 1), "*", $(_b, "-", 2)), "/", 6), IN, R));
+				
+				autodeduce(goal.getProposition());
+				
+				goal.conclude();
+			}
+			
+		}, printer);
+		
+		printer.process(deduction);
 	}
 	
 }
