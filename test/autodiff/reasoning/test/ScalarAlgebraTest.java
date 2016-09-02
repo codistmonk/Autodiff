@@ -3,6 +3,7 @@ package autodiff.reasoning.test;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
 import static autodiff.reasoning.tactics.Auto.autodeduce;
+import static autodiff.reasoning.tactics.Goal.newGoal;
 import static autodiff.reasoning.tactics.Stack.*;
 import static autodiff.reasoning.test.BasicsTest.build;
 import static multij.tools.Tools.*;
@@ -36,7 +37,7 @@ public final class ScalarAlgebraTest {
 				suppose($(_a, IN, R));
 				
 				{
-					final Goal goal = Goal.newGoal($($(_a, "+", 1), IN, R));
+					final Goal goal = newGoal($($(_a, "+", 1), IN, R));
 					
 					autodeduce(goal.getProposition());
 					
@@ -44,7 +45,7 @@ public final class ScalarAlgebraTest {
 				}
 				
 				{
-					final Goal goal = Goal.newGoal($($(_a, "*", 1), IN, R));
+					final Goal goal = newGoal($($(_a, "*", 1), IN, R));
 					
 					autodeduce(goal.getProposition());
 					
@@ -52,7 +53,7 @@ public final class ScalarAlgebraTest {
 				}
 				
 				{
-					final Goal goal = Goal.newGoal($($(_a, "-", 1), IN, R));
+					final Goal goal = newGoal($($(_a, "-", 1), IN, R));
 					
 					autodeduce(goal.getProposition());
 					
@@ -60,7 +61,7 @@ public final class ScalarAlgebraTest {
 				}
 				
 				{
-					final Goal goal = Goal.newGoal($($(_a, "/", 1), IN, R));
+					final Goal goal = newGoal($($(_a, "/", 1), IN, R));
 					
 					autodeduce(goal.getProposition());
 					
@@ -83,7 +84,7 @@ public final class ScalarAlgebraTest {
 				
 				suppose($(_a, IN, N));
 				
-				final Goal goal = Goal.newGoal($($(_a, "+", 1), IN, R));
+				final Goal goal = newGoal($($(_a, "+", 1), IN, R));
 				
 				autodeduce(goal.getProposition());
 				
@@ -107,7 +108,7 @@ public final class ScalarAlgebraTest {
 				suppose($(_a, IN, R));
 				suppose($(_b, IN, N));
 				
-				final Goal goal = Goal.newGoal($($($($(_a, "+", 1), "*", $(_b, "-", 2)), "/", 6), IN, R));
+				final Goal goal = newGoal($($($($(_a, "+", 1), "*", $(_b, "-", 2)), "/", 6), IN, R));
 				
 				autodeduce(goal.getProposition());
 				
@@ -136,11 +137,22 @@ public final class ScalarAlgebraTest {
 				suppose($(_a, IN, R));
 				suppose($(_b, IN, N));
 				
-				final Goal goal = Goal.newGoal($($($($(_a, "+", 1), "*", $(_b, "-", 2)), "/", 6), IN, R));
+				{
+					final Goal goal = newGoal($($($($(_a, "+", 1), "*", $(_b, "-", 2)), "/", 6), IN, R));
+					
+					autodeduce(goal.getProposition());
+					
+					goal.conclude();
+				}
 				
-				autodeduce(goal.getProposition());
-				
-				goal.conclude();
+				{
+					final Goal goal = newGoal($($(_a, "+", $(1, "+", 1)), "=", $(_a, "+", 2)));
+					
+					bind("identity", left(goal.getProposition()));
+					ScalarAlgebra.CANONICALIZER.apply(proposition(-1));
+					
+					goal.conclude();
+				}
 			}
 			
 		}, printer);

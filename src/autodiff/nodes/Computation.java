@@ -2,6 +2,7 @@ package autodiff.nodes;
 
 import static autodiff.reasoning.deductions.Basics.*;
 import static autodiff.reasoning.deductions.Propositions.*;
+import static autodiff.reasoning.deductions.ScalarAlgebra.newElementarySimplificationRule;
 import static autodiff.reasoning.deductions.Sequences.*;
 import static autodiff.reasoning.deductions.Sets.*;
 import static autodiff.reasoning.expressions.Expressions.*;
@@ -17,9 +18,7 @@ import autodiff.reasoning.deductions.Basics;
 import autodiff.reasoning.deductions.Sets;
 import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.io.Simple;
-import autodiff.reasoning.proofs.ElementaryVerification;
 import autodiff.reasoning.proofs.Deduction;
-import autodiff.reasoning.proofs.Substitution;
 import autodiff.rules.Rule;
 import autodiff.rules.Rules;
 import autodiff.rules.SimpleRule;
@@ -1926,36 +1925,6 @@ public final class Computation extends AbstractNode<Computation> {
 			bind("definition_of_forall_in_3", vx.get(), vy.get(), vz.get(), vX.get(), vP.get());
 			
 			return true;
-		});
-	}
-	
-	public static final SimpleRule<Object, Boolean> newElementarySimplificationRule() {
-		return new SimpleRule<>((e, m) -> {
-			try {
-				final Object f = ElementaryVerification.Evaluator.INSTANCE.apply(e);
-				
-				return !f.equals(e) && !Substitution.deepContains(f, null);
-			} catch (final AbortException exception) {
-				throw exception;
-			} catch (final Exception exception) {
-				ignore(exception);
-			}
-			
-			return false;
-		}, (e, m) -> {
-			try {
-				final Object f = ElementaryVerification.Evaluator.INSTANCE.apply(e);
-				
-				verifyElementaryProposition($(e, "=", f));
-				
-				return true;
-			} catch (final AbortException exception) {
-				throw exception;
-			} catch (final Exception exception) {
-				ignore(exception);
-			}
-			
-			return false;
 		});
 	}
 	

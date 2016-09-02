@@ -7,9 +7,11 @@ import static autodiff.reasoning.tactics.Stack.*;
 import static multij.tools.Tools.ignore;
 
 import autodiff.reasoning.expressions.ExpressionRewriter;
+import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.tactics.Stack.AbortException;
 import autodiff.reasoning.tactics.Stack.PropositionDescription;
+import autodiff.rules.Rule;
 import autodiff.rules.Rules;
 import autodiff.rules.SimpleRule;
 import autodiff.rules.TryRule;
@@ -219,6 +221,126 @@ public final class Auto {
 				return false;
 			}
 		};
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-21)
+	 */
+	public static final class Simplifier implements ExpressionVisitor<Boolean> {
+		
+		private final Rules<Object, Boolean> rules;
+		
+		private final Mode mode;
+		
+		public Simplifier() {
+			this(Mode.REWRITE);
+		}
+		
+		public Simplifier(final Mode mode) {
+			this.rules = new Rules<>();
+			this.mode = mode;
+		}
+		
+		public final Rules<Object, Boolean> getRules() {
+			return this.rules;
+		}
+		
+		public final Mode getMode() {
+			return this.mode;
+		}
+		
+		public final Simplifier add(final Rule<Object, Boolean> rule) {
+			this.getRules().add(rule);
+			
+			return this;
+		}
+		
+		public final void simplifyCompletely(final Object expression) {
+			subdeduction();
+			
+			if (this.apply(expression)) {
+				while (this.apply(proposition(-1))) {
+					// NOP
+				}
+			} else {
+				pop();
+			}
+			
+			conclude();
+		}
+		
+		@Override
+		public final Boolean visit(final Object expression) {
+			return this.tryRules(expression);
+		}
+		
+		@Override
+		public final Boolean visit(final List<?> expression) {
+			if (this.tryRules(expression)) {
+				return true;
+			}
+			
+			for (final Object subExpression : expression) {
+				if (this.apply(subExpression)) {
+					return true;
+				}
+			}
+			
+			return false;
+		}
+		
+		private final boolean tryRules(final Object expression) {
+			final Deduction deduction = subdeduction();
+			
+			try {
+				if (this.getRules().applyTo(expression)) {
+					if (Mode.DEFINE.equals(this.getMode())) {
+						final int targets = countIn(proposition(-2), left(proposition(-1)));
+						final int leftTargets = countIn(left(proposition(-2)), left(proposition(-1)));
+						
+						if (leftTargets < targets) {
+							final int[] rightTargets = new int[targets - leftTargets];
+							
+							for (int i = leftTargets; i < targets; ++i) {
+								rightTargets[i - leftTargets] = i;
+							}
+							
+							rewrite(name(-2), name(-1), rightTargets);
+						} else {
+							popTo(deduction.getParent());
+							
+							return false;
+						}
+					} else {
+						rewrite(name(-2), name(-1));
+					}
+					
+					conclude();
+					
+					return true;
+				}
+			} catch (final AbortException exception) {
+				throw exception;
+			} catch (final Exception exception) {
+				ignore(exception);
+			}
+			
+			popTo(deduction.getParent());
+			
+			return false;
+		}
+		
+		private static final long serialVersionUID = -5429351197907942483L;
+		
+		/**
+		 * @author codistmonk (creation 2016-08-23)
+		 */
+		public static enum Mode {
+			
+			REWRITE, DEFINE;
+			
+		}
+		
 	}
 	
 }

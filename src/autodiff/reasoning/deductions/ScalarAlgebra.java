@@ -3,9 +3,16 @@ package autodiff.reasoning.deductions;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
 import static autodiff.reasoning.tactics.Auto.*;
+import static autodiff.reasoning.tactics.PatternPredicate.rule;
 import static autodiff.reasoning.tactics.Stack.*;
 import static multij.tools.Tools.array;
+import static multij.tools.Tools.ignore;
 
+import autodiff.reasoning.proofs.ElementaryVerification;
+import autodiff.reasoning.proofs.Substitution;
+import autodiff.reasoning.tactics.Auto;
+import autodiff.reasoning.tactics.Stack.AbortException;
+import autodiff.rules.SimpleRule;
 import autodiff.rules.Variable;
 
 import multij.tools.IllegalInstantiationException;
@@ -18,6 +25,10 @@ public final class ScalarAlgebra {
 	private ScalarAlgebra() {
 		throw new IllegalInstantiationException();
 	}
+	
+	public static final Auto.Simplifier CANONICALIZER = new Simplifier(Simplifier.Mode.DEFINE)
+			.add(newElementarySimplificationRule())
+			.add(rule(new Variable("*"), (e, m) -> false));
 	
 	public static final Object[] NUMERIC_TYPES = { N, Z, Q, R };
 	
@@ -284,6 +295,36 @@ public final class ScalarAlgebra {
 				return true;
 			}));
 		}
+	}
+	
+	public static final SimpleRule<Object, Boolean> newElementarySimplificationRule() {
+		return new SimpleRule<>((e, m) -> {
+			try {
+				final Object f = ElementaryVerification.Evaluator.INSTANCE.apply(e);
+				
+				return !f.equals(e) && !Substitution.deepContains(f, null);
+			} catch (final AbortException exception) {
+				throw exception;
+			} catch (final Exception exception) {
+				ignore(exception);
+			}
+			
+			return false;
+		}, (e, m) -> {
+			try {
+				final Object f = ElementaryVerification.Evaluator.INSTANCE.apply(e);
+				
+				verifyElementaryProposition($(e, "=", f));
+				
+				return true;
+			} catch (final AbortException exception) {
+				throw exception;
+			} catch (final Exception exception) {
+				ignore(exception);
+			}
+			
+			return false;
+		});
 	}
 	
 }
