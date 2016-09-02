@@ -1,20 +1,15 @@
 package autodiff.reasoning.test;
 
+import static autodiff.reasoning.deductions.ScalarAlgebra.canonicalize;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
 import static autodiff.reasoning.tactics.Auto.autodeduce;
 import static autodiff.reasoning.tactics.Goal.newGoal;
 import static autodiff.reasoning.tactics.Stack.*;
 import static autodiff.reasoning.test.BasicsTest.build;
-import static multij.tools.Tools.*;
-
-import java.io.FileNotFoundException;
-import java.io.PrintStream;
 
 import autodiff.reasoning.deductions.ScalarAlgebra;
-import autodiff.reasoning.io.HTML;
 import autodiff.reasoning.io.Simple;
-import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.tactics.Goal;
 
 import org.junit.Test;
@@ -25,7 +20,7 @@ import org.junit.Test;
 public final class ScalarAlgebraTest {
 	
 	@Test
-	public final void test1() {
+	public final void testAutodeduce1() {
 		build(new Runnable() {
 			
 			@Override
@@ -36,44 +31,17 @@ public final class ScalarAlgebraTest {
 				
 				suppose($(_a, IN, R));
 				
-				{
-					final Goal goal = newGoal($($(_a, "+", 1), IN, R));
-					
-					autodeduce(goal.getProposition());
-					
-					goal.conclude();
-				}
-				
-				{
-					final Goal goal = newGoal($($(_a, "*", 1), IN, R));
-					
-					autodeduce(goal.getProposition());
-					
-					goal.conclude();
-				}
-				
-				{
-					final Goal goal = newGoal($($(_a, "-", 1), IN, R));
-					
-					autodeduce(goal.getProposition());
-					
-					goal.conclude();
-				}
-				
-				{
-					final Goal goal = newGoal($($(_a, "/", 1), IN, R));
-					
-					autodeduce(goal.getProposition());
-					
-					goal.conclude();
-				}
+				testAutodeduce($($(_a, "+", 1), IN, R));
+				testAutodeduce($($(_a, "*", 1), IN, R));
+				testAutodeduce($($(_a, "-", 1), IN, R));
+				testAutodeduce($($(_a, "/", 1), IN, R));
 			}
 			
 		});
 	}
 	
 	@Test
-	public final void test2() {
+	public final void testAutodeduce2() {
 		build(new Runnable() {
 			
 			@Override
@@ -84,18 +52,14 @@ public final class ScalarAlgebraTest {
 				
 				suppose($(_a, IN, N));
 				
-				final Goal goal = newGoal($($(_a, "+", 1), IN, R));
-				
-				autodeduce(goal.getProposition());
-				
-				goal.conclude();
+				testAutodeduce($($(_a, "+", 1), IN, R));
 			}
 			
 		});
 	}
 	
 	@Test
-	public final void test3() {
+	public final void testAutodeduce3() {
 		build(new Runnable() {
 			
 			@Override
@@ -108,24 +72,15 @@ public final class ScalarAlgebraTest {
 				suppose($(_a, IN, R));
 				suppose($(_b, IN, N));
 				
-				final Goal goal = newGoal($($($($(_a, "+", 1), "*", $(_b, "-", 2)), "/", 6), IN, R));
-				
-				autodeduce(goal.getProposition());
-				
-				goal.conclude();
+				testAutodeduce($($($($(_a, "+", 1), "*", $(_b, "-", 2)), "/", 6), IN, R));
 			}
 			
 		});
 	}
 	
 	@Test
-	public final void testCanonicalize1() throws FileNotFoundException {
-		if (false) {
-			final Deduction.Processor printer = new HTML().setOutput(new PrintStream(getThisMethodName() + ".html"));
-		}
-		
-		final Deduction.Processor printer = new Simple(1);
-		final Deduction deduction = build(new Runnable() {
+	public final void testCanonicalize1() {
+		build(new Runnable() {
 			
 			@Override
 			public final void run() {
@@ -137,90 +92,53 @@ public final class ScalarAlgebraTest {
 				suppose($(_a, IN, R));
 				suppose($(_b, IN, N));
 				
-				{
-					final Goal goal = newGoal($($($($(_a, "+", 1), "*", $(_b, "-", 2)), "/", 6), IN, R));
-					
-					autodeduce(goal.getProposition());
-					
-					goal.conclude();
-				}
-				
-				{
-					final Goal goal = newGoal($($(_a, "+", $(1, "+", 1)), "=", $(2, "+", _a)));
-					
-					bind("identity", left(goal.getProposition()));
-					ScalarAlgebra.CANONICALIZER.simplifyCompletely(proposition(-1));
-					
-					goal.conclude();
-				}
-				
-				{
-					final Goal goal = newGoal($($(_a, "+", _a), "=", $(2, "*", _a)));
-					
-					bind("identity", left(goal.getProposition()));
-					ScalarAlgebra.CANONICALIZER.simplifyCompletely(proposition(-1));
-					
-					goal.conclude();
-				}
-				
-				{
-					final Goal goal = newGoal($($(_a, "+", $(2, "*", _a)), "=", $(3, "*", _a)));
-					
-					bind("identity", left(goal.getProposition()));
-					ScalarAlgebra.CANONICALIZER.simplifyCompletely(proposition(-1));
-					
-					goal.conclude();
-				}
-				
-				{
-					final Goal goal = newGoal($($($(2, "*", _a), "+", _a), "=", $(3, "*", _a)));
-					
-					bind("identity", left(goal.getProposition()));
-					ScalarAlgebra.CANONICALIZER.simplifyCompletely(proposition(-1));
-					
-					goal.conclude();
-				}
-				
-				{
-					final Goal goal = newGoal($($(_b, "+", _a), "=", $(_a, "+", _b)));
-					
-					bind("identity", left(goal.getProposition()));
-					ScalarAlgebra.CANONICALIZER.simplifyCompletely(proposition(-1));
-					
-					goal.conclude();
-				}
-				
-				{
-					final Goal goal = newGoal($($(_a, "*", _a), "=", $(_a, "^", 2)));
-					
-					bind("identity", left(goal.getProposition()));
-					ScalarAlgebra.CANONICALIZER.simplifyCompletely(proposition(-1));
-					
-					goal.conclude();
-				}
-				
-				{
-					final Goal goal = newGoal($($(_a, "*", $(_a, "^", 2)), "=", $(_a, "^", 3)));
-					
-					bind("identity", left(goal.getProposition()));
-					ScalarAlgebra.CANONICALIZER.simplifyCompletely(proposition(-1));
-					
-					goal.conclude();
-				}
-				
-				{
-					final Goal goal = newGoal($($(_b, "*", _a), "=", $(_a, "*", _b)));
-					
-					bind("identity", left(goal.getProposition()));
-					ScalarAlgebra.CANONICALIZER.simplifyCompletely(proposition(-1));
-					
-					goal.conclude();
-				}
+				testCanonicalize($(_a, "+", $(1, "+", 1)), $(2, "+", _a));
+				testCanonicalize($(_a, "+", _a), $(2, "*", _a));
+				testCanonicalize($(_a, "+", $(2, "*", _a)), $(3, "*", _a));
+				testCanonicalize($(_a, "+", 0), _a);
+				testCanonicalize($(_a, "-", _a), 0);
+				testCanonicalize($(_a, "+", $(_b, "+", _a)), $($(2, "*", _a), "+", _b));
 			}
 			
-		}, printer);
+		}, new Simple(1));
+	}
+	
+	@Test
+	public final void testCanonicalize2() {
+		build(new Runnable() {
+			
+			@Override
+			public final void run() {
+				ScalarAlgebra.load();
+				
+				final Object _a = $new("a");
+				final Object _b = $new("b");
+				
+				suppose($(_a, IN, R));
+				suppose($(_b, IN, N));
+				
+				testCanonicalize($(_a, "*", _a), $(_a, "^", 2));
+				testCanonicalize($(_a, "*", $(_a, "^", 2)), $(_a, "^", 3));
+				testCanonicalize($(_b, "*", _a), $(_a, "*", _b));
+			}
+			
+		}, new Simple(1));
+	}
+	
+	public static final void testCanonicalize(final Object expression, final Object expectedCanonicalized) {
+		final Goal goal = newGoal($(expression, "=", expectedCanonicalized));
 		
-		printer.process(deduction);
+		canonicalize(left(goal.getProposition()));
+		
+		goal.conclude();
+	}
+	
+	public static final void testAutodeduce(final Object proposition) {
+		final Goal goal = newGoal(proposition);
+		
+		autodeduce(goal.getProposition());
+		
+		goal.conclude();
 	}
 	
 }

@@ -34,6 +34,7 @@ public final class ScalarAlgebra {
 	public static final Auto.Simplifier CANONICALIZER = new Simplifier(Simplifier.Mode.DEFINE)
 			.add(newElementarySimplificationRule2())
 			.add(newAdditionSimplificationRule())
+			.add(newSubtractionSimplificationRule())
 			.add(newMultiplicationSimplificationRule())
 			.add(newIgnoreRule());
 	
@@ -117,7 +118,7 @@ public final class ScalarAlgebra {
 			
 			suppose("definition_of_-_in_" + R,
 					$(FORALL, _x, ",", _y, IN, R,
-							$($(_x, "-", _y), "=", $(_x, "+", $("-", _y)))));
+							$($(_x, "-", _y), "=", $(_x, "+", $(-1, "*", _y)))));
 		}
 		
 		{
@@ -232,6 +233,19 @@ public final class ScalarAlgebra {
 		}
 		
 		loadAutoHints();
+	}
+	
+	public static final void canonicalize(final Object expression) {
+		canonicalize(newName(), expression);
+	}
+	
+	public static final void canonicalize(final String propositionName, final Object expression) {
+		subdeduction(propositionName);
+		
+		bind("identity", expression);
+		CANONICALIZER.simplifyCompletely(proposition(-1));
+		
+		conclude();
 	}
 	
 	public static final Object notZero(final Object _x) {
@@ -450,6 +464,27 @@ public final class ScalarAlgebra {
 				}
 			}
 			
+			if (match($(0, "+", vx), e)) {
+				final Object _x = vx.get();
+				final Deduction deduction = subdeduction();
+				
+				try {
+					autobindTrim("commutativity_of_+_in_" + R, 0, _x);
+					autobindTrim("neutrality_of_0", _x);
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+					
+					return true;
+				} catch (final AbortException exception) {
+					throw exception;
+				} catch (final Exception exception) {
+					ignore(exception);
+					
+					popTo(deduction.getParent());
+				}
+			}
+			
 			if (match($(vx, "+", vx), e)) {
 				final Object _x = vx.get();
 				final Deduction deduction = subdeduction();
@@ -489,6 +524,24 @@ public final class ScalarAlgebra {
 						ignore(exception);
 					}
 				}
+			}
+			
+			return false;
+		};
+	}
+	
+	public static final TryRule<Object> newSubtractionSimplificationRule() {
+		return (e, m) -> {
+			final Variable vx = new Variable("x");
+			final Variable vy = new Variable("y");
+			
+			if (match($(vx, "-", vy), e)) {
+				final Object _x = vx.get();
+				final Object _y = vy.get();
+				
+				autobindTrim("definition_of_-_in_" + R, _x, _y);
+				
+				return true;
 			}
 			
 			return false;
@@ -570,6 +623,34 @@ public final class ScalarAlgebra {
 						
 						popTo(deduction.getParent());
 					}
+				}
+			}
+			
+			if (match($(0, "*", vx), e)) {
+				final Object _x = vx.get();
+				
+				try {
+					autobindTrim("absorbingness_of_0", _x);
+					
+					return true;
+				} catch (final AbortException exception) {
+					throw exception;
+				} catch (final Exception exception) {
+					ignore(exception);
+				}
+			}
+			
+			if (match($(1, "*", vx), e)) {
+				final Object _x = vx.get();
+				
+				try {
+					autobindTrim("neutrality_of_1", _x);
+					
+					return true;
+				} catch (final AbortException exception) {
+					throw exception;
+				} catch (final Exception exception) {
+					ignore(exception);
 				}
 			}
 			
