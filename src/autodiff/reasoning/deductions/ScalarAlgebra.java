@@ -9,16 +9,15 @@ import static autodiff.reasoning.tactics.Stack.*;
 import static multij.tools.Tools.array;
 import static multij.tools.Tools.ignore;
 
-import java.util.Map;
-
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.proofs.ElementaryVerification;
 import autodiff.reasoning.proofs.Substitution;
 import autodiff.reasoning.tactics.Auto;
 import autodiff.reasoning.tactics.Stack.AbortException;
-import autodiff.rules.SimpleRule;
 import autodiff.rules.TryRule;
 import autodiff.rules.Variable;
+
+import java.util.Map;
 
 import multij.tools.IllegalInstantiationException;
 
@@ -32,10 +31,11 @@ public final class ScalarAlgebra {
 	}
 	
 	public static final Auto.Simplifier CANONICALIZER = new Simplifier(Simplifier.Mode.DEFINE)
-			.add(newElementarySimplificationRule2())
+			.add(newElementarySimplificationRule())
 			.add(newAdditionSimplificationRule())
 			.add(newSubtractionSimplificationRule())
 			.add(newMultiplicationSimplificationRule())
+			.add(newAssociativitySimplificationRule())
 			.add(newIgnoreRule());
 	
 	public static final Object[] NUMERIC_TYPES = { N, Z, Q, R };
@@ -318,36 +318,6 @@ public final class ScalarAlgebra {
 		}
 	}
 	
-	public static final SimpleRule<Object, Boolean> newElementarySimplificationRule() {
-		return new SimpleRule<>((e, m) -> {
-			try {
-				final Object f = ElementaryVerification.Evaluator.INSTANCE.apply(e);
-				
-				return !f.equals(e) && !Substitution.deepContains(f, null);
-			} catch (final AbortException exception) {
-				throw exception;
-			} catch (final Exception exception) {
-				ignore(exception);
-			}
-			
-			return false;
-		}, (e, m) -> {
-			try {
-				final Object f = ElementaryVerification.Evaluator.INSTANCE.apply(e);
-				
-				verifyElementaryProposition($(e, "=", f));
-				
-				return true;
-			} catch (final AbortException exception) {
-				throw exception;
-			} catch (final Exception exception) {
-				ignore(exception);
-			}
-			
-			return false;
-		});
-	}
-	
 	public static final TryRule<Object> newIgnoreRule() {
 		return new TryRule<Object>() {
 			
@@ -366,7 +336,7 @@ public final class ScalarAlgebra {
 		};
 	}
 	
-	public static final TryRule<Object> newElementarySimplificationRule2() {
+	public static final TryRule<Object> newElementarySimplificationRule() {
 		return (e, m) -> {
 			try {
 				final Object f = ElementaryVerification.Evaluator.INSTANCE.apply(e);
@@ -380,6 +350,104 @@ public final class ScalarAlgebra {
 				throw exception;
 			} catch (final Exception exception) {
 				ignore(exception);
+			}
+			
+			return false;
+		};
+	}
+	
+	public static final TryRule<Object> newAssociativitySimplificationRule() {
+		return (e, m) -> {
+			final Variable vx = new Variable("x");
+			final Variable vy = new Variable("y");
+			final Variable vz = new Variable("z");
+			
+			if (match($(vx, "+", $(vy, "+", vz)), e)) {
+				try {
+					autobindTrim("associativity_of_+_+_in_" + R, vx.get(), vy.get(), vz.get());
+					
+					return true;
+				} catch (final AbortException exception) {
+					throw exception;
+				} catch (final Exception exception) {
+					ignore(exception);
+				}
+			}
+			
+			if (match($($(vx, "+", vy), "+", vz), e)) {
+				final Object _x = vx.get();
+				final Object _y = vy.get();
+				final Object _z = vz.get();
+				
+				if (_z.toString().compareTo(_y.toString()) < 0) {
+					final Deduction deduction = subdeduction();
+					
+					try {
+						bind("identity", e);
+						autobindTrim("associativity_of_+_+_in_" + R, _x, _y, _z);
+						rewriteRight(name(-2), name(-1), 1);
+						
+						autobindTrim("commutativity_of_+_in_" + R, _y, _z);
+						rewrite(name(-2), name(-1));
+						
+						autobindTrim("associativity_of_+_+_in_" + R, _x, _z, _y);
+						rewrite(name(-2), name(-1));
+						
+						conclude();
+						
+						return true;
+					} catch (final AbortException exception) {
+						throw exception;
+					} catch (final Exception exception) {
+						ignore(exception);
+						
+						popTo(deduction.getParent());
+					}
+				}
+			}
+			
+			if (match($(vx, "*", $(vy, "*", vz)), e)) {
+				try {
+					autobindTrim("associativity_of_*_*_in_" + R, vx.get(), vy.get(), vz.get());
+					
+					return true;
+				} catch (final AbortException exception) {
+					throw exception;
+				} catch (final Exception exception) {
+					ignore(exception);
+				}
+			}
+			
+			if (match($($(vx, "*", vy), "*", vz), e)) {
+				final Object _x = vx.get();
+				final Object _y = vy.get();
+				final Object _z = vz.get();
+				
+				if (_z.toString().compareTo(_y.toString()) < 0) {
+					final Deduction deduction = subdeduction();
+					
+					try {
+						bind("identity", e);
+						autobindTrim("associativity_of_*_*_in_" + R, _x, _y, _z);
+						rewriteRight(name(-2), name(-1), 1);
+						
+						autobindTrim("commutativity_of_*_in_" + R, _y, _z);
+						rewrite(name(-2), name(-1));
+						
+						autobindTrim("associativity_of_*_*_in_" + R, _x, _z, _y);
+						rewrite(name(-2), name(-1));
+						
+						conclude();
+						
+						return true;
+					} catch (final AbortException exception) {
+						throw exception;
+					} catch (final Exception exception) {
+						ignore(exception);
+						
+						popTo(deduction.getParent());
+					}
+				}
 			}
 			
 			return false;

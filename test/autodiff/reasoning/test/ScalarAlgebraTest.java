@@ -92,12 +92,24 @@ public final class ScalarAlgebraTest {
 				suppose($(_a, IN, R));
 				suppose($(_b, IN, N));
 				
-				testCanonicalize($(_a, "+", $(1, "+", 1)), $(2, "+", _a));
-				testCanonicalize($(_a, "+", _a), $(2, "*", _a));
-				testCanonicalize($(_a, "+", $(2, "*", _a)), $(3, "*", _a));
-				testCanonicalize($(_a, "+", 0), _a);
-				testCanonicalize($(_a, "-", _a), 0);
-				testCanonicalize($(_a, "+", $(_b, "+", _a)), $($(2, "*", _a), "+", _b));
+				testCanonicalize(
+						$(_a, "+", $(1, "+", 1)),
+						$(2, "+", _a));
+				testCanonicalize(
+						$(_a, "+", _a),
+						$(2, "*", _a));
+				testCanonicalize(
+						$(_a, "+", $(2, "*", _a)),
+						$(3, "*", _a));
+				testCanonicalize(
+						$(_a, "+", 0),
+						_a);
+				testCanonicalize(
+						$(_a, "-", _a),
+						0);
+				testCanonicalize(
+						$(_a, "+", $(_b, "+", _a)),
+						$($(2, "*", _a), "+", _b));
 			}
 			
 		}, new Simple(1));
@@ -117,9 +129,18 @@ public final class ScalarAlgebraTest {
 				suppose($(_a, IN, R));
 				suppose($(_b, IN, N));
 				
-				testCanonicalize($(_a, "*", _a), $(_a, "^", 2));
-				testCanonicalize($(_a, "*", $(_a, "^", 2)), $(_a, "^", 3));
-				testCanonicalize($(_b, "*", _a), $(_a, "*", _b));
+				testCanonicalize(
+						$(_a, "*", _a),
+						$(_a, "^", 2));
+				testCanonicalize(
+						$(_a, "*", $(_a, "^", 2)),
+						$(_a, "^", 3));
+				testCanonicalize(
+						$(_b, "*", _a),
+						$(_a, "*", _b));
+				testCanonicalize(
+						$(_a, "*", $(_b, "*", _a)),
+						$($(_a, "^", 2), "*", _b));
 			}
 			
 		}, new Simple(1));
