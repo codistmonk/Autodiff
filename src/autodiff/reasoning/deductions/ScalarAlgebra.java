@@ -34,6 +34,7 @@ public final class ScalarAlgebra {
 	public static final Auto.Simplifier CANONICALIZER = new Simplifier(Simplifier.Mode.DEFINE)
 			.add(newElementarySimplificationRule2())
 			.add(newAdditionSimplificationRule())
+			.add(newMultiplicationSimplificationRule())
 			.add(newIgnoreRule());
 	
 	public static final Object[] NUMERIC_TYPES = { N, Z, Q, R };
@@ -139,17 +140,17 @@ public final class ScalarAlgebra {
 		{
 			final Object _x = $new("x");
 			
-			suppose("definition_of_x_^_0",
+			suppose("definition_of_x^0",
 					$(FORALL, _x, IN, R,
-							$(_x, "^", 0), "=", 1));
+							$($(_x, "^", 0), "=", 1)));
 		}
 		
 		{
 			final Object _x = $new("x");
 			
-			suppose("definition_of_x_^_1",
+			suppose("definition_of_x^1",
 					$(FORALL, _x, IN, R,
-							$(_x, "^", 1), "=", _x));
+							$($(_x, "^", 1), "=", _x)));
 		}
 		
 		{
@@ -157,7 +158,7 @@ public final class ScalarAlgebra {
 			final Object _a = $new("a");
 			final Object _b = $new("b");
 			
-			suppose("simplification_of_nonzero_x_^_a_*_x_^_b",
+			suppose("simplification_of_nonzero_x^a*x^b",
 					$(FORALL, _x, IN, R,
 							$(FORALL, _a, ",", _b, IN, Z,
 									$rule(notZero(_x), $($(_x, "^", _a), "*", $(_x, "^", _b)), "=", $(_x, "^", $(_a, "+", _b))))));
@@ -168,10 +169,10 @@ public final class ScalarAlgebra {
 			final Object _a = $new("a");
 			final Object _b = $new("b");
 			
-			suppose("simplification_of_x_^_a_*_x_^_b",
+			suppose("simplification_of_x^a*x^b",
 					$(FORALL, _x, IN, R,
 							$(FORALL, _a, ",", _b, IN, N,
-									$($(_x, "^", _a), "*", $(_x, "^", _b)), "=", $(_x, "^", $(_a, "+", _b)))));
+									$($($(_x, "^", _a), "*", $(_x, "^", _b)), "=", $(_x, "^", $(_a, "+", _b))))));
 		}
 		
 		{
@@ -179,7 +180,7 @@ public final class ScalarAlgebra {
 			final Object _a = $new("a");
 			final Object _b = $new("b");
 			
-			suppose("simplification_of_nonzero_x_^_a_^_b",
+			suppose("simplification_of_nonzero_x^a^b",
 					$(FORALL, _x, IN, R,
 							$(FORALL, _a, ",", _b, IN, Z,
 									$rule(notZero(_x), $($($(_x, "^", _a), "^", _b), "=", $(_x, "^", $(_a, "*", _b)))))));
@@ -190,7 +191,7 @@ public final class ScalarAlgebra {
 			final Object _a = $new("a");
 			final Object _b = $new("b");
 			
-			suppose("simplification_of_x_^_a_^_b",
+			suppose("simplification_of_x^a^b",
 					$(FORALL, _x, IN, R,
 							$(FORALL, _a, ",", _b, IN, N,
 									$($($(_x, "^", _a), "^", _b), "=", $(_x, "^", $(_a, "*", _b))))));
@@ -201,7 +202,7 @@ public final class ScalarAlgebra {
 			final Object _a = $new("a");
 			final Object _b = $new("b");
 			
-			suppose("simplification_of_a_*_x_+_b_*_x",
+			suppose("simplification_of_a*x+b*x",
 					$(FORALL, _x, ",", _a, ",", _b, IN, R,
 							$($($(_a, "*", _x), "+", $(_b, "*", _x)), "=", $($(_a, "+", _b), "*", _x))));
 		}
@@ -384,7 +385,7 @@ public final class ScalarAlgebra {
 				
 				if (_a instanceof Number && _b instanceof Number) {
 					try {
-						autobindTrim("simplification_of_a_*_x_+_b_*_x", _x, _a, _b);
+						autobindTrim("simplification_of_a*x+b*x", _x, _a, _b);
 						
 						return true;
 					} catch (final AbortException exception) {
@@ -406,7 +407,7 @@ public final class ScalarAlgebra {
 						autobindTrim("neutrality_of_1", _x);
 						rewriteRight(name(-2), name(-1), 2);
 						
-						autobindTrim("simplification_of_a_*_x_+_b_*_x", _x, 1, _b);
+						autobindTrim("simplification_of_a*x+b*x", _x, 1, _b);
 						rewrite(name(-2), name(-1));
 						
 						conclude();
@@ -433,7 +434,7 @@ public final class ScalarAlgebra {
 						autobindTrim("neutrality_of_1", _x);
 						rewriteRight(name(-2), name(-1), 3);
 						
-						autobindTrim("simplification_of_a_*_x_+_b_*_x", _x, _a, 1);
+						autobindTrim("simplification_of_a*x+b*x", _x, _a, 1);
 						rewrite(name(-2), name(-1));
 						
 						conclude();
@@ -458,7 +459,7 @@ public final class ScalarAlgebra {
 					autobindTrim("neutrality_of_1", _x);
 					rewriteRight(name(-2), name(-1), 2, 3);
 					
-					autobindTrim("simplification_of_a_*_x_+_b_*_x", _x, 1, 1);
+					autobindTrim("simplification_of_a*x+b*x", _x, 1, 1);
 					rewrite(name(-2), name(-1));
 					
 					conclude();
@@ -470,6 +471,146 @@ public final class ScalarAlgebra {
 					ignore(exception);
 					
 					popTo(deduction.getParent());
+				}
+			}
+			
+			if (match($(vb, "+", va), e)) {
+				final Object _a = va.get();
+				final Object _b = vb.get();
+				
+				if (_a.toString().compareTo(_b.toString()) < 0) {
+					try {
+						autobindTrim("commutativity_of_+_in_" + R, _b, _a);
+						
+						return true;
+					} catch (final AbortException exception) {
+						throw exception;
+					} catch (final Exception exception) {
+						ignore(exception);
+					}
+				}
+			}
+			
+			return false;
+		};
+	}
+	
+	public static final TryRule<Object> newMultiplicationSimplificationRule() {
+		return (e, m) -> {
+			final Variable vx = new Variable("x");
+			final Variable va = new Variable("a");
+			final Variable vb = new Variable("b");
+			
+			if (match($($(vx, "^", va), "*", $(vx, "^", vb)), e)) {
+				final Object _x = vx.get();
+				final Object _a = va.get();
+				final Object _b = vb.get();
+				
+				if (_a instanceof Number && _b instanceof Number) {
+					try {
+						autobindTrim("simplification_of_x^a*x^b", _x, _a, _b);
+						
+						return true;
+					} catch (final AbortException exception) {
+						throw exception;
+					} catch (final Exception exception) {
+						ignore(exception);
+					}
+				}
+			}
+			
+			if (match($(vx, "*", $(vx, "^", vb)), e)) {
+				final Object _x = vx.get();
+				final Object _b = vb.get();
+				final Deduction deduction = subdeduction();
+				
+				if (_b instanceof Number) {
+					try {
+						bind("identity", e);
+						autobindTrim("definition_of_x^1", _x);
+						rewriteRight(name(-2), name(-1), 2);
+						
+						autobindTrim("simplification_of_x^a*x^b", _x, 1, _b);
+						rewrite(name(-2), name(-1));
+						
+						conclude();
+						
+						return true;
+					} catch (final AbortException exception) {
+						throw exception;
+					} catch (final Exception exception) {
+						ignore(exception);
+						
+						popTo(deduction.getParent());
+					}
+				}
+			}
+			
+			if (match($($(va, "*", vx), "+", vx), e)) {
+				final Object _x = vx.get();
+				final Object _a = va.get();
+				final Deduction deduction = subdeduction();
+				
+				if (_a instanceof Number) {
+					try {
+						bind("identity", e);
+						autobindTrim("definition_of_x^1", _x);
+						rewriteRight(name(-2), name(-1), 3);
+						
+						autobindTrim("simplification_of_x^a*x^b", _x, _a, 1);
+						rewrite(name(-2), name(-1));
+						
+						conclude();
+						
+						return true;
+					} catch (final AbortException exception) {
+						throw exception;
+					} catch (final Exception exception) {
+						ignore(exception);
+						
+						popTo(deduction.getParent());
+					}
+				}
+			}
+			
+			if (match($(vx, "*", vx), e)) {
+				final Object _x = vx.get();
+				final Deduction deduction = subdeduction();
+				
+				try {
+					bind("identity", e);
+					autobindTrim("definition_of_x^1", _x);
+					rewriteRight(name(-2), name(-1), 2, 3);
+					
+					autobindTrim("simplification_of_x^a*x^b", _x, 1, 1);
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+					
+					return true;
+				} catch (final AbortException exception) {
+					throw exception;
+				} catch (final Exception exception) {
+					ignore(exception);
+					
+					popTo(deduction.getParent());
+				}
+			}
+			
+			if (match($(vb, "*", va), e)) {
+				final Object _a = va.get();
+				final Object _b = vb.get();
+				
+				if (_a.toString().compareTo(_b.toString()) < 0) {
+					try {
+						autobindTrim("commutativity_of_*_in_" + R, _b, _a);
+						
+						return true;
+					} catch (final AbortException exception) {
+						throw exception;
+					} catch (final Exception exception) {
+						ignore(exception);
+					}
 				}
 			}
 			

@@ -136,11 +136,14 @@ public final class Auto {
 			if (match(pattern, proposition(lastName))) {
 				bind(lastName, object);
 			} else {
+				boolean ok = false;
+				
 				for (Deduction d = deduction(); d != null; d = d.getParent()) {
 					try {
 						autobindRules.get(d).applyTo(proposition(lastName));
 						rewrite(lastName, name(-1));
 						bind(name(-1), object);
+						ok = true;
 					} catch (final AbortException exception2) {
 						throw exception2;
 					} catch (final Exception exception2) {
@@ -148,6 +151,10 @@ public final class Auto {
 						
 						popTo(deduction);
 					}
+				}
+				
+				if (!ok) {
+					abort();
 				}
 			}
 			
