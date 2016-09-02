@@ -395,12 +395,66 @@ public final class ScalarAlgebra {
 				}
 			}
 			
+			if (match($(vx, "+", $(vb, "*", vx)), e)) {
+				final Object _x = vx.get();
+				final Object _b = vb.get();
+				final Deduction deduction = subdeduction();
+				
+				if (_b instanceof Number) {
+					try {
+						bind("identity", e);
+						autobindTrim("neutrality_of_1", _x);
+						rewriteRight(name(-2), name(-1), 2);
+						
+						autobindTrim("simplification_of_a_*_x_+_b_*_x", _x, 1, _b);
+						rewrite(name(-2), name(-1));
+						
+						conclude();
+						
+						return true;
+					} catch (final AbortException exception) {
+						throw exception;
+					} catch (final Exception exception) {
+						ignore(exception);
+						
+						popTo(deduction.getParent());
+					}
+				}
+			}
+			
+			if (match($($(va, "*", vx), "+", vx), e)) {
+				final Object _x = vx.get();
+				final Object _a = va.get();
+				final Deduction deduction = subdeduction();
+				
+				if (_a instanceof Number) {
+					try {
+						bind("identity", e);
+						autobindTrim("neutrality_of_1", _x);
+						rewriteRight(name(-2), name(-1), 3);
+						
+						autobindTrim("simplification_of_a_*_x_+_b_*_x", _x, _a, 1);
+						rewrite(name(-2), name(-1));
+						
+						conclude();
+						
+						return true;
+					} catch (final AbortException exception) {
+						throw exception;
+					} catch (final Exception exception) {
+						ignore(exception);
+						
+						popTo(deduction.getParent());
+					}
+				}
+			}
+			
 			if (match($(vx, "+", vx), e)) {
 				final Object _x = vx.get();
 				final Deduction deduction = subdeduction();
 				
 				try {
-					bind("identity", $(_x, "+", _x));
+					bind("identity", e);
 					autobindTrim("neutrality_of_1", _x);
 					rewriteRight(name(-2), name(-1), 2, 3);
 					
