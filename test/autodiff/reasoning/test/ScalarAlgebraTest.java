@@ -149,6 +149,60 @@ public final class ScalarAlgebraTest {
 					final Goal goal = newGoal($($(_a, "+", $(1, "+", 1)), "=", $(_a, "+", 2)));
 					
 					bind("identity", left(goal.getProposition()));
+					ScalarAlgebra.CANONICALIZER.simplifyCompletely(proposition(-1));
+					
+					goal.conclude();
+				}
+				
+				{
+					final Goal goal = newGoal($($(_a, "+", _a), "=", $(2, "*", _a)));
+					
+					bind("identity", left(goal.getProposition()));
+					ScalarAlgebra.CANONICALIZER.simplifyCompletely(proposition(-1));
+					
+					goal.conclude();
+				}
+				
+				{
+					final Goal goal = newGoal($($(_a, "+", $(2, "*", _a)), "=", $(3, "*", _a)));
+					
+					bind("identity", left(goal.getProposition()));
+					ScalarAlgebra.CANONICALIZER.simplifyCompletely(proposition(-1));
+					
+					goal.conclude();
+				}
+				
+				{
+					final Goal goal = newGoal($($($(2, "*", _a), "+", _a), "=", $(3, "*", _a)));
+					
+					bind("identity", left(goal.getProposition()));
+					ScalarAlgebra.CANONICALIZER.simplifyCompletely(proposition(-1));
+					
+					goal.conclude();
+				}
+				
+				{
+					final Goal goal = newGoal($($(_a, "*", _a), "=", $(_a, "^", 2)));
+					
+					bind("identity", left(goal.getProposition()));
+					ScalarAlgebra.CANONICALIZER.apply(proposition(-1));
+					
+					goal.conclude();
+				}
+				
+				{
+					final Goal goal = newGoal($($(_a, "*", $(_a, "^", 2)), "=", $(_a, "^", 3)));
+					
+					bind("identity", left(goal.getProposition()));
+					ScalarAlgebra.CANONICALIZER.apply(proposition(-1));
+					
+					goal.conclude();
+				}
+				
+				{
+					final Goal goal = newGoal($($(_b, "*", _a), "=", $(_a, "*", _b)));
+					
+					bind("identity", left(goal.getProposition()));
 					ScalarAlgebra.CANONICALIZER.apply(proposition(-1));
 					
 					goal.conclude();

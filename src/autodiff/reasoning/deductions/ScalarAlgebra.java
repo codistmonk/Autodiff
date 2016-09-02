@@ -1,18 +1,23 @@
 package autodiff.reasoning.deductions;
 
+import static autodiff.reasoning.deductions.Basics.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
 import static autodiff.reasoning.tactics.Auto.*;
-import static autodiff.reasoning.tactics.PatternPredicate.rule;
+import static autodiff.reasoning.tactics.PatternMatching.match;
 import static autodiff.reasoning.tactics.Stack.*;
 import static multij.tools.Tools.array;
 import static multij.tools.Tools.ignore;
 
+import java.util.Map;
+
+import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.proofs.ElementaryVerification;
 import autodiff.reasoning.proofs.Substitution;
 import autodiff.reasoning.tactics.Auto;
 import autodiff.reasoning.tactics.Stack.AbortException;
 import autodiff.rules.SimpleRule;
+import autodiff.rules.TryRule;
 import autodiff.rules.Variable;
 
 import multij.tools.IllegalInstantiationException;
@@ -27,8 +32,9 @@ public final class ScalarAlgebra {
 	}
 	
 	public static final Auto.Simplifier CANONICALIZER = new Simplifier(Simplifier.Mode.DEFINE)
-			.add(newElementarySimplificationRule())
-			.add(rule(new Variable("*"), (e, m) -> false));
+			.add(newElementarySimplificationRule2())
+			.add(newAdditionSimplificationRule())
+			.add(newIgnoreRule());
 	
 	public static final Object[] NUMERIC_TYPES = { N, Z, Q, R };
 	
@@ -197,7 +203,7 @@ public final class ScalarAlgebra {
 			
 			suppose("simplification_of_a_*_x_+_b_*_x",
 					$(FORALL, _x, ",", _a, ",", _b, IN, R,
-							$($(_a, "*", _x), "+", $(_b, "*", _x)), "=", $($(_a, "+", _b), "*", _x)));
+							$($($(_a, "*", _x), "+", $(_b, "*", _x)), "=", $($(_a, "+", _b), "*", _x))));
 		}
 		
 		{
@@ -325,6 +331,96 @@ public final class ScalarAlgebra {
 			
 			return false;
 		});
+	}
+	
+	public static final TryRule<Object> newIgnoreRule() {
+		return new TryRule<Object>() {
+			
+			@Override
+			public final boolean test(final Object object, final Map<Variable, Object> mapping) {
+				return true;
+			}
+			
+			@Override
+			public final Boolean applyTo(final Object object, final Map<Variable, Object> mapping) {
+				return false;
+			}
+			
+			private static final long serialVersionUID = 5917717573706684334L;
+			
+		};
+	}
+	
+	public static final TryRule<Object> newElementarySimplificationRule2() {
+		return (e, m) -> {
+			try {
+				final Object f = ElementaryVerification.Evaluator.INSTANCE.apply(e);
+				
+				if (!f.equals(e) && !Substitution.deepContains(f, null)) {
+					verifyElementaryProposition($(e, "=", f));
+					
+					return true;
+				}
+			} catch (final AbortException exception) {
+				throw exception;
+			} catch (final Exception exception) {
+				ignore(exception);
+			}
+			
+			return false;
+		};
+	}
+	
+	public static final TryRule<Object> newAdditionSimplificationRule() {
+		return (e, m) -> {
+			final Variable vx = new Variable("x");
+			final Variable va = new Variable("a");
+			final Variable vb = new Variable("b");
+			
+			if (match($($(va, "*", vx), "+", $(vb, "*", vx)), e)) {
+				final Object _x = vx.get();
+				final Object _a = va.get();
+				final Object _b = vb.get();
+				
+				if (_a instanceof Number && _b instanceof Number) {
+					try {
+						autobindTrim("simplification_of_a_*_x_+_b_*_x", _x, _a, _b);
+						
+						return true;
+					} catch (final AbortException exception) {
+						throw exception;
+					} catch (final Exception exception) {
+						ignore(exception);
+					}
+				}
+			}
+			
+			if (match($(vx, "+", vx), e)) {
+				final Object _x = vx.get();
+				final Deduction deduction = subdeduction();
+				
+				try {
+					bind("identity", $(_x, "+", _x));
+					autobindTrim("neutrality_of_1", _x);
+					rewriteRight(name(-2), name(-1), 2, 3);
+					
+					autobindTrim("simplification_of_a_*_x_+_b_*_x", _x, 1, 1);
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+					
+					return true;
+				} catch (final AbortException exception) {
+					throw exception;
+				} catch (final Exception exception) {
+					ignore(exception);
+					
+					popTo(deduction.getParent());
+				}
+			}
+			
+			return false;
+		};
 	}
 	
 }

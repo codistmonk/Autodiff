@@ -6,18 +6,15 @@ import static autodiff.reasoning.tactics.PatternMatching.match;
 import static autodiff.reasoning.tactics.Stack.*;
 import static multij.tools.Tools.ignore;
 
-import autodiff.reasoning.expressions.ExpressionRewriter;
 import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.tactics.Stack.AbortException;
 import autodiff.reasoning.tactics.Stack.PropositionDescription;
-import autodiff.rules.Rule;
 import autodiff.rules.Rules;
 import autodiff.rules.SimpleRule;
 import autodiff.rules.TryRule;
 import autodiff.rules.Variable;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -33,9 +30,9 @@ public final class Auto {
 		throw new IllegalInstantiationException();
 	}
 	
-	private static final Map<Deduction, Rules<Object, Void>> autodeduceRules = new WeakHashMap<>();
+	private static final Map<Deduction, Rules<Object, Boolean>> autodeduceRules = new WeakHashMap<>();
 	
-	private static final Map<Deduction, Rules<Object, Void>> autobindRules = new WeakHashMap<>();
+	private static final Map<Deduction, Rules<Object, Boolean>> autobindRules = new WeakHashMap<>();
 	
 	public static final void hintAutodeduce(final TryRule<Object> rule) {
 		autodeduceRules.computeIfAbsent(deduction(), __ -> new Rules<>()).add(rule);
@@ -99,6 +96,19 @@ public final class Auto {
 		}
 	}
 	
+	public static final void autobindTrim(final String targetName, final Object... objects) {
+		autobindTrim(newName(), targetName, objects);
+	}
+	
+	public static final void autobindTrim(final String propositionName, final String targetName, final Object... objects) {
+		subdeduction(propositionName);
+		
+		autobind(targetName, objects);
+		trim();
+		
+		conclude();
+	}
+	
 	public static final void autobind(final String targetName, final Object... objects) {
 		autobind(newName(), targetName, objects);
 	}
@@ -147,19 +157,8 @@ public final class Auto {
 		conclude();
 	}
 	
-	public static final Object patternify(final Object object) {
-		return new ExpressionRewriter() {
-			
-			private final Map<Object, Variable> variables = new HashMap<>();
-			
-			@Override
-			public final Object visit(final Object expression) {
-				return this.variables.computeIfAbsent(expression, __ -> new Variable());
-			}
-			
-			private static final long serialVersionUID = -1327184193528204097L;
-			
-		}.apply(object);
+	public static final void trim() {
+		autoapply(name(-1));
 	}
 	
 	public static final void autoapply(final String targetName) {
@@ -249,7 +248,7 @@ public final class Auto {
 			return this.mode;
 		}
 		
-		public final Simplifier add(final Rule<Object, Boolean> rule) {
+		public final Simplifier add(final TryRule<Object> rule) {
 			this.getRules().add(rule);
 			
 			return this;
@@ -262,11 +261,11 @@ public final class Auto {
 				while (this.apply(proposition(-1))) {
 					// NOP
 				}
+				
+				conclude();
 			} else {
 				pop();
 			}
-			
-			conclude();
 		}
 		
 		@Override

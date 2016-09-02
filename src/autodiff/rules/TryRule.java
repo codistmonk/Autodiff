@@ -7,14 +7,14 @@ import java.util.Map;
 /**
  * @author codistmonk (creation 2016-08-31)
  */
-public interface TryRule<T> extends Rule<T, Void> {
+public interface TryRule<T> extends Rule<T, Boolean> {
 	
 	@Override
-	public default Void applyTo(final T object, final Map<Variable, Object> mapping) {
+	public default Boolean applyTo(final T object, final Map<Variable, Object> mapping) {
 		ignore(object);
 		ignore(mapping);
 		
-		return null;
+		return true;
 	}
 	
 }

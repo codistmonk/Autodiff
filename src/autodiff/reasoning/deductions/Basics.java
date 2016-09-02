@@ -104,7 +104,7 @@ public final class Basics {
 		
 		bind("commutativity_of_equality", left(equality), right(equality));
 		apply(name(-1), equalityName);
-		rewrite(targetName, name(-1));
+		rewrite(targetName, name(-1), indices);
 		
 		set(conclude().getMessage(), "By right rewriting in", targetName, "using", equalityName, "at",
 				Arrays.stream(indices).mapToObj(Integer::valueOf).collect(toTreeSet()));
