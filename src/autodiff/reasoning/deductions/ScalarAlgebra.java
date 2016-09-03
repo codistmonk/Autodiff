@@ -36,7 +36,7 @@ public final class ScalarAlgebra {
 			.add(newAdditionAssociativitySimplificationRule())
 			.add(newMultiplicationAssociativitySimplificationRule())
 			.add(newAdditionSimplificationRule())
-//			.add(newMultiplicationSimplificationRule())
+			.add(newMultiplicationSimplificationRule())
 			.add(newIgnoreRule());
 	
 	public static final Object[] NUMERIC_TYPES = { N, Z, Q, R };
@@ -502,9 +502,9 @@ public final class ScalarAlgebra {
 			final Object _by = get(vby);
 			
 			if (_a instanceof Number && _b instanceof Number) {
-				final Object addition = $(new Variable("?"), "+", new Variable("?"));
+				final Object binary = $(new Variable("?"), "+", new Variable("?"));
 				
-				if (match(addition, _ax) || match(addition, _by)) {
+				if (match(binary, _ax) || match(binary, _by)) {
 					return null;
 				}
 				
@@ -531,6 +531,7 @@ public final class ScalarAlgebra {
 		/*
 		 * 
 		 * (x+y)+z   -> x+(y+z)
+		 * 
 		 * ax+(bx+z) -> (a+b)x+z
 		 * ax+(x+z)  -> (a+1)x+z
 		 * x+(bx+z)  -> (1+b)x+z
@@ -725,10 +726,12 @@ public final class ScalarAlgebra {
 		/*
 		 * 
 		 * (x*y)*z     -> x*(y*z)
+		 * 
 		 * x^a*(x^b*z) -> x^(a+b)*z
 		 * x^a*(x*z)   -> x^(a+1)*z
 		 * x*(x^b*z)   -> x^(1+b)*z
 		 * x*(x*z)     -> x^(1+1)*z
+		 * 
 		 * y*(x*z)     -> x*(y*z)
 		 * 
 		 */
@@ -741,7 +744,6 @@ public final class ScalarAlgebra {
 			
 			final Object vxa = $(vx, "^", va);
 			final Object vxb = $(vx, "^", vb);
-			final Object vyb = $(vy, "^", vb);
 			
 			if (match($($(vx, "*", vy), "*", vz), e)) {
 				try {
@@ -878,134 +880,6 @@ public final class ScalarAlgebra {
 		return null;
 	}
 	
-	public static final TryRule<Object> newAssociativitySimplificationRule() {
-		/*
-		 * 
-		 * (x+y)+z   -> x+(y+z)
-		 * ax+(bx+z) -> (a+b)x+z
-		 * ax+(x+z)  -> (a+1)x+z
-		 * x+(bx+z)  -> (1+b)x+z
-		 * x+(x+z)   -> (1+1)x+z
-		 * by+(ax+z) -> ax+(by+z)
-		 * y+(ax+z)  -> ax+(y+z)
-		 * by+(x+z)  -> x+(by+z)
-		 * y+(x+z)   -> x+(y+z)
-		 * 
-		 * (x*y)*z     -> x*(y*z)
-		 * x^a*(x^b*z) -> x^(a+b)*z
-		 * x^a*(x*z)   -> x^(a+1)*z
-		 * x*(x^b*z)   -> x^(1+b)*z
-		 * x*(x*z)     -> x^(1+1)*z
-		 * y*(x*z)     -> x*(y*z)
-		 * 
-		 */
-		return (e, m) -> {
-			final Variable vx = new Variable("x");
-			final Variable vy = new Variable("y");
-			final Variable vz = new Variable("z");
-			
-//			abort();
-			
-			if (match($($(vx, "+", vy), "+", vz), e)) {
-				try {
-					autobindTrim("associativity_of_+_+_in_" + R, vx.get(), vy.get(), vz.get());
-					
-					return true;
-				} catch (final AbortException exception) {
-					throw exception;
-				} catch (final Exception exception) {
-					ignore(exception);
-				}
-			}
-			
-			final Variable va = new Variable("a");
-			final Variable vb = new Variable("b");
-			final Object vax = $(va, "*", vx);
-			final Object vby = $(vb, "*", vy);
-			
-			if (match($(vax, "+", $(vby, "+", vz)), e)) {
-				final Object _x = vx.get();
-				final Object _y = vy.get();
-				final Object _z = vz.get();
-				
-				if (_y.toString().compareTo(_x.toString()) < 0) {
-					final Deduction deduction = subdeduction();
-					final Object _ax = $(va.get(), "*", _x);
-					final Object _by = $(vb.get(), "*", _y);
-					
-					try {
-						bind("identity", e);
-						abort();
-						autobindTrim("associativity_of_+_+_in_" + R, _x, _y, _z);
-						rewriteRight(name(-2), name(-1), 1);
-						
-						autobindTrim("commutativity_of_+_in_" + R, _y, _z);
-						rewrite(name(-2), name(-1));
-						
-						autobindTrim("associativity_of_+_+_in_" + R, _x, _z, _y);
-						rewrite(name(-2), name(-1));
-						
-						conclude();
-						
-						return true;
-					} catch (final AbortException exception) {
-						throw exception;
-					} catch (final Exception exception) {
-						ignore(exception);
-						
-						popTo(deduction.getParent());
-					}
-				}
-			}
-			
-			if (match($($(vx, "*", vy), "*", vz), e)) {
-				try {
-					autobindTrim("associativity_of_*_*_in_" + R, vx.get(), vy.get(), vz.get());
-					
-					return true;
-				} catch (final AbortException exception) {
-					throw exception;
-				} catch (final Exception exception) {
-					ignore(exception);
-				}
-			}
-			
-			if (match($(vx, "*", $(vy, "*", vz)), e)) {
-				final Object _x = vx.get();
-				final Object _y = vy.get();
-				final Object _z = vz.get();
-				
-				if (_y.toString().compareTo(_x.toString()) < 0) {
-					final Deduction deduction = subdeduction();
-					
-					try {
-						bind("identity", e);
-						autobindTrim("associativity_of_*_*_in_" + R, _x, _y, _z);
-						rewriteRight(name(-2), name(-1), 1);
-						
-						autobindTrim("commutativity_of_*_in_" + R, _y, _z);
-						rewrite(name(-2), name(-1));
-						
-						autobindTrim("associativity_of_*_*_in_" + R, _x, _z, _y);
-						rewrite(name(-2), name(-1));
-						
-						conclude();
-						
-						return true;
-					} catch (final AbortException exception) {
-						throw exception;
-					} catch (final Exception exception) {
-						ignore(exception);
-						
-						popTo(deduction.getParent());
-					}
-				}
-			}
-			
-			return false;
-		};
-	}
-	
 	public static final TryRule<Object> newSubtractionSimplificationRule() {
 		return (e, m) -> {
 			final Variable vx = new Variable("x");
@@ -1025,123 +899,96 @@ public final class ScalarAlgebra {
 	}
 	
 	public static final TryRule<Object> newMultiplicationSimplificationRule() {
+		/*
+		 * 
+		 * x^a*x^b -> x^(a+b)
+		 * x^a*x   -> x^(a+1)
+		 * x*x^b   -> x^(1+b)
+		 * x*x     -> x^(1+1)
+		 * 
+		 * y*x     -> x*y
+		 * 
+		 */
 		return (e, m) -> {
-			if (true) return false;
-			
 			final Variable vx = new Variable("x");
+			final Variable vy = new Variable("y");
 			final Variable va = new Variable("a");
 			final Variable vb = new Variable("b");
 			
-			if (match($($(vx, "^", va), "*", $(vx, "^", vb)), e)) {
-				final Object _x = vx.get();
-				final Object _a = va.get();
-				final Object _b = vb.get();
-				
-				if (_a instanceof Number && _b instanceof Number) {
-					try {
-						autobindTrim("simplification_of_x^a*x^b", _x, _a, _b);
-						
-						return true;
-					} catch (final AbortException exception) {
-						throw exception;
-					} catch (final Exception exception) {
-						ignore(exception);
-					}
-				}
+			final Object vxa = $(vx, "^", va);
+			final Object vxb = $(vx, "^", vb);
+			
+			Boolean result;
+			
+			result = tryMultiplication(vx, va, vb, vxa, vxb, e);
+			
+			if (result != null) {
+				return result;
 			}
 			
-			if (match($(vx, "*", $(vx, "^", vb)), e)) {
-				final Object _x = vx.get();
-				final Object _b = vb.get();
+			result = tryMultiplication(vx, va, 1, vxa, vx, e);
+			
+			if (result != null) {
+				return result;
+			}
+			
+			result = tryMultiplication(vx, 1, vb, vx, vxb, e);
+			
+			if (result != null) {
+				return result;
+			}
+			
+			result = tryMultiplication(vx, 1, 1, vx, vx, e);
+			
+			if (result != null) {
+				return result;
+			}
+			
+			result = tryMultiplication(vx, vy, 1, 1, vx, vy, e);
+			
+			if (result != null) {
+				return result;
+			}
+			
+			return false;
+		};
+	}
+	
+	public static final Boolean tryMultiplication(final Object vx,
+			final Object va, final Object vb, final Object vax, final Object vbx, final Object expression) {
+		if (match($(vax, "*", vbx), expression)) {
+			final Object _x = get(vx);
+			final Object _a = get(va);
+			final Object _b = get(vb);
+			
+			if (!"1".equals(va.toString()) && !"1".equals(vb.toString())) {
+				try {
+					autobindTrim("simplification_of_x^a*x^b", _x, _a, _b);
+					
+					return true;
+				} catch (final AbortException exception) {
+					throw exception;
+				} catch (final Exception exception) {
+					ignore(exception);
+				}
+			} else {
 				final Deduction deduction = subdeduction();
 				
-				if (_b instanceof Number) {
-					try {
-						bind("identity", e);
+				try {
+					bind("identity", expression);
+					
+					if ("1".equals(va.toString()) && "1".equals(vb.toString())) {
+						autobindTrim("definition_of_x^1", _x);
+						rewriteRight(name(-2), name(-1), 2, 3);
+					} else if ("1".equals(va.toString())) {
 						autobindTrim("definition_of_x^1", _x);
 						rewriteRight(name(-2), name(-1), 2);
-						
-						autobindTrim("simplification_of_x^a*x^b", _x, 1, _b);
-						rewrite(name(-2), name(-1));
-						
-						conclude();
-						
-						return true;
-					} catch (final AbortException exception) {
-						throw exception;
-					} catch (final Exception exception) {
-						ignore(exception);
-						
-						popTo(deduction.getParent());
-					}
-				}
-			}
-			
-			if (match($($(va, "*", vx), "+", vx), e)) {
-				final Object _x = vx.get();
-				final Object _a = va.get();
-				final Deduction deduction = subdeduction();
-				
-				if (_a instanceof Number) {
-					try {
-						bind("identity", e);
+					} else if ("1".equals(vb.toString())) {
 						autobindTrim("definition_of_x^1", _x);
 						rewriteRight(name(-2), name(-1), 3);
-						
-						autobindTrim("simplification_of_x^a*x^b", _x, _a, 1);
-						rewrite(name(-2), name(-1));
-						
-						conclude();
-						
-						return true;
-					} catch (final AbortException exception) {
-						throw exception;
-					} catch (final Exception exception) {
-						ignore(exception);
-						
-						popTo(deduction.getParent());
 					}
-				}
-			}
-			
-			if (match($(0, "*", vx), e)) {
-				final Object _x = vx.get();
-				
-				try {
-					autobindTrim("absorbingness_of_0", _x);
 					
-					return true;
-				} catch (final AbortException exception) {
-					throw exception;
-				} catch (final Exception exception) {
-					ignore(exception);
-				}
-			}
-			
-			if (match($(1, "*", vx), e)) {
-				final Object _x = vx.get();
-				
-				try {
-					autobindTrim("neutrality_of_1", _x);
-					
-					return true;
-				} catch (final AbortException exception) {
-					throw exception;
-				} catch (final Exception exception) {
-					ignore(exception);
-				}
-			}
-			
-			if (match($(vx, "*", vx), e)) {
-				final Object _x = vx.get();
-				final Deduction deduction = subdeduction();
-				
-				try {
-					bind("identity", e);
-					autobindTrim("definition_of_x^1", _x);
-					rewriteRight(name(-2), name(-1), 2, 3);
-					
-					autobindTrim("simplification_of_x^a*x^b", _x, 1, 1);
+					autobindTrim("simplification_of_x^a*x^b", _x, _a, _b);
 					rewrite(name(-2), name(-1));
 					
 					conclude();
@@ -1155,14 +1002,31 @@ public final class ScalarAlgebra {
 					popTo(deduction.getParent());
 				}
 			}
+		}
+		
+		return null;
+	}
+	
+	public static final Boolean tryMultiplication(final Object vx, final Object vy,
+			final Object va, final Object vb, final Object vax, final Object vby, final Object expression) {
+		if (match($(vby, "*", vax), expression)) {
+			final Object _x = get(vx);
+			final Object _y = get(vy);
+			final Object _a = get(va);
+			final Object _b = get(vb);
+			final Object _ax = get(vax);
+			final Object _by = get(vby);
 			
-			if (match($(vb, "*", va), e)) {
-				final Object _a = va.get();
-				final Object _b = vb.get();
+			if (_a instanceof Number && _b instanceof Number) {
+				final Object binary = $(new Variable("?"), "*", new Variable("?"));
 				
-				if (_a.toString().compareTo(_b.toString()) < 0) {
+				if (match(binary, _ax) || match(binary, _by)) {
+					return null;
+				}
+				
+				if (_x.toString().compareTo(_y.toString()) < 0) {
 					try {
-						autobindTrim("commutativity_of_*_in_" + R, _b, _a);
+						autobindTrim("commutativity_of_*_in_" + R, _by, _ax);
 						
 						return true;
 					} catch (final AbortException exception) {
@@ -1171,10 +1035,12 @@ public final class ScalarAlgebra {
 						ignore(exception);
 					}
 				}
+				
+				return false;
 			}
-			
-			return false;
-		};
+		}
+		
+		return null;
 	}
 	
 }
