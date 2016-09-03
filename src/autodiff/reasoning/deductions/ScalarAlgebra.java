@@ -6,10 +6,7 @@ import static autodiff.reasoning.proofs.ElementaryVerification.*;
 import static autodiff.reasoning.tactics.Auto.*;
 import static autodiff.reasoning.tactics.PatternMatching.match;
 import static autodiff.reasoning.tactics.Stack.*;
-import static multij.tools.Tools.array;
-import static multij.tools.Tools.cast;
-import static multij.tools.Tools.debugPrint;
-import static multij.tools.Tools.ignore;
+import static multij.tools.Tools.*;
 
 import autodiff.reasoning.expressions.ExpressionRewriter;
 import autodiff.reasoning.proofs.Deduction;
@@ -20,11 +17,9 @@ import autodiff.reasoning.tactics.Stack.AbortException;
 import autodiff.rules.TryRule;
 import autodiff.rules.Variable;
 
-import java.util.List;
 import java.util.Map;
 
 import multij.tools.IllegalInstantiationException;
-import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2016-08-31)
@@ -61,6 +56,18 @@ public final class ScalarAlgebra {
 				suppose("stability_of_" + operator + "_in_" + type,
 						$(FORALL, _x, ",", _y, IN, type,
 								$($(_x, operator, _y), IN, type)));
+			}
+		}
+		
+		for (final Object type : NUMERIC_TYPES) {
+			for (final Object operator : array($("^"))) {
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				
+				suppose("stability_of_" + operator + "_in_" + type,
+						$(FORALL, _x, IN, type,
+								$(FORALL, _y, IN, N,
+										$($(_x, operator, _y), IN, type))));
 			}
 		}
 		
@@ -264,12 +271,7 @@ public final class ScalarAlgebra {
 			final Variable vy = new Variable("y");
 			
 			hintAutodeduce(tryMatch($($(vx, "+", vy), IN, R), (e, m) -> {
-				subdeduction();
-				
-				autobind("stability_of_+_in_" + R, vx.get(), vy.get());
-				autoapply(name(-1));
-				
-				conclude();
+				autobindTrim("stability_of_+_in_" + R, vx.get(), vy.get());
 				
 				return true;
 			}));
@@ -280,12 +282,7 @@ public final class ScalarAlgebra {
 			final Variable vy = new Variable("y");
 			
 			hintAutodeduce(tryMatch($($(vx, "-", vy), IN, R), (e, m) -> {
-				subdeduction();
-				
-				autobind("stability_of_-_in_" + R, vx.get(), vy.get());
-				autoapply(name(-1));
-				
-				conclude();
+				autobindTrim("stability_of_-_in_" + R, vx.get(), vy.get());
 				
 				return true;
 			}));
@@ -296,12 +293,7 @@ public final class ScalarAlgebra {
 			final Variable vy = new Variable("y");
 			
 			hintAutodeduce(tryMatch($($(vx, "*", vy), IN, R), (e, m) -> {
-				subdeduction();
-				
-				autobind("stability_of_*_in_" + R, vx.get(), vy.get());
-				autoapply(name(-1));
-				
-				conclude();
+				autobindTrim("stability_of_*_in_" + R, vx.get(), vy.get());
 				
 				return true;
 			}));
@@ -312,12 +304,18 @@ public final class ScalarAlgebra {
 			final Variable vy = new Variable("y");
 			
 			hintAutodeduce(tryMatch($($(vx, "/", vy), IN, R), (e, m) -> {
-				subdeduction();
+				autobindTrim("stability_of_/_in_" + R, vx.get(), vy.get());
 				
-				autobind("stability_of_/_in_" + R, vx.get(), vy.get());
-				autoapply(name(-1));
-				
-				conclude();
+				return true;
+			}));
+		}
+		
+		{
+			final Variable vx = new Variable("x");
+			final Variable vy = new Variable("y");
+			
+			hintAutodeduce(tryMatch($($(vx, "^", vy), IN, R), (e, m) -> {
+				autobindTrim("stability_of_^_in_" + R, vx.get(), vy.get());
 				
 				return true;
 			}));
@@ -415,7 +413,7 @@ public final class ScalarAlgebra {
 				return true;
 			}
 			
-			Boolean result = null;
+			Boolean result;
 			
 			result = tryAdditionAssociativity(vx, vy, vz, va, vb, vax, vby, e);
 			
@@ -559,8 +557,149 @@ public final class ScalarAlgebra {
 		 * 
 		 */
 		return (e, m) -> {
+			final Variable vx = new Variable("x");
+			final Variable vy = new Variable("y");
+			final Variable vz = new Variable("z");
+			final Variable va = new Variable("a");
+			final Variable vb = new Variable("b");
+			
+			final Object vxa = $(vx, "^", va);
+			final Object vxb = $(vx, "^", vb);
+			final Object vyb = $(vy, "^", vb);
+			
+			if (match($($(vx, "*", vy), "*", vz), e)) {
+				try {
+					autobindTrim("associativity_of_*_*_in_" + R, vx.get(), vy.get(), vz.get());
+					
+					return true;
+				} catch (final AbortException exception) {
+					throw exception;
+				} catch (final Exception exception) {
+					ignore(exception);
+				}
+			}
+			
+			Boolean result;
+			
+			result = tryMultiplicationAssociativity(vx, vz, va, vb, vxa, vxb, e);
+			
+			if (result != null) {
+				return result;
+			}
+			
+			result = tryMultiplicationAssociativity(vx, vz, va, 1, vxa, vx, e);
+			
+			if (result != null) {
+				return result;
+			}
+			
+			result = tryMultiplicationAssociativity(vx, vz, 1, vb, vx, vxb, e);
+			
+			if (result != null) {
+				return result;
+			}
+			
+			result = tryMultiplicationAssociativity(vx, vz, 1, 1, vx, vx, e);
+			
+			if (result != null) {
+				return result;
+			}
+			
+			result = tryMultiplicationAssociativity(vx, vy, vz, 1, 1, vx, vy, e);
+			
+			if (result != null) {
+				return result;
+			}
+			
 			return false;
 		};
+	}
+	
+	public static final Boolean tryMultiplicationAssociativity(final Object vx, final Object vz,
+			final Object va, final Object vb, final Object vxa, final Object vxb, final Object expression) {
+		if (match($(vxa, "*", $(vxb, "*", vz)), expression)) {
+			final Object _x = get(vx);
+			final Object _a = get(va);
+			final Object _b = get(vb);
+			final Object _xa = get(vxa);
+			final Object _xb = get(vxb);
+			final Object _z = get(vz);
+			final Deduction deduction = subdeduction();
+			
+			try {
+				bind("identity", expression);
+				autobindTrim("associativity_of_*_*_in_" + R, _xa, _xb, _z);
+				rewriteRight(name(-2), name(-1), 1);
+				
+				if ("1".equals(va.toString()) && "1".equals(vb.toString())) {
+					autobindTrim("definition_of_x^1", _x);
+					rewriteRight(name(-2), name(-1), 2, 3);
+				} else if ("1".equals(va.toString())) {
+					autobindTrim("definition_of_x^1", _x);
+					rewriteRight(name(-2), name(-1), 2);
+				} else if ("1".equals(vb.toString())) {
+					autobindTrim("definition_of_x^1", _x);
+					rewriteRight(name(-2), name(-1), 3);
+				}
+				
+				autobindTrim("simplification_of_x^a*x^b", _x, _a, _b);
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+				
+				return true;
+			} catch (final AbortException exception) {
+				throw exception;
+			} catch (final Exception exception) {
+				ignore(exception);
+				
+				popTo(deduction.getParent());
+			}
+		}
+		
+		return null;
+	}
+	
+	public static final Boolean tryMultiplicationAssociativity(final Object vx, final Object vy, final Object vz,
+			final Object va, final Object vb, final Object vxa, final Object vyb, final Object expression) {
+		if (match($(vyb, "*", $(vxa, "*", vz)), expression)) {
+			final Object _x = get(vx);
+			final Object _y = get(vy);
+			final Object _z = get(vz);
+			final Object _a = get(va);
+			final Object _b = get(vb);
+			final Object _xa = get(vxa);
+			final Object _yb = get(vyb);
+			
+			if (_a instanceof Number && _b instanceof Number) {
+				if (_x.toString().compareTo(_y.toString()) < 0) {
+					final Deduction deduction = subdeduction();
+					
+					try {
+						bind("identity", expression);
+						autobindTrim("associativity_of_*_*_in_" + R, _yb, _xa, _z);
+						rewriteRight(name(-2), name(-1), 1);
+						
+						autobindTrim("commutativity_of_*_in_" + R, _yb, _xa);
+						rewrite(name(-2), name(-1));
+						
+						conclude();
+						
+						return true;
+					} catch (final AbortException exception) {
+						throw exception;
+					} catch (final Exception exception) {
+						ignore(exception);
+						
+						popTo(deduction.getParent());
+					}
+				}
+				
+				return false;
+			}
+		}
+		
+		return null;
 	}
 	
 	public static final TryRule<Object> newAssociativitySimplificationRule() {
