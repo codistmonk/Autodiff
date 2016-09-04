@@ -53,7 +53,7 @@ public final class Rules<T, R> implements Rule<T, R>, BiFunction<T, Map<Variable
 	
 	@Deprecated
 	public final void add(final Predicate<T> predicate, final Application<T, R> application) {
-		this.add((BiFunction<T, Map<Variable, Object>, Result<R>>) new SimpleRule<>(predicate, application));
+		this.add(new SimpleRule<>(predicate, application));
 	}
 	
 	@Override

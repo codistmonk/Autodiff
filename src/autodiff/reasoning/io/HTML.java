@@ -125,12 +125,12 @@ public final class HTML implements Deduction.Processor {
 		
 		@Override
 		public final Object visit(final Object expression) {
-			return this.formatterRules.applyTo(expression);
+			return this.formatterRules.apply(expression);
 		}
 		
 		@Override
 		public final Object visit(final List<?> expression) {
-			return this.formatterRules.applyTo(ExpressionRewriter.super.visit(expression));
+			return this.formatterRules.apply(ExpressionRewriter.super.visit(expression));
 		}
 		
 		private static final long serialVersionUID = 3835349443395647970L;

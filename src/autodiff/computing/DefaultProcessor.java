@@ -22,7 +22,6 @@ import autodiff.reasoning.expressions.Expressions;
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.rules.Rules;
-import autodiff.rules.Variable;
 import autodiff.rules.Rules.Result;
 import autodiff.rules.PatternPredicate;
 

@@ -443,7 +443,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 		public final Object visit(final List<?> expression) {
 			final List<Object> arguments = expression.stream().map(this).collect(toList());
 			
-			return this.rules.applyTo(arguments);
+			return this.rules.apply(arguments);
 		}
 		
 		private static final long serialVersionUID = -9089588808047854990L;

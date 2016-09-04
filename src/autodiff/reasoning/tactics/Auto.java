@@ -18,7 +18,6 @@ import autodiff.rules.Variable;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.function.BiFunction;
 
 import multij.tools.IllegalInstantiationException;
 
@@ -36,11 +35,11 @@ public final class Auto {
 	private static final Map<Deduction, Rules<Object, Boolean>> autobindRules = new WeakHashMap<>();
 	
 	public static final void hintAutodeduce(final TryRule<Object> rule) {
-		autodeduceRules.computeIfAbsent(deduction(), __ -> new Rules<>()).add((BiFunction) rule);
+		autodeduceRules.computeIfAbsent(deduction(), __ -> new Rules<>()).add(rule);
 	}
 	
 	public static final void hintAutobind(final TryRule<Object> rule) {
-		autobindRules.computeIfAbsent(deduction(), __ -> new Rules<>()).add((BiFunction) rule);
+		autobindRules.computeIfAbsent(deduction(), __ -> new Rules<>()).add(rule);
 	}
 	
 	public static final void autodeduce(final Object proposition) {
@@ -259,7 +258,7 @@ public final class Auto {
 		}
 		
 		public final Simplifier add(final TryRule<Object> rule) {
-			this.getRules().add((BiFunction) rule);
+			this.getRules().add(rule);
 			
 			return this;
 		}
@@ -302,7 +301,7 @@ public final class Auto {
 			final Deduction deduction = subdeduction();
 			
 			try {
-				if (this.getRules().applyTo(expression)) {
+				if (this.getRules().apply(expression)) {
 					if (Mode.DEFINE.equals(this.getMode())) {
 						final int targets = countIn(proposition(-2), left(proposition(-1)));
 						final int leftTargets = countIn(left(proposition(-2)), left(proposition(-1)));
