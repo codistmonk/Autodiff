@@ -3,6 +3,9 @@ package autodiff.rules;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiFunction;
+
+import autodiff.rules.Rules.Result;
 
 /**
  * @author codistmonk (creation 2015-12-07)
@@ -10,7 +13,13 @@ import java.util.Map;
  * @param <T>
  * @param <R>
  */
-public abstract interface Rule<T, R> extends Serializable {
+@Deprecated
+public abstract interface Rule<T, R> extends Serializable, BiFunction<T, Map<Variable, Object>, Rules.Result<R>> {
+	
+	@Override
+	public default Result<R> apply(final T t, final Map<Variable, Object> u) {
+		return this.test(t, u) ? new Result<>(this.applyTo(t, u)) : null;
+	}
 	
 	public default boolean test(final T object) {
 		return this.test(object, new HashMap<>());

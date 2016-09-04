@@ -11,6 +11,7 @@ import static multij.tools.Tools.append;
 import autodiff.reasoning.tactics.Goal;
 import autodiff.rules.Rules;
 import autodiff.rules.Variable;
+import autodiff.rules.Rules.Result;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 import multij.tools.IllegalInstantiationException;
 
@@ -323,10 +325,10 @@ public final class Sequences {
 			final CaseDescription c = newSequenceAppendCase0();
 			final Map<String, Object> v = c.getVariables();
 			
-			rules.add(rule($(v.get("s"), c.getConditions(), v.get("y")), (__, m) -> {
+			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(v.get("s"), c.getConditions(), v.get("y")), (__, m) -> {
 				ebindTrim("definition_of_sequence_append_0", v.values().stream().map(m::get).toArray());
 				
-				return null;
+				return (Void) null;
 			}));
 		}
 		
@@ -334,10 +336,10 @@ public final class Sequences {
 			final CaseDescription c = newSequenceAppendCase1();
 			final Map<String, Object> v = c.getVariables();
 			
-			rules.add(rule($(v.get("s"), c.getConditions(), v.get("y")), (__, m) -> {
+			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(v.get("s"), c.getConditions(), v.get("y")), (__, m) -> {
 				ebindTrim("definition_of_sequence_append_1", v.values().stream().map(m::get).toArray());
 				
-				return null;
+				return (Void) null;
 			}));
 		}
 		
@@ -345,7 +347,7 @@ public final class Sequences {
 			final CaseDescription c = newSequenceAppendCase2();
 			final Map<String, Object> v = c.getVariables();
 			
-			rules.add(rule($(v.get("s"), c.getConditions(), v.get("y")), (__, m) -> {
+			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(v.get("s"), c.getConditions(), v.get("y")), (__, m) -> {
 				{
 					subdeduction();
 					
@@ -360,14 +362,14 @@ public final class Sequences {
 					conclude();
 				}
 				
-				return null;
+				return (Void) null;
 			}));
 		}
 		
 		{
 			subdeduction(propositionName);
 			
-			rules.applyTo($(s, $1($(x, "=", x)), y));
+			rules.apply($(s, $1($(x, "=", x)), y));
 			
 			conclude();
 		}
@@ -380,10 +382,10 @@ public final class Sequences {
 			final CaseDescription c = newSequenceSubappendCase0();
 			final Map<String, Object> v = c.getVariables();
 			
-			rules.add(rule($(v.get("s"), c.getConditions(), v.get("y")), (__, m) -> {
+			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(v.get("s"), c.getConditions(), v.get("y")), (__, m) -> {
 				ebindTrim("definition_of_sequence_subappend_0", v.values().stream().map(m::get).toArray());
 				
-				return null;
+				return (Void) null;
 			}));
 		}
 		
@@ -391,7 +393,7 @@ public final class Sequences {
 			final CaseDescription c = newSequenceSubappendCase1();
 			final Map<String, Object> v = c.getVariables();
 			
-			rules.add(rule($(v.get("s"), c.getConditions(), v.get("y")), (__, m) -> {
+			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(v.get("s"), c.getConditions(), v.get("y")), (__, m) -> {
 				{
 					subdeduction();
 					
@@ -406,11 +408,11 @@ public final class Sequences {
 					conclude();
 				}
 				
-				return null;
+				return (Void) null;
 			}));
 		}
 		
-		rules.applyTo($(s, $1($(x, "=", x)), y));
+		rules.apply($(s, $1($(x, "=", x)), y));
 	}
 	
 	public static final CaseDescription newSequenceConcatenateCase0() {
@@ -699,10 +701,10 @@ public final class Sequences {
 			final Object _s = v.get("s");
 			final Object _y = v.get("y");
 			
-			rules.add(rule($(_s, first(c.getConditions()), $(_y, "=", _y)), (__, m) -> {
+			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(_s, first(c.getConditions()), $(_y, "=", _y)), (__, m) -> {
 				ebindTrim("definition_of_sequence_concatenate_0", v.values().stream().map(m::get).toArray());
 				
-				return null;
+				return (Void) null;
 			}));
 		}
 		
@@ -713,10 +715,10 @@ public final class Sequences {
 			final Object _s = v.get("s");
 			final Object _x = v.get("x");
 			
-			rules.add(rule($(_s, $(_x, "=", _x), first(c.getConditions())), (__, m) -> {
+			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(_s, $(_x, "=", _x), first(c.getConditions())), (__, m) -> {
 				ebindTrim("definition_of_sequence_concatenate_1", v.values().stream().map(m::get).toArray());
 				
-				return null;
+				return (Void) null;
 			}));
 		}
 		
@@ -728,7 +730,7 @@ public final class Sequences {
 			final Object _x = v.get("x");
 			final Object _y0 = v.get("y0");
 			
-			rules.add(rule($(_s, $(_x, "=", _x), first(c.getConditions())), (__, m) -> {
+			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(_s, $(_x, "=", _x), first(c.getConditions())), (__, m) -> {
 				{
 					subdeduction();
 					
@@ -739,7 +741,7 @@ public final class Sequences {
 					conclude();
 				}
 				
-				return null;
+				return (Void) null;
 			}));
 		}
 		
@@ -747,10 +749,10 @@ public final class Sequences {
 			final CaseDescription c = newSequenceConcatenateCase3();
 			final Map<String, Object> v = c.getVariables();
 			
-			rules.add(rule($(v.get("s"), first(c.getConditions()), second(c.getConditions())), (__, m) -> {
+			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(v.get("s"), first(c.getConditions()), second(c.getConditions())), (__, m) -> {
 				ebindTrim("definition_of_sequence_concatenate_3", v.values().stream().map(m::get).toArray());
 				
-				return null;
+				return (Void) null;
 			}));
 		}
 		
@@ -762,7 +764,7 @@ public final class Sequences {
 			final Object _x1 = v.get("x1");
 			final Object _y = v.get("y");
 			
-			rules.add(rule($(_s, first(c.getConditions()), second(c.getConditions())), (__, m) -> {
+			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(_s, first(c.getConditions()), second(c.getConditions())), (__, m) -> {
 				{
 					subdeduction();
 					
@@ -773,14 +775,14 @@ public final class Sequences {
 					conclude();
 				}
 				
-				return null;
+				return (Void) null;
 			}));
 		}
 		
 		{
 			subdeduction(propositionName);
 			
-			rules.applyTo($(s, $(x, "=", x), $(y, "=", y)));
+			rules.apply($(s, $(x, "=", x), $(y, "=", y)));
 			
 			conclude();
 		}
@@ -797,10 +799,10 @@ public final class Sequences {
 			final CaseDescription c = newSequenceSubconcatenateCase0();
 			final Map<String, Object> v = c.getVariables();
 			
-			rules.add(rule($(v.get("s"), first(c.getConditions()), second(c.getConditions())), (__, m) -> {
+			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(v.get("s"), first(c.getConditions()), second(c.getConditions())), (__, m) -> {
 				ebindTrim("definition_of_sequence_subconcatenate_0", v.values().stream().map(m::get).toArray());
 				
-				return null;
+				return (Void) null;
 			}));
 		}
 		
@@ -811,7 +813,7 @@ public final class Sequences {
 			final Object _x1 = v.get("x1");
 			final Object _y = v.get("y");
 			
-			rules.add(rule($(_s, first(c.getConditions()), $(_y, "=", _y)), (__, m) -> {
+			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(_s, first(c.getConditions()), $(_y, "=", _y)), (__, m) -> {
 				{
 					subdeduction();
 					
@@ -822,14 +824,14 @@ public final class Sequences {
 					conclude();
 				}
 				
-				return null;
+				return (Void) null;
 			}));
 		}
 		
 		{
 			subdeduction(propositionName);
 			
-			rules.applyTo($(s, $(x, "=", x), $(y, "=", y)));
+			rules.apply($(s, $(x, "=", x), $(y, "=", y)));
 			
 			conclude();
 		}

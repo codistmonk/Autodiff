@@ -3,6 +3,8 @@ package autodiff.rules;
 import java.io.Serializable;
 import java.util.Map;
 
+import autodiff.rules.Rules.Result;
+
 /**
  * @author codistmonk (creation 2015-12-07)
  *
@@ -29,11 +31,14 @@ public final class SimpleRule<T, R> implements Rule<T, R> {
 	}
 	
 	@Override
+	public final Result<R> apply(final T t, final Map<Variable, Object> u) {
+		return this.test(t, u) ? new Result<>(this.applyTo(t, u)) : null;
+	}
+	
 	public final boolean test(final T object, final Map<Variable, Object> mapping) {
 		return this.getPredicate().test(object, mapping);
 	}
 	
-	@Override
 	public final R applyTo(final T object, final Map<Variable, Object> mapping) {
 		return this.getApplication().applyTo(object, mapping);
 	}

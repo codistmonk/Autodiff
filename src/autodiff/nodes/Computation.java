@@ -24,12 +24,14 @@ import autodiff.rules.Rules;
 import autodiff.rules.SimpleRule;
 import autodiff.rules.TryRule;
 import autodiff.rules.Variable;
+import autodiff.rules.Rules.Result;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 /**
  * @author codistmonk (creation 2016-08-09)
@@ -384,23 +386,23 @@ public final class Computation extends AbstractNode<Computation> {
 		final Rules<Object, Void> rules = new Rules<>();
 		
 		{
-			rules.add(rule($(PI, $()),
+			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(PI, $()),
 					(_1, m) -> {
 						// NOP
 						
-						return null;
+						return (Void) null;
 					}));
 		}
 		
 		{
 			final Variable _x0 = new Variable("x0");
 			
-			rules.add(rule($(PI, $1(_x0)),
+			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(PI, $1(_x0)),
 					(_1, m) -> {
 						ebindTrim("definition_of_vector_reduction_by_product_1",
 								m.get(_x0));
 						
-						return null;
+						return (Void) null;
 					}));
 		}
 		
@@ -409,7 +411,7 @@ public final class Computation extends AbstractNode<Computation> {
 			final Variable _x0 = new Variable("x0");
 			final Variable _x1 = new Variable("x1");
 			
-			rules.add(rule($(PI, $(_x0, $(_s, _x1))),
+			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(PI, $(_x0, $(_s, _x1))),
 					(_1, m) -> {
 						{
 							subdeduction();
@@ -422,7 +424,7 @@ public final class Computation extends AbstractNode<Computation> {
 							conclude();
 						}
 						
-						return null;
+						return (Void) null;
 					}));
 		}
 		
@@ -432,7 +434,7 @@ public final class Computation extends AbstractNode<Computation> {
 			final Variable _x1 = new Variable("x1");
 			final Variable _x2 = new Variable("x2");
 			
-			rules.add(rule($(PI, $(_x0, $(_s, _x1, _x2))),
+			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(PI, $(_x0, $(_s, _x1, _x2))),
 					(_1, m) -> {
 						{
 							subdeduction();
@@ -449,11 +451,11 @@ public final class Computation extends AbstractNode<Computation> {
 							conclude();
 						}
 						
-						return null;
+						return (Void) null;
 					}));
 		}
 		
-		rules.applyTo(formula);
+		rules.apply(formula);
 	}
 	
 	public static final Computation ones() {
@@ -1950,7 +1952,7 @@ public final class Computation extends AbstractNode<Computation> {
 				final Variable vi = new Variable("i");
 				final Variable vn = new Variable("n");
 				
-				this.rules.add(rule($("to_CL", $(p(vX), "_", $(vi, "<", vn))), (__, m) -> {
+				this.rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($("to_CL", $(p(vX), "_", $(vi, "<", vn))), (__, m) -> {
 					final Object _X = m.get(vX);
 					final Object _i = m.get(vi);
 					final Object _n = m.get(vn);
@@ -1996,7 +1998,7 @@ public final class Computation extends AbstractNode<Computation> {
 						
 						eapply(name(-2));
 						
-						this.rules.applyTo($("to_CL", _X));
+						this.compute($("to_CL", _X));
 						rewrite(name(-2), name(-1));
 						
 						substitute(_X, map(_i, "gid"));
@@ -2005,23 +2007,23 @@ public final class Computation extends AbstractNode<Computation> {
 						conclude();
 					}
 					
-					return null;
+					return (Void) null;
 				}));
 			}
 			
 			{
 				final Variable vX = new Variable("X");
 				
-				this.rules.add(rule($("to_CL", vX), (__, m) -> {
+				this.rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($("to_CL", vX), (__, m) -> {
 					ebindTrim("definition_of_real_to_CL", m.get(vX));
 					
-					return null;
+					return (Void) null;
 				}));
 			}
 		}
 		
 		public final void compute(final Object proposition) {
-			this.rules.applyTo(proposition);
+			this.rules.apply(proposition);
 		}
 		
 		private static final long serialVersionUID = 3834061141856389415L;
@@ -2041,7 +2043,7 @@ public final class Computation extends AbstractNode<Computation> {
 				final Variable vi = new Variable("i");
 				final Variable vn = new Variable("n");
 				
-				this.rules.add(rule($("to_java", $(p(vX), "_", $(vi, "<", vn))), (__, m) -> {
+				this.rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($("to_java", $(p(vX), "_", $(vi, "<", vn))), (__, m) -> {
 					final Object _X = m.get(vX);
 					final Object _i = m.get(vi);
 					final Object _n = m.get(vn);
@@ -2088,13 +2090,13 @@ public final class Computation extends AbstractNode<Computation> {
 						eapply(name(-2));
 						
 						{
-							this.rules.applyTo($("to_java", _n));
+							this.compute($("to_java", _n));
 							
 							rewrite(name(-2), name(-1));
 						}
 						
 						{
-							this.rules.applyTo($("to_java", _X));
+							this.compute($("to_java", _X));
 							
 							rewrite(name(-2), name(-1));
 						}
@@ -2102,23 +2104,23 @@ public final class Computation extends AbstractNode<Computation> {
 						conclude();
 					}
 					
-					return null;
+					return (Void) null;
 				}));
 			}
 			
 			{
 				final Variable vX = new Variable("X");
 				
-				this.rules.add(rule($("to_java", vX), (__, m) -> {
+				this.rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($("to_java", vX), (__, m) -> {
 					ebindTrim("definition_of_real_to_java", m.get(vX));
 					
-					return null;
+					return (Void) null;
 				}));
 			}
 		}
 		
 		public final void compute(final Object expression) {
-			this.rules.applyTo(expression);
+			this.rules.apply(expression);
 		}
 		
 		private static final long serialVersionUID = 8767164056521982370L;

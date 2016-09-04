@@ -17,6 +17,7 @@ import autodiff.reasoning.tactics.Stack.AbortException;
 import autodiff.reasoning.tactics.Stack.PropositionDescription;
 import autodiff.rules.Rules;
 import autodiff.rules.Variable;
+import autodiff.rules.Rules.Result;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,6 +25,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
 
 import multij.tools.IllegalInstantiationException;
 import multij.tools.Pair;
@@ -603,7 +606,7 @@ public final class Sets {
 		{
 			final Variable _x = new Variable("x");
 			
-			rules.add(rule($(_x, "_", 0), (__, m) -> {
+			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(_x, "_", 0), (__, m) -> {
 				{
 					subdeduction();
 					
@@ -614,7 +617,7 @@ public final class Sets {
 					conclude();
 				}
 				
-				return null;
+				return (Void) null;
 			}));
 		}
 		
@@ -622,7 +625,7 @@ public final class Sets {
 			final Variable _x = new Variable("x");
 			final Variable _i = new Variable("i");
 			
-			rules.add(rule($(_x, "_", _i), (__, m) -> {
+			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(_x, "_", _i), (__, m) -> {
 				{
 					subdeduction();
 					
@@ -638,11 +641,11 @@ public final class Sets {
 					conclude();
 				}
 				
-				return null;
+				return (Void) null;
 			}));
 		}
 		
-		rules.applyTo(formula);
+		rules.apply(formula);
 	}
 	
 	public static final Object pp(final Object... set) {
@@ -934,7 +937,7 @@ public final class Sets {
 			final Variable vx = new Variable("x");
 			final Variable vy = new Variable("y");
 			
-			rules.add(rule($(vx, "+", vy), (e, m) -> {
+			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(vx, "+", vy), (e, m) -> {
 				{
 					subdeduction();
 					
@@ -952,11 +955,11 @@ public final class Sets {
 					}
 				}
 				
-				return null;
+				return (Void) null;
 			}));
 		}
 		
-		rules.applyTo(left(proposition));
+		rules.apply(left(proposition));
 		
 		result = new PropositionDescription().setIndex(-1).setName(name(-1)).setProposition(proposition(-1));
 		

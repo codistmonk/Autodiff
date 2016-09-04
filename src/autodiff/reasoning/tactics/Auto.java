@@ -18,6 +18,7 @@ import autodiff.rules.Variable;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.function.BiFunction;
 
 import multij.tools.IllegalInstantiationException;
 
@@ -35,11 +36,11 @@ public final class Auto {
 	private static final Map<Deduction, Rules<Object, Boolean>> autobindRules = new WeakHashMap<>();
 	
 	public static final void hintAutodeduce(final TryRule<Object> rule) {
-		autodeduceRules.computeIfAbsent(deduction(), __ -> new Rules<>()).add(rule);
+		autodeduceRules.computeIfAbsent(deduction(), __ -> new Rules<>()).add((BiFunction) rule);
 	}
 	
 	public static final void hintAutobind(final TryRule<Object> rule) {
-		autobindRules.computeIfAbsent(deduction(), __ -> new Rules<>()).add(rule);
+		autobindRules.computeIfAbsent(deduction(), __ -> new Rules<>()).add((BiFunction) rule);
 	}
 	
 	public static final void autodeduce(final Object proposition) {
@@ -71,7 +72,8 @@ public final class Auto {
 				
 				for (Deduction d = deduction(); d != null; d = d.getParent()) {
 					try {
-						autodeduceRules.get(d).applyTo(proposition);
+//						autodeduceRules.get(d).applyTo(proposition);
+						autodeduceRules.get(d).apply(proposition);
 						
 						conclude();
 						
@@ -140,7 +142,8 @@ public final class Auto {
 				
 				for (Deduction d = deduction(); d != null; d = d.getParent()) {
 					try {
-						autobindRules.get(d).applyTo(proposition(lastName));
+//						autobindRules.get(d).applyTo(proposition(lastName));
+						autobindRules.get(d).apply(proposition(lastName));
 						rewrite(lastName, name(-1));
 						bind(name(-1), object);
 						ok = true;
@@ -256,7 +259,7 @@ public final class Auto {
 		}
 		
 		public final Simplifier add(final TryRule<Object> rule) {
-			this.getRules().add(rule);
+			this.getRules().add((BiFunction) rule);
 			
 			return this;
 		}

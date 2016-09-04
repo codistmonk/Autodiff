@@ -28,11 +28,15 @@ public final class ExpressionContext implements Serializable {
 	}
 	
 	public final Object simplify(final Object expression) {
-		return this.getSimplificationRules().applyTo(expression, expression);
+//		return this.getSimplificationRules().applyTo(expression, expression);
+		// TODO
+		return null;
 	}
 	
 	public final Object getTypeOf(final Object expression) {
-		return this.getTypeRules().applyTo(expression, "Undefined");
+//		return this.getTypeRules().applyTo(expression, "Undefined");
+		// TODO
+		return null;
 	}
 	
 	public final Object $(final Object... objects) {
