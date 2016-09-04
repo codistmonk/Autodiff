@@ -17,7 +17,6 @@ import autodiff.reasoning.tactics.Stack.AbortException;
 import autodiff.reasoning.tactics.Stack.PropositionDescription;
 import autodiff.rules.Rules;
 import autodiff.rules.Variable;
-import autodiff.rules.Rules.Result;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,8 +24,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
 
 import multij.tools.IllegalInstantiationException;
 import multij.tools.Pair;
@@ -606,7 +603,7 @@ public final class Sets {
 		{
 			final Variable _x = new Variable("x");
 			
-			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(_x, "_", 0), (__, m) -> {
+			rules.add(rule($(_x, "_", 0), (__, m) -> {
 				{
 					subdeduction();
 					
@@ -617,7 +614,7 @@ public final class Sets {
 					conclude();
 				}
 				
-				return (Void) null;
+				return null;
 			}));
 		}
 		
@@ -625,7 +622,7 @@ public final class Sets {
 			final Variable _x = new Variable("x");
 			final Variable _i = new Variable("i");
 			
-			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(_x, "_", _i), (__, m) -> {
+			rules.add(rule($(_x, "_", _i), (__, m) -> {
 				{
 					subdeduction();
 					
@@ -641,7 +638,7 @@ public final class Sets {
 					conclude();
 				}
 				
-				return (Void) null;
+				return null;
 			}));
 		}
 		
@@ -937,7 +934,7 @@ public final class Sets {
 			final Variable vx = new Variable("x");
 			final Variable vy = new Variable("y");
 			
-			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(vx, "+", vy), (e, m) -> {
+			rules.add(rule($(vx, "+", vy), (e, m) -> {
 				{
 					subdeduction();
 					
@@ -955,7 +952,7 @@ public final class Sets {
 					}
 				}
 				
-				return (Void) null;
+				return null;
 			}));
 		}
 		
