@@ -11,8 +11,8 @@ import static autodiff.reasoning.test.BasicsTest.build;
 import autodiff.reasoning.deductions.ScalarAlgebra;
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.tactics.Goal;
-import multij.tools.Tools;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -75,6 +75,28 @@ public final class ScalarAlgebraTest {
 				suppose($(_b, IN, N));
 				
 				testAutodeduce($($($($(_a, "+", 1), "*", $(_b, "-", 2)), "/", 6), IN, R));
+			}
+			
+		});
+	}
+	
+	@Test
+	@Ignore
+	public final void testFractions1() {
+		build(new Runnable() {
+			
+			@Override
+			public final void run() {
+				ScalarAlgebra.load();
+				
+				final Object _x = $new("x");
+				
+				suppose($(_x, IN, R));
+				
+				testCanonicalize($($(1, "/", 3), "+", $(2, "/", 3)), 1);
+				testCanonicalize($($(1, "/", 3), "*", 3), 1);
+				testCanonicalize($(2, "/", 6), $(1, "/", 3));
+				testCanonicalize($(_x, "/", 3), $($(1, "/", 3), "*", _x));
 			}
 			
 		});
