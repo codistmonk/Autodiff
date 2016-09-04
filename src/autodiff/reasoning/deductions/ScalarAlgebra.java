@@ -445,7 +445,10 @@ public final class ScalarAlgebra {
 			final Object _a = get(va);
 			final Object _b = get(vb);
 			
-			if (!"1".equals(va.toString()) && !"1".equals(vb.toString())) {
+			final boolean vaIs1 = "1".equals(va.toString());
+			final boolean vbIs1 = "1".equals(vb.toString());
+			
+			if (!vaIs1 && !vbIs1) {
 				try {
 					autobindTrim("simplification_of_a*x+b*x", _x, _a, _b);
 					
@@ -461,13 +464,13 @@ public final class ScalarAlgebra {
 				try {
 					bind("identity", expression);
 					
-					if ("1".equals(va.toString()) && "1".equals(vb.toString())) {
+					if (vaIs1 && vbIs1) {
 						autobindTrim("neutrality_of_1", _x);
 						rewriteRight(name(-2), name(-1), 2, 3);
-					} else if ("1".equals(va.toString())) {
+					} else if (vaIs1) {
 						autobindTrim("neutrality_of_1", _x);
 						rewriteRight(name(-2), name(-1), 2);
-					} else if ("1".equals(vb.toString())) {
+					} else if (vbIs1) {
 						autobindTrim("neutrality_of_1", _x);
 						rewriteRight(name(-2), name(-1), 3);
 					}
@@ -508,7 +511,7 @@ public final class ScalarAlgebra {
 					return null;
 				}
 				
-				if (_x.toString().compareTo(_y.toString()) < 0) {
+				if (compare(_x, _y) < 0) {
 					try {
 						autobindTrim("commutativity_of_+_in_" + R, _by, _ax);
 						
@@ -525,6 +528,25 @@ public final class ScalarAlgebra {
 		}
 		
 		return null;
+	}
+	
+	public static final int compare(final Object object1, final Object object2) {
+		final Number n1 = cast(Number.class, object1);
+		final Number n2 = cast(Number.class, object2);
+		
+		if (n1 != null && n2 != null) {
+			return 0;
+		}
+		
+		if (n1 != null) {
+			return -1;
+		}
+		
+		if (n2 != null) {
+			return 1;
+		}
+		
+		return object1.toString().compareTo(object2.toString());
 	}
 	
 	public static final TryRule<Object> newAdditionAssociativitySimplificationRule() {
@@ -632,7 +654,7 @@ public final class ScalarAlgebra {
 			final Object _by = get(vby);
 			
 			if (_a instanceof Number && _b instanceof Number) {
-				if (_x.toString().compareTo(_y.toString()) < 0) {
+				if (compare(_x, _y) < 0) {
 					final Deduction deduction = subdeduction();
 					
 					try {
@@ -678,13 +700,16 @@ public final class ScalarAlgebra {
 				autobindTrim("associativity_of_+_+_in_" + R, _ax, _bx, _z);
 				rewriteRight(name(-2), name(-1), 1);
 				
-				if ("1".equals(va.toString()) && "1".equals(vb.toString())) {
+				final boolean vaIs1 = "1".equals(va.toString());
+				final boolean vbIs1 = "1".equals(vb.toString());
+				
+				if (vaIs1 && vbIs1) {
 					autobindTrim("neutrality_of_1", _x);
 					rewriteRight(name(-2), name(-1), 2, 3);
-				} else if ("1".equals(va.toString())) {
+				} else if (vaIs1) {
 					autobindTrim("neutrality_of_1", _x);
 					rewriteRight(name(-2), name(-1), 2);
-				} else if ("1".equals(vb.toString())) {
+				} else if (vbIs1) {
 					autobindTrim("neutrality_of_1", _x);
 					rewriteRight(name(-2), name(-1), 3);
 				}
@@ -809,13 +834,16 @@ public final class ScalarAlgebra {
 				autobindTrim("associativity_of_*_*_in_" + R, _xa, _xb, _z);
 				rewriteRight(name(-2), name(-1), 1);
 				
-				if ("1".equals(va.toString()) && "1".equals(vb.toString())) {
+				final boolean vaIs1 = "1".equals(va.toString());
+				final boolean vbIs1 = "1".equals(vb.toString());
+				
+				if (vaIs1 && vbIs1) {
 					autobindTrim("definition_of_x^1", _x);
 					rewriteRight(name(-2), name(-1), 2, 3);
-				} else if ("1".equals(va.toString())) {
+				} else if (vaIs1) {
 					autobindTrim("definition_of_x^1", _x);
 					rewriteRight(name(-2), name(-1), 2);
-				} else if ("1".equals(vb.toString())) {
+				} else if (vbIs1) {
 					autobindTrim("definition_of_x^1", _x);
 					rewriteRight(name(-2), name(-1), 3);
 				}
@@ -850,7 +878,7 @@ public final class ScalarAlgebra {
 			final Object _yb = get(vyb);
 			
 			if (_a instanceof Number && _b instanceof Number) {
-				if (_x.toString().compareTo(_y.toString()) < 0) {
+				if (compare(_x, _y) < 0) {
 					final Deduction deduction = subdeduction();
 					
 					try {
@@ -961,7 +989,10 @@ public final class ScalarAlgebra {
 			final Object _a = get(va);
 			final Object _b = get(vb);
 			
-			if (!"1".equals(va.toString()) && !"1".equals(vb.toString())) {
+			final boolean vaIs1 = "1".equals(va.toString());
+			final boolean vbIs1 = "1".equals(vb.toString());
+			
+			if (!vaIs1 && !vbIs1) {
 				try {
 					autobindTrim("simplification_of_x^a*x^b", _x, _a, _b);
 					
@@ -977,13 +1008,13 @@ public final class ScalarAlgebra {
 				try {
 					bind("identity", expression);
 					
-					if ("1".equals(va.toString()) && "1".equals(vb.toString())) {
+					if (vaIs1 && vbIs1) {
 						autobindTrim("definition_of_x^1", _x);
 						rewriteRight(name(-2), name(-1), 2, 3);
-					} else if ("1".equals(va.toString())) {
+					} else if (vaIs1) {
 						autobindTrim("definition_of_x^1", _x);
 						rewriteRight(name(-2), name(-1), 2);
-					} else if ("1".equals(vb.toString())) {
+					} else if (vbIs1) {
 						autobindTrim("definition_of_x^1", _x);
 						rewriteRight(name(-2), name(-1), 3);
 					}
@@ -1024,7 +1055,7 @@ public final class ScalarAlgebra {
 					return null;
 				}
 				
-				if (_x.toString().compareTo(_y.toString()) < 0) {
+				if (compare(_x, _y) < 0) {
 					try {
 						autobindTrim("commutativity_of_*_in_" + R, _by, _ax);
 						
