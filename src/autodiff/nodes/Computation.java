@@ -10,7 +10,6 @@ import static autodiff.reasoning.proofs.ElementaryVerification.*;
 import static autodiff.reasoning.tactics.Goal.*;
 import static autodiff.reasoning.tactics.PatternPredicate.rule;
 import static autodiff.reasoning.tactics.Stack.*;
-import static autodiff.rules.Variable.match;
 import static autodiff.rules.Variable.matchOrFail;
 import static multij.tools.Tools.*;
 
@@ -19,9 +18,11 @@ import autodiff.reasoning.deductions.Sets;
 import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
-import autodiff.rules.Rule;
+import autodiff.reasoning.tactics.Auto.Simplifier;
+import autodiff.reasoning.tactics.PatternMatching;
 import autodiff.rules.Rules;
 import autodiff.rules.SimpleRule;
+import autodiff.rules.TryRule;
 import autodiff.rules.Variable;
 
 import java.io.Serializable;
@@ -1582,7 +1583,7 @@ public final class Computation extends AbstractNode<Computation> {
 		.add(newForallInSimplificationRule())
 		.add(newForallIn2SimplificationRule())
 		.add(newForallIn3SimplificationRule())
-		.add(rule(new Variable("*"), (e, m) -> false))
+		.add(tryPattern(new Variable("*"), (e, m) -> false))
 		.simplifyCompletely(expression);
 	}
 	
@@ -1594,21 +1595,21 @@ public final class Computation extends AbstractNode<Computation> {
 		new Simplifier(mode)
 				.add(newElementarySimplificationRule())
 				.add(newSubstitutionSimplificationRule())
-				.add(rule(new Variable("*"), (e, m) -> false))
+				.add(tryPattern(new Variable("*"), (e, m) -> false))
 				.simplifyCompletely(proposition(-1));
 	}
 	
 	public static final void simplifySequenceAppendInLast() {
 		new Simplifier()
 				.add(newSequenceAppendSimplificationRule())
-				.add(rule(new Variable("*"), (e, m) -> false))
+				.add(tryPattern(new Variable("*"), (e, m) -> false))
 				.simplifyCompletely(proposition(-1));
 	}
 	
 	public static final void simplifySequenceConcatenateInLast() {
 		new Simplifier()
 				.add(newSequenceConcatenateSimplificationRule())
-				.add(rule(new Variable("*"), (e, m) -> false))
+				.add(tryPattern(new Variable("*"), (e, m) -> false))
 				.simplifyCompletely(proposition(-1));
 	}
 	
@@ -1622,37 +1623,27 @@ public final class Computation extends AbstractNode<Computation> {
 			final Variable vy = new Variable("y");
 			final Variable vz = new Variable("z");
 			
-			simplifier.add(new SimpleRule<>(
-					(e, m) -> {
-						if (match($($(vx, "+", vy), "+", vz), e)) {
-							final Object y = vy.get();
-							final Object z = vz.get();
-							final Number ny = cast(Number.class, y);
-							final Number nz = cast(Number.class, z);
-							
-							if (ny == null && nz != null) {
-								return true;
-							}
-							
-							if (ny == null && nz == null && y.toString().compareTo(z.toString()) > 0) {
-								return true;
-							}
-						}
-						
-						return false;
-					}, (e, m) -> {
-						{
-							subdeduction();	
-							
-							ebindTrim("associativity_of_addition", vx.get(), vy.get(), vz.get());
-							ebindTrim("commutativity_of_addition", vy.get(), vz.get());
-							rewrite(name(-2), name(-1));
-							
-							conclude();
-						}
-						
-						return true;
-					}));
+			simplifier.add(tryPattern($($(vx, "+", vy), "+", vz), (e, m) -> {
+				final Object y = vy.get();
+				final Object z = vz.get();
+				final Number ny = cast(Number.class, y);
+				final Number nz = cast(Number.class, z);
+				
+				if (ny == null && nz != null
+						|| ny == null && nz == null && y.toString().compareTo(z.toString()) > 0) {
+					subdeduction();	
+					
+					ebindTrim("associativity_of_addition", vx.get(), vy.get(), vz.get());
+					ebindTrim("commutativity_of_addition", vy.get(), vz.get());
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+					
+					return true;
+				}
+				
+				return false;
+			}));
 		}
 		
 		{
@@ -1660,268 +1651,130 @@ public final class Computation extends AbstractNode<Computation> {
 			final Variable vy = new Variable("y");
 			final Variable vz = new Variable("z");
 			
-			simplifier.add(new SimpleRule<>(
-					(e, m) -> {
-						if (match($(vx, "+", $(vy, "+", vz)), e)) {
-							return true;
-						}
-						
-						return false;
-					}, (e, m) -> {
-						{
-							subdeduction();	
-							
-							ebindTrim("associativity_of_addition", vx.get(), vy.get(), vz.get());
-							ebindTrim("commutativity_of_equality", left(proposition(-1)), right(proposition(-1)));
-							
-							conclude();	
-						}
-						
-						return true;
-					}));
+			simplifier.add(tryPattern($(vx, "+", $(vy, "+", vz)), (e, m) -> {
+				{
+					subdeduction();	
+					
+					ebindTrim("associativity_of_addition", vx.get(), vy.get(), vz.get());
+					ebindTrim("commutativity_of_equality", left(proposition(-1)), right(proposition(-1)));
+					
+					conclude();	
+				}
+				
+				return true;
+			}));
 		}
 		
 		{
 			final Variable vx = new Variable("x");
 			final Variable vy = new Variable("y");
 			
-			simplifier.add(new SimpleRule<>(
-					(e, m) -> {
-						if (match($($(vx, "-", vy)), e)) {
-							return true;
-						}
-						
-						return false;
-					}, (e, m) -> {
-						ebindTrim("definition_of_subtraction", vx.get(), vy.get());
-						
-						return true;
-					}));
+			simplifier.add(tryPattern($($(vx, "-", vy)), (e, m) -> {
+				ebindTrim("definition_of_subtraction", vx.get(), vy.get());
+				
+				return true;
+			}));
 		}
 		
 		{
 			final Variable vx = new Variable("x");
 			final Variable vy = new Variable("y");
 			
-			simplifier.add(new SimpleRule<>(
-					(e, m) -> {
-						if (match($($(vx, "+", vy)), e)) {
-							final Object x = vx.get();
-							final Object y = vy.get();
-							final Number nx = cast(Number.class, x);
-							final Number ny = cast(Number.class, y);
-							
-							if (nx == null && ny != null) {
-								return true;
-							}
-							
-							if (nx == null && ny == null && x.toString().compareTo(y.toString()) > 0) {
-								return true;
-							}
-						}
-						
-						return false;
-					}, (e, m) -> {
-						ebindTrim("commutativity_of_addition", vx.get(), vy.get());
-						
-						return true;
-					}));
+			simplifier.add(tryPattern($($(vx, "+", vy)), (e, m) -> {
+				final Object x = vx.get();
+				final Object y = vy.get();
+				final Number nx = cast(Number.class, x);
+				final Number ny = cast(Number.class, y);
+				
+				if (nx == null && ny != null
+						|| nx == null && ny == null && x.toString().compareTo(y.toString()) > 0) {
+					ebindTrim("commutativity_of_addition", vx.get(), vy.get());
+					
+					return true;
+				}
+				
+				return false;
+			}));
 		}
 		
-		simplifier.add(rule(new Variable("*"), (e, m) -> false));
+		simplifier.add(tryPattern(new Variable("*"), (e, m) -> false));
 		
 		simplifier.simplifyCompletely(proposition(-1));
 	}
 	
-	/**
-	 * @author codistmonk (creation 2016-08-21)
-	 */
-	public static final class Simplifier implements ExpressionVisitor<Boolean> {
-		
-		private final Rules<Object, Boolean> rules;
-		
-		private final Mode mode;
-		
-		public Simplifier() {
-			this(Mode.REWRITE);
-		}
-		
-		public Simplifier(final Mode mode) {
-			this.rules = new Rules<>();
-			this.mode = mode;
-		}
-		
-		public final Rules<Object, Boolean> getRules() {
-			return this.rules;
-		}
-		
-		public final Mode getMode() {
-			return this.mode;
-		}
-		
-		public final Simplifier add(final Rule<Object, Boolean> rule) {
-			this.getRules().add(rule);
-			
-			return this;
-		}
-		
-		public final void simplifyCompletely(final Object expression) {
-			subdeduction();
-			
-			if (this.apply(expression)) {
-				while (this.apply(proposition(-1))) {
-					// NOP
-				}
-			} else {
-				pop();
-			}
-			
-			conclude();
-		}
-		
-		@Override
-		public final Boolean visit(final Object expression) {
-			return this.tryRules(expression);
-		}
-		
-		@Override
-		public final Boolean visit(final List<?> expression) {
-			if (this.tryRules(expression)) {
-				return true;
-			}
-			
-			for (final Object subExpression : expression) {
-				if (this.apply(subExpression)) {
-					return true;
-				}
-			}
-			
-			return false;
-		}
-		
-		private final boolean tryRules(final Object expression) {
-			final Deduction deduction = subdeduction();
-			
-			try {
-				if (this.getRules().applyTo(expression)) {
-					if (Mode.DEFINE.equals(this.getMode())) {
-						final int targets = countIn(proposition(-2), left(proposition(-1)));
-						final int leftTargets = countIn(left(proposition(-2)), left(proposition(-1)));
-						
-						if (leftTargets < targets) {
-							final int[] rightTargets = new int[targets - leftTargets];
-							
-							for (int i = leftTargets; i < targets; ++i) {
-								rightTargets[i - leftTargets] = i;
-							}
-							
-							rewrite(name(-2), name(-1), rightTargets);
-						} else {
-							popTo(deduction.getParent());
-							
-							return false;
-						}
-					} else {
-						rewrite(name(-2), name(-1));
-					}
-					
-					conclude();
-					
-					return true;
-				}
-			} catch (final AbortException exception) {
-				throw exception;
-			} catch (final Exception exception) {
-				ignore(exception);
-			}
-			
-			popTo(deduction.getParent());
-			
-			return false;
-		}
-		
-		private static final long serialVersionUID = -5429351197907942483L;
-		
-		/**
-		 * @author codistmonk (creation 2016-08-23)
-		 */
-		public static enum Mode {
-			
-			REWRITE, DEFINE;
-			
-		}
-		
-	}
-	
-	public static final SimpleRule<Object, Boolean> newSequenceAppendSimplificationRule() {
+	public static final TryRule<Object> newSequenceAppendSimplificationRule() {
 		final Variable vs = new Variable("s");
 		final Variable vx = new Variable("x");
 		final Variable vy = new Variable("y");
 		
-		return rule($("sequence_append", vs, vx, vy), (e, m) -> {
+		return tryPattern($("sequence_append", vs, vx, vy), (e, m) -> {
 			computeSequenceAppend(vs.get(), vx.get(), vy.get());
 			
 			return true;
 		});
 	}
 	
-	public static final SimpleRule<Object, Boolean> newSequenceConcatenateSimplificationRule() {
+	public static final TryRule<Object> newSequenceConcatenateSimplificationRule() {
 		final Variable vs = new Variable("s");
 		final Variable vx = new Variable("x");
 		final Variable vy = new Variable("y");
 		
-		return rule($("sequence_concatenate", vs, vx, vy), (e, m) -> {
+		return tryPattern($("sequence_concatenate", vs, vx, vy), (e, m) -> {
 			computeSequenceConcatenate(vs.get(), vx.get(), vy.get());
 			
 			return true;
 		});
 	}
 	
-	public static final SimpleRule<Object, Boolean> newSubstitutionSimplificationRule() {
+	public static final TryRule<Object> tryPattern(final Object pattern, final SimpleRule.Predicate<Object> tryAction) {
+		return (e, m) -> PatternMatching.match(pattern, e) && tryAction.test(e, m);
+	}
+	
+	public static final TryRule<Object> newSubstitutionSimplificationRule() {
 		final Variable vx = new Variable("x");
 		final Variable ve = new Variable("e");
 		final Variable vi = new Variable("i");
 		
-		return rule($(vx, "|", ve, "@", vi), (e, m) -> {
+		return tryPattern($(vx, "|", ve, "@", vi), (e, m) -> {
 			substitute(vx.get(), toMap(ve.get()), toInts(vi.get()));
 			
 			return true;
 		});
 	}
 	
-	public static final SimpleRule<Object, Boolean> newForallInSimplificationRule() {
+	public static final TryRule<Object> newForallInSimplificationRule() {
 		final Variable vx = new Variable("x");
 		final Variable vX = new Variable("X");
 		final Variable vP = new Variable("P");
 		
-		return rule($(FORALL, vx, IN, vX, vP), (e, m) -> {
+		return tryPattern($(FORALL, vx, IN, vX, vP), (e, m) -> {
 			bind("definition_of_forall_in", vx.get(), vX.get(), vP.get());
 			
 			return true;
 		});
 	}
 	
-	public static final SimpleRule<Object, Boolean> newForallIn2SimplificationRule() {
+	public static final TryRule<Object> newForallIn2SimplificationRule() {
 		final Variable vx = new Variable("x");
 		final Variable vy = new Variable("y");
 		final Variable vX = new Variable("X");
 		final Variable vP = new Variable("P");
 		
-		return rule($(FORALL, vx, ",", vy, IN, vX, vP), (e, m) -> {
+		return tryPattern($(FORALL, vx, ",", vy, IN, vX, vP), (e, m) -> {
 			bind("definition_of_forall_in_2", vx.get(), vy.get(), vX.get(), vP.get());
 			
 			return true;
 		});
 	}
 	
-	public static final SimpleRule<Object, Boolean> newForallIn3SimplificationRule() {
+	public static final TryRule<Object> newForallIn3SimplificationRule() {
 		final Variable vx = new Variable("x");
 		final Variable vy = new Variable("y");
 		final Variable vz = new Variable("z");
 		final Variable vX = new Variable("X");
 		final Variable vP = new Variable("P");
 		
-		return rule($(FORALL, vx, ",", vy, ",", vz, IN, vX, vP), (e, m) -> {
+		return tryPattern($(FORALL, vx, ",", vy, ",", vz, IN, vX, vP), (e, m) -> {
 			bind("definition_of_forall_in_3", vx.get(), vy.get(), vz.get(), vX.get(), vP.get());
 			
 			return true;
