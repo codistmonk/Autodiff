@@ -6,9 +6,8 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
-
-import autodiff.rules.SimpleRule.Application;
-import autodiff.rules.SimpleRule.Predicate;
+import java.util.Map;
+import java.util.function.BiFunction;
 
 /**
  * @author codistmonk (creation 2015-12-07)
@@ -47,19 +46,19 @@ public final class ExpressionContext implements Serializable {
 		this.getTypeRules().add((e, m) -> Variable.match(object, e, m), (e, m) -> Variable.rewrite(type, m));
 	}
 	
-	public final void addType(final Predicate<Object> predicate, final Application<Object, Object> application) {
+	public final void addType(final Predicate<Object> predicate, final BiFunction<Object, Map<Variable, Object>, Object> application) {
 		this.addType(new SimpleRule<>(predicate, application));
 	}
 	
-	public final void addType(final Rule<Object, Object> rule) {
+	public final void addType(final SimpleRule<Object, Object> rule) {
 		this.getTypeRules().add(rule);
 	}
 	
-	public final void addSimplification(final Predicate<Object> predicate, final Application<Object, Object> application) {
+	public final void addSimplification(final Predicate<Object> predicate, final BiFunction<Object, Map<Variable, Object>, Object> application) {
 		this.addSimplification(new SimpleRule<>(predicate, application));
 	}
 	
-	public final void addSimplification(final Rule<Object, Object> rule) {
+	public final void addSimplification(final SimpleRule<Object, Object> rule) {
 		this.getSimplificationRules().add(rule);
 	}
 	

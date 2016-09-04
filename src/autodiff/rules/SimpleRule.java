@@ -1,7 +1,7 @@
 package autodiff.rules;
 
-import java.io.Serializable;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 import autodiff.rules.Rules.Result;
 
@@ -13,59 +13,35 @@ import autodiff.rules.Rules.Result;
  */
 public final class SimpleRule<T, R> implements Rule<T, R> {
 	
-	private final SimpleRule.Predicate<T> predicate;
+	private final Predicate<T> predicate;
 	
-	private final SimpleRule.Application<T, R> application;
+	private final BiFunction<T, Map<Variable, Object>, R> application;
 	
-	public SimpleRule(final SimpleRule.Predicate<T> predicate, final SimpleRule.Application<T, R> application) {
+	public SimpleRule(final Predicate<T> predicate, final BiFunction<T, Map<Variable, Object>, R> application) {
 		this.predicate = predicate;
 		this.application = application;
 	}
 	
-	public final SimpleRule.Predicate<T> getPredicate() {
+	public final Predicate<T> getPredicate() {
 		return this.predicate;
 	}
 	
-	public final SimpleRule.Application<T, R> getApplication() {
+	public final BiFunction<T, Map<Variable, Object>, R> getApplication() {
 		return this.application;
 	}
-	
 	@Override
-	public final Result<R> apply(final T t, final Map<Variable, Object> u) {
-		return this.test(t, u) ? new Result<>(this.applyTo(t, u)) : null;
+	public final Result<R> apply(final T object, final Map<Variable, Object> mapping) {
+		return this.test(object, mapping) ? new Result<>(this.applyTo(object, mapping)) : null;
 	}
 	
-	public final boolean test(final T object, final Map<Variable, Object> mapping) {
+	private final boolean test(final T object, final Map<Variable, Object> mapping) {
 		return this.getPredicate().test(object, mapping);
 	}
 	
-	public final R applyTo(final T object, final Map<Variable, Object> mapping) {
-		return this.getApplication().applyTo(object, mapping);
+	private final R applyTo(final T object, final Map<Variable, Object> mapping) {
+		return this.getApplication().apply(object, mapping);
 	}
 	
 	private static final long serialVersionUID = -7416281112771134372L;
-	
-	/**
-	 * @author codistmonk (creation 2015-12-07)
-	 *
-	 * @param <T>
-	 */
-	public static abstract interface Predicate<T> extends Serializable {
-		
-		public abstract boolean test(T object, Map<Variable, Object> mapping);
-		
-	}
-	
-	/**
-	 * @author codistmonk (creation 2015-12-07)
-	 *
-	 * @param <T>
-	 * @param <R>
-	 */
-	public static abstract interface Application<T, R> extends Serializable {
-		
-		public abstract R applyTo(T object, Map<Variable, Object> mapping);
-		
-	}
 	
 }

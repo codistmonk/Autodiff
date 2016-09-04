@@ -7,20 +7,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-import autodiff.rules.SimpleRule.Application;
-import autodiff.rules.SimpleRule.Predicate;
-
 /**
  * @author codistmonk (creation 2015-12-07)
  *
  * @param <T>
  * @param <R>
  */
-public final class Rules<T, R> implements Serializable, BiFunction<T, Map<Variable, Object>, Rules.Result<R>> {
+public final class Rules<T, R> implements Rule<T, R> {
 	
-	private final List<BiFunction<T, Map<Variable, Object>, Result<R>>> rules = new ArrayList<>();
+	private final List<Rule<T, R>> rules = new ArrayList<>();
 	
-	public final List<BiFunction<T, Map<Variable, Object>, Result<R>>> getRules() {
+	public final List<Rule<T, R>> getRules() {
 		return this.rules;
 	}
 	
@@ -32,7 +29,7 @@ public final class Rules<T, R> implements Serializable, BiFunction<T, Map<Variab
 	public final Result<R> apply(final T input, final Map<Variable, Object> mapping) {
 		final Map<Variable, Object> backup = new LinkedHashMap<>(mapping);
 		
-		for (final BiFunction<T, Map<Variable, Object>, Result<R>> rule : this.getRules()) {
+		for (final Rule<T, R> rule : this.getRules()) {
 			restore(backup, mapping);
 			
 			final Result<R> r = rule.apply(input, mapping);
@@ -49,14 +46,14 @@ public final class Rules<T, R> implements Serializable, BiFunction<T, Map<Variab
 		return this.apply(input, mapping).get();
 	}
 	
-	public final Rules<T, R> add(final BiFunction<T, Map<Variable, Object>, Result<R>> rule) {
+	public final Rules<T, R> add(final Rule<T, R> rule) {
 		this.getRules().add(rule);
 		
 		return this;
 	}
 	
 	@Deprecated
-	public final void add(final Predicate<T> predicate, final Application<T, R> application) {
+	public final void add(final Predicate<T> predicate, final BiFunction<T, Map<Variable, Object>, R> application) {
 		this.add(new SimpleRule<>(predicate, application));
 	}
 	

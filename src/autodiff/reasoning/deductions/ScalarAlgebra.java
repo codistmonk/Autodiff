@@ -14,6 +14,8 @@ import autodiff.reasoning.proofs.ElementaryVerification;
 import autodiff.reasoning.proofs.Substitution;
 import autodiff.reasoning.tactics.Auto;
 import autodiff.reasoning.tactics.Stack.AbortException;
+import autodiff.rules.Predicate;
+import autodiff.rules.Rules.Result;
 import autodiff.rules.TryRule;
 import autodiff.rules.Variable;
 
@@ -323,25 +325,11 @@ public final class ScalarAlgebra {
 	}
 	
 	public static final TryRule<Object> newIgnoreRule() {
-		return new TryRule<Object>() {
-			
-			@Override
-			public final boolean test(final Object object, final Map<Variable, Object> mapping) {
-				return true;
-			}
-			
-			@Override
-			public final Boolean applyTo(final Object object, final Map<Variable, Object> mapping) {
-				return false;
-			}
-			
-			private static final long serialVersionUID = 5917717573706684334L;
-			
-		};
+		return (e, m) -> TryRule.F;
 	}
 	
 	public static final TryRule<Object> newElementarySimplificationRule() {
-		return (e, m) -> {
+		return tryPredicate((e, m) -> {
 			try {
 				final Object f = ElementaryVerification.Evaluator.INSTANCE.apply(e);
 				
@@ -357,7 +345,7 @@ public final class ScalarAlgebra {
 			}
 			
 			return false;
-		};
+		});
 	}
 	
 	public static final TryRule<Object> newAdditionSimplificationRule() {
@@ -374,7 +362,7 @@ public final class ScalarAlgebra {
 		 * y+x   -> x+y
 		 * 
 		 */
-		return (e, m) -> {
+		return tryPredicate((e, m) -> {
 			final Variable vx = new Variable("x");
 			final Variable vy = new Variable("y");
 			final Variable va = new Variable("a");
@@ -435,7 +423,7 @@ public final class ScalarAlgebra {
 			}
 			
 			return false;
-		};
+		});
 	}
 	
 	public static final Boolean tryAddition(final Object vx,
@@ -565,7 +553,7 @@ public final class ScalarAlgebra {
 		 * y+(x+z)   -> x+(y+z)
 		 * 
 		 */
-		return (e, m) -> {
+		return tryPredicate((e, m) -> {
 			final Variable vx = new Variable("x");
 			final Variable vy = new Variable("y");
 			final Variable vz = new Variable("z");
@@ -639,7 +627,7 @@ public final class ScalarAlgebra {
 			}
 			
 			return false;
-		};
+		});
 	}
 	
 	public static final Boolean tryAdditionAssociativity(final Object vx, final Object vy, final Object vz,
@@ -760,7 +748,7 @@ public final class ScalarAlgebra {
 		 * y*(x*z)     -> x*(y*z)
 		 * 
 		 */
-		return (e, m) -> {
+		return tryPredicate((e, m) -> {
 			final Variable vx = new Variable("x");
 			final Variable vy = new Variable("y");
 			final Variable vz = new Variable("z");
@@ -815,7 +803,7 @@ public final class ScalarAlgebra {
 			}
 			
 			return false;
-		};
+		});
 	}
 	
 	public static final Boolean tryMultiplicationAssociativity(final Object vx, final Object vz,
@@ -909,7 +897,7 @@ public final class ScalarAlgebra {
 	}
 	
 	public static final TryRule<Object> newSubtractionSimplificationRule() {
-		return (e, m) -> {
+		return tryPredicate((e, m) -> {
 			final Variable vx = new Variable("x");
 			final Variable vy = new Variable("y");
 			
@@ -923,6 +911,23 @@ public final class ScalarAlgebra {
 			}
 			
 			return false;
+		});
+	}
+	
+	public static final <T> TryRule<T> tryPredicate(final Predicate<T> predicate) {
+		return new TryRule<T>() {
+			
+			@Override
+			public final Result<Boolean> apply(final T t, final Map<Variable, Object> u) {
+				if (predicate.test(t, u)) {
+					return T;
+				}
+				
+				return null;
+			}
+			
+			private static final long serialVersionUID = 2615332966395330391L;
+			
 		};
 	}
 	
@@ -937,7 +942,7 @@ public final class ScalarAlgebra {
 		 * y*x     -> x*y
 		 * 
 		 */
-		return (e, m) -> {
+		return tryPredicate((e, m) -> {
 			final Variable vx = new Variable("x");
 			final Variable vy = new Variable("y");
 			final Variable va = new Variable("a");
@@ -979,7 +984,7 @@ public final class ScalarAlgebra {
 			}
 			
 			return false;
-		};
+		});
 	}
 	
 	public static final Boolean tryMultiplication(final Object vx,

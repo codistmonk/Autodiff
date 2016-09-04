@@ -7,6 +7,7 @@ import static autodiff.reasoning.deductions.Sequences.*;
 import static autodiff.reasoning.deductions.Sets.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
+import static autodiff.reasoning.tactics.Auto.tryMatch;
 import static autodiff.reasoning.tactics.Goal.*;
 import static autodiff.reasoning.tactics.PatternPredicate.rule;
 import static autodiff.reasoning.tactics.Stack.*;
@@ -19,19 +20,15 @@ import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.tactics.Auto.Simplifier;
-import autodiff.reasoning.tactics.PatternMatching;
 import autodiff.rules.Rules;
-import autodiff.rules.SimpleRule;
 import autodiff.rules.TryRule;
 import autodiff.rules.Variable;
-import autodiff.rules.Rules.Result;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
 
 /**
  * @author codistmonk (creation 2016-08-09)
@@ -386,23 +383,23 @@ public final class Computation extends AbstractNode<Computation> {
 		final Rules<Object, Void> rules = new Rules<>();
 		
 		{
-			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(PI, $()),
+			rules.add(rule($(PI, $()),
 					(_1, m) -> {
 						// NOP
 						
-						return (Void) null;
+						return null;
 					}));
 		}
 		
 		{
 			final Variable _x0 = new Variable("x0");
 			
-			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(PI, $1(_x0)),
+			rules.add(rule($(PI, $1(_x0)),
 					(_1, m) -> {
 						ebindTrim("definition_of_vector_reduction_by_product_1",
 								m.get(_x0));
 						
-						return (Void) null;
+						return null;
 					}));
 		}
 		
@@ -411,7 +408,7 @@ public final class Computation extends AbstractNode<Computation> {
 			final Variable _x0 = new Variable("x0");
 			final Variable _x1 = new Variable("x1");
 			
-			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(PI, $(_x0, $(_s, _x1))),
+			rules.add(rule($(PI, $(_x0, $(_s, _x1))),
 					(_1, m) -> {
 						{
 							subdeduction();
@@ -424,7 +421,7 @@ public final class Computation extends AbstractNode<Computation> {
 							conclude();
 						}
 						
-						return (Void) null;
+						return null;
 					}));
 		}
 		
@@ -434,7 +431,7 @@ public final class Computation extends AbstractNode<Computation> {
 			final Variable _x1 = new Variable("x1");
 			final Variable _x2 = new Variable("x2");
 			
-			rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($(PI, $(_x0, $(_s, _x1, _x2))),
+			rules.add(rule($(PI, $(_x0, $(_s, _x1, _x2))),
 					(_1, m) -> {
 						{
 							subdeduction();
@@ -451,7 +448,7 @@ public final class Computation extends AbstractNode<Computation> {
 							conclude();
 						}
 						
-						return (Void) null;
+						return null;
 					}));
 		}
 		
@@ -1585,7 +1582,7 @@ public final class Computation extends AbstractNode<Computation> {
 		.add(newForallInSimplificationRule())
 		.add(newForallIn2SimplificationRule())
 		.add(newForallIn3SimplificationRule())
-		.add(tryPattern(new Variable("*"), (e, m) -> false))
+		.add(tryMatch(new Variable("*"), (e, m) -> false))
 		.simplifyCompletely(expression);
 	}
 	
@@ -1597,21 +1594,21 @@ public final class Computation extends AbstractNode<Computation> {
 		new Simplifier(mode)
 				.add(newElementarySimplificationRule())
 				.add(newSubstitutionSimplificationRule())
-				.add(tryPattern(new Variable("*"), (e, m) -> false))
+				.add(tryMatch(new Variable("*"), (e, m) -> false))
 				.simplifyCompletely(proposition(-1));
 	}
 	
 	public static final void simplifySequenceAppendInLast() {
 		new Simplifier()
 				.add(newSequenceAppendSimplificationRule())
-				.add(tryPattern(new Variable("*"), (e, m) -> false))
+				.add(tryMatch(new Variable("*"), (e, m) -> false))
 				.simplifyCompletely(proposition(-1));
 	}
 	
 	public static final void simplifySequenceConcatenateInLast() {
 		new Simplifier()
 				.add(newSequenceConcatenateSimplificationRule())
-				.add(tryPattern(new Variable("*"), (e, m) -> false))
+				.add(tryMatch(new Variable("*"), (e, m) -> false))
 				.simplifyCompletely(proposition(-1));
 	}
 	
@@ -1625,7 +1622,7 @@ public final class Computation extends AbstractNode<Computation> {
 			final Variable vy = new Variable("y");
 			final Variable vz = new Variable("z");
 			
-			simplifier.add(tryPattern($($(vx, "+", vy), "+", vz), (e, m) -> {
+			simplifier.add(tryMatch($($(vx, "+", vy), "+", vz), (e, m) -> {
 				final Object y = vy.get();
 				final Object z = vz.get();
 				final Number ny = cast(Number.class, y);
@@ -1653,7 +1650,7 @@ public final class Computation extends AbstractNode<Computation> {
 			final Variable vy = new Variable("y");
 			final Variable vz = new Variable("z");
 			
-			simplifier.add(tryPattern($(vx, "+", $(vy, "+", vz)), (e, m) -> {
+			simplifier.add(tryMatch($(vx, "+", $(vy, "+", vz)), (e, m) -> {
 				{
 					subdeduction();	
 					
@@ -1671,7 +1668,7 @@ public final class Computation extends AbstractNode<Computation> {
 			final Variable vx = new Variable("x");
 			final Variable vy = new Variable("y");
 			
-			simplifier.add(tryPattern($($(vx, "-", vy)), (e, m) -> {
+			simplifier.add(tryMatch($($(vx, "-", vy)), (e, m) -> {
 				ebindTrim("definition_of_subtraction", vx.get(), vy.get());
 				
 				return true;
@@ -1682,7 +1679,7 @@ public final class Computation extends AbstractNode<Computation> {
 			final Variable vx = new Variable("x");
 			final Variable vy = new Variable("y");
 			
-			simplifier.add(tryPattern($($(vx, "+", vy)), (e, m) -> {
+			simplifier.add(tryMatch($($(vx, "+", vy)), (e, m) -> {
 				final Object x = vx.get();
 				final Object y = vy.get();
 				final Number nx = cast(Number.class, x);
@@ -1699,7 +1696,7 @@ public final class Computation extends AbstractNode<Computation> {
 			}));
 		}
 		
-		simplifier.add(tryPattern(new Variable("*"), (e, m) -> false));
+		simplifier.add(tryMatch(new Variable("*"), (e, m) -> false));
 		
 		simplifier.simplifyCompletely(proposition(-1));
 	}
@@ -1709,7 +1706,7 @@ public final class Computation extends AbstractNode<Computation> {
 		final Variable vx = new Variable("x");
 		final Variable vy = new Variable("y");
 		
-		return tryPattern($("sequence_append", vs, vx, vy), (e, m) -> {
+		return tryMatch($("sequence_append", vs, vx, vy), (e, m) -> {
 			computeSequenceAppend(vs.get(), vx.get(), vy.get());
 			
 			return true;
@@ -1721,15 +1718,11 @@ public final class Computation extends AbstractNode<Computation> {
 		final Variable vx = new Variable("x");
 		final Variable vy = new Variable("y");
 		
-		return tryPattern($("sequence_concatenate", vs, vx, vy), (e, m) -> {
+		return tryMatch($("sequence_concatenate", vs, vx, vy), (e, m) -> {
 			computeSequenceConcatenate(vs.get(), vx.get(), vy.get());
 			
 			return true;
 		});
-	}
-	
-	public static final TryRule<Object> tryPattern(final Object pattern, final SimpleRule.Predicate<Object> tryAction) {
-		return (e, m) -> PatternMatching.match(pattern, e) && tryAction.test(e, m);
 	}
 	
 	public static final TryRule<Object> newSubstitutionSimplificationRule() {
@@ -1737,7 +1730,7 @@ public final class Computation extends AbstractNode<Computation> {
 		final Variable ve = new Variable("e");
 		final Variable vi = new Variable("i");
 		
-		return tryPattern($(vx, "|", ve, "@", vi), (e, m) -> {
+		return tryMatch($(vx, "|", ve, "@", vi), (e, m) -> {
 			substitute(vx.get(), toMap(ve.get()), toInts(vi.get()));
 			
 			return true;
@@ -1749,7 +1742,7 @@ public final class Computation extends AbstractNode<Computation> {
 		final Variable vX = new Variable("X");
 		final Variable vP = new Variable("P");
 		
-		return tryPattern($(FORALL, vx, IN, vX, vP), (e, m) -> {
+		return tryMatch($(FORALL, vx, IN, vX, vP), (e, m) -> {
 			bind("definition_of_forall_in", vx.get(), vX.get(), vP.get());
 			
 			return true;
@@ -1762,7 +1755,7 @@ public final class Computation extends AbstractNode<Computation> {
 		final Variable vX = new Variable("X");
 		final Variable vP = new Variable("P");
 		
-		return tryPattern($(FORALL, vx, ",", vy, IN, vX, vP), (e, m) -> {
+		return tryMatch($(FORALL, vx, ",", vy, IN, vX, vP), (e, m) -> {
 			bind("definition_of_forall_in_2", vx.get(), vy.get(), vX.get(), vP.get());
 			
 			return true;
@@ -1776,7 +1769,7 @@ public final class Computation extends AbstractNode<Computation> {
 		final Variable vX = new Variable("X");
 		final Variable vP = new Variable("P");
 		
-		return tryPattern($(FORALL, vx, ",", vy, ",", vz, IN, vX, vP), (e, m) -> {
+		return tryMatch($(FORALL, vx, ",", vy, ",", vz, IN, vX, vP), (e, m) -> {
 			bind("definition_of_forall_in_3", vx.get(), vy.get(), vz.get(), vX.get(), vP.get());
 			
 			return true;
@@ -1952,7 +1945,7 @@ public final class Computation extends AbstractNode<Computation> {
 				final Variable vi = new Variable("i");
 				final Variable vn = new Variable("n");
 				
-				this.rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($("to_CL", $(p(vX), "_", $(vi, "<", vn))), (__, m) -> {
+				this.rules.add(rule($("to_CL", $(p(vX), "_", $(vi, "<", vn))), (__, m) -> {
 					final Object _X = m.get(vX);
 					final Object _i = m.get(vi);
 					final Object _n = m.get(vn);
@@ -2007,17 +2000,17 @@ public final class Computation extends AbstractNode<Computation> {
 						conclude();
 					}
 					
-					return (Void) null;
+					return null;
 				}));
 			}
 			
 			{
 				final Variable vX = new Variable("X");
 				
-				this.rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($("to_CL", vX), (__, m) -> {
+				this.rules.add(rule($("to_CL", vX), (__, m) -> {
 					ebindTrim("definition_of_real_to_CL", m.get(vX));
 					
-					return (Void) null;
+					return null;
 				}));
 			}
 		}
@@ -2043,7 +2036,7 @@ public final class Computation extends AbstractNode<Computation> {
 				final Variable vi = new Variable("i");
 				final Variable vn = new Variable("n");
 				
-				this.rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($("to_java", $(p(vX), "_", $(vi, "<", vn))), (__, m) -> {
+				this.rules.add(rule($("to_java", $(p(vX), "_", $(vi, "<", vn))), (__, m) -> {
 					final Object _X = m.get(vX);
 					final Object _i = m.get(vi);
 					final Object _n = m.get(vn);
@@ -2104,17 +2097,17 @@ public final class Computation extends AbstractNode<Computation> {
 						conclude();
 					}
 					
-					return (Void) null;
+					return null;
 				}));
 			}
 			
 			{
 				final Variable vX = new Variable("X");
 				
-				this.rules.add((BiFunction<Object, Map<Variable, Object>, Result<Void>>) rule($("to_java", vX), (__, m) -> {
+				this.rules.add(rule($("to_java", vX), (__, m) -> {
 					ebindTrim("definition_of_real_to_java", m.get(vX));
 					
-					return (Void) null;
+					return null;
 				}));
 			}
 		}

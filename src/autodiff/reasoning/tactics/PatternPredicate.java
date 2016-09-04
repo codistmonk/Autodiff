@@ -1,14 +1,16 @@
 package autodiff.reasoning.tactics;
 
 import java.util.Map;
+import java.util.function.BiFunction;
 
+import autodiff.rules.Predicate;
 import autodiff.rules.SimpleRule;
 import autodiff.rules.Variable;
 
 /**
  * @author codistmonk (creation 2016-08-16)
  */
-public final class PatternPredicate implements SimpleRule.Predicate<Object> {
+public final class PatternPredicate implements Predicate<Object> {
 	
 	private final Object pattern;
 	
@@ -23,7 +25,7 @@ public final class PatternPredicate implements SimpleRule.Predicate<Object> {
 	
 	private static final long serialVersionUID = -5516068695919791749L;
 	
-	public static final <R> SimpleRule<Object, R> rule(final Object pattern, final SimpleRule.Application<Object, R> application) {
+	public static final <R> SimpleRule<Object, R> rule(final Object pattern, final BiFunction<Object, Map<Variable, Object>, R> application) {
 		return new SimpleRule<>(new PatternPredicate(pattern), application);
 	}
 	

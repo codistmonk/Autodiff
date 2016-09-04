@@ -10,8 +10,9 @@ import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.tactics.Stack.AbortException;
 import autodiff.reasoning.tactics.Stack.PropositionDescription;
+import autodiff.rules.Predicate;
 import autodiff.rules.Rules;
-import autodiff.rules.SimpleRule;
+import autodiff.rules.Rules.Result;
 import autodiff.rules.TryRule;
 import autodiff.rules.Variable;
 
@@ -218,16 +219,27 @@ public final class Auto {
 		conclude();
 	}
 	
-	public static final <T> TryRule<T> tryMatch(final Object pattern, SimpleRule.Predicate<T> predicateContinuation) {
-		return (e, m) -> {
-			try {
-				return match(pattern, e)
-					&& predicateContinuation.test(e, m);
-			} catch (final AbortException exception) {
-				throw exception;
-			} catch (final Exception exception) {
-				return false;
+	public static final <T> TryRule<T> tryMatch(final Object pattern, Predicate<T> continuation) {
+		return new TryRule<T>() {
+			
+			@Override
+			public final Result<Boolean> apply(final T e, final Map<Variable, Object> m) {
+				try {
+					if (new PatternMatching(m).apply(pattern, e)
+						&& continuation.test(e, m)) {
+						return T;
+					}
+				} catch (final AbortException exception) {
+					throw exception;
+				} catch (final Exception exception) {
+					ignore(exception);
+				}
+				
+				return null;
 			}
+						
+			private static final long serialVersionUID = 5597439472888754461L;
+			
 		};
 	}
 	
