@@ -22,7 +22,6 @@ import autodiff.reasoning.expressions.Expressions;
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.rules.Rules;
-import autodiff.rules.Rules.Result;
 import autodiff.rules.PatternPredicate;
 
 import java.io.Serializable;
@@ -34,7 +33,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
 
 import multij.tools.Pair;
 import multij.tools.TicToc;
@@ -296,13 +294,13 @@ public final class DefaultProcessor implements NodeProcessor {
 				{
 					final autodiff.rules.Variable s = new autodiff.rules.Variable("s");
 					
-					this.rules.add((BiFunction<Object, Map<autodiff.rules.Variable, Object>, Result<Object>>) rule(Expressions.$("\"", s, "\""), (__, m) -> (Object) m.get(s).toString()));
+					this.rules.add(rule(Expressions.$("\"", s, "\""), (__, m) -> (Object) m.get(s).toString()));
 				}
 				
 				{
 					final autodiff.rules.Variable p = new autodiff.rules.Variable("p");
 					
-					this.rules.add((BiFunction<Object, Map<autodiff.rules.Variable, Object>, Result<Object>>) rule(Expressions.$("()->{", p, "}"), (__, m) -> new Runnable() {
+					this.rules.add(rule(Expressions.$("()->{", p, "}"), (__, m) -> new Runnable() {
 						
 						private final Object _p = m.get(p);
 						
@@ -318,7 +316,7 @@ public final class DefaultProcessor implements NodeProcessor {
 					final autodiff.rules.Variable f = new autodiff.rules.Variable("f");
 					final autodiff.rules.Variable x = new autodiff.rules.Variable("x");
 					
-					this.rules.add((BiFunction<Object, Map<autodiff.rules.Variable, Object>, Result<Object>>) rule(Expressions.$(f, "(", x, ")"), (__, m) -> {
+					this.rules.add(rule(Expressions.$(f, "(", x, ")"), (__, m) -> {
 						final List<Object> arguments = Sequences.flattenSequence(",", this.apply(m.get(x)));
 						
 						return invoke(JavaCodeContext.this, m.get(f).toString(), arguments.toArray());
@@ -326,7 +324,7 @@ public final class DefaultProcessor implements NodeProcessor {
 				}
 				
 				{
-					this.rules.add((BiFunction<Object, Map<autodiff.rules.Variable, Object>, Result<Object>>) rule(new autodiff.rules.Variable("*"), (e, __) -> ExpressionRewriter.super.visit((List<?>) e)));
+					this.rules.add(rule(new autodiff.rules.Variable("*"), (e, __) -> ExpressionRewriter.super.visit((List<?>) e)));
 				}
 			}
 			

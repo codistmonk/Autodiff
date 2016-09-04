@@ -16,7 +16,7 @@ import autodiff.rules.SimpleRule.Predicate;
  * @param <T>
  * @param <R>
  */
-public final class Rules<T, R> implements Rule<T, R>, BiFunction<T, Map<Variable, Object>, Rules.Result<R>> {
+public final class Rules<T, R> implements Serializable, BiFunction<T, Map<Variable, Object>, Rules.Result<R>> {
 	
 	private final List<BiFunction<T, Map<Variable, Object>, Result<R>>> rules = new ArrayList<>();
 	
@@ -45,6 +45,10 @@ public final class Rules<T, R> implements Rule<T, R>, BiFunction<T, Map<Variable
 		return null;
 	}
 	
+	public final R applyTo(final T input, final Map<Variable, Object> mapping) {
+		return this.apply(input, mapping).get();
+	}
+	
 	public final Rules<T, R> add(final BiFunction<T, Map<Variable, Object>, Result<R>> rule) {
 		this.getRules().add(rule);
 		
@@ -54,18 +58,6 @@ public final class Rules<T, R> implements Rule<T, R>, BiFunction<T, Map<Variable
 	@Deprecated
 	public final void add(final Predicate<T> predicate, final Application<T, R> application) {
 		this.add(new SimpleRule<>(predicate, application));
-	}
-	
-	@Override
-	@Deprecated
-	public final boolean test(final T object, final Map<Variable, Object> mapping) {
-		throw new RuntimeException();
-	}
-	
-//	@Override
-	@Deprecated
-	public final R applyTo(final T object, final Map<Variable, Object> mapping) {
-		return this.apply(object, mapping).get();
 	}
 	
 	private static final long serialVersionUID = 271358038357056552L;
