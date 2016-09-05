@@ -1,10 +1,10 @@
 package autodiff.reasoning.tactics;
 
 import java.util.Map;
-import java.util.function.BiFunction;
 
+import autodiff.rules.Application;
 import autodiff.rules.Predicate;
-import autodiff.rules.SimpleRule;
+import autodiff.rules.CompositeRule;
 import autodiff.rules.Variable;
 
 /**
@@ -25,8 +25,8 @@ public final class PatternPredicate implements Predicate<Object> {
 	
 	private static final long serialVersionUID = -5516068695919791749L;
 	
-	public static final <R> SimpleRule<Object, R> rule(final Object pattern, final BiFunction<Object, Map<Variable, Object>, R> application) {
-		return new SimpleRule<>(new PatternPredicate(pattern), application);
+	public static final <R> CompositeRule<Object, R> rule(final Object pattern, final Application<Object, R> application) {
+		return new CompositeRule<>(new PatternPredicate(pattern), application);
 	}
 	
 }

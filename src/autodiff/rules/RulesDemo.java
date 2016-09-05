@@ -5,7 +5,6 @@ import static multij.tools.Tools.debugPrint;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 import java.util.function.BiFunction;
 
 import multij.tools.IllegalInstantiationException;
@@ -56,7 +55,7 @@ public final class RulesDemo {
 		return get(expression, 0);
 	}
 	
-	public static final BiFunction<Object, Map<Variable, Object>, Object> numberBinaryOperation(final BiFunction<BigDecimal, BigDecimal, BigDecimal> operation) {
+	public static final Application<Object, Object> numberBinaryOperation(final BiFunction<BigDecimal, BigDecimal, BigDecimal> operation) {
 		return (e, m) -> operation.apply(number(left(e)), number(right(e)));
 	}
 	

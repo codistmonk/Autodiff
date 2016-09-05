@@ -104,7 +104,7 @@ public final class HTML implements Deduction.Processor {
 				final Variable vx = new Variable("x");
 				final Variable vP = new Variable("P");
 				
-				this.formatterRules.add(autodiff.rules.PatternPredicate.rule(
+				this.formatterRules.add(autodiff.rules.PatternPredicate.matchWith(
 						$forall(vx, vP),
 						(e, m) -> $("\\forall", vx.get(), "\\quad", "(", vP.get(), ")")));
 			}

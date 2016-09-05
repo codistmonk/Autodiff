@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
 
 /**
  * @author codistmonk (creation 2015-12-07)
@@ -52,9 +51,8 @@ public final class Rules<T, R> implements Rule<T, R> {
 		return this;
 	}
 	
-	@Deprecated
-	public final void add(final Predicate<T> predicate, final BiFunction<T, Map<Variable, Object>, R> application) {
-		this.add(new SimpleRule<>(predicate, application));
+	public final void add(final Predicate<T> predicate, final Application<T, R> application) {
+		this.add(new CompositeRule<>(predicate, application));
 	}
 	
 	private static final long serialVersionUID = 271358038357056552L;

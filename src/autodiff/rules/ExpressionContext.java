@@ -6,8 +6,6 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Map;
-import java.util.function.BiFunction;
 
 /**
  * @author codistmonk (creation 2015-12-07)
@@ -46,19 +44,19 @@ public final class ExpressionContext implements Serializable {
 		this.getTypeRules().add((e, m) -> Variable.match(object, e, m), (e, m) -> Variable.rewrite(type, m));
 	}
 	
-	public final void addType(final Predicate<Object> predicate, final BiFunction<Object, Map<Variable, Object>, Object> application) {
-		this.addType(new SimpleRule<>(predicate, application));
+	public final void addType(final Predicate<Object> predicate, final Application<Object, Object> application) {
+		this.addType(new CompositeRule<>(predicate, application));
 	}
 	
-	public final void addType(final SimpleRule<Object, Object> rule) {
+	public final void addType(final CompositeRule<Object, Object> rule) {
 		this.getTypeRules().add(rule);
 	}
 	
-	public final void addSimplification(final Predicate<Object> predicate, final BiFunction<Object, Map<Variable, Object>, Object> application) {
-		this.addSimplification(new SimpleRule<>(predicate, application));
+	public final void addSimplification(final Predicate<Object> predicate, final Application<Object, Object> application) {
+		this.addSimplification(new CompositeRule<>(predicate, application));
 	}
 	
-	public final void addSimplification(final SimpleRule<Object, Object> rule) {
+	public final void addSimplification(final CompositeRule<Object, Object> rule) {
 		this.getSimplificationRules().add(rule);
 	}
 	

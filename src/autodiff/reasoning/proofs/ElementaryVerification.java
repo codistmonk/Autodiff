@@ -1,7 +1,7 @@
 package autodiff.reasoning.proofs;
 
 import static autodiff.reasoning.expressions.Expressions.*;
-import static autodiff.rules.PatternPredicate.rule;
+import static autodiff.rules.PatternPredicate.matchWith;
 import static java.util.stream.Collectors.toList;
 import static multij.tools.Tools.cast;
 import static multij.tools.Tools.ignore;
@@ -69,7 +69,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vx = new Variable("x");
 				final Variable vy = new Variable("y");
 				
-				this.rules.add(rule($(vx, "+", vy), (e, m) -> {
+				this.rules.add(matchWith($(vx, "+", vy), (e, m) -> {
 					final Object x = vx.get();
 					final Object y = vy.get();
 					final String sx = cast(String.class, x);
@@ -102,7 +102,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vx = new Variable("x");
 				final Variable vy = new Variable("y");
 				
-				this.rules.add(rule($(vx, "-", vy), (e, m) -> {
+				this.rules.add(matchWith($(vx, "-", vy), (e, m) -> {
 					final BigDecimal nx = $n(vx.get());
 					final BigDecimal ny = $n(vy.get());
 					
@@ -114,7 +114,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vx = new Variable("x");
 				final Variable vy = new Variable("y");
 				
-				this.rules.add(rule($(vx, "*", vy), (e, m) -> {
+				this.rules.add(matchWith($(vx, "*", vy), (e, m) -> {
 					final BigDecimal nx = $n(vx.get());
 					final BigDecimal ny = $n(vy.get());
 					
@@ -126,7 +126,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vx = new Variable("x");
 				final Variable vy = new Variable("y");
 				
-				this.rules.add(rule($(vx, "/", vy), (e, m) -> {
+				this.rules.add(matchWith($(vx, "/", vy), (e, m) -> {
 					final BigDecimal nx = $n(vx.get());
 					final BigDecimal ny = $n(vy.get());
 					
@@ -138,7 +138,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vx = new Variable("x");
 				final Variable vy = new Variable("y");
 				
-				this.rules.add(rule($(vx, "^", vy), (e, m) -> {
+				this.rules.add(matchWith($(vx, "^", vy), (e, m) -> {
 					final BigDecimal nx = $n(vx.get());
 					final BigDecimal ny = $n(vy.get());
 					
@@ -150,7 +150,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vx = new Variable("x");
 				final Variable vy = new Variable("y");
 				
-				this.rules.add(rule($(vx, "%", vy), (e, m) -> {
+				this.rules.add(matchWith($(vx, "%", vy), (e, m) -> {
 					final BigDecimal nx = $n(vx.get());
 					final BigDecimal ny = $n(vy.get());
 					
@@ -162,7 +162,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vx = new Variable("x");
 				final Variable vy = new Variable("y");
 				
-				this.rules.add(rule($(vx, "<<", vy), (e, m) -> {
+				this.rules.add(matchWith($(vx, "<<", vy), (e, m) -> {
 					final BigDecimal nx = $n(vx.get());
 					final BigDecimal ny = $n(vy.get());
 					
@@ -174,7 +174,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vx = new Variable("x");
 				final Variable vy = new Variable("y");
 				
-				this.rules.add(rule($(vx, ">>", vy), (e, m) -> {
+				this.rules.add(matchWith($(vx, ">>", vy), (e, m) -> {
 					final BigDecimal nx = $n(vx.get());
 					final BigDecimal ny = $n(vy.get());
 					
@@ -186,7 +186,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vx = new Variable("x");
 				final Variable vy = new Variable("y");
 				
-				this.rules.add(rule($(vx, "|", vy), (e, m) -> {
+				this.rules.add(matchWith($(vx, "|", vy), (e, m) -> {
 					final BigDecimal nx = $n(vx.get());
 					final BigDecimal ny = $n(vy.get());
 					
@@ -198,7 +198,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vx = new Variable("x");
 				final Variable vy = new Variable("y");
 				
-				this.rules.add(rule($(vx, "&", vy), (e, m) -> {
+				this.rules.add(matchWith($(vx, "&", vy), (e, m) -> {
 					final BigDecimal nx = $n(vx.get());
 					final BigDecimal ny = $n(vy.get());
 					
@@ -210,7 +210,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vx = new Variable("x");
 				final Variable vy = new Variable("y");
 				
-				this.rules.add(rule($(vx, "¨", vy), (e, m) -> {
+				this.rules.add(matchWith($(vx, "¨", vy), (e, m) -> {
 					final BigDecimal nx = $n(vx.get());
 					final BigDecimal ny = $n(vy.get());
 					
@@ -222,7 +222,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vx = new Variable("x");
 				final Variable vy = new Variable("y");
 				
-				this.rules.add(rule($(vx, "<", vy), (e, m) -> {
+				this.rules.add(matchWith($(vx, "<", vy), (e, m) -> {
 					final BigDecimal nx = $n(vx.get());
 					final BigDecimal ny = $n(vy.get());
 					
@@ -234,7 +234,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vx = new Variable("x");
 				final Variable vy = new Variable("y");
 				
-				this.rules.add(rule($(vx, "<=", vy), (e, m) -> {
+				this.rules.add(matchWith($(vx, "<=", vy), (e, m) -> {
 					final BigDecimal nx = $n(vx.get());
 					final BigDecimal ny = $n(vy.get());
 					
@@ -246,7 +246,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vx = new Variable("x");
 				final Variable vy = new Variable("y");
 				
-				this.rules.add(rule($(vx, LE, vy), (e, m) -> {
+				this.rules.add(matchWith($(vx, LE, vy), (e, m) -> {
 					final BigDecimal nx = $n(vx.get());
 					final BigDecimal ny = $n(vy.get());
 					
@@ -258,7 +258,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vx = new Variable("x");
 				final Variable vy = new Variable("y");
 				
-				this.rules.add(rule($(vx, ">", vy), (e, m) -> {
+				this.rules.add(matchWith($(vx, ">", vy), (e, m) -> {
 					final BigDecimal nx = $n(vx.get());
 					final BigDecimal ny = $n(vy.get());
 					
@@ -270,7 +270,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vx = new Variable("x");
 				final Variable vy = new Variable("y");
 				
-				this.rules.add(rule($(vx, ">=", vy), (e, m) -> {
+				this.rules.add(matchWith($(vx, ">=", vy), (e, m) -> {
 					final BigDecimal nx = $n(vx.get());
 					final BigDecimal ny = $n(vy.get());
 					
@@ -282,7 +282,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vx = new Variable("x");
 				final Variable vy = new Variable("y");
 				
-				this.rules.add(rule($(vx, GE, vy), (e, m) -> {
+				this.rules.add(matchWith($(vx, GE, vy), (e, m) -> {
 					final BigDecimal nx = $n(vx.get());
 					final BigDecimal ny = $n(vy.get());
 					
@@ -293,7 +293,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 			{
 				final Variable vx = new Variable("x");
 				
-				this.rules.add(rule($("-", vx), (e, m) -> {
+				this.rules.add(matchWith($("-", vx), (e, m) -> {
 					final BigDecimal nx = $n(vx.get());
 					
 					return nx.negate();
@@ -303,7 +303,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 			{
 				final Variable vx = new Variable("x");
 				
-				this.rules.add(rule($("floor", vx), (e, m) -> {
+				this.rules.add(matchWith($("floor", vx), (e, m) -> {
 					final BigDecimal nx = $n(vx.get());
 					
 					return nx.setScale(0, BigDecimal.ROUND_FLOOR);
@@ -313,7 +313,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 			{
 				final Variable vx = new Variable("x");
 				
-				this.rules.add(rule($("ceiling", vx), (e, m) -> {
+				this.rules.add(matchWith($("ceiling", vx), (e, m) -> {
 					final BigDecimal nx = $n(vx.get());
 					
 					return nx.setScale(0, BigDecimal.ROUND_CEILING);
@@ -323,7 +323,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 			{
 				final Variable vx = new Variable("x");
 				
-				this.rules.add(rule($("~", vx), (e, m) -> {
+				this.rules.add(matchWith($("~", vx), (e, m) -> {
 					final BigDecimal nx = $n(vx.get());
 					
 					return new BigDecimal(nx.toBigIntegerExact().not());
@@ -333,7 +333,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 			{
 				final Variable vx = new Variable("x");
 				
-				this.rules.add(rule(norm(vx), (e, m) -> {
+				this.rules.add(matchWith(norm(vx), (e, m) -> {
 					final String sx = cast(String.class, vx.get());
 					
 					if (sx != null) {
@@ -349,7 +349,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 			{
 				final Variable vx = new Variable("x");
 				
-				this.rules.add(rule($(LNOT, vx), (e, m) -> {
+				this.rules.add(matchWith($(LNOT, vx), (e, m) -> {
 					return !(Boolean) vx.get();
 				}));
 			}
@@ -359,7 +359,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vy = new Variable("y");
 				final Collection<Object> knownSets = Tools.set(N, Z, Q, R, STRING);
 				
-				this.rules.add(rule($(vx, IN, vy), (e, m) -> {
+				this.rules.add(matchWith($(vx, IN, vy), (e, m) -> {
 					final Object x = vx.get();
 					final Object y = vy.get();
 					
@@ -409,7 +409,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vx = new Variable("x");
 				final Variable vy = new Variable("y");
 				
-				this.rules.add(rule($(vx, "=", vy), (e, m) -> {
+				this.rules.add(matchWith($(vx, "=", vy), (e, m) -> {
 					final Object x = vx.get();
 					final Object y = vy.get();
 					
@@ -435,7 +435,7 @@ public final class ElementaryVerification extends Proof.Abstract {
 			}
 			
 			{
-				this.rules.add(rule(new Variable("*"), (e, m) -> e));
+				this.rules.add(matchWith(new Variable("*"), (e, m) -> e));
 			}
 		}
 		
