@@ -7,6 +7,10 @@ import static autodiff.reasoning.deductions.Sequences.*;
 import static autodiff.reasoning.deductions.Sets.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
+import static autodiff.reasoning.tactics.Auto.autoapply;
+import static autodiff.reasoning.tactics.Auto.autoapplyOnce;
+import static autodiff.reasoning.tactics.Auto.autobind;
+import static autodiff.reasoning.tactics.Auto.autobindTrim;
 import static autodiff.reasoning.tactics.Auto.tryMatch;
 import static autodiff.reasoning.tactics.Goal.*;
 import static autodiff.reasoning.tactics.PatternPredicate.rule;
@@ -15,10 +19,11 @@ import static autodiff.rules.Variable.matchOrFail;
 import static multij.tools.Tools.*;
 
 import autodiff.reasoning.deductions.Basics;
-import autodiff.reasoning.deductions.Sets;
+import autodiff.reasoning.deductions.ScalarAlgebra;
 import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
+import autodiff.reasoning.tactics.Auto;
 import autodiff.reasoning.tactics.Auto.Simplifier;
 import autodiff.rules.Rules;
 import autodiff.rules.TryRule;
@@ -151,7 +156,8 @@ public final class Computation extends AbstractNode<Computation> {
 //			Basics.load();
 //			Sequences.load();
 //			Propositions.load();
-			Sets.load();
+//			Sets.load();
+			ScalarAlgebra.load();
 			
 			supposeEliminationOfParentheses();
 			
@@ -257,22 +263,6 @@ public final class Computation extends AbstractNode<Computation> {
 								$($(_x, "<", _y), "=", $(_y, ">", _x))));
 			}
 			
-			{
-				final Object _x = $new("x");
-				
-				suppose("neutrality_of_0",
-						$(FORALL, _x, IN, R,
-								$($(_x, "+", 0), "=", _x)));
-			}
-			
-			{
-				final Object _x = $new("x");
-				
-				suppose("neutrality_of_1",
-						$(FORALL, _x, IN, R,
-								$($(_x, "*", 1), "=", _x)));
-			}
-			
 			for (final Map.Entry<Object, Object> entry : map("addition", $("+"), "multiplication", $("*")).entrySet()) {
 				{
 					final Object _x = $new("x");
@@ -331,11 +321,6 @@ public final class Computation extends AbstractNode<Computation> {
 						$(FORALL, _x, IN, N,
 								$(0, LE, _x)));
 			}
-			
-//			{
-//				suppose("naturals_subset_relatives",
-//						$(N, SUBSET, Z));
-//			}
 			
 			{
 				suppose("relatives_in_Uhm",
@@ -396,7 +381,7 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			rules.add(rule($(PI, $1(_x0)),
 					(_1, m) -> {
-						ebindTrim("definition_of_vector_reduction_by_product_1",
+						autobindTrim("definition_of_vector_reduction_by_product_1",
 								m.get(_x0));
 						
 						return null;
@@ -413,7 +398,7 @@ public final class Computation extends AbstractNode<Computation> {
 						{
 							subdeduction();
 							
-							ebindTrim("definition_of_vector_reduction_by_product_2",
+							autobindTrim("definition_of_vector_reduction_by_product_2",
 									m.get(_s), m.get(_x0), m.get(_x1));
 							
 							simplifyElementaryExpression(name(-1), right(proposition(-1)));
@@ -436,7 +421,7 @@ public final class Computation extends AbstractNode<Computation> {
 						{
 							subdeduction();
 							
-							ebindTrim("definition_of_vector_reduction_by_product_3",
+							autobindTrim("definition_of_vector_reduction_by_product_3",
 									m.get(_s), m.get(_x2), m.get(_x0), m.get(_x1));
 							
 							computeVectorReductionByProduct(right(right(proposition(-1))));
@@ -497,7 +482,7 @@ public final class Computation extends AbstractNode<Computation> {
 					
 					final Object[] s = toObjects((int[]) result.get("s"));
 					
-					ebindTrim(name(-1), $(result.get("n")));
+					autobindTrim(name(-1), $(result.get("n")));
 					
 					canonicalizeForallIn(name(-1));
 					
@@ -577,7 +562,7 @@ public final class Computation extends AbstractNode<Computation> {
 	public static final void deducePositivesSubsetNaturals() {
 		subdeduction("positives_subset_naturals");
 		
-		ebindTrim("definition_of_subset", POS, N);
+		autobindTrim("definition_of_subset", POS, N);
 		
 		{
 			subdeduction();
@@ -622,7 +607,7 @@ public final class Computation extends AbstractNode<Computation> {
 	public static final void deducePositivesInUhm() {
 		subdeduction("positives_in_Uhm");
 		
-		ebindTrim("subset_in_Uhm", POS, N);
+		autobindTrim("subset_in_Uhm", POS, N);
 		
 		conclude();
 	}
@@ -1034,7 +1019,7 @@ public final class Computation extends AbstractNode<Computation> {
 								
 								matchOrFail(sequence(";", vp0, app("repeat", 1, str(va), 0, $("()->{", vq, "}"))), right(proposition(-1)));
 								
-								ebindTrim("meaning_of_repeat_2", $1(vp0.get()), va.get(), 0, 1, vq.get());
+								autobindTrim("meaning_of_repeat_2", $1(vp0.get()), va.get(), 0, 1, vq.get());
 							}
 							
 							verifyElementaryProposition($($(1, "-", 1), "=", 0));
@@ -1097,7 +1082,7 @@ public final class Computation extends AbstractNode<Computation> {
 							{
 								subdeduction();
 								
-								ebindTrim("meaning_of_repeat_1", $1(app("allocate", str("i"), 1)), 0, "i", 0, $1(app("write", str("result"), app("read", str("i"), 0), 1)));
+								autobindTrim("meaning_of_repeat_1", $1(app("allocate", str("i"), 1)), 0, "i", 0, $1(app("write", str("result"), app("read", str("i"), 0), 1)));
 								
 								simplifySequenceAppendInLast();
 								
@@ -1119,8 +1104,8 @@ public final class Computation extends AbstractNode<Computation> {
 							{
 								subdeduction();
 								
-								ebind("meaning_of_write_1", "result", 0, 1, sequence(";", app("allocate", str("i"), 1), app("repeat", 0, str("i"), 0, block(app("write", str("result"), app("read", str("i"), 0), 1)))));
-								eapplyLast();
+								autobind("meaning_of_write_1", (Object) "result", 0, 1, sequence(";", app("allocate", str("i"), 1), app("repeat", 0, str("i"), 0, block(app("write", str("result"), app("read", str("i"), 0), 1)))));
+								autoapplyOnce(name(-1));
 								
 								simplifySequenceAppendInLast();
 								
@@ -1135,14 +1120,15 @@ public final class Computation extends AbstractNode<Computation> {
 										"i", 0, "result", 0,
 										$1(app("write", str("result"), app("read", str("i"), 0), 1)));
 								
-								ebindTrim("left_elimination_of_disjunction", left(condition(proposition(-1))), right(condition(proposition(-1))), conclusion(proposition(-1)));
+								autobindTrim("left_elimination_of_disjunction", left(condition(proposition(-1))), right(condition(proposition(-1))), conclusion(proposition(-1)));
 								
 								simplifySequenceAppendInLast();
 								
 								{
 									subdeduction();
 									
-									ebindTrim("meaning_of_allocate_0", $(), "i", 1, "result", 0);
+									autobindTrim("meaning_of_allocate_0", $(), "i", 1, "result", 0);
+									
 									simplifySequenceAppendInLast();
 									
 									
@@ -1159,25 +1145,12 @@ public final class Computation extends AbstractNode<Computation> {
 							{
 								subdeduction("result_element_is_real");
 								
-								{
-									subdeduction();
-									
-									verifyElementaryProposition($(0, IN, N));
-									verifyElementaryProposition($(0, "<", 1));
-									ebindTrim("introduction_of_conjunction", proposition(-2), proposition(-1));
-									
-									ebindTrim("definition_of_range", 1, 0);
-									rewriteRight(name(-2), name(-1));
-									
-									conclude();
-								}
-								
-								ebindTrim(resultReality, 0);
+								autobindTrim(resultReality, 0);
 								
 								conclude();
 							}
 							
-							eapply(name(-2));
+							autoapply(name(-2));
 							
 							final List<Object> l = flattenSequence(";", left(proposition(-1)));
 							
@@ -1246,18 +1219,18 @@ public final class Computation extends AbstractNode<Computation> {
 							{
 								subdeduction();
 								
-								ebindTrim("nonnegativity_of_naturals", m);
-								ebindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), 1);
-								ebindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), 1);
-								ebindTrim("commutativity_of_addition", left(right(proposition(-1))), right(right(proposition(-1))));
+								autobindTrim("nonnegativity_of_naturals", m);
+								autobindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), 1);
+								autobindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), 1);
+								autobindTrim("commutativity_of_addition", left(right(proposition(-1))), right(right(proposition(-1))));
 								rewrite(name(-2), name(-1));
 								simplifySubstitutionsAndElementaryInLast(Simplifier.Mode.REWRITE);
-								ebindTrim("transitivity_of_<" + LE, 0, left(proposition(-1)), right(proposition(-1)));
+								autobindTrim("transitivity_of_<" + LE, 0, left(proposition(-1)), right(proposition(-1)));
 								
 								conclude();
 							}
 							
-							ebindTrim("meaning_of_repeat_2",
+							autobindTrim("meaning_of_repeat_2",
 									sequence(";", app("allocate", str("i"), 1)), "i", 0, $(1, "+", $(m, "+", 1)),
 									sequence(";", app("write", str("result"), app("read", str("i"), 0), 1)));
 							
@@ -1294,7 +1267,7 @@ public final class Computation extends AbstractNode<Computation> {
 							{
 								subdeduction();
 								
-								ebindTrim("meaning_of_repeat_1",
+								autobindTrim("meaning_of_repeat_1",
 										sequence(";", vp0.get()),
 										$(1, "+", m),
 										"i",
@@ -1337,7 +1310,7 @@ public final class Computation extends AbstractNode<Computation> {
 						
 						matchOrFail($(sequence(";", vp0, vp1, app("write", str(va), vi, 1))), right(proposition(-2)));
 						
-						ebind("meaning_of_write_0",
+						autobind("meaning_of_write_0",
 								sequence(";", vp0.get(), vp1.get()),
 								va.get(),
 								vi.get(),
@@ -1350,14 +1323,14 @@ public final class Computation extends AbstractNode<Computation> {
 						{
 							subdeduction();
 							
-							ebindTrim("nonnegativity_of_naturals", m);
-							ebindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), 1);
-							ebindTrim("transitivity_of_<" + LE, 0, left(proposition(-1)), right(proposition(-1)));
-							ebindTrim("commutativity_of_addition", left(right(proposition(-1))), right(right(proposition(-1))));
+							autobindTrim("nonnegativity_of_naturals", m);
+							autobindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), 1);
+							autobindTrim("transitivity_of_<" + LE, 0, left(proposition(-1)), right(proposition(-1)));
+							autobindTrim("commutativity_of_addition", left(right(proposition(-1))), right(right(proposition(-1))));
 							rewrite(name(-2), name(-1));
-							ebindTrim("conversion<>", left(proposition(-1)), right(proposition(-1)));
+							autobindTrim("conversion<>", left(proposition(-1)), right(proposition(-1)));
 							rewrite(name(-2), name(-1));
-							ebindTrim(">_implies_not_equal", left(proposition(-1)), right(proposition(-1)));
+							autobindTrim(">_implies_not_equal", left(proposition(-1)), right(proposition(-1)));
 							
 							conclude();
 						}
@@ -1369,10 +1342,10 @@ public final class Computation extends AbstractNode<Computation> {
 							
 							matchOrFail($rule($(vx, LOR, vy), vz), proposition(-2));
 							
-							ebindTrim("right_elimination_of_disjunction", vx.get(), vy.get(), vz.get());
+							autobindTrim("right_elimination_of_disjunction", vx.get(), vy.get(), vz.get());
 						}
 						
-						ebindTrim("commutativity_of_equality", left(proposition(-1)), right(proposition(-1)));
+						autobindTrim("commutativity_of_equality", left(proposition(-1)), right(proposition(-1)));
 						
 						conclude();
 					}
@@ -1396,40 +1369,40 @@ public final class Computation extends AbstractNode<Computation> {
 							{
 								subdeduction();
 								
-								ebindTrim("definition_of_range", $(1, "+", $(m, "+", 1)), k);
+								autobindTrim("definition_of_range", $(1, "+", $(m, "+", 1)), k);
 								
 								{
 									subdeduction();
 									
-									ebindTrim("definition_of_range", $(1, "+", m), k);
+									autobindTrim("definition_of_range", $(1, "+", m), k);
 									rewrite(h, name(-1));
 									breakConjunction(name(-1));
 									
 									{
 										subdeduction();
 										
-										ebindTrim("preservation_of_<_under_addition", 0, 1, m);
-										ebindTrim("commutativity_of_addition", 0, m);
+										autobindTrim("preservation_of_<_under_addition", 0, 1, m);
+										autobindTrim("commutativity_of_addition", 0, m);
 										rewrite(name(-2), name(-1));
-										ebindTrim("commutativity_of_addition", 1, m);
+										autobindTrim("commutativity_of_addition", 1, m);
 										rewrite(name(-2), name(-1));
-										ebindTrim("neutrality_of_0", m);
+										autobindTrim("neutrality_of_0", m);
 										rewrite(name(-2), name(-1));
 										
-										ebindTrim("preservation_of_<_under_addition", m, $(m, "+", 1), 1);
-										ebindTrim("commutativity_of_addition", m, 1);
+										autobindTrim("preservation_of_<_under_addition", m, $(m, "+", 1), 1);
+										autobindTrim("commutativity_of_addition", m, 1);
 										rewrite(name(-2), name(-1), 0);
-										ebindTrim("commutativity_of_addition", $(m, "+", 1), 1);
+										autobindTrim("commutativity_of_addition", $(m, "+", 1), 1);
 										rewrite(name(-2), name(-1));
 										
 										deduceNaturalIsReal(k);
 										
-										ebindTrim("transitivity_of_<", k, $(1, "+", m), $(1, "+", $(m, "+", 1)));
+										autobindTrim("transitivity_of_<", k, $(1, "+", m), $(1, "+", $(m, "+", 1)));
 										
 										conclude();
 									}
 									
-									ebindTrim("introduction_of_conjunction", proposition(-3), proposition(-1));
+									autobindTrim("introduction_of_conjunction", proposition(-3), proposition(-1));
 									
 									conclude();
 								}
@@ -1439,19 +1412,15 @@ public final class Computation extends AbstractNode<Computation> {
 								conclude();
 							}
 							
-							eapply(name(-2));
+							autoapply(name(-2));
 							
 							conclude();
 						}
 						
-//						canonicalizeForallIn(condition(proposition("induction_condition_n.2")));
-//						
-//						rewriteRight(name(-2), name(-1));
-						
-						eapply("induction_simplified_condition_n.2");
+						autoapply("induction_simplified_condition_n.2");
 						
 						new ToJavaHelper().compute(left(condition(scope(proposition(-1)))));
-						ebindTrim(name(-2), right(proposition(-1)));
+						autobindTrim(name(-2), right(proposition(-1)));
 						simplifySequenceAppendInLast();
 						
 						conclude();
@@ -1472,7 +1441,7 @@ public final class Computation extends AbstractNode<Computation> {
 			{
 				subdeduction();
 				
-				ebindTrim("definition_of_positives", _n);
+				autobindTrim("definition_of_positives", _n);
 				rewrite(last(deduction().getParent().getConditionNames()), name(-1));
 				
 				conclude();
@@ -1483,9 +1452,9 @@ public final class Computation extends AbstractNode<Computation> {
 			{
 				subdeduction("n_is_relative");
 				
-				ebindTrim("definition_of_subset", N, Z);
+				autobindTrim("definition_of_subset", N, Z);
 				rewrite("naturals_subset_relatives", name(-1));
-				ebindTrim(name(-1), _n);
+				autobindTrim(name(-1), _n);
 				
 				conclude();
 			}
@@ -1496,11 +1465,11 @@ public final class Computation extends AbstractNode<Computation> {
 				{
 					subdeduction();
 					
-					ebindTrim("definition_of_subset", N, Z);
+					autobindTrim("definition_of_subset", N, Z);
 					rewrite("naturals_subset_relatives", name(-1));
-					ebindTrim(name(-1), _n);
+					autobindTrim(name(-1), _n);
 					
-					ebindTrim("equality_<" + LE, 0, _n);
+					autobindTrim("equality_<" + LE, 0, _n);
 					
 //					simplifyArithmeticInLast(); // FIXME stack pops too far
 					
@@ -1513,20 +1482,12 @@ public final class Computation extends AbstractNode<Computation> {
 				conclude();
 			}
 			
-			{
-				subdeduction("n_is_real");
-				
-				ebindTrim("definition_of_subset", N, R);
-				rewrite("naturals_subset_reals", name(-1));
-				ebindTrim(name(-1), _n);
-				
-				conclude();
-			}
+			Auto.autodeduce($(_n, IN, R));
 			
 			{
 				subdeduction();
 				
-				trim("full_induction");
+				autoapply("full_induction");
 				
 				canonicalizeForallIn(proposition(-1));
 				
@@ -1534,16 +1495,16 @@ public final class Computation extends AbstractNode<Computation> {
 				
 				bind(name(-1), $(_n, "-", 1));
 				
-				ebindTrim("subtraction_in_naturals", _n, 1);
+				autobindTrim("subtraction_in_naturals", _n, 1);
 				
-				eapply(name(-2));
+				autoapply(name(-2));
 				
 				simplifyArithmeticInLast();
 				
-				ebindTrim("commutativity_of_addition", 0, _n);
+				autobindTrim("commutativity_of_addition", 0, _n);
 				rewrite(name(-2), name(-1));
 				
-				ebindTrim("neutrality_of_0", _n);
+				autobindTrim("neutrality_of_0", _n);
 				rewrite(name(-2), name(-1));
 				
 				{
@@ -1561,16 +1522,20 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			concludeGoal();
 		}
+		
+		if (false) {
+			abort();
+		}
 	}
-
+	
 	public static void deduceNaturalIsReal(final Object value) {
 		subdeduction();
 		
-		ebindTrim("definition_of_subset", N, R);
+		autobindTrim("definition_of_subset", N, R);
 		
 		rewrite("naturals_subset_reals", name(-1));
 		
-		ebindTrim(name(-1), value);
+		autobindTrim(name(-1), value);
 		
 		conclude();
 	}
@@ -1632,8 +1597,8 @@ public final class Computation extends AbstractNode<Computation> {
 						|| ny == null && nz == null && y.toString().compareTo(z.toString()) > 0) {
 					subdeduction();	
 					
-					ebindTrim("associativity_of_addition", vx.get(), vy.get(), vz.get());
-					ebindTrim("commutativity_of_addition", vy.get(), vz.get());
+					autobindTrim("associativity_of_addition", vx.get(), vy.get(), vz.get());
+					autobindTrim("commutativity_of_addition", vy.get(), vz.get());
 					rewrite(name(-2), name(-1));
 					
 					conclude();
@@ -1654,8 +1619,8 @@ public final class Computation extends AbstractNode<Computation> {
 				{
 					subdeduction();	
 					
-					ebindTrim("associativity_of_addition", vx.get(), vy.get(), vz.get());
-					ebindTrim("commutativity_of_equality", left(proposition(-1)), right(proposition(-1)));
+					autobindTrim("associativity_of_addition", vx.get(), vy.get(), vz.get());
+					autobindTrim("commutativity_of_equality", left(proposition(-1)), right(proposition(-1)));
 					
 					conclude();	
 				}
@@ -1669,7 +1634,7 @@ public final class Computation extends AbstractNode<Computation> {
 			final Variable vy = new Variable("y");
 			
 			simplifier.add(tryMatch($($(vx, "-", vy)), (e, m) -> {
-				ebindTrim("definition_of_subtraction", vx.get(), vy.get());
+				autobindTrim("definition_of_subtraction", vx.get(), vy.get());
 				
 				return true;
 			}));
@@ -1687,7 +1652,7 @@ public final class Computation extends AbstractNode<Computation> {
 				
 				if (nx == null && ny != null
 						|| nx == null && ny == null && x.toString().compareTo(y.toString()) > 0) {
-					ebindTrim("commutativity_of_addition", vx.get(), vy.get());
+					autobindTrim("commutativity_of_addition", vx.get(), vy.get());
 					
 					return true;
 				}
@@ -1871,14 +1836,14 @@ public final class Computation extends AbstractNode<Computation> {
 		
 		public final void compute() {
 			if (this.n == 0) {
-				ebind("definition_of_repeat_0", this.s, this.x);
+				autobind("definition_of_repeat_0", this.s, this.x);
 			} else {
 				subdeduction();
 				
 				{
 					subdeduction();
 					
-					ebindTrim("definition_of_repeat_n", this.s, this.x, this.n);
+					autobindTrim("definition_of_repeat_n", this.s, this.x, this.n);
 					verifyElementaryProposition($($(this.n, "-", 1), "=", this.n - 1));
 					rewrite(name(-2), name(-1));
 					
@@ -1890,7 +1855,6 @@ public final class Computation extends AbstractNode<Computation> {
 				
 				final List<?> formula = list(right(proposition(-1)));
 				
-//				new SequenceAppendHelper_(this.s, formula.get(2), formula.get(3)).compute();
 				computeSequenceAppend(this.s, formula.get(2), formula.get(3));
 				rewrite(name(-2), name(-1));
 				
@@ -1950,8 +1914,8 @@ public final class Computation extends AbstractNode<Computation> {
 					final Object _i = m.get(vi);
 					final Object _n = m.get(vn);
 					
-					ebind("definition_of_vector_generator_to_CL", _X, _i, _n);
-					eapplyLast();
+					autobind("definition_of_vector_generator_to_CL", _X, _i, _n);
+					autoapplyOnce(name(-1));
 					
 					{
 						subdeduction();
@@ -1981,7 +1945,7 @@ public final class Computation extends AbstractNode<Computation> {
 							}
 							
 							{
-								ebind("definition_of_forall_in", j, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", j)), "@", $()), IN, R));
+								autobind("definition_of_forall_in", j, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", j)), "@", $()), IN, R));
 								
 								rewriteRight(name(-2), name(-1));
 							}
@@ -1989,7 +1953,7 @@ public final class Computation extends AbstractNode<Computation> {
 							conclude();
 						}
 						
-						eapply(name(-2));
+						autoapplyOnce(name(-2));
 						
 						this.compute($("to_CL", _X));
 						rewrite(name(-2), name(-1));
@@ -2008,7 +1972,7 @@ public final class Computation extends AbstractNode<Computation> {
 				final Variable vX = new Variable("X");
 				
 				this.rules.add(rule($("to_CL", vX), (__, m) -> {
-					ebindTrim("definition_of_real_to_CL", m.get(vX));
+					autobindTrim("definition_of_real_to_CL", m.get(vX));
 					
 					return null;
 				}));
@@ -2044,8 +2008,8 @@ public final class Computation extends AbstractNode<Computation> {
 					{
 						subdeduction();
 						
-						ebind("definition_of_vector_generator_to_java", _X, _i, _n);
-						eapplyLast();
+						autobind("definition_of_vector_generator_to_java", _X, _i, _n);
+						autoapplyOnce(name(-1));
 						
 						{
 							subdeduction();
@@ -2072,7 +2036,7 @@ public final class Computation extends AbstractNode<Computation> {
 							}
 							
 							{
-								ebind("definition_of_forall_in", j, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", j)), "@", $()), IN, R));
+								autobind("definition_of_forall_in", j, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", j)), "@", $()), IN, R));
 								
 								rewriteRight(name(-2), name(-1));
 							}
@@ -2080,7 +2044,7 @@ public final class Computation extends AbstractNode<Computation> {
 							conclude();
 						}
 						
-						eapply(name(-2));
+						autoapplyOnce(name(-2));
 						
 						{
 							this.compute($("to_java", _n));
@@ -2105,7 +2069,7 @@ public final class Computation extends AbstractNode<Computation> {
 				final Variable vX = new Variable("X");
 				
 				this.rules.add(rule($("to_java", vX), (__, m) -> {
-					ebindTrim("definition_of_real_to_java", m.get(vX));
+					autobindTrim("definition_of_real_to_java", m.get(vX));
 					
 					return null;
 				}));

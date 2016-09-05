@@ -8,7 +8,9 @@ import static multij.tools.Tools.*;
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.proofs.ElementaryVerification;
+import autodiff.reasoning.tactics.Auto;
 import autodiff.reasoning.tactics.Goal;
+import autodiff.rules.Variable;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,6 +32,16 @@ public final class Basics {
 		deduceIdentity();
 		deduceCommutativityOfEquality();
 		deduceRecall();
+		
+		{
+			final Variable vx = new Variable("x");
+			
+			Auto.hintAutodeduce(Auto.tryMatch($(vx, "=", vx), (e, m) -> {
+				bind("identity", vx.get());
+				
+				return true;
+			}));
+		}
 	}
 	
 	public static final void supposeRewrite() {

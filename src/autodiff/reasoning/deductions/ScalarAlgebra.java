@@ -248,6 +248,9 @@ public final class ScalarAlgebra {
 		}
 		
 		loadAutoHints();
+		
+		Sets.testSimplificationOfTypeOfTuple();
+		Sets.testVectorAccess();
 	}
 	
 	public static final void canonicalize(final Object expression) {
@@ -268,15 +271,17 @@ public final class ScalarAlgebra {
 	}
 	
 	public static final void loadAutoHints() {
-		{
-			final Variable vx = new Variable("x");
-			final Variable vy = new Variable("y");
-			
-			hintAutodeduce(tryMatch($($(vx, "+", vy), IN, R), (e, m) -> {
-				autobindTrim("stability_of_+_in_" + R, vx.get(), vy.get());
+		for (final Object type : NUMERIC_TYPES) {
+			for (final Object operator : array($("+"), $("*"))) {
+				final Variable vx = new Variable("x");
+				final Variable vy = new Variable("y");
 				
-				return true;
-			}));
+				hintAutodeduce(tryMatch($($(vx, operator, vy), IN, type), (e, m) -> {
+					autobindTrim("stability_of_" + operator + "_in_" + type, vx.get(), vy.get());
+					
+					return true;
+				}));
+			}
 		}
 		
 		{
@@ -285,17 +290,6 @@ public final class ScalarAlgebra {
 			
 			hintAutodeduce(tryMatch($($(vx, "-", vy), IN, R), (e, m) -> {
 				autobindTrim("stability_of_-_in_" + R, vx.get(), vy.get());
-				
-				return true;
-			}));
-		}
-		
-		{
-			final Variable vx = new Variable("x");
-			final Variable vy = new Variable("y");
-			
-			hintAutodeduce(tryMatch($($(vx, "*", vy), IN, R), (e, m) -> {
-				autobindTrim("stability_of_*_in_" + R, vx.get(), vy.get());
 				
 				return true;
 			}));
@@ -318,6 +312,43 @@ public final class ScalarAlgebra {
 			
 			hintAutodeduce(tryMatch($($(vx, "^", vy), IN, R), (e, m) -> {
 				autobindTrim("stability_of_^_in_" + R, vx.get(), vy.get());
+				
+				return true;
+			}));
+		}
+		
+		{
+			final Variable vx = new Variable("x");
+			
+			Auto.hintAutodeduce(tryMatch($(vx, IN, Sets.POS), (e, m) -> {
+				subdeduction();
+				
+				Auto.autodeduce($(vx.get(), IN, N));
+				Auto.autodeduce($(0, "<", vx.get()));
+				Auto.autobindTrim("introduction_of_conjunction", proposition(-2), proposition(-1));
+				bind("definition_of_positives", vx.get());
+				rewriteRight(name(-2), name(-1));
+				
+				conclude();
+				
+				return true;
+			}));
+		}
+		
+		{
+			final Variable vx = new Variable("x");
+			final Variable vn = new Variable("n");
+			
+			Auto.hintAutodeduce(tryMatch($(vx, IN, $(N, "_", $("<", vn))), (e, m) -> {
+				subdeduction();
+				
+				Auto.autodeduce($(vx.get(), IN, N));
+				Auto.autodeduce($(vx.get(), "<", vn.get()));
+				Auto.autobindTrim("introduction_of_conjunction", proposition(-2), proposition(-1));
+				Auto.autobind("definition_of_range", vn.get(), vx.get());
+				rewriteRight(name(-2), name(-1));
+				
+				conclude();
 				
 				return true;
 			}));

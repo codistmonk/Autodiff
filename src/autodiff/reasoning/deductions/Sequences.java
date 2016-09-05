@@ -1,9 +1,9 @@
 package autodiff.reasoning.deductions;
 
 import static autodiff.reasoning.deductions.Basics.rewrite;
-import static autodiff.reasoning.deductions.Sets.ebind;
-import static autodiff.reasoning.deductions.Sets.ebindTrim;
 import static autodiff.reasoning.expressions.Expressions.*;
+import static autodiff.reasoning.tactics.Auto.autobind;
+import static autodiff.reasoning.tactics.Auto.autobindTrim;
 import static autodiff.reasoning.tactics.PatternPredicate.rule;
 import static autodiff.reasoning.tactics.Stack.*;
 import static multij.tools.Tools.append;
@@ -324,7 +324,7 @@ public final class Sequences {
 			final Map<String, Object> v = c.getVariables();
 			
 			rules.add(rule($(v.get("s"), c.getConditions(), v.get("y")), (__, m) -> {
-				ebindTrim("definition_of_sequence_append_0", v.values().stream().map(m::get).toArray());
+				autobindTrim("definition_of_sequence_append_0", v.values().stream().map(m::get).toArray());
 				
 				return null;
 			}));
@@ -335,7 +335,7 @@ public final class Sequences {
 			final Map<String, Object> v = c.getVariables();
 			
 			rules.add(rule($(v.get("s"), c.getConditions(), v.get("y")), (__, m) -> {
-				ebindTrim("definition_of_sequence_append_1", v.values().stream().map(m::get).toArray());
+				autobindTrim("definition_of_sequence_append_1", v.values().stream().map(m::get).toArray());
 				
 				return null;
 			}));
@@ -351,7 +351,7 @@ public final class Sequences {
 					
 					final Object[] values = v.values().stream().map(m::get).toArray();
 					
-					ebindTrim("definition_of_sequence_append_2", values);
+					autobindTrim("definition_of_sequence_append_2", values);
 					
 					computeSequenceSubappend(s, values[3], y);
 					
@@ -381,7 +381,7 @@ public final class Sequences {
 			final Map<String, Object> v = c.getVariables();
 			
 			rules.add(rule($(v.get("s"), c.getConditions(), v.get("y")), (__, m) -> {
-				ebindTrim("definition_of_sequence_subappend_0", v.values().stream().map(m::get).toArray());
+				autobindTrim("definition_of_sequence_subappend_0", v.values().stream().map(m::get).toArray());
 				
 				return null;
 			}));
@@ -397,7 +397,7 @@ public final class Sequences {
 					
 					final Object[] values = v.values().stream().map(m::get).toArray();
 					
-					ebindTrim("definition_of_sequence_subappend_1", values);
+					autobindTrim("definition_of_sequence_subappend_1", values);
 					
 					computeSequenceSubappend(s, values[3], y);
 					
@@ -700,7 +700,7 @@ public final class Sequences {
 			final Object _y = v.get("y");
 			
 			rules.add(rule($(_s, first(c.getConditions()), $(_y, "=", _y)), (__, m) -> {
-				ebindTrim("definition_of_sequence_concatenate_0", v.values().stream().map(m::get).toArray());
+				autobindTrim("definition_of_sequence_concatenate_0", v.values().stream().map(m::get).toArray());
 				
 				return null;
 			}));
@@ -714,7 +714,7 @@ public final class Sequences {
 			final Object _x = v.get("x");
 			
 			rules.add(rule($(_s, $(_x, "=", _x), first(c.getConditions())), (__, m) -> {
-				ebindTrim("definition_of_sequence_concatenate_1", v.values().stream().map(m::get).toArray());
+				autobindTrim("definition_of_sequence_concatenate_1", v.values().stream().map(m::get).toArray());
 				
 				return null;
 			}));
@@ -732,7 +732,7 @@ public final class Sequences {
 				{
 					subdeduction();
 					
-					ebindTrim("definition_of_sequence_concatenate_2", v.values().stream().map(m::get).toArray());
+					autobindTrim("definition_of_sequence_concatenate_2", v.values().stream().map(m::get).toArray());
 					computeSequenceAppend(m.get(_s), m.get(_x), m.get(_y0));
 					rewrite(name(-2), name(-1));
 					
@@ -748,7 +748,7 @@ public final class Sequences {
 			final Map<String, Object> v = c.getVariables();
 			
 			rules.add(rule($(v.get("s"), first(c.getConditions()), second(c.getConditions())), (__, m) -> {
-				ebindTrim("definition_of_sequence_concatenate_3", v.values().stream().map(m::get).toArray());
+				autobindTrim("definition_of_sequence_concatenate_3", v.values().stream().map(m::get).toArray());
 				
 				return null;
 			}));
@@ -766,7 +766,7 @@ public final class Sequences {
 				{
 					subdeduction();
 					
-					ebindTrim("definition_of_sequence_concatenate_4", v.values().stream().map(m::get).toArray());
+					autobindTrim("definition_of_sequence_concatenate_4", v.values().stream().map(m::get).toArray());
 					computeSequenceSubconcatenate(m.get(_s), m.get(_x1), m.get(_y));
 					rewrite(name(-2), name(-1));
 					
@@ -798,7 +798,7 @@ public final class Sequences {
 			final Map<String, Object> v = c.getVariables();
 			
 			rules.add(rule($(v.get("s"), first(c.getConditions()), second(c.getConditions())), (__, m) -> {
-				ebindTrim("definition_of_sequence_subconcatenate_0", v.values().stream().map(m::get).toArray());
+				autobindTrim("definition_of_sequence_subconcatenate_0", v.values().stream().map(m::get).toArray());
 				
 				return null;
 			}));
@@ -815,7 +815,7 @@ public final class Sequences {
 				{
 					subdeduction();
 					
-					ebindTrim("definition_of_sequence_subconcatenate_1", v.values().stream().map(m::get).toArray());
+					autobindTrim("definition_of_sequence_subconcatenate_1", v.values().stream().map(m::get).toArray());
 					computeSequenceSubconcatenate(m.get(_s), m.get(_x1), m.get(_y));
 					rewrite(name(-2), name(-1));
 					
@@ -899,13 +899,13 @@ public final class Sequences {
 		final List<?> list = list(x);
 		
 		if (1 == list.size()) {
-			ebind("definition_of_sequence_head_1", first(list));
+			autobind("definition_of_sequence_head_1", first(list));
 			
 			return;
 		}
 		
 		if (2 == list.size()) {
-			ebind("definition_of_sequence_head_2", first(list), second(list));
+			autobind("definition_of_sequence_head_2", first(list), second(list));
 			
 			return;
 		}
@@ -921,13 +921,13 @@ public final class Sequences {
 			
 			if (separator.equals(first(second))) {
 				if (2 == second.size()) {
-					ebind("definition_of_sequence_tail_1", separator, first(list), second(second));
+					autobind("definition_of_sequence_tail_1", separator, first(list), second(second));
 					
 					return;
 				}
 				
 				if (3 == second.size()) {
-					ebind("definition_of_sequence_tail_2", separator, first(list), second(second), third(second));
+					autobind("definition_of_sequence_tail_2", separator, first(list), second(second), third(second));
 					
 					return;
 				}

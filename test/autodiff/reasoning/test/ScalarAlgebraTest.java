@@ -55,6 +55,7 @@ public final class ScalarAlgebraTest {
 				suppose($(_a, IN, N));
 				
 				testAutodeduce($($(_a, "+", 1), IN, R));
+				testAutodeduce($($(_a, "+", 1), IN, N));
 			}
 			
 		});

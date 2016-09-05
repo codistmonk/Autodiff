@@ -16,6 +16,8 @@ import autodiff.reasoning.tactics.PatternMatching;
 import autodiff.reasoning.tactics.Stack.AbortException;
 import autodiff.reasoning.tactics.Stack.PropositionDescription;
 import autodiff.rules.Rules;
+import autodiff.rules.Rules.Result;
+import autodiff.rules.TryRule;
 import autodiff.rules.Variable;
 
 import java.util.ArrayList;
@@ -24,6 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import multij.tools.IllegalInstantiationException;
 import multij.tools.Pair;
@@ -62,7 +65,7 @@ public final class Sets {
 		
 		supposeNumbersInclusions();
 		
-		setupAutoHints();
+		loadAutoHints();
 		
 		supposeDefinitionOfPowerset();
 		
@@ -90,7 +93,7 @@ public final class Sets {
 		{
 			subdeduction("single_N_in_Uhm");
 			
-			ebindTrim("type_of_single_in_Uhm", N);
+			autobindTrim("type_of_single_in_Uhm", N);
 			
 			conclude();
 		}
@@ -100,10 +103,8 @@ public final class Sets {
 		supposeDefinitionsForRepeat();
 		
 		supposeSimplificationOfTypeOfTuple();
-		testSimplificationOfTypeOfTuple();
 		
 		supposeDefinitionsForVectorAccess();
-		testVectorAccess();
 	}
 	
 	public static final void supposeNumbersInclusions() {
@@ -115,7 +116,7 @@ public final class Sets {
 				$(Q, SUBSET, R));
 	}
 	
-	public static final void setupAutoHints() {
+	public static final void loadAutoHints() {
 		{
 			final Variable vx = new Variable("x");
 			final Variable vX = new Variable("X");
@@ -209,6 +210,25 @@ public final class Sets {
 				return true;
 			}));
 		}
+		
+		{
+			hintAutodeduce(new TryRule<Object>() {
+				
+				@Override
+				public final Result<Boolean> apply(final Object t, Map<Variable, Object> u) {
+					if (isCartesianProductity(t)) {
+						deduceCartesianProduct(left(right(t)), flattenSequence(",", left(t)).toArray());
+						
+						return T;
+					}
+					
+					return null;
+				}
+				
+				private static final long serialVersionUID = 4045120425678548838L;
+				
+			});
+		}
 	}
 	
 	public static final List<PropositionDescription> inclusionPath(final Object origin, final Object target, final Collection<Object> ignore) {
@@ -253,7 +273,7 @@ public final class Sets {
 	public static final void deduceNaturalsInUhm() {
 		subdeduction("naturals_in_Uhm");
 		
-		ebindTrim("subset_in_Uhm", N, R);
+		autobindTrim("subset_in_Uhm", N, R);
 		
 		conclude();
 	}
@@ -351,7 +371,7 @@ public final class Sets {
 			{
 				subdeduction();
 				
-				ebindTrim("definition_of_subset", _X, _Y);
+				autobindTrim("definition_of_subset", _X, _Y);
 				rewrite(h1, name(-1));
 				bind(name(-1), _x);
 				
@@ -363,7 +383,7 @@ public final class Sets {
 			{
 				subdeduction();
 				
-				ebindTrim("definition_of_subset", _Y, _Z);
+				autobindTrim("definition_of_subset", _Y, _Z);
 				rewrite(h2, name(-1));
 				bind(name(-1), _x);
 				
@@ -378,7 +398,7 @@ public final class Sets {
 		{
 			subdeduction();
 			
-			ebindTrim("definition_of_subset", _X, _Z);
+			autobindTrim("definition_of_subset", _X, _Z);
 			
 			conclude();
 		}
@@ -448,14 +468,14 @@ public final class Sets {
 				
 				verifyElementaryProposition($(1, IN, N));
 				
-				ebindTrim("type_of_single", N, 1);
+				autobindTrim("type_of_single", N, 1);
 				
 				rewrite(name(-2), name(-1));
 				
 				conclude();
 			}
 			
-			ebindTrim("type_of_tuple", $1(N), N, $1(1), 2);
+			autobindTrim("type_of_tuple", $1(N), N, $1(1), 2);
 			
 			final List<?> _x = list(left(proposition(-1)));
 			final List<?> _X = list(right(proposition(-1)));
@@ -475,7 +495,7 @@ public final class Sets {
 			{
 				subdeduction();
 				
-				ebindTrim("type_of_tuple_in_Uhm", $1(N), N);
+				autobindTrim("type_of_tuple_in_Uhm", $1(N), N);
 				
 				computeSequenceAppend(CROSS, $1(N), N);
 				rewrite(name(-2), name(-1));
@@ -483,7 +503,7 @@ public final class Sets {
 				conclude();
 			}
 			
-			ebindTrim("type_of_tuple", sequence(CROSS, N, N), N, sequence(",", 1, 2), 3);
+			autobindTrim("type_of_tuple", sequence(CROSS, N, N), N, sequence(",", 1, 2), 3);
 			
 			final List<?> _x = list(left(proposition(-1)));
 			final List<?> _X = list(right(proposition(-1)));
@@ -534,7 +554,7 @@ public final class Sets {
 		{
 			subdeduction("simplification_of_type_of_tuple.test1");
 			
-			ebindTrim("simplification_of_type_of_tuple", N, 3);
+			autobindTrim("simplification_of_type_of_tuple", N, 3);
 			
 			new RepeatHelper(CROSS, N, 3).compute();
 			rewrite(name(-2), name(-1));
@@ -607,7 +627,7 @@ public final class Sets {
 				{
 					subdeduction();
 					
-					ebindTrim("definition_of_vector_access_0", elementType, sequenceLength(",", m.get(_x)), m.get(_x));
+					autobindTrim("definition_of_vector_access_0", elementType, sequenceLength(",", m.get(_x)), m.get(_x));
 					computeSequenceHead(m.get(_x));
 					rewrite(name(-2), name(-1));
 					
@@ -626,7 +646,7 @@ public final class Sets {
 				{
 					subdeduction();
 					
-					ebindTrim("definition_of_vector_access_i", elementType, sequenceLength(",", m.get(_x)), m.get(_i), m.get(_x));
+					autobindTrim("definition_of_vector_access_i", elementType, sequenceLength(",", m.get(_x)), m.get(_i), m.get(_x));
 					simplifyElementaryExpression(name(-1), right(right(proposition(-1))));
 					
 					computeSequenceTail(",", m.get(_x));
@@ -657,104 +677,6 @@ public final class Sets {
 		return list($("{", $(objects), "}"));
 	}
 	
-	public static final void ebindLast(final Object... values) {
-		ebind(name(-1), values);
-	}
-	
-	public static final void ebindTrim(final String target, final Object... values) {
-		subdeduction();
-		
-		ebind(target, values);
-		trimLast();
-		
-		conclude();
-	}
-	
-	public static final void ebind(final String target, final Object... values) {
-		subdeduction();
-		
-		String newTarget = target;
-		
-		for (final Object value : values) {
-			ebind1(newTarget, value);
-			newTarget = name(-1);
-		}
-		
-		conclude();
-	}
-	
-	public static final void ebind1(final String target, final Object value) {
-		subdeduction();
-		
-		String newTarget = target;
-		boolean done = false;
-		
-		while (!done) {
-//		while (!isBlock(proposition(newTarget))) {
-//			debugPrint(proposition(newTarget));
-			
-			done = true;
-			
-			if (isForallIn(proposition(newTarget))) {
-				canonicalizeForallIn(newTarget);
-				newTarget = name(-1);
-				done = false;
-			} else if (isForallIn2(proposition(newTarget))) {
-				canonicalizeForallIn2(newTarget);
-				newTarget = name(-1);
-				done = false;
-			} else if (isForallIn3(proposition(newTarget))) {
-				canonicalizeForallIn3(newTarget);
-				newTarget = name(-1);
-				done = false;
-			} else if (trim(newTarget)) {
-				newTarget = name(-1);
-				done = false;
-			}
-		}
-		
-		bind(newTarget, value);
-		
-		conclude();
-	}
-	
-	public static final void trimLast() {
-		trim(name(-1));
-	}
-	
-	public static final boolean trim(final String target) {
-		if (isRule(proposition(target))) {
-			String newTarget = target;
-			
-			subdeduction();
-			
-			while (isRule(proposition(newTarget))) {
-				eapply(newTarget);
-				newTarget = name(-1);
-			}
-			
-			conclude();
-			
-			return true;
-		}
-		
-		return false;
-	}
-	
-	public static final void eapplyLast() {
-		eapply(name(-1));
-	}
-	
-	public static final void eapply(final String targetName) {
-		subdeduction();
-				
-		final String justificationName = justicationFor(condition(proposition(targetName))).getName();
-		
-		apply(targetName, justificationName);
-		
-		conclude();
-	}
-	
 	public static final PropositionDescription justicationFor(final Object proposition) {
 		PropositionDescription result = PropositionDescription.existingJustificationFor(proposition);
 		
@@ -778,6 +700,7 @@ public final class Sets {
 					} else if (isPositivity(proposition)) {
 						deducePositivity(left(proposition));
 					} else if(isCartesianProductity(proposition)) {
+						debugPrint(proposition);
 						deduceCartesianProduct(left(right(proposition)), flattenSequence(",", left(proposition)).toArray());
 					} else {
 						throw new IllegalStateException("Failed to justify: " + proposition);
@@ -806,7 +729,7 @@ public final class Sets {
 		{
 			subdeduction();
 			
-			ebindTrim("simplification_of_type_of_tuple", valueType, values.length);
+			autobindTrim("simplification_of_type_of_tuple", valueType, values.length);
 			
 			new RepeatHelper(CROSS, valueType, values.length).compute();
 			rewrite(name(-2), name(-1));
@@ -835,7 +758,7 @@ public final class Sets {
 		{
 			subdeduction();
 			
-			ebindTrim("type_of_tuple_in_Uhm", previousType, type);
+			autobindTrim("type_of_tuple_in_Uhm", previousType, type);
 			
 //			new SequenceAppendHelper(CROSS, previousType, type).compute();
 			computeSequenceAppend(CROSS, previousType, type);
@@ -849,7 +772,7 @@ public final class Sets {
 			
 			deducePositivity(1);
 			
-			ebindTrim("type_of_tuple", previousType, type, previousValue, value);
+			autobindTrim("type_of_tuple", previousType, type, previousValue, value);
 			
 //			new SequenceAppendHelper(",", previousValue, value).compute();
 			computeSequenceAppend(",", previousValue, value);
@@ -871,7 +794,7 @@ public final class Sets {
 		{
 			subdeduction();
 			
-			ebindTrim("type_of_single", right(proposition), left(proposition));
+			autobindTrim("type_of_single", right(proposition), left(proposition));
 			
 			conclude();
 		}
@@ -904,30 +827,6 @@ public final class Sets {
 		
 		final Object type = right(proposition);
 		
-//		if (R.equals(type)) {
-//			subdeduction();
-//			
-//			PropositionDescription tmp = justifyArithmeticTyping($(left(proposition), IN, Q));
-//			
-//			if (tmp != null) {
-//				try {
-//					subdeduction();
-//					
-//					ebindTrim("definition_of_subset", Q, R);
-//					rewrite("rationals_subset_reals", name(-1));
-//					ebindTrim(name(-1), left(proposition));
-//					
-//					conclude();
-//				} catch (final AbortException exception) {
-//					throw exception;
-//				} catch (final Exception exception) {
-//					ignore(exception);
-//					
-//					pop();
-//				}
-//			}
-//		}
-		
 		final Rules<Object, Void> rules = new Rules<>();
 		
 		{
@@ -944,7 +843,7 @@ public final class Sets {
 					final PropositionDescription jy = justifyArithmeticTyping($(y, IN, type));
 					
 					if (jx != null && jy != null) {
-						ebindTrim("stability_of_addition_in_" + type, x, y);
+						autobindTrim("stability_of_addition_in_" + type, x, y);
 						
 						conclude();
 					} else {
@@ -1044,7 +943,7 @@ public final class Sets {
 			final PropositionDescription j1 = justicationFor($(target, IN, N));
 			final PropositionDescription j2 = justicationFor($(0, "<", target));
 			
-			ebindTrim("introduction_of_conjunction", j1.getProposition(), j2.getProposition());
+			autobindTrim("introduction_of_conjunction", j1.getProposition(), j2.getProposition());
 			
 			conclude();
 		}

@@ -1,8 +1,9 @@
 package autodiff.reasoning.deductions;
 
 import static autodiff.reasoning.deductions.Basics.rewrite;
-import static autodiff.reasoning.deductions.Sets.*;
 import static autodiff.reasoning.expressions.Expressions.*;
+import static autodiff.reasoning.tactics.Auto.autoapplyOnce;
+import static autodiff.reasoning.tactics.Auto.autobindTrim;
 import static autodiff.reasoning.tactics.Stack.*;
 
 import multij.tools.IllegalInstantiationException;
@@ -107,7 +108,7 @@ public final class Propositions {
 		
 		breakConjunction(name(-1));
 		
-		ebindTrim("logical_equality", _X, _Y);
+		autobindTrim("logical_equality", _X, _Y);
 		
 		conclude();
 	}
@@ -124,7 +125,7 @@ public final class Propositions {
 			suppose($(_X, LAND, _Y));
 			breakConjunction(name(-1));
 			
-			ebindTrim("introduction_of_conjunction", _Y, _X);
+			autobindTrim("introduction_of_conjunction", _Y, _X);
 			
 			conclude();
 		}
@@ -135,12 +136,12 @@ public final class Propositions {
 			suppose($(_Y, LAND, _X));
 			breakConjunction(name(-1));
 			
-			ebindTrim("introduction_of_conjunction", _X, _Y);
+			autobindTrim("introduction_of_conjunction", _X, _Y);
 			
 			conclude();
 		}
 		
-		ebindTrim("logical_equality", $(_X, LAND, _Y), $(_Y, LAND, _X));
+		autobindTrim("logical_equality", $(_X, LAND, _Y), $(_Y, LAND, _X));
 		
 		conclude();
 	}
@@ -158,7 +159,7 @@ public final class Propositions {
 		subdeduction();
 		
 		bind("left_elimination_of_conjunction", left, right);
-		eapplyLast();
+		autoapplyOnce(name(-1));
 		
 		conclude();
 	}
@@ -171,7 +172,7 @@ public final class Propositions {
 		subdeduction();
 		
 		bind("right_elimination_of_conjunction", left, right);
-		eapplyLast();
+		autoapplyOnce(name(-1));
 		
 		conclude();
 	}

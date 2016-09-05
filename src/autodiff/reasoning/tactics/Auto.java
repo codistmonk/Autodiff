@@ -72,7 +72,6 @@ public final class Auto {
 				
 				for (Deduction d = deduction(); d != null; d = d.getParent()) {
 					try {
-//						autodeduceRules.get(d).applyTo(proposition);
 						autodeduceRules.get(d).apply(proposition);
 						
 						conclude();
