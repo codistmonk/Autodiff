@@ -6,22 +6,30 @@ import static autodiff.reasoning.proofs.ElementaryVerification.*;
 import static autodiff.reasoning.tactics.Auto.*;
 import static autodiff.reasoning.tactics.PatternMatching.match;
 import static autodiff.reasoning.tactics.Stack.*;
+import static autodiff.reasoning.tactics.Stack.PropositionDescription.potentialJustificationsFor;
 import static multij.tools.Tools.*;
 
 import autodiff.reasoning.expressions.ExpressionRewriter;
+import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.proofs.ElementaryVerification;
 import autodiff.reasoning.proofs.Substitution;
 import autodiff.reasoning.tactics.Auto;
+import autodiff.reasoning.tactics.PatternMatching;
 import autodiff.reasoning.tactics.Stack.AbortException;
 import autodiff.rules.Predicate;
 import autodiff.rules.Rules.Result;
 import autodiff.rules.TryRule;
 import autodiff.rules.Variable;
 
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import multij.tools.IllegalInstantiationException;
+import multij.tools.Pair;
 
 /**
  * @author codistmonk (creation 2016-08-31)
@@ -255,6 +263,86 @@ public final class ScalarAlgebra {
 							$(0, LE, _x)));
 		}
 		
+		for (final Object operator : array($("<"), $("<="), LE, ">", ">=", GE)) {
+			{
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				final Object _z = $new("z");
+				
+				suppose("transitivity_of_" + operator,
+						$(FORALL, _x, ",", _y, ",", _z, IN, R,
+								$rule($(_x, operator, _y), $(_y, operator, _z), $(_x, operator, _z))));
+			}
+			
+			{
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				final Object _z = $new("z");
+				
+				suppose("preservation_of_" + operator + "_under_addition",
+						$(FORALL, _x, ",", _y, ",", _z, IN, R,
+								$rule($(_x, operator, _y), $($(_x, "+", _z), operator, $(_y, "+", _z)))));
+			}
+		}
+		
+		for (final Object operator : array($("<"), $("<="), LE)) {
+			{
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				
+				suppose("preservation_of_" + operator + "_under_multiplication",
+						$(FORALL, _x, ",", _y, IN, R,
+								$rule($(0, operator, _x), $(0, operator, _y), $(0, operator, $(_x, "*", _y)))));
+			}
+		}
+		
+		{
+			final Object _x = $new("x");
+			final Object _y = $new("y");
+			final Object _z = $new("z");
+			
+			suppose("transitivity_of_" + LE + "<",
+					$(FORALL, _x, ",", _y, ",", _z, IN, R,
+							$rule($(_x, LE, _y), $(_y, "<", _z), $(_x, "<", _z))));
+		}
+		
+		{
+			final Object _x = $new("x");
+			final Object _y = $new("y");
+			final Object _z = $new("z");
+			
+			suppose("transitivity_of_<" + LE,
+					$(FORALL, _x, ",", _y, ",", _z, IN, R,
+							$rule($(_x, "<", _y), $(_y, LE, _z), $(_x, "<", _z))));
+		}
+		
+		for (final Object operator : array("<", ">")) {
+			final Object _x = $new("x");
+			final Object _y = $new("y");
+			
+			suppose(operator + "_implies_not_equal",
+					$(FORALL, _x, ",", _y, IN, R,
+							$rule($(_x, operator, _y), $(LNOT, $(_x, "=", _y)))));
+		}
+		
+		{
+			final Object _x = $new("x");
+			final Object _y = $new("y");
+			
+			suppose("conversion<>",
+					$(FORALL, _x, ",", _y, IN, R,
+							$($(_x, "<", _y), "=", $(_y, ">", _x))));
+		}
+		
+		{
+			final Object _x = $new("x");
+			final Object _y = $new("y");
+			
+			suppose("equality_<" + LE,
+					$(FORALL, _x, ",", _y, IN, Z,
+							$($(_x, "<", _y), "=", $($(_x, "+", 1), LE, _y))));
+		}
+		
 		loadAutoHints();
 		
 		Sets.testSimplificationOfTypeOfTuple();
@@ -373,6 +461,94 @@ public final class ScalarAlgebra {
 				canonicalize(_x);
 				autobindTrim("nonnegativity_of_naturals", right(proposition(-1)));
 				rewriteRight(name(-1), name(-2));
+				
+				conclude();
+				
+				return true;
+			}));
+		}
+		
+		{
+			final Variable vx = new Variable("x");
+			
+			hintAutodeduce(tryMatch($(0, LE, vx), (e, m) -> {
+				final Object _x = vx.get();
+				
+				subdeduction();
+				
+				canonicalize(_x);
+				
+				final Map<Object, BigDecimal> leftBounds = new LinkedHashMap<>();
+				final Map<Object, BigDecimal> rightBounds = new LinkedHashMap<>();
+				
+				new ExpressionVisitor<Void>() {
+					
+					@Override
+					public final Void visit(final Object expression) {
+						final Variable va = new Variable("?");
+						
+						for (final Pair<PropositionDescription, PatternMatching> d : potentialJustificationsFor($(va, LE, expression))) {
+							final BigDecimal n = cast(BigDecimal.class, $n(d.getSecond().getMapping().get(va)));
+							
+							if (n != null) {
+								leftBounds.compute(expression, (k, v) -> v == null ? n : v.max(n));
+							}
+						}
+						
+						return null;
+					}
+					
+					@Override
+					public final Void visit(final List<?> expression) {
+						ExpressionVisitor.super.visit(expression);
+						
+						final Variable vx = new Variable("x");
+						final Variable vy = new Variable("y");
+						
+						if (match($(vx, "+", vy), expression)) {
+							final Object _x = vx.get();
+							final Object _y = vy.get();
+							final BigDecimal nx = cast(BigDecimal.class, $n(_x));
+							final BigDecimal ny = cast(BigDecimal.class, $n(_y));
+							
+							{
+								final BigDecimal a = leftBounds.get(_y);
+								
+								if (nx != null && a != null) {
+									// TODO
+									debugPrint("TODO");
+									abort();
+								}
+							}
+							
+							
+							{
+								final BigDecimal a = leftBounds.get(_x);
+								
+								if (a != null && ny != null) {
+									autobindTrim("preservation_of_≤_under_addition", a, _x, ny);
+									
+									canonicalize(left(proposition(-1)));
+									rewrite(name(-2), name(-1));
+									leftBounds.put(expression, a.add(ny));
+								}
+							}
+						}
+						
+						return null;
+					}
+					
+					private static final long serialVersionUID = 7743324648699993537L;
+					
+				}.apply(right(proposition(-1)));
+				
+				abort();
+				
+				{
+					final BigDecimal a = leftBounds.get(_x);
+					
+					autobindTrim("transitivity_of_≤", 0, a, _x);
+				}
 				
 				conclude();
 				

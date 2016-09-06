@@ -192,77 +192,6 @@ public final class Computation extends AbstractNode<Computation> {
 								$($(_x, "+", _y), IN, type)));
 			}
 			
-			for (final Object operator : array($("<"), $("<="), LE, ">", ">=", GE)) {
-				{
-					final Object _x = $new("x");
-					final Object _y = $new("y");
-					final Object _z = $new("z");
-					
-					suppose("transitivity_of_" + operator,
-							$(FORALL, _x, ",", _y, ",", _z, IN, R,
-									$rule($(_x, operator, _y), $(_y, operator, _z), $(_x, operator, _z))));
-				}
-				
-				{
-					final Object _x = $new("x");
-					final Object _y = $new("y");
-					final Object _z = $new("z");
-					
-					suppose("preservation_of_" + operator + "_under_addition",
-							$(FORALL, _x, ",", _y, ",", _z, IN, R,
-									$rule($(_x, operator, _y), $($(_x, "+", _z), operator, $(_y, "+", _z)))));
-				}
-			}
-			
-			for (final Object operator : array($("<"), $("<="), LE)) {
-				{
-					final Object _x = $new("x");
-					final Object _y = $new("y");
-					
-					suppose("preservation_of_" + operator + "_under_multiplication",
-							$(FORALL, _x, ",", _y, IN, R,
-									$rule($(0, operator, _x), $(0, operator, _y), $(0, operator, $(_x, "*", _y)))));
-				}
-			}
-			
-			{
-				final Object _x = $new("x");
-				final Object _y = $new("y");
-				final Object _z = $new("z");
-				
-				suppose("transitivity_of_" + LE + "<",
-						$(FORALL, _x, ",", _y, ",", _z, IN, R,
-								$rule($(_x, LE, _y), $(_y, "<", _z), $(_x, "<", _z))));
-			}
-			
-			{
-				final Object _x = $new("x");
-				final Object _y = $new("y");
-				final Object _z = $new("z");
-				
-				suppose("transitivity_of_<" + LE,
-						$(FORALL, _x, ",", _y, ",", _z, IN, R,
-								$rule($(_x, "<", _y), $(_y, LE, _z), $(_x, "<", _z))));
-			}
-			
-			for (final Object operator : array("<", ">")) {
-				final Object _x = $new("x");
-				final Object _y = $new("y");
-				
-				suppose(operator + "_implies_not_equal",
-						$(FORALL, _x, ",", _y, IN, R,
-								$rule($(_x, operator, _y), $(LNOT, $(_x, "=", _y)))));
-			}
-			
-			{
-				final Object _x = $new("x");
-				final Object _y = $new("y");
-				
-				suppose("conversion<>",
-						$(FORALL, _x, ",", _y, IN, R,
-								$($(_x, "<", _y), "=", $(_y, ">", _x))));
-			}
-			
 			for (final Map.Entry<Object, Object> entry : map("addition", $("+"), "multiplication", $("*")).entrySet()) {
 				{
 					final Object _x = $new("x");
@@ -303,15 +232,6 @@ public final class Computation extends AbstractNode<Computation> {
 				suppose("associativity_of_+-",
 						$(FORALL, _x, ",", _y, ",", _z, IN, R,
 								$($($(_x, "+", _y), "-", _z), "=", $(_x, "+", $(_y, "-", _z)))));
-			}
-			
-			{
-				final Object _x = $new("x");
-				final Object _y = $new("y");
-				
-				suppose("equality_<" + LE,
-						$(FORALL, _x, ",", _y, IN, Z,
-								$($(_x, "<", _y), "=", $($(_x, "+", 1), LE, _y))));
 			}
 			
 			{

@@ -188,6 +188,9 @@ public final class ScalarAlgebraTest {
 						_x,
 						_x);
 				testCanonicalize(
+						$(0, "+", 1),
+						1);
+				testCanonicalize(
 						$($(_x, "+", _y), "+", _z),
 						$(_x, "+", $(_y, "+", _z)));
 				testCanonicalize(

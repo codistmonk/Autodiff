@@ -375,6 +375,7 @@ public final class Stack {
 				while (target != null) {
 					final PatternMatching patternMatching = new PatternMatching();
 					
+					
 					if (patternMatching.apply(propositionPattern, target)) {
 						result.add(new Pair<>(description.clone(), patternMatching));
 					}

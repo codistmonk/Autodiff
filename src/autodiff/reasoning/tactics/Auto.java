@@ -278,7 +278,7 @@ public final class Auto {
 			subdeduction();
 			
 			if (this.apply(this.isDefining() ? right(expression) : expression)) {
-				while (this.apply(proposition(-1))) {
+				while (this.apply(this.isDefining() ? right(proposition(-1)) : proposition(-1))) {
 					// NOP
 				}
 				
