@@ -7,6 +7,7 @@ import static multij.tools.Tools.cast;
 import static multij.tools.Tools.ignore;
 
 import autodiff.reasoning.expressions.ExpressionRewriter;
+import autodiff.reasoning.tactics.Stack;
 import autodiff.rules.Rules;
 import autodiff.rules.Variable;
 
@@ -36,6 +37,10 @@ public final class ElementaryVerification extends Proof.Abstract {
 		
 		if (!(Boolean) verification) {
 			return $(LNOT, this.proposition);
+		}
+		
+		if ("[[x, =, x], =, true]".equals(this.proposition.toString())) {
+			Stack.abort();
 		}
 		
 		return this.proposition;

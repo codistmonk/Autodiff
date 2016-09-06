@@ -315,14 +315,6 @@ public final class Computation extends AbstractNode<Computation> {
 			}
 			
 			{
-				final Object _x = $new("x");
-				
-				suppose("nonnegativity_of_naturals",
-						$(FORALL, _x, IN, N,
-								$(0, LE, _x)));
-			}
-			
-			{
 				suppose("relatives_in_Uhm",
 						$(Z, IN, U));
 			}

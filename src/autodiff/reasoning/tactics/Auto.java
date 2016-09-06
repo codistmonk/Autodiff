@@ -277,7 +277,7 @@ public final class Auto {
 		public final void simplifyCompletely(final Object expression) {
 			subdeduction();
 			
-			if (this.apply(expression)) {
+			if (this.apply(this.isDefining() ? right(expression) : expression)) {
 				while (this.apply(proposition(-1))) {
 					// NOP
 				}
@@ -313,7 +313,7 @@ public final class Auto {
 			
 			try {
 				if (this.getRules().apply(expression)) {
-					if (Mode.DEFINE.equals(this.getMode())) {
+					if (this.isDefining()) {
 						final int targets = countIn(proposition(-2), left(proposition(-1)));
 						final int leftTargets = countIn(left(proposition(-2)), left(proposition(-1)));
 						
@@ -347,6 +347,10 @@ public final class Auto {
 			popTo(deduction.getParent());
 			
 			return false;
+		}
+		
+		private final boolean isDefining() {
+			return Mode.DEFINE.equals(this.getMode());
 		}
 		
 		private static final long serialVersionUID = -5429351197907942483L;

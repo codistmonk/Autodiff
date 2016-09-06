@@ -82,6 +82,49 @@ public final class ScalarAlgebraTest {
 	}
 	
 	@Test
+	public final void testComparisons1() {
+		build(new Runnable() {
+			
+			@Override
+			public final void run() {
+				ScalarAlgebra.load();
+				
+				final Object _a = $new("a");
+				
+				suppose($(_a, IN, N));
+				
+				testAutodeduce($(0, LE, _a));
+				testAutodeduce($(0, LE, $(_a, "+", 1)));
+				testAutodeduce($(0, LE, $($(_a, "+", 1), "-", 1)));
+				testAutodeduce($(0, LE, $(_a, "*", 2)));
+			}
+			
+		});
+	}
+	
+	@Test
+	public final void testComparisons2() {
+		build(new Runnable() {
+			
+			@Override
+			public final void run() {
+				ScalarAlgebra.load();
+				
+				final Object _a = $new("a");
+				
+				suppose($(_a, IN, Z));
+				suppose($(0, LE, _a));
+				
+				testAutodeduce($(0, LE, _a));
+				testAutodeduce($(0, LE, $(_a, "+", 1)));
+				testAutodeduce($(0, LE, $($(_a, "+", 1), "-", 1)));
+				testAutodeduce($(0, LE, $(_a, "*", 2)));
+			}
+			
+		});
+	}
+	
+	@Test
 	@Ignore
 	public final void testFractions1() {
 		build(new Runnable() {
@@ -141,6 +184,9 @@ public final class ScalarAlgebraTest {
 				final Object _bx = $(_b, "*", _x);
 				final Object _by = $(_b, "*", _y);
 				
+				testCanonicalize(
+						_x,
+						_x);
 				testCanonicalize(
 						$($(_x, "+", _y), "+", _z),
 						$(_x, "+", $(_y, "+", _z)));

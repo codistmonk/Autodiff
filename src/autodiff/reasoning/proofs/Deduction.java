@@ -110,8 +110,13 @@ public final class Deduction extends Proof.Abstract {
 		
 		final Object existingProposition = this.getProposition(propositionName);
 		
-		checkArgument(existingProposition == null
-				|| equal(proposition, existingProposition), "Duplicate proposition name: " + propositionName);
+		if (existingProposition != null) {
+			if (equal(proposition, existingProposition)) {
+				return this;
+			}
+			
+			checkArgument(false, "Duplicate proposition name: " + propositionName);
+		}
 		
 		this.getPropositions().put(propositionName, proposition);
 		this.getPropositionNames().add(propositionName);

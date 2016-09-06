@@ -247,6 +247,14 @@ public final class ScalarAlgebra {
 							$($(0, "*", _x), "=", 0)));
 		}
 		
+		{
+			final Object _x = $new("x");
+			
+			suppose("nonnegativity_of_naturals",
+					$(FORALL, _x, IN, N,
+							$(0, LE, _x)));
+		}
+		
 		loadAutoHints();
 		
 		Sets.testSimplificationOfTypeOfTuple();
@@ -320,12 +328,12 @@ public final class ScalarAlgebra {
 		{
 			final Variable vx = new Variable("x");
 			
-			Auto.hintAutodeduce(tryMatch($(vx, IN, Sets.POS), (e, m) -> {
+			hintAutodeduce(tryMatch($(vx, IN, Sets.POS), (e, m) -> {
 				subdeduction();
 				
-				Auto.autodeduce($(vx.get(), IN, N));
-				Auto.autodeduce($(0, "<", vx.get()));
-				Auto.autobindTrim("introduction_of_conjunction", proposition(-2), proposition(-1));
+				autodeduce($(vx.get(), IN, N));
+				autodeduce($(0, "<", vx.get()));
+				autobindTrim("introduction_of_conjunction", proposition(-2), proposition(-1));
 				bind("definition_of_positives", vx.get());
 				rewriteRight(name(-2), name(-1));
 				
@@ -339,14 +347,32 @@ public final class ScalarAlgebra {
 			final Variable vx = new Variable("x");
 			final Variable vn = new Variable("n");
 			
-			Auto.hintAutodeduce(tryMatch($(vx, IN, $(N, "_", $("<", vn))), (e, m) -> {
+			hintAutodeduce(tryMatch($(vx, IN, $(N, "_", $("<", vn))), (e, m) -> {
 				subdeduction();
 				
-				Auto.autodeduce($(vx.get(), IN, N));
-				Auto.autodeduce($(vx.get(), "<", vn.get()));
-				Auto.autobindTrim("introduction_of_conjunction", proposition(-2), proposition(-1));
-				Auto.autobind("definition_of_range", vn.get(), vx.get());
+				autodeduce($(vx.get(), IN, N));
+				autodeduce($(vx.get(), "<", vn.get()));
+				autobindTrim("introduction_of_conjunction", proposition(-2), proposition(-1));
+				autobind("definition_of_range", vn.get(), vx.get());
 				rewriteRight(name(-2), name(-1));
+				
+				conclude();
+				
+				return true;
+			}));
+		}
+		
+		{
+			final Variable vx = new Variable("x");
+			
+			hintAutodeduce(tryMatch($(0, LE, vx), (e, m) -> {
+				final Object _x = vx.get();
+				
+				subdeduction();
+				
+				canonicalize(_x);
+				autobindTrim("nonnegativity_of_naturals", right(proposition(-1)));
+				rewriteRight(name(-1), name(-2));
 				
 				conclude();
 				
