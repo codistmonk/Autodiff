@@ -258,6 +258,9 @@ public final class ScalarAlgebraTest {
 				final Object _by = $(_b, "*", _y);
 				
 				testCanonicalize(
+						$(0, "+", _x),
+						_x);
+				testCanonicalize(
 						$(_ax, "+", _bx),
 						$($(a + b), "*", _x));
 				testCanonicalize(

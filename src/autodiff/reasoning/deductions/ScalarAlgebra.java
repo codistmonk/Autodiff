@@ -23,7 +23,6 @@ import autodiff.rules.TryRule;
 import autodiff.rules.Variable;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -236,7 +235,7 @@ public final class ScalarAlgebra {
 			
 			suppose("neutrality_of_0",
 					$(FORALL, _x, IN, R,
-							$($(_x, "+", 0), "=", _x)));
+							$($(0, "+", _x), "=", _x)));
 		}
 		
 		{
@@ -355,7 +354,7 @@ public final class ScalarAlgebra {
 		
 		loadAutoHints();
 		
-		if (false) {
+		if (true) {
 			subdeduction("preservation_of_≤_under_nonnegative_multiplication");
 			
 			{
@@ -387,10 +386,12 @@ public final class ScalarAlgebra {
 						rewrite(name(-2), name(-1), 0);
 						
 						autobindTrim("preservation_of_" + LE + "_under_multiplication", right(proposition(-1)), _z);
-						// TODO distribute z
-						// TODO add xz
 						
-						abort();
+						autobindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), $(_x, "*", _z));
+						canonicalize(left(proposition(-1)));
+						rewrite(name(-2), name(-1), 0);
+						canonicalize(right(proposition(-1)));
+						rewrite(name(-2), name(-1), 0);
 						
 						conclude();
 					}
@@ -399,6 +400,22 @@ public final class ScalarAlgebra {
 				}
 				
 				conclude();
+			}
+			
+			{
+				final Variable vx = new Variable("x");
+				final Variable vy = new Variable("y");
+				final Variable vz = new Variable("z");
+				final Variable vP = new Variable("P");
+				
+				Variable.matchOrFail($forall(vx, $rule($(vx, IN, R),
+						$forall(vy, $rule($(vy, IN, R),
+								$forall(vz, $rule($(vz, IN, R),
+										vP)))))), proposition(-1));
+				
+				autobindTrim("definition_of_forall_in_3", vx.get(), vy.get(), vz.get(), R, vP.get());
+				
+				rewriteRight(name(-2), name(-1));
 			}
 			
 			conclude();
@@ -612,14 +629,14 @@ public final class ScalarAlgebra {
 									final BigDecimal a = leftBounds.get(_y);
 									
 									if (nx != null && a != null) {
-										autobind("preservation_of_≤_under_multiplication", a, _y);
-										abort();
-										autobindTrim("preservation_of_≤_under_multiplication", a, _y, nx);
-										autobindTrim("commutativity_of_*_in_" + R, left(right(proposition(-1))), right(right(proposition(-1))));
-										rewrite(name(-2), name(-1));
-										canonicalize(left(proposition(-1)));
-										rewrite(name(-2), name(-1));
-										leftBounds.put(expression, a.add(nx));
+										if (0 <= nx.signum()) {
+											autobindTrim("preservation_of_≤_under_nonnegative_multiplication", a, _y, nx);
+											autobindTrim("commutativity_of_*_in_" + R, left(right(proposition(-1))), right(right(proposition(-1))));
+											rewrite(name(-2), name(-1));
+											canonicalize(left(proposition(-1)));
+											rewrite(name(-2), name(-1));
+											leftBounds.put(expression, a.multiply(nx));
+										}
 									}
 								}
 								
@@ -628,11 +645,13 @@ public final class ScalarAlgebra {
 									final BigDecimal a = leftBounds.get(_x);
 									
 									if (a != null && ny != null) {
-										autobindTrim("preservation_of_≤_under_multiplication", a, _x, ny);
-										
-										canonicalize(left(proposition(-1)));
-										rewrite(name(-2), name(-1));
-										leftBounds.put(expression, a.add(ny));
+										if (0 <= ny.signum()) {
+											autobindTrim("preservation_of_≤_under_nonnegative_multiplication", a, _x, ny);
+											
+											canonicalize(left(proposition(-1)));
+											rewrite(name(-2), name(-1));
+											leftBounds.put(expression, a.add(ny));
+										}
 									}
 								}
 							}
@@ -702,6 +721,13 @@ public final class ScalarAlgebra {
 		 */
 		return tryPredicate((e, m) -> {
 			final Variable vx = new Variable("x");
+			
+			if (match($(0, "+", vx), e)) {
+				autobindTrim("neutrality_of_0", vx.get());
+				
+				return true;
+			}
+			
 			final Variable vy = new Variable("y");
 			final Variable va = new Variable("a");
 			final Variable vb = new Variable("b");

@@ -4,7 +4,7 @@ import static autodiff.reasoning.deductions.Basics.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.tactics.PatternMatching.match;
 import static autodiff.reasoning.tactics.Stack.*;
-import static multij.tools.Tools.ignore;
+import static multij.tools.Tools.*;
 
 import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.proofs.Deduction;

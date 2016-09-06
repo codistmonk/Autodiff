@@ -54,4 +54,10 @@ public final class PatternMatching extends AbstractExpressionEquality {
 		return new PatternMatching().apply(pattern, target);
 	}
 	
+	public static final void matchOrFail(final Object pattern, final Object target) {
+		if (!match(pattern, target)) {
+			throw new IllegalArgumentException("Failed to match " + pattern + " with " + target);
+		}
+	}
+	
 }

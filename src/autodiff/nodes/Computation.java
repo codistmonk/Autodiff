@@ -128,7 +128,6 @@ public final class Computation extends AbstractNode<Computation> {
 	public final Computation autoShape() {
 		final Deduction deduction = this.getBoundForm();
 		final Object proposition = deduction.getProposition(deduction.getPropositionName(-1));
-//		final Object shapeExpression = middle(right(middle(right(proposition))));
 		final Object shapeExpression = right(middle(right(proposition)));
 		
 		setShape(toInts(flattenSequence(",", shapeExpression)));
@@ -153,10 +152,6 @@ public final class Computation extends AbstractNode<Computation> {
 		
 		@Override
 		public final void run() {
-//			Basics.load();
-//			Sequences.load();
-//			Propositions.load();
-//			Sets.load();
 			ScalarAlgebra.load();
 			
 			supposeEliminationOfParentheses();
@@ -1294,8 +1289,6 @@ public final class Computation extends AbstractNode<Computation> {
 										subdeduction();
 										
 										autobindTrim("preservation_of_<_under_addition", 0, 1, m);
-										autobindTrim("commutativity_of_addition", 0, m);
-										rewrite(name(-2), name(-1));
 										autobindTrim("commutativity_of_addition", 1, m);
 										rewrite(name(-2), name(-1));
 										autobindTrim("neutrality_of_0", m);
@@ -1412,9 +1405,6 @@ public final class Computation extends AbstractNode<Computation> {
 				autoapply(name(-2));
 				
 				simplifyArithmeticInLast();
-				
-				autobindTrim("commutativity_of_addition", 0, _n);
-				rewrite(name(-2), name(-1));
 				
 				autobindTrim("neutrality_of_0", _n);
 				rewrite(name(-2), name(-1));
