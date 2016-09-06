@@ -89,6 +89,10 @@ public final class Expressions {
 		return Arrays.stream(objects).map(Expressions::$).collect(toList());
 	}
 	
+	public static final BigDecimal $N(final Object object) {
+		return cast(BigDecimal.class, $n(object));
+	}
+	
 	@SuppressWarnings("unchecked")
 	public static final <T> T $n(final Object object) {
 		if (object instanceof BigDecimal) {

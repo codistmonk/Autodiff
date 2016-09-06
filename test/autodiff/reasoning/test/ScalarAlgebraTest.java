@@ -7,6 +7,7 @@ import static autodiff.reasoning.tactics.Auto.autodeduce;
 import static autodiff.reasoning.tactics.Goal.newGoal;
 import static autodiff.reasoning.tactics.Stack.*;
 import static autodiff.reasoning.test.BasicsTest.build;
+import static multij.tools.Tools.debugPrint;
 
 import autodiff.reasoning.deductions.ScalarAlgebra;
 import autodiff.reasoning.io.Simple;
@@ -119,6 +120,35 @@ public final class ScalarAlgebraTest {
 				testAutodeduce($(0, LE, $(_a, "+", 1)));
 				testAutodeduce($(0, LE, $($(_a, "+", 1), "-", 1)));
 				testAutodeduce($(0, LE, $(_a, "*", 2)));
+				testAutodeduce($(_a, LE, $(_a, "+", 1)));
+				testAutodeduce($(_a, LE, $(_a, "*", 2)));
+			}
+			
+		});
+	}
+	
+	@Test
+	public final void testComparisons3() {
+		build(new Runnable() {
+			
+			@Override
+			public final void run() {
+				ScalarAlgebra.load();
+				
+				final Object _a = $new("a");
+				final Object _b = $new("b");
+				
+				suppose($(_a, IN, R));
+				suppose($(_b, IN, R));
+				suppose($(_a, LE, _b));
+				
+				debugPrint();
+				testAutodeduce($(_a, LE, _b));
+				debugPrint();
+				testAutodeduce($($(_a, "+", 1), LE, $(_b, "+", 1)));
+				debugPrint();
+				testAutodeduce($(_a, LE, $(_b, "+", 1)));
+				debugPrint();
 			}
 			
 		});
@@ -190,6 +220,9 @@ public final class ScalarAlgebraTest {
 				testCanonicalize(
 						$(0, "+", 1),
 						1);
+				testCanonicalize(
+						$(1, "+", $(-1, "+", _x)),
+						_x);
 				testCanonicalize(
 						$($(_x, "+", _y), "+", _z),
 						$(_x, "+", $(_y, "+", _z)));

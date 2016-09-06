@@ -556,6 +556,9 @@ public final class ScalarAlgebra {
 				
 				final Object _xx = right(proposition(-1));
 				
+				debugPrint(_x);
+				debugPrint(_xx);
+				
 				{
 					subdeduction();
 					
@@ -605,7 +608,6 @@ public final class ScalarAlgebra {
 									}
 								}
 								
-								
 								{
 									final BigDecimal a = leftBounds.get(_x);
 									
@@ -636,6 +638,9 @@ public final class ScalarAlgebra {
 											canonicalize(left(proposition(-1)));
 											rewrite(name(-2), name(-1));
 											leftBounds.put(expression, a.multiply(nx));
+										} else {
+											debugPrint("TODO");
+											abort();
 										}
 									}
 								}
@@ -651,6 +656,9 @@ public final class ScalarAlgebra {
 											canonicalize(left(proposition(-1)));
 											rewrite(name(-2), name(-1));
 											leftBounds.put(expression, a.add(ny));
+										} else {
+											debugPrint("TODO");
+											abort();
 										}
 									}
 								}
@@ -668,6 +676,47 @@ public final class ScalarAlgebra {
 						
 						autobindTrim("transitivity_of_≤", 0, a, _xx);
 					}
+					
+					conclude();
+				}
+				
+				rewriteRight(name(-1), name(-2));
+				
+				conclude();
+				
+				return true;
+			}));
+		}
+		
+		{
+			final Variable vx = new Variable("x");
+			final Variable vy = new Variable("y");
+			
+			hintAutodeduce(tryMatch($(vx, LE, vy), (e, m) -> {
+				final Object _x = vx.get();
+				final Object _y = vy.get();
+				
+				if (match($(0), _x)) {
+					return false;
+				}
+				
+				subdeduction();
+				
+				canonicalize(_y);
+				
+				debugPrint(e);
+				
+				final Object _yy = right(proposition(-1));
+				
+				{
+					subdeduction();
+					
+					autodeduce($(0, LE, $(_yy, "-", _x)));
+					autobindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), _x);
+					canonicalize(left(proposition(-1)));
+					rewrite(name(-2), name(-1));
+					canonicalize(right(proposition(-1)));
+					rewrite(name(-2), name(-1));
 					
 					conclude();
 				}
@@ -887,7 +936,7 @@ public final class ScalarAlgebra {
 		final Number n2 = cast(Number.class, object2);
 		
 		if (n1 != null && n2 != null) {
-			return 0;
+			return $N(object1).compareTo($N(object2));
 		}
 		
 		if (n1 != null) {
@@ -1329,10 +1378,13 @@ public final class ScalarAlgebra {
 				final Object _z = vz.get();
 				
 				// XXX why is this case not handled by elementary rule? 
-				if (!(_y instanceof Number || _z instanceof Number)) {
+				if (!(_y instanceof Number && _z instanceof Number)) {
 					autobindTrim("distributivity_of_*_over_+", _x, _y, _z);
 					
 					return true;
+				} else {
+					debugPrint(e);
+					abort();
 				}
 			}
 			
@@ -1342,7 +1394,7 @@ public final class ScalarAlgebra {
 				final Object _z = vz.get();
 				
 				// XXX why is this case not handled by elementary rule? 
-				if (!(_x instanceof Number || _y instanceof Number)) {
+				if (!(_x instanceof Number && _y instanceof Number)) {
 					subdeduction();
 					
 					autobindTrim("distributivity_of_*_over_+", _z, _x, _y);
@@ -1352,6 +1404,9 @@ public final class ScalarAlgebra {
 					conclude();
 					
 					return true;
+				} else {
+					debugPrint(e);
+					abort();
 				}
 			}
 			
