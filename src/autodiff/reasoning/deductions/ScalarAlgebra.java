@@ -263,6 +263,16 @@ public final class ScalarAlgebra {
 							$(0, LE, _x)));
 		}
 		
+		{
+			final Object _x = $new("x");
+			final Object _y = $new("y");
+			final Object _z = $new("z");
+			
+			suppose("distributivity_of_*_over_+",
+					$(FORALL, _x, ",", _y, ",", _z, IN, R,
+							$($(_x, "*", $(_y, "+", _z)), "=", $($(_x, "*", _y), "+", $(_x, "*", _z)))));
+		}
+		
 		for (final Object operator : array($("<"), $("<="), LE, ">", ">=", GE)) {
 			{
 				final Object _x = $new("x");
@@ -1272,6 +1282,8 @@ public final class ScalarAlgebra {
 		 */
 		return tryPredicate((e, m) -> {
 			final Variable vx = new Variable("x");
+			final Variable vy = new Variable("y");
+			final Variable vz = new Variable("y");
 			
 			if (match($(0, "*", vx), e)) {
 				autobindTrim("absorbingness_of_0", vx.get());
@@ -1285,7 +1297,38 @@ public final class ScalarAlgebra {
 				return true;
 			}
 			
-			final Variable vy = new Variable("y");
+			if (match($(vx, "*", $(vy, "+", vz)), e)) {
+				final Object _x = vx.get();
+				final Object _y = vy.get();
+				final Object _z = vz.get();
+				
+				// XXX why is this case not handled by elementary rule? 
+				if (!(_y instanceof Number || _z instanceof Number)) {
+					autobindTrim("distributivity_of_*_over_+", _x, _y, _z);
+					
+					return true;
+				}
+			}
+			
+			if (match($($(vx, "+", vy), "*", vz), e)) {
+				final Object _x = vx.get();
+				final Object _y = vy.get();
+				final Object _z = vz.get();
+				
+				// XXX why is this case not handled by elementary rule? 
+				if (!(_x instanceof Number || _y instanceof Number)) {
+					subdeduction();
+					
+					autobindTrim("distributivity_of_*_over_+", _z, _x, _y);
+					autobindTrim("commutativity_of_*_in_" + R, left(left(proposition(-1))), right(left(proposition(-1))));
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+					
+					return true;
+				}
+			}
+			
 			final Variable va = new Variable("a");
 			final Variable vb = new Variable("b");
 			
