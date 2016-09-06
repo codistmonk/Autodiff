@@ -58,6 +58,7 @@ public final class Sets {
 		supposeDefinitionOfForallIn();
 		supposeDefinitionOfForallIn2();
 		supposeDefinitionOfForallIn3();
+		supposeDefinitionOfForallIn4();
 		
 		supposeDefinitionOfSubset();
 		supposeSubsetInUhm();
@@ -151,6 +152,21 @@ public final class Sets {
 			
 			hintAutobind(tryMatch($(FORALL, vx, ",", vy, ",", vz, IN, vX, vP), (e, m) -> {
 				bind("definition_of_forall_in_3", vx.get(), vy.get(), vz.get(), vX.get(), vP.get());
+				
+				return true;
+			}));
+		}
+		
+		{
+			final Variable va = new Variable("a");
+			final Variable vb = new Variable("b");
+			final Variable vc = new Variable("c");
+			final Variable vd = new Variable("d");
+			final Variable vX = new Variable("X");
+			final Variable vP = new Variable("P");
+			
+			hintAutobind(tryMatch($(FORALL, va, ",", vb, ",", vc, ",", vd, IN, vX, vP), (e, m) -> {
+				bind("definition_of_forall_in_4", va.get(), vb.get(), vc.get(), vd.get(), vX.get(), vP.get());
 				
 				return true;
 			}));
@@ -291,7 +307,9 @@ public final class Sets {
 		final Object _P = $new("P");
 		
 		suppose("definition_of_forall_in", $forall(_x, _X, _P,
-				$($(FORALL, _x, IN, _X, _P), "=", $forall(_x, $rule($(_x, IN, _X), _P)))));
+				$($(FORALL, _x, IN, _X, _P),
+						"=", $forall(_x, $rule($(_x, IN, _X),
+								_P)))));
 	}
 	
 	public static final void supposeDefinitionOfForallIn2() {
@@ -301,7 +319,10 @@ public final class Sets {
 		final Object _P = $new("P");
 		
 		suppose("definition_of_forall_in_2", $forall(_x, _y, _X, _P,
-				$($(FORALL, _x, ",", _y, IN, _X, _P), "=", $forall(_x, $rule($(_x, IN, _X), $forall(_y, $rule($(_y, IN, _X), _P)))))));
+				$($(FORALL, _x, ",", _y, IN, _X, _P),
+						"=", $forall(_x, $rule($(_x, IN, _X),
+								$forall(_y, $rule($(_y, IN, _X),
+										_P)))))));
 	}
 	
 	public static final void supposeDefinitionOfForallIn3() {
@@ -313,7 +334,27 @@ public final class Sets {
 		
 		suppose("definition_of_forall_in_3", $forall(_x, _y, _z, _X, _P,
 				$($(FORALL, _x, ",", _y, ",", _z, IN, _X, _P),
-						"=", $forall(_x, $rule($(_x, IN, _X), $forall(_y, $rule($(_y, IN, _X), $forall(_z, $rule($(_z, IN, _X), _P)))))))));
+						"=", $forall(_x, $rule($(_x, IN, _X),
+								$forall(_y, $rule($(_y, IN, _X),
+										$forall(_z, $rule($(_z, IN, _X),
+												_P)))))))));
+	}
+	
+	public static final void supposeDefinitionOfForallIn4() {
+		final Object _a = $new("a");
+		final Object _b = $new("b");
+		final Object _c = $new("c");
+		final Object _d = $new("d");
+		final Object _X = $new("X");
+		final Object _P = $new("P");
+		
+		suppose("definition_of_forall_in_4", $forall(_a, _b, _c, _d, _X, _P,
+				$($(FORALL, _a, ",", _b, ",", _c, ",", _d, IN, _X, _P),
+						"=", $forall(_a, $rule($(_a, IN, _X),
+								$forall(_b, $rule($(_b, IN, _X),
+										$forall(_c, $rule($(_c, IN, _X),
+												$forall(_d, $rule($(_d, IN, _X),
+														_P)))))))))));
 	}
 	
 	public static final void supposeDefinitionOfSubset() {

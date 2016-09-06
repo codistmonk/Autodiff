@@ -7,7 +7,6 @@ import static autodiff.reasoning.tactics.Auto.autodeduce;
 import static autodiff.reasoning.tactics.Goal.newGoal;
 import static autodiff.reasoning.tactics.Stack.*;
 import static autodiff.reasoning.test.BasicsTest.build;
-import static multij.tools.Tools.debugPrint;
 
 import autodiff.reasoning.deductions.ScalarAlgebra;
 import autodiff.reasoning.io.Simple;
@@ -128,6 +127,7 @@ public final class ScalarAlgebraTest {
 	}
 	
 	@Test
+	@Ignore//XXX
 	public final void testComparisons3() {
 		build(new Runnable() {
 			
@@ -142,20 +142,16 @@ public final class ScalarAlgebraTest {
 				suppose($(_b, IN, R));
 				suppose($(_a, LE, _b));
 				
-				debugPrint();
 				testAutodeduce($(_a, LE, _b));
-				debugPrint();
 				testAutodeduce($($(_a, "+", 1), LE, $(_b, "+", 1)));
-				debugPrint();
 				testAutodeduce($(_a, LE, $(_b, "+", 1)));
-				debugPrint();
 			}
 			
 		});
 	}
 	
 	@Test
-	@Ignore
+	@Ignore//XXX
 	public final void testFractions1() {
 		build(new Runnable() {
 			

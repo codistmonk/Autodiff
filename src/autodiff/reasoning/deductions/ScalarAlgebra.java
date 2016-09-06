@@ -354,75 +354,141 @@ public final class ScalarAlgebra {
 		
 		loadAutoHints();
 		
-		if (true) {
+		{
 			subdeduction("preservation_of_≤_under_nonnegative_multiplication");
 			
 			{
-				subdeduction();
+				final Object _x = subdeductionForallIn("x", R);
+				final Object _y = subdeductionForallIn("y", R);
+				final Object _z = subdeductionForallIn("z", R);
 				
-				final Object _x = forall("x");
+				suppose($(0, LE, _z));
+				suppose($(_x, LE, _y));
 				
-				suppose($(_x, IN, R));
+				autobindTrim("preservation_of_" + LE + "_under_addition", _x, _y, $(-1, "*", _x));
+				canonicalize(left(proposition(-1)));
+				rewrite(name(-2), name(-1), 0);
+				
+				autobindTrim("preservation_of_" + LE + "_under_multiplication", right(proposition(-1)), _z);
+				
+				autobindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), $(_x, "*", _z));
+				canonicalize(left(proposition(-1)));
+				rewrite(name(-2), name(-1));
+				canonicalize(right(proposition(-1)));
+				rewrite(name(-2), name(-1));
+				
+				repeatConclude(3);
+			}
+			
+			buildForallIn3();
+			
+			conclude();
+		}
+		
+		for (final Object operator : array(LE, "<")) {
+			subdeduction("combination_of_" + operator + operator);
+			
+			{
+				final Object _a = subdeductionForallIn("a", R);
+				final Object _b = subdeductionForallIn("b", R);
+				final Object _c = subdeductionForallIn("c", R);
+				final Object _d = subdeductionForallIn("d", R);
+				
+				suppose($(_a, operator, _b));
+				suppose($(_c, operator, _d));
 				
 				{
 					subdeduction();
 					
-					final Object _y = forall("y");
+					autobindTrim("preservation_of_" + operator + "_under_addition", _c, _d, $(_b, "-", _c));
+					canonicalize(left(proposition(-1)));
+					rewrite(name(-2), name(-1));
 					
-					suppose($(_y, IN, R));
-					
-					{
-						subdeduction();
-						
-						final Object _z = forall("z");
-						
-						suppose($(_z, IN, R));
-						
-						suppose($(0, LE, _z));
-						suppose($(_x, LE, _y));
-						
-						autobindTrim("preservation_of_" + LE + "_under_addition", _x, _y, $(-1, "*", _x));
-						canonicalize(left(proposition(-1)));
-						rewrite(name(-2), name(-1), 0);
-						
-						autobindTrim("preservation_of_" + LE + "_under_multiplication", right(proposition(-1)), _z);
-						
-						autobindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), $(_x, "*", _z));
-						canonicalize(left(proposition(-1)));
-						rewrite(name(-2), name(-1), 0);
-						canonicalize(right(proposition(-1)));
-						rewrite(name(-2), name(-1), 0);
-						
-						conclude();
-					}
-				
 					conclude();
 				}
 				
-				conclude();
+				autobindTrim("transitivity_of_" + operator, _a, left(proposition(-1)), right(proposition(-1)));
+				
+				{
+					subdeduction();
+					
+					autobindTrim("preservation_of_" + operator + "_under_addition", left(proposition(-1)), right(proposition(-1)), _c);
+					canonicalize(right(proposition(-1)));
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				repeatConclude(4);
 			}
 			
-			{
-				final Variable vx = new Variable("x");
-				final Variable vy = new Variable("y");
-				final Variable vz = new Variable("z");
-				final Variable vP = new Variable("P");
-				
-				Variable.matchOrFail($forall(vx, $rule($(vx, IN, R),
-						$forall(vy, $rule($(vy, IN, R),
-								$forall(vz, $rule($(vz, IN, R),
-										vP)))))), proposition(-1));
-				
-				autobindTrim("definition_of_forall_in_3", vx.get(), vy.get(), vz.get(), R, vP.get());
-				
-				rewriteRight(name(-2), name(-1));
-			}
+			buildForallIn4();
 			
 			conclude();
 		}
 		
 		Sets.testSimplificationOfTypeOfTuple();
 		Sets.testVectorAccess();
+	}
+	
+	public static final void buildForallIn3() {
+		final Variable vx = new Variable("x");
+		final Variable vy = new Variable("y");
+		final Variable vz = new Variable("z");
+		final Variable vX = new Variable("X");
+		final Variable vP = new Variable("P");
+		
+		Variable.matchOrFail(
+				$forall(vx, $rule($(vx, IN, vX),
+						$forall(vy, $rule($(vy, IN, vX),
+								$forall(vz, $rule($(vz, IN, vX),
+										vP)))))), proposition(-1));
+		
+		subdeduction();
+		
+		autobindTrim("definition_of_forall_in_3", vx.get(), vy.get(), vz.get(), vX.get(), vP.get());
+		rewriteRight(name(-2), name(-1));
+		
+		conclude();
+	}
+	
+	public static final void buildForallIn4() {
+		final Variable va = new Variable("a");
+		final Variable vb = new Variable("b");
+		final Variable vc = new Variable("c");
+		final Variable vd = new Variable("d");
+		final Variable vX = new Variable("X");
+		final Variable vP = new Variable("P");
+		
+		Variable.matchOrFail(
+				$forall(va, $rule($(va, IN, vX),
+						$forall(vb, $rule($(vb, IN, vX),
+								$forall(vc, $rule($(vc, IN, vX),
+										$forall(vd, $rule($(vd, IN, vX),
+												vP)))))))), proposition(-1));
+		
+		subdeduction();
+		
+		autobindTrim("definition_of_forall_in_4", va.get(), vb.get(), vc.get(), vd.get(), vX.get(), vP.get());
+		rewriteRight(name(-2), name(-1));
+		
+		conclude();
+	}
+	
+	public static final Object subdeductionForallIn(final String variableName, final Object type) {
+		subdeduction();
+		
+		final Object result = forall(variableName);
+		
+		suppose($(result, IN, type));
+		
+		return result;
+	}
+	
+	public static final void repeatConclude(final int n) {
+		for (int i = 0; i < n; ++i) {
+			conclude();
+		}
 	}
 	
 	public static final void canonicalize(final Object expression) {
@@ -556,9 +622,6 @@ public final class ScalarAlgebra {
 				
 				final Object _xx = right(proposition(-1));
 				
-				debugPrint(_x);
-				debugPrint(_xx);
-				
 				{
 					subdeduction();
 					
@@ -592,8 +655,8 @@ public final class ScalarAlgebra {
 							if (match($(vx, "+", vy), expression)) {
 								final Object _x = vx.get();
 								final Object _y = vy.get();
-								final BigDecimal nx = cast(BigDecimal.class, $n(_x));
-								final BigDecimal ny = cast(BigDecimal.class, $n(_y));
+								final BigDecimal nx = $N(_x);
+								final BigDecimal ny = $N(_y);
 								
 								{
 									final BigDecimal a = leftBounds.get(_y);
@@ -624,8 +687,8 @@ public final class ScalarAlgebra {
 							if (match($(vx, "*", vy), expression)) {
 								final Object _x = vx.get();
 								final Object _y = vy.get();
-								final BigDecimal nx = cast(BigDecimal.class, $n(_x));
-								final BigDecimal ny = cast(BigDecimal.class, $n(_y));
+								final BigDecimal nx = $N(_x);
+								final BigDecimal ny = $N(_y);
 								
 								{
 									final BigDecimal a = leftBounds.get(_y);
@@ -644,7 +707,6 @@ public final class ScalarAlgebra {
 										}
 									}
 								}
-								
 								
 								{
 									final BigDecimal a = leftBounds.get(_x);
@@ -703,8 +765,6 @@ public final class ScalarAlgebra {
 				subdeduction();
 				
 				canonicalize(_y);
-				
-				debugPrint(e);
 				
 				final Object _yy = right(proposition(-1));
 				

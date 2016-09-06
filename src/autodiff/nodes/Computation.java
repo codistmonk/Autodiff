@@ -2,6 +2,7 @@ package autodiff.nodes;
 
 import static autodiff.reasoning.deductions.Basics.*;
 import static autodiff.reasoning.deductions.Propositions.*;
+import static autodiff.reasoning.deductions.ScalarAlgebra.canonicalize;
 import static autodiff.reasoning.deductions.ScalarAlgebra.newElementarySimplificationRule;
 import static autodiff.reasoning.deductions.Sequences.*;
 import static autodiff.reasoning.deductions.Sets.*;
@@ -11,6 +12,7 @@ import static autodiff.reasoning.tactics.Auto.autoapply;
 import static autodiff.reasoning.tactics.Auto.autoapplyOnce;
 import static autodiff.reasoning.tactics.Auto.autobind;
 import static autodiff.reasoning.tactics.Auto.autobindTrim;
+import static autodiff.reasoning.tactics.Auto.autodeduce;
 import static autodiff.reasoning.tactics.Auto.tryMatch;
 import static autodiff.reasoning.tactics.Goal.*;
 import static autodiff.reasoning.tactics.PatternPredicate.rule;
@@ -23,7 +25,6 @@ import autodiff.reasoning.deductions.ScalarAlgebra;
 import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
-import autodiff.reasoning.tactics.Auto;
 import autodiff.reasoning.tactics.Auto.Simplifier;
 import autodiff.rules.Rules;
 import autodiff.rules.TryRule;
@@ -1105,8 +1106,6 @@ public final class Computation extends AbstractNode<Computation> {
 					
 					final String definitionOfP = name(-1);
 					
-					deduceNaturalIsReal(m);
-					
 					{
 						subdeduction();
 						
@@ -1288,21 +1287,20 @@ public final class Computation extends AbstractNode<Computation> {
 									{
 										subdeduction();
 										
-										autobindTrim("preservation_of_<_under_addition", 0, 1, m);
-										autobindTrim("commutativity_of_addition", 1, m);
-										rewrite(name(-2), name(-1));
-										autobindTrim("neutrality_of_0", m);
+										autobindTrim("combination_of_<<", left(proposition(-1)), right(proposition(-1)), 0, 1);
+										canonicalize(left(proposition(-1)));
 										rewrite(name(-2), name(-1));
 										
-										autobindTrim("preservation_of_<_under_addition", m, $(m, "+", 1), 1);
-										autobindTrim("commutativity_of_addition", m, 1);
-										rewrite(name(-2), name(-1), 0);
-										autobindTrim("commutativity_of_addition", $(m, "+", 1), 1);
-										rewrite(name(-2), name(-1));
-										
-										deduceNaturalIsReal(k);
-										
-										autobindTrim("transitivity_of_<", k, $(1, "+", m), $(1, "+", $(m, "+", 1)));
+										{
+											final Variable va = new Variable("a");
+											final Variable vb = new Variable("b");
+											final Variable vc = new Variable("c");
+											
+											matchOrFail($($(va, "+", vb), "+", vc), right(proposition(-1)));
+											
+											autobindTrim("associativity_of_+_+_in_" + R, va.get(), vb.get(), vc.get());
+											rewrite(name(-2), name(-1));
+										}
 										
 										conclude();
 									}
@@ -1354,32 +1352,12 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			breakConjunction(name(-1));
 			
-			{
-				subdeduction("n_is_relative");
-				
-				autobindTrim("definition_of_subset", N, Z);
-				rewrite("naturals_subset_relatives", name(-1));
-				autobindTrim(name(-1), _n);
-				
-				conclude();
-			}
+			autodeduce($(_n, IN, Z));
 			
 			{
 				subdeduction();
 				
-				{
-					subdeduction();
-					
-					autobindTrim("definition_of_subset", N, Z);
-					rewrite("naturals_subset_relatives", name(-1));
-					autobindTrim(name(-1), _n);
-					
-					autobindTrim("equality_<" + LE, 0, _n);
-					
-//					simplifyArithmeticInLast(); // FIXME stack pops too far
-					
-					conclude();
-				}
+				autobindTrim("equality_<" + LE, 0, _n);
 				
 				rewrite(name(-3), name(-1));
 				simplifyArithmeticInLast();
@@ -1387,7 +1365,7 @@ public final class Computation extends AbstractNode<Computation> {
 				conclude();
 			}
 			
-			Auto.autodeduce($(_n, IN, R));
+			autodeduce($(_n, IN, R));
 			
 			{
 				subdeduction();
@@ -1395,29 +1373,14 @@ public final class Computation extends AbstractNode<Computation> {
 				autoapply("full_induction");
 				
 				canonicalizeForallIn(proposition(-1));
-				
 				rewrite(name(-2), name(-1));
 				
 				bind(name(-1), $(_n, "-", 1));
-				
 				autobindTrim("subtraction_in_naturals", _n, 1);
-				
 				autoapply(name(-2));
 				
-				simplifyArithmeticInLast();
-				
-				autobindTrim("neutrality_of_0", _n);
-				rewrite(name(-2), name(-1));
-				
-				{
-					final Variable vX = new Variable("X");
-					final Variable ve = new Variable("e");
-					
-					matchOrFail($(vX, "|", ve, "@", $()), proposition(-1));
-					
-					substitute(vX.get(), toMap(ve.get()));
-					rewrite(name(-2), name(-1));
-				}
+				subsituteLast();
+				canonicalizeLast();
 				
 				conclude();
 			}
@@ -1430,14 +1393,25 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 	}
 	
-	public static void deduceNaturalIsReal(final Object value) {
+	public static final void canonicalizeLast() {
 		subdeduction();
 		
-		autobindTrim("definition_of_subset", N, R);
+		canonicalize(proposition(-1));
+		rewrite(name(-2), name(-1));
 		
-		rewrite("naturals_subset_reals", name(-1));
+		conclude();
+	}
+	
+	public static final void subsituteLast() {
+		final Variable vX = new Variable("X");
+		final Variable ve = new Variable("e");
 		
-		autobindTrim(name(-1), value);
+		matchOrFail($(vX, "|", ve, "@", $()), proposition(-1));
+		
+		subdeduction();
+		
+		substitute(vX.get(), toMap(ve.get()));
+		rewrite(name(-2), name(-1));
 		
 		conclude();
 	}
