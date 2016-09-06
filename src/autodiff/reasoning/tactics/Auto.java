@@ -141,7 +141,6 @@ public final class Auto {
 				
 				for (Deduction d = deduction(); d != null; d = d.getParent()) {
 					try {
-//						autobindRules.get(d).applyTo(proposition(lastName));
 						autobindRules.get(d).apply(proposition(lastName));
 						rewrite(lastName, name(-1));
 						bind(name(-1), object);
@@ -223,6 +222,8 @@ public final class Auto {
 			
 			@Override
 			public final Result<Boolean> apply(final T e, final Map<Variable, Object> m) {
+				final Deduction deduction = deduction();
+				
 				try {
 					if (new PatternMatching(m).apply(pattern, e)
 						&& continuation.test(e, m)) {
@@ -232,6 +233,8 @@ public final class Auto {
 					throw exception;
 				} catch (final Exception exception) {
 					ignore(exception);
+					
+					popTo(deduction);
 				}
 				
 				return null;

@@ -345,6 +345,55 @@ public final class ScalarAlgebra {
 		
 		loadAutoHints();
 		
+		if (false) {
+			subdeduction("preservation_of_≤_under_nonnegative_multiplication");
+			
+			{
+				subdeduction();
+				
+				final Object _x = forall("x");
+				
+				suppose($(_x, IN, R));
+				
+				{
+					subdeduction();
+					
+					final Object _y = forall("y");
+					
+					suppose($(_y, IN, R));
+					
+					{
+						subdeduction();
+						
+						final Object _z = forall("z");
+						
+						suppose($(_z, IN, R));
+						
+						suppose($(0, LE, _z));
+						suppose($(_x, LE, _y));
+						
+						autobindTrim("preservation_of_" + LE + "_under_addition", _x, _y, $(-1, "*", _x));
+						canonicalize(left(proposition(-1)));
+						rewrite(name(-2), name(-1), 0);
+						
+						autobindTrim("preservation_of_" + LE + "_under_multiplication", right(proposition(-1)), _z);
+						// TODO distribute z
+						// TODO add xz
+						
+						abort();
+						
+						conclude();
+					}
+				
+					conclude();
+				}
+				
+				conclude();
+			}
+			
+			conclude();
+		}
+		
 		Sets.testSimplificationOfTypeOfTuple();
 		Sets.testVectorAccess();
 	}
@@ -478,77 +527,123 @@ public final class ScalarAlgebra {
 				
 				canonicalize(_x);
 				
-				final Map<Object, BigDecimal> leftBounds = new LinkedHashMap<>();
-				final Map<Object, BigDecimal> rightBounds = new LinkedHashMap<>();
-				
-				new ExpressionVisitor<Void>() {
-					
-					@Override
-					public final Void visit(final Object expression) {
-						final Variable va = new Variable("?");
-						
-						for (final Pair<PropositionDescription, PatternMatching> d : potentialJustificationsFor($(va, LE, expression))) {
-							final BigDecimal n = cast(BigDecimal.class, $n(d.getSecond().getMapping().get(va)));
-							
-							if (n != null) {
-								leftBounds.compute(expression, (k, v) -> v == null ? n : v.max(n));
-							}
-						}
-						
-						return null;
-					}
-					
-					@Override
-					public final Void visit(final List<?> expression) {
-						ExpressionVisitor.super.visit(expression);
-						
-						final Variable vx = new Variable("x");
-						final Variable vy = new Variable("y");
-						
-						if (match($(vx, "+", vy), expression)) {
-							final Object _x = vx.get();
-							final Object _y = vy.get();
-							final BigDecimal nx = cast(BigDecimal.class, $n(_x));
-							final BigDecimal ny = cast(BigDecimal.class, $n(_y));
-							
-							{
-								final BigDecimal a = leftBounds.get(_y);
-								
-								if (nx != null && a != null) {
-									// TODO
-									debugPrint("TODO");
-									abort();
-								}
-							}
-							
-							
-							{
-								final BigDecimal a = leftBounds.get(_x);
-								
-								if (a != null && ny != null) {
-									autobindTrim("preservation_of_≤_under_addition", a, _x, ny);
-									
-									canonicalize(left(proposition(-1)));
-									rewrite(name(-2), name(-1));
-									leftBounds.put(expression, a.add(ny));
-								}
-							}
-						}
-						
-						return null;
-					}
-					
-					private static final long serialVersionUID = 7743324648699993537L;
-					
-				}.apply(right(proposition(-1)));
-				
-				abort();
+				final Object _xx = right(proposition(-1));
 				
 				{
-					final BigDecimal a = leftBounds.get(_x);
+					subdeduction();
 					
-					autobindTrim("transitivity_of_≤", 0, a, _x);
+					final Map<Object, BigDecimal> leftBounds = new LinkedHashMap<>();
+					final Map<Object, BigDecimal> rightBounds = new LinkedHashMap<>();
+					
+					new ExpressionVisitor<Void>() {
+						
+						@Override
+						public final Void visit(final Object expression) {
+							final Variable va = new Variable("?");
+							
+							for (final Pair<PropositionDescription, PatternMatching> d : potentialJustificationsFor($(va, LE, expression))) {
+								final BigDecimal n = cast(BigDecimal.class, $n(d.getSecond().getMapping().get(va)));
+								
+								if (n != null) {
+									leftBounds.compute(expression, (k, v) -> v == null ? n : v.max(n));
+								}
+							}
+							
+							return null;
+						}
+						
+						@Override
+						public final Void visit(final List<?> expression) {
+							ExpressionVisitor.super.visit(expression);
+							
+							final Variable vx = new Variable("x");
+							final Variable vy = new Variable("y");
+							
+							if (match($(vx, "+", vy), expression)) {
+								final Object _x = vx.get();
+								final Object _y = vy.get();
+								final BigDecimal nx = cast(BigDecimal.class, $n(_x));
+								final BigDecimal ny = cast(BigDecimal.class, $n(_y));
+								
+								{
+									final BigDecimal a = leftBounds.get(_y);
+									
+									if (nx != null && a != null) {
+										autobindTrim("preservation_of_≤_under_addition", a, _y, nx);
+										autobindTrim("commutativity_of_+_in_" + R, left(right(proposition(-1))), right(right(proposition(-1))));
+										rewrite(name(-2), name(-1));
+										canonicalize(left(proposition(-1)));
+										rewrite(name(-2), name(-1));
+										leftBounds.put(expression, a.add(nx));
+									}
+								}
+								
+								
+								{
+									final BigDecimal a = leftBounds.get(_x);
+									
+									if (a != null && ny != null) {
+										autobindTrim("preservation_of_≤_under_addition", a, _x, ny);
+										
+										canonicalize(left(proposition(-1)));
+										rewrite(name(-2), name(-1));
+										leftBounds.put(expression, a.add(ny));
+									}
+								}
+							}
+							
+							if (match($(vx, "*", vy), expression)) {
+								final Object _x = vx.get();
+								final Object _y = vy.get();
+								final BigDecimal nx = cast(BigDecimal.class, $n(_x));
+								final BigDecimal ny = cast(BigDecimal.class, $n(_y));
+								
+								{
+									final BigDecimal a = leftBounds.get(_y);
+									
+									if (nx != null && a != null) {
+										autobind("preservation_of_≤_under_multiplication", a, _y);
+										abort();
+										autobindTrim("preservation_of_≤_under_multiplication", a, _y, nx);
+										autobindTrim("commutativity_of_*_in_" + R, left(right(proposition(-1))), right(right(proposition(-1))));
+										rewrite(name(-2), name(-1));
+										canonicalize(left(proposition(-1)));
+										rewrite(name(-2), name(-1));
+										leftBounds.put(expression, a.add(nx));
+									}
+								}
+								
+								
+								{
+									final BigDecimal a = leftBounds.get(_x);
+									
+									if (a != null && ny != null) {
+										autobindTrim("preservation_of_≤_under_multiplication", a, _x, ny);
+										
+										canonicalize(left(proposition(-1)));
+										rewrite(name(-2), name(-1));
+										leftBounds.put(expression, a.add(ny));
+									}
+								}
+							}
+							
+							return null;
+						}
+						
+						private static final long serialVersionUID = 7743324648699993537L;
+						
+					}.apply(_xx);
+					
+					{
+						final BigDecimal a = leftBounds.get(_xx);
+						
+						autobindTrim("transitivity_of_≤", 0, a, _xx);
+					}
+					
+					conclude();
 				}
+				
+				rewriteRight(name(-1), name(-2));
 				
 				conclude();
 				
@@ -1177,6 +1272,19 @@ public final class ScalarAlgebra {
 		 */
 		return tryPredicate((e, m) -> {
 			final Variable vx = new Variable("x");
+			
+			if (match($(0, "*", vx), e)) {
+				autobindTrim("absorbingness_of_0", vx.get());
+				
+				return true;
+			}
+			
+			if (match($(1, "*", vx), e)) {
+				autobindTrim("neutrality_of_1", vx.get());
+				
+				return true;
+			}
+			
 			final Variable vy = new Variable("y");
 			final Variable va = new Variable("a");
 			final Variable vb = new Variable("b");
