@@ -931,34 +931,9 @@ public final class Computation extends AbstractNode<Computation> {
 								autobindTrim("meaning_of_repeat_2", $1(vp0.get()), va.get(), 0, 1, vq.get());
 							}
 							
-							verifyElementaryProposition($($(1, "-", 1), "=", 0));
-							rewrite(name(-2), name(-1));
+							canonicalizeLast();
 							
-							{
-								final Variable va = new Variable("a");
-								final Variable vb = new Variable("b");
-								final Variable vc = new Variable("c");
-								final Variable vd = new Variable("d");
-								
-								matchOrFail($($("sequence_append", ";", va, vb), "=",
-										$("sequence_concatenate", ";", va, $("sequence_concatenate", ";", vc, vd))), proposition(-1));
-								
-								computeSequenceAppend(";", va.get(), vb.get());
-								rewrite(name(-2), name(-1));
-								
-								computeSequenceConcatenate(";", vc.get(), vd.get());
-								rewrite(name(-2), name(-1));
-							}
-							
-							{
-								final Variable va = new Variable("a");
-								final Variable vb = new Variable("b");
-								
-								matchOrFail($("sequence_concatenate", ";", va, vb), right(proposition(-1)));
-								
-								computeSequenceConcatenate(";", va.get(), vb.get());
-								rewrite(name(-2), name(-1));
-							}
+							simplifySequenceAppendAndConcatenateInLast();
 							
 							conclude();
 						}
@@ -1029,7 +1004,7 @@ public final class Computation extends AbstractNode<Computation> {
 										"i", 0, "result", 0,
 										$1(app("write", str("result"), app("read", str("i"), 0), 1)));
 								
-								autobindTrim("left_elimination_of_disjunction", left(condition(proposition(-1))), right(condition(proposition(-1))), conclusion(proposition(-1)));
+								leftEliminateDisjunction(name(-1));
 								
 								simplifySequenceAppendInLast();
 								
@@ -1039,7 +1014,6 @@ public final class Computation extends AbstractNode<Computation> {
 									autobindTrim("meaning_of_allocate_0", $(), "i", 1, "result", 0);
 									
 									simplifySequenceAppendInLast();
-									
 									
 									conclude();
 								}
@@ -1051,13 +1025,7 @@ public final class Computation extends AbstractNode<Computation> {
 							
 							rewriteRight(name(-2), name(-1));
 							
-							{
-								subdeduction("result_element_is_real");
-								
-								autobindTrim(resultReality, 0);
-								
-								conclude();
-							}
+							autobindTrim(resultReality, 0);
 							
 							autoapply(name(-2));
 							
@@ -1242,17 +1210,9 @@ public final class Computation extends AbstractNode<Computation> {
 							conclude();
 						}
 						
-						{
-							final Variable vx = new Variable("x");
-							final Variable vy = new Variable("y");
-							final Variable vz = new Variable("z");
-							
-							matchOrFail($rule($(vx, LOR, vy), vz), proposition(-2));
-							
-							autobindTrim("right_elimination_of_disjunction", vx.get(), vy.get(), vz.get());
-						}
+						rightEliminateDisjunction(name(-2));
 						
-						autobindTrim("commutativity_of_equality", left(proposition(-1)), right(proposition(-1)));
+						commuteEquality(name(-1));
 						
 						conclude();
 					}
@@ -1394,6 +1354,32 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 	}
 	
+	public static final void commuteEquality(final String targetName) {
+		final Object target = proposition(targetName);
+		
+		autobindTrim("commutativity_of_equality", left(target), right(target));
+	}
+	
+	public static final void leftEliminateDisjunction(final String targetName) {
+		final Variable vx = new Variable("x");
+		final Variable vy = new Variable("y");
+		final Variable vz = new Variable("z");
+		
+		matchOrFail($rule($(vx, LOR, vy), vz), proposition(targetName));
+		
+		autobindTrim("left_elimination_of_disjunction", vx.get(), vy.get(), vz.get());
+	}
+	
+	public static final void rightEliminateDisjunction(final String targetName) {
+		final Variable vx = new Variable("x");
+		final Variable vy = new Variable("y");
+		final Variable vz = new Variable("z");
+		
+		matchOrFail($rule($(vx, LOR, vy), vz), proposition(targetName));
+		
+		autobindTrim("right_elimination_of_disjunction", vx.get(), vy.get(), vz.get());
+	}
+	
 	public static final void canonicalizeLast() {
 		subdeduction();
 		
@@ -1438,6 +1424,14 @@ public final class Computation extends AbstractNode<Computation> {
 				.add(newSubstitutionSimplificationRule())
 				.add(tryMatch(new Variable("*"), (e, m) -> false))
 				.simplifyCompletely(proposition(-1));
+	}
+	
+	public static final void simplifySequenceAppendAndConcatenateInLast() {
+		new Simplifier()
+		.add(newSequenceAppendSimplificationRule())
+		.add(newSequenceConcatenateSimplificationRule())
+		.add(tryMatch(new Variable("*"), (e, m) -> false))
+		.simplifyCompletely(proposition(-1));
 	}
 	
 	public static final void simplifySequenceAppendInLast() {
