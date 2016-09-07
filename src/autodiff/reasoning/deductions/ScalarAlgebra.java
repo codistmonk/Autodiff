@@ -17,10 +17,10 @@ import autodiff.reasoning.proofs.Substitution;
 import autodiff.reasoning.tactics.Auto;
 import autodiff.reasoning.tactics.PatternMatching;
 import autodiff.reasoning.tactics.Stack.AbortException;
-import autodiff.rules.Predicate;
-import autodiff.rules.Rules.Result;
-import autodiff.rules.TryRule;
-import autodiff.rules.Variable;
+import multij.rules.Predicate;
+import multij.rules.Rules.Result;
+import multij.rules.TryRule;
+import multij.rules.Variable;
 
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;

@@ -3,7 +3,7 @@ package autodiff.reasoning.tactics;
 import static multij.tools.Tools.cast;
 
 import autodiff.reasoning.proofs.Substitution.AbstractExpressionEquality;
-import autodiff.rules.Variable;
+import multij.rules.Variable;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

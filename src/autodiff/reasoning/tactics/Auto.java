@@ -10,16 +10,16 @@ import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.tactics.Stack.AbortException;
 import autodiff.reasoning.tactics.Stack.PropositionDescription;
-import autodiff.rules.Predicate;
-import autodiff.rules.Rules;
-import autodiff.rules.Rules.Result;
-import autodiff.rules.TryRule;
-import autodiff.rules.Variable;
 
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import multij.rules.Predicate;
+import multij.rules.Rules;
+import multij.rules.Rules.Result;
+import multij.rules.TryRule;
+import multij.rules.Variable;
 import multij.tools.IllegalInstantiationException;
 
 /**

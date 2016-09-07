@@ -15,7 +15,7 @@
             	<present present="srconly" targetdir="test"/>
         	</fileset>
             <fileset dir="src"/>
-            <zipfileset excludes="META-INF/*.SF" src="lib/multij-1.8.201606081340.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="lib/multij-1.8.201609070956.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="lib/JOCL-0.1.9.jar"/>
             <zipfileset excludes="META-INF/*.SF" src="lib/jgraphx.jar"/>
         </jar>

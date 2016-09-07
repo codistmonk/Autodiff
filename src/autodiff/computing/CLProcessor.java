@@ -4,7 +4,7 @@ import static autodiff.computing.Functions.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.R;
 import static autodiff.reasoning.tactics.Stack.*;
-import static autodiff.rules.PatternPredicate.matchWith;
+import static multij.rules.PatternPredicate.matchWith;
 import static java.lang.Math.max;
 import static multij.tools.Tools.cast;
 import static multij.tools.Tools.swap;
@@ -24,7 +24,6 @@ import autodiff.nodes.Computation.ToCLHelper;
 import autodiff.reasoning.deductions.Basics;
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
-import autodiff.rules.Rules;
 
 import java.io.Serializable;
 import java.nio.Buffer;
@@ -38,6 +37,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
+import multij.rules.Rules;
 import multij.tools.Pair;
 import multij.tools.TicToc;
 
@@ -490,42 +490,42 @@ public final class CLProcessor implements NodeProcessor {
 		{
 			for (final List<Object> definition : Functions.getDefinitions().values()) {
 				{
-					final autodiff.rules.Variable x = new autodiff.rules.Variable();
-					final autodiff.rules.Variable y = new autodiff.rules.Variable();
-					final autodiff.rules.Variable z = new autodiff.rules.Variable();
+					final multij.rules.Variable x = new multij.rules.Variable();
+					final multij.rules.Variable y = new multij.rules.Variable();
+					final multij.rules.Variable z = new multij.rules.Variable();
 					final List<Object> function1DefinitionPattern = $$(FORALL, $$(x), IN, R, $$(y, "=", z));
-					final Map<autodiff.rules.Variable, Object> mapping = new HashMap<>();
+					final Map<multij.rules.Variable, Object> mapping = new HashMap<>();
 					
-					if (autodiff.rules.Variable.match(function1DefinitionPattern, definition, mapping)
+					if (multij.rules.Variable.match(function1DefinitionPattern, definition, mapping)
 							&& !mapping.get(y).equals(mapping.get(z))) {
 						final Map<Object, Object> m_ = new HashMap<>();
 						
 						m_.put(mapping.get(x), x);
 						
-						final Object y_ = autodiff.rules.Variable.rewrite(mapping.get(y), m_);
-						final Object z_ = autodiff.rules.Variable.rewrite(mapping.get(z), m_);
+						final Object y_ = multij.rules.Variable.rewrite(mapping.get(y), m_);
+						final Object z_ = multij.rules.Variable.rewrite(mapping.get(z), m_);
 						
 						this.rules.add(matchWith(y_, (__, m) -> this.rules.applyTo(z_, m)));
 					}
 				}
 				
 				{
-					final autodiff.rules.Variable x0 = new autodiff.rules.Variable();
-					final autodiff.rules.Variable x1 = new autodiff.rules.Variable();
-					final autodiff.rules.Variable y = new autodiff.rules.Variable();
-					final autodiff.rules.Variable z = new autodiff.rules.Variable();
+					final multij.rules.Variable x0 = new multij.rules.Variable();
+					final multij.rules.Variable x1 = new multij.rules.Variable();
+					final multij.rules.Variable y = new multij.rules.Variable();
+					final multij.rules.Variable z = new multij.rules.Variable();
 					final List<Object> function2DefinitionPattern = $$(FORALL, $$(x0, x1), IN, R, $$(y, "=", z));
-					final Map<autodiff.rules.Variable, Object> mapping = new HashMap<>();
+					final Map<multij.rules.Variable, Object> mapping = new HashMap<>();
 					
-					if (autodiff.rules.Variable.match(function2DefinitionPattern, definition, mapping)
+					if (multij.rules.Variable.match(function2DefinitionPattern, definition, mapping)
 							&& !mapping.get(y).equals(mapping.get(z))) {
 						final Map<Object, Object> m_ = new HashMap<>();
 						
 						m_.put(mapping.get(x0), x0);
 						m_.put(mapping.get(x1), x1);
 						
-						final Object y_ = autodiff.rules.Variable.rewrite(mapping.get(y), m_);
-						final Object z_ = autodiff.rules.Variable.rewrite(mapping.get(z), m_);
+						final Object y_ = multij.rules.Variable.rewrite(mapping.get(y), m_);
+						final Object z_ = multij.rules.Variable.rewrite(mapping.get(z), m_);
 						
 						this.rules.add(matchWith(y_, (__, m) -> this.rules.applyTo(z_, m)));
 					}
@@ -577,7 +577,7 @@ public final class CLProcessor implements NodeProcessor {
 			}
 			
 			{
-				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final multij.rules.Variable x = new multij.rules.Variable();
 				
 				this.rules.add(matchWith($$(ABS, x), (__, m) -> {
 					return prefix("abs", x, m);
@@ -585,7 +585,7 @@ public final class CLProcessor implements NodeProcessor {
 			}
 			
 			{
-				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final multij.rules.Variable x = new multij.rules.Variable();
 				
 				this.rules.add(matchWith($$(SQRT, x), (__, m) -> {
 					return prefix("sqrt", x, m);
@@ -593,7 +593,7 @@ public final class CLProcessor implements NodeProcessor {
 			}
 			
 			{
-				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final multij.rules.Variable x = new multij.rules.Variable();
 				
 				this.rules.add(matchWith($$(EXP, x), (__, m) -> {
 					return prefix("exp", x, m);
@@ -601,7 +601,7 @@ public final class CLProcessor implements NodeProcessor {
 			}
 			
 			{
-				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final multij.rules.Variable x = new multij.rules.Variable();
 				
 				this.rules.add(matchWith($$("-", x), (__, m) -> {
 					return prefix("-", x, m);
@@ -609,7 +609,7 @@ public final class CLProcessor implements NodeProcessor {
 			}
 			
 			{
-				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final multij.rules.Variable x = new multij.rules.Variable();
 				
 				this.rules.add(matchWith($$(LN, x), (__, m) -> {
 					return prefix("log", x, m);
@@ -617,7 +617,7 @@ public final class CLProcessor implements NodeProcessor {
 			}
 			
 			{
-				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final multij.rules.Variable x = new multij.rules.Variable();
 				
 				this.rules.add(matchWith($$(SIN, x), (__, m) -> {
 					return prefix("sin", x, m);
@@ -625,7 +625,7 @@ public final class CLProcessor implements NodeProcessor {
 			}
 			
 			{
-				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final multij.rules.Variable x = new multij.rules.Variable();
 				
 				this.rules.add(matchWith($$(COS, x), (__, m) -> {
 					return prefix("cos", x, m);
@@ -633,7 +633,7 @@ public final class CLProcessor implements NodeProcessor {
 			}
 			
 			{
-				final autodiff.rules.Variable x = new autodiff.rules.Variable();
+				final multij.rules.Variable x = new multij.rules.Variable();
 				
 				this.rules.add(matchWith($$(ROUND, x), (__, m) -> {
 					return prefix("round", x, m);
@@ -641,8 +641,8 @@ public final class CLProcessor implements NodeProcessor {
 			}
 			
 			{
-				final autodiff.rules.Variable x = new autodiff.rules.Variable();
-				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				final multij.rules.Variable x = new multij.rules.Variable();
+				final multij.rules.Variable y = new multij.rules.Variable();
 				
 				this.rules.add(matchWith($$(x, "+", y), (__, m) -> {
 					return infix("+", x, y, m);
@@ -650,8 +650,8 @@ public final class CLProcessor implements NodeProcessor {
 			}
 			
 			{
-				final autodiff.rules.Variable x = new autodiff.rules.Variable();
-				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				final multij.rules.Variable x = new multij.rules.Variable();
+				final multij.rules.Variable y = new multij.rules.Variable();
 				
 				this.rules.add(matchWith($$(x, "-", y), (__, m) -> {
 					return infix("-", x, y, m);
@@ -659,8 +659,8 @@ public final class CLProcessor implements NodeProcessor {
 			}
 			
 			{
-				final autodiff.rules.Variable x = new autodiff.rules.Variable();
-				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				final multij.rules.Variable x = new multij.rules.Variable();
+				final multij.rules.Variable y = new multij.rules.Variable();
 				
 				this.rules.add(matchWith($$(x, "*", y), (__, m) -> {
 					return infix("*", x, y, m);
@@ -668,8 +668,8 @@ public final class CLProcessor implements NodeProcessor {
 			}
 			
 			{
-				final autodiff.rules.Variable x = new autodiff.rules.Variable();
-				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				final multij.rules.Variable x = new multij.rules.Variable();
+				final multij.rules.Variable y = new multij.rules.Variable();
 				
 				this.rules.add(matchWith($$(x, "/", y), (__, m) -> {
 					return infix("/", x, y, m);
@@ -677,8 +677,8 @@ public final class CLProcessor implements NodeProcessor {
 			}
 			
 			{
-				final autodiff.rules.Variable x = new autodiff.rules.Variable();
-				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				final multij.rules.Variable x = new multij.rules.Variable();
+				final multij.rules.Variable y = new multij.rules.Variable();
 				
 				this.rules.add(matchWith($$(x, "=", y), (__, m) -> {
 					return infix("==", x, y, m);
@@ -686,8 +686,8 @@ public final class CLProcessor implements NodeProcessor {
 			}
 			
 			{
-				final autodiff.rules.Variable x = new autodiff.rules.Variable();
-				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				final multij.rules.Variable x = new multij.rules.Variable();
+				final multij.rules.Variable y = new multij.rules.Variable();
 				
 				this.rules.add(matchWith($$(x, "!=", y), (__, m) -> {
 					return infix("!=", x, y, m);
@@ -695,8 +695,8 @@ public final class CLProcessor implements NodeProcessor {
 			}
 			
 			{
-				final autodiff.rules.Variable x = new autodiff.rules.Variable();
-				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				final multij.rules.Variable x = new multij.rules.Variable();
+				final multij.rules.Variable y = new multij.rules.Variable();
 				
 				this.rules.add(matchWith($$(x, "<", y), (__, m) -> {
 					return infix("<", x, y, m);
@@ -704,8 +704,8 @@ public final class CLProcessor implements NodeProcessor {
 			}
 			
 			{
-				final autodiff.rules.Variable x = new autodiff.rules.Variable();
-				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				final multij.rules.Variable x = new multij.rules.Variable();
+				final multij.rules.Variable y = new multij.rules.Variable();
 				
 				this.rules.add(matchWith($$(x, "<=", y), (__, m) -> {
 					return infix("<=", x, y, m);
@@ -713,8 +713,8 @@ public final class CLProcessor implements NodeProcessor {
 			}
 			
 			{
-				final autodiff.rules.Variable x = new autodiff.rules.Variable();
-				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				final multij.rules.Variable x = new multij.rules.Variable();
+				final multij.rules.Variable y = new multij.rules.Variable();
 				
 				this.rules.add(matchWith($$(x, ">", y), (__, m) -> {
 					return infix(">", x, y, m);
@@ -722,15 +722,15 @@ public final class CLProcessor implements NodeProcessor {
 			}
 			
 			{
-				final autodiff.rules.Variable x = new autodiff.rules.Variable();
-				final autodiff.rules.Variable y = new autodiff.rules.Variable();
+				final multij.rules.Variable x = new multij.rules.Variable();
+				final multij.rules.Variable y = new multij.rules.Variable();
 				
 				this.rules.add(matchWith($$(x, ">=", y), (__, m) -> {
 					return infix(">=", x, y, m);
 				}));
 			}
 			
-			this.rules.add((object, __) -> object instanceof autodiff.rules.Variable, (name, m) -> {
+			this.rules.add((object, __) -> object instanceof multij.rules.Variable, (name, m) -> {
 				final Object value = DefaultProcessor.Context.transitiveGet(m, name);
 				
 				if (value instanceof String) {
@@ -743,11 +743,11 @@ public final class CLProcessor implements NodeProcessor {
 			this.rules.add((object, __) -> object instanceof Number, (x, __) -> x.toString());
 		}
 		
-		final String prefix(final String op, final autodiff.rules.Variable x, final Map<autodiff.rules.Variable, Object> m) {
+		final String prefix(final String op, final multij.rules.Variable x, final Map<multij.rules.Variable, Object> m) {
 			return op + "(" + this.rules.applyTo(m.get(x), m) + ")";
 		}
 		
-		final String infix(final String op, final autodiff.rules.Variable x, final autodiff.rules.Variable y, final Map<autodiff.rules.Variable, Object> m) {
+		final String infix(final String op, final multij.rules.Variable x, final multij.rules.Variable y, final Map<multij.rules.Variable, Object> m) {
 			return "(" + this.rules.applyTo(m.get(x), m) + op + this.rules.applyTo(m.get(y), m) + ")";
 		}
 		
@@ -764,13 +764,13 @@ public final class CLProcessor implements NodeProcessor {
 			this.reset();
 			
 			{
-				final autodiff.rules.Variable x = new autodiff.rules.Variable();
-				final autodiff.rules.Variable y = new autodiff.rules.Variable();
-				final autodiff.rules.Variable z = new autodiff.rules.Variable();
+				final multij.rules.Variable x = new multij.rules.Variable();
+				final multij.rules.Variable y = new multij.rules.Variable();
+				final multij.rules.Variable z = new multij.rules.Variable();
 				final List<Object> function1DefinitionPattern = $$(FORALL, $$(x), IN, R, $$(y, "=", z));
-				final Map<autodiff.rules.Variable, Object> mapping = new HashMap<>();
+				final Map<multij.rules.Variable, Object> mapping = new HashMap<>();
 				
-				if (autodiff.rules.Variable.match(function1DefinitionPattern, definition, mapping)) {
+				if (multij.rules.Variable.match(function1DefinitionPattern, definition, mapping)) {
 //					final Variable variable = new Variable();
 					
 //					if (this.variables.put(x, variable) != null) {
@@ -783,7 +783,7 @@ public final class CLProcessor implements NodeProcessor {
 					
 					final Map<Object, Object> m_ = new HashMap<>();
 					m_.put(mapping.get(x), x);
-					final Object z_ = autodiff.rules.Variable.rewrite(mapping.get(z), m_);
+					final Object z_ = multij.rules.Variable.rewrite(mapping.get(z), m_);
 					
 //					mapping.put(x, variable);
 					
@@ -792,14 +792,14 @@ public final class CLProcessor implements NodeProcessor {
 			}
 			
 			{
-				final autodiff.rules.Variable x0 = new autodiff.rules.Variable();
-				final autodiff.rules.Variable x1 = new autodiff.rules.Variable();
-				final autodiff.rules.Variable y = new autodiff.rules.Variable();
-				final autodiff.rules.Variable z = new autodiff.rules.Variable();
+				final multij.rules.Variable x0 = new multij.rules.Variable();
+				final multij.rules.Variable x1 = new multij.rules.Variable();
+				final multij.rules.Variable y = new multij.rules.Variable();
+				final multij.rules.Variable z = new multij.rules.Variable();
 				final List<Object> function2DefinitionPattern = $$(FORALL, $$(x0, x1), IN, R, $$(y, "=", z));
-				final Map<autodiff.rules.Variable, Object> mapping = new HashMap<>();
+				final Map<multij.rules.Variable, Object> mapping = new HashMap<>();
 				
-				if (autodiff.rules.Variable.match(function2DefinitionPattern, definition, mapping)) {
+				if (multij.rules.Variable.match(function2DefinitionPattern, definition, mapping)) {
 //					final Variable variable0 = new Variable();
 //					
 //					if (this.variables.put(x0, variable0) != null) {
@@ -820,7 +820,7 @@ public final class CLProcessor implements NodeProcessor {
 					final Map<Object, Object> m_ = new HashMap<>();
 					m_.put(mapping.get(x0), x0);
 					m_.put(mapping.get(x1), x1);
-					final Object z_ = autodiff.rules.Variable.rewrite(mapping.get(z), m_);
+					final Object z_ = multij.rules.Variable.rewrite(mapping.get(z), m_);
 					
 //					mapping.put(x0, variable0);
 //					mapping.put(x1, variable1);

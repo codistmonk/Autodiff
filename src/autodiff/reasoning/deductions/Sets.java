@@ -15,10 +15,6 @@ import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.tactics.PatternMatching;
 import autodiff.reasoning.tactics.Stack.AbortException;
 import autodiff.reasoning.tactics.Stack.PropositionDescription;
-import autodiff.rules.Rules;
-import autodiff.rules.Rules.Result;
-import autodiff.rules.TryRule;
-import autodiff.rules.Variable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,6 +24,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import multij.rules.Rules;
+import multij.rules.Rules.Result;
+import multij.rules.TryRule;
+import multij.rules.Variable;
 import multij.tools.IllegalInstantiationException;
 import multij.tools.Pair;
 import multij.tools.Tools;

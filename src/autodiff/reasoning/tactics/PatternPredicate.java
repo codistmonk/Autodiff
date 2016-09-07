@@ -2,10 +2,10 @@ package autodiff.reasoning.tactics;
 
 import java.util.Map;
 
-import autodiff.rules.Application;
-import autodiff.rules.Predicate;
-import autodiff.rules.CompositeRule;
-import autodiff.rules.Variable;
+import multij.rules.Application;
+import multij.rules.Predicate;
+import multij.rules.CompositeRule;
+import multij.rules.Variable;
 
 /**
  * @author codistmonk (creation 2016-08-16)

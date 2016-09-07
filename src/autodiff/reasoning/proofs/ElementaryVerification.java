@@ -1,14 +1,12 @@
 package autodiff.reasoning.proofs;
 
 import static autodiff.reasoning.expressions.Expressions.*;
-import static autodiff.rules.PatternPredicate.matchWith;
+import static multij.rules.PatternPredicate.matchWith;
 import static java.util.stream.Collectors.toList;
 import static multij.tools.Tools.cast;
 import static multij.tools.Tools.ignore;
 
 import autodiff.reasoning.expressions.ExpressionRewriter;
-import autodiff.rules.Rules;
-import autodiff.rules.Variable;
 
 import java.math.BigDecimal;
 import java.util.Collection;
@@ -16,6 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import multij.rules.Rules;
+import multij.rules.Variable;
 import multij.tools.Tools;
 
 /**

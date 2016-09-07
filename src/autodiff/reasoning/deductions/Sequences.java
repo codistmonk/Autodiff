@@ -9,8 +9,6 @@ import static autodiff.reasoning.tactics.Stack.*;
 import static multij.tools.Tools.append;
 
 import autodiff.reasoning.tactics.Goal;
-import autodiff.rules.Rules;
-import autodiff.rules.Variable;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -20,6 +18,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import multij.rules.Rules;
+import multij.rules.Variable;
 import multij.tools.IllegalInstantiationException;
 
 /**

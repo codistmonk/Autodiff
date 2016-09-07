@@ -10,7 +10,7 @@ import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.proofs.ElementaryVerification;
 import autodiff.reasoning.tactics.Auto;
 import autodiff.reasoning.tactics.Goal;
-import autodiff.rules.Variable;
+import multij.rules.Variable;
 
 import java.util.Arrays;
 import java.util.Collections;

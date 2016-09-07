@@ -7,12 +7,13 @@ import static multij.tools.Tools.cast;
 import autodiff.reasoning.expressions.ExpressionRewriter;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.proofs.Proof;
-import autodiff.rules.Rules;
-import autodiff.rules.Variable;
 
 import java.io.PrintStream;
 import java.util.List;
 import java.util.TreeSet;
+
+import multij.rules.Rules;
+import multij.rules.Variable;
 
 /**
  * @author codistmonk (creation 2016-08-31)
@@ -104,7 +105,7 @@ public final class HTML implements Deduction.Processor {
 				final Variable vx = new Variable("x");
 				final Variable vP = new Variable("P");
 				
-				this.formatterRules.add(autodiff.rules.PatternPredicate.matchWith(
+				this.formatterRules.add(multij.rules.PatternPredicate.matchWith(
 						$forall(vx, vP),
 						(e, m) -> $("\\forall", vx.get(), "\\quad", "(", vP.get(), ")")));
 			}

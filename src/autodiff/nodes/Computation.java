@@ -17,7 +17,7 @@ import static autodiff.reasoning.tactics.Auto.tryMatch;
 import static autodiff.reasoning.tactics.Goal.*;
 import static autodiff.reasoning.tactics.PatternPredicate.rule;
 import static autodiff.reasoning.tactics.Stack.*;
-import static autodiff.rules.Variable.matchOrFail;
+import static multij.rules.Variable.matchOrFail;
 import static multij.tools.Tools.*;
 
 import autodiff.reasoning.deductions.Basics;
@@ -26,15 +26,16 @@ import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.tactics.Auto.Simplifier;
-import autodiff.rules.Rules;
-import autodiff.rules.TryRule;
-import autodiff.rules.Variable;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import multij.rules.Rules;
+import multij.rules.TryRule;
+import multij.rules.Variable;
 
 /**
  * @author codistmonk (creation 2016-08-09)
