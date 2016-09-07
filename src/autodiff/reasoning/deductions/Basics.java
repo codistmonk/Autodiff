@@ -54,7 +54,7 @@ public final class Basics {
 		// \/P P -> \/X,Y X=Y -> \/I,Q P|X=Y@[I] = Q -> Q 
 		suppose("rewrite", $forall(p, $rule(p,
 				$forall(x, $forall(y, $rule($equality(x, y),
-						$forall(i, $forall(q, $rule($equality($(p, GIVEN, asList($equality(x, y)), AT, i), q), q)))))))));
+						$forall(i, $forall(q, $rule($equality($(p, GIVEN, asList($replacement(x, y)), AT, i), q), q)))))))));
 	}
 	
 	public static final void deduceIdentity() {

@@ -37,6 +37,8 @@ public final class Expressions {
 	
 	public static final Object GIVEN = $("|");
 	
+	public static final Object REPLACED_BY = $(Special.REPLACED_BY);
+	
 	public static final Object AND = $(",");
 	
 	public static final Object AT = $("@");
@@ -135,6 +137,10 @@ public final class Expressions {
 	
 	public static final List<Object> $equality(final Object left, final Object right) {
 		return list($(left, EQUALS, right));
+	}
+	
+	public static final List<Object> $replacement(final Object left, final Object right) {
+		return list($(left, REPLACED_BY, right));
 	}
 	
 	public static final List<Object> $list(final Object... objects) {
@@ -385,6 +391,26 @@ public final class Expressions {
 		}
 		
 		return resultBuilder.toString();
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-09-07)
+	 */
+	public static enum Special {
+		
+		REPLACED_BY("=");
+		
+		private final String string;
+		
+		private Special(final String string) {
+			this.string = string;
+		}
+		
+		@Override
+		public final String toString() {
+			return this.string;
+		}
+		
 	}
 	
 }

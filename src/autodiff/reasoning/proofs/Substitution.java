@@ -22,19 +22,19 @@ public final class Substitution extends Proof.Abstract {
 	
 	private Object target;
 	
-	private final Map<Object, Object> equalities;
+	private final Map<Object, Object> replacements;
 	
 	private final Collection<Integer> indices;
 	
-	public Substitution(final Object target, final Map<Object, Object> equalities, final Collection<Integer> indices) {
-		this(null, target, equalities, indices);
+	public Substitution(final Object target, final Map<Object, Object> replacements, final Collection<Integer> indices) {
+		this(null, target, replacements, indices);
 	}
 	
 	public Substitution(final String provedPropositionName, final Object target,
-			final Map<Object, Object> equalities, final Collection<Integer> indices) {
-		super(provedPropositionName, Arrays.asList("By substituting in", target, "using", equalities, "at", null));
+			final Map<Object, Object> replacements, final Collection<Integer> indices) {
+		super(provedPropositionName, Arrays.asList("By substituting in", target, "using", replacements, "at", null));
 		this.target = target;
-		this.equalities = equalities;
+		this.replacements = replacements;
 		this.indices = indices instanceof TreeSet ? indices : new TreeSet<>(indices);
 		
 		this.getMessage().set(5, this.getIndices());
@@ -44,8 +44,8 @@ public final class Substitution extends Proof.Abstract {
 		return this.target;
 	}
 	
-	public final Map<Object, Object> getEqualities() {
-		return this.equalities;
+	public final Map<Object, Object> getReplacements() {
+		return this.replacements;
 	}
 	
 	public final Collection<Integer> getIndices() {
@@ -56,9 +56,9 @@ public final class Substitution extends Proof.Abstract {
 	public final Object getProvedPropositionFor(final Deduction context) {
 		final Object substitution = $(this.getTarget(),
 				GIVEN, join(AND, iterable(
-						this.getEqualities().entrySet().stream().map(e -> $equality(e.getKey(), e.getValue())))),
+						this.getReplacements().entrySet().stream().map(e -> $replacement(e.getKey(), e.getValue())))),
 				AT, new ArrayList<>(this.getIndices()));
-		final Object substituted = substituteIn(this.getTarget(), this.getEqualities(), this.getIndices());
+		final Object substituted = substituteIn(this.getTarget(), this.getReplacements(), this.getIndices());
 		
 		return $equality(substitution, substituted);
 	}
@@ -66,8 +66,8 @@ public final class Substitution extends Proof.Abstract {
 	private static final long serialVersionUID = -5039934017175763847L;
 	
 	public static final Object substituteIn(final Object target,
-			final Map<Object, Object> equalities, final Collection<Integer> indices) {
-		return substituteIn(target, equalities, indices, new int[] { -1 });
+			final Map<Object, Object> replacements, final Collection<Integer> indices) {
+		return substituteIn(target, replacements, indices, new int[] { -1 });
 	}
 	
 	public static final boolean deepContains(final Object haystack, final Object needle) {
@@ -107,10 +107,10 @@ public final class Substitution extends Proof.Abstract {
 	}
 	
 	private static final Object substituteIn(final Object target,
-			final Map<Object, Object> equalities, final Collection<Integer> indices, final int[] index) {
+			final Map<Object, Object> replacements, final Collection<Integer> indices, final int[] index) {
 		Object replacement = null;
 		
-		for (final Map.Entry<Object, Object> entry : equalities.entrySet()) {
+		for (final Map.Entry<Object, Object> entry : replacements.entrySet()) {
 			if (equal(entry.getKey(), target)) {
 				replacement = entry.getValue();
 				break;
@@ -123,7 +123,7 @@ public final class Substitution extends Proof.Abstract {
 		
 		if (target instanceof List) {
 			return list(target).stream().map(e ->
-					substituteIn(e, equalities, indices, index)).collect(toList());
+					substituteIn(e, replacements, indices, index)).collect(toList());
 		}
 		
 		return target;

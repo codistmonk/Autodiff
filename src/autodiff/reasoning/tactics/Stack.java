@@ -92,13 +92,13 @@ public final class Stack {
 	}
 	
 	public static final void substitute(final Object target,
-			final Map<Object, Object> equalities, final int... indices) {
-		substitute(null, target, equalities, indices);
+			final Map<Object, Object> replacements, final int... indices) {
+		substitute(null, target, replacements, indices);
 	}
 	
 	public static final void substitute(final String propositionName, final Object target,
-			final Map<Object, Object> equalities, final int... indices) {
-		conclude(new Substitution(propositionName, target, equalities, indices(indices)));
+			final Map<Object, Object> replacements, final int... indices) {
+		conclude(new Substitution(propositionName, target, replacements, indices(indices)));
 	}
 	
 	public static final void bind(final String targetName, final Object... values) {

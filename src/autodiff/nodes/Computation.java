@@ -540,7 +540,7 @@ public final class Computation extends AbstractNode<Computation> {
 						$forall(_i, _X,
 								$rule($rule($(_i, IN, $(N, "_", $("<", _n))), $(_X, IN, R)),
 										$($(PI, "_", $(_i, "<", _n), _X),
-												"=", $($(PI, "_", $(_i, "<", $(_n, "-", 1)), _X), "*", $(_X, "|", $1($(_i, "=", $(_n, "-", 1))), "@", $())))))));
+												"=", $($(PI, "_", $(_i, "<", $(_n, "-", 1)), _X), "*", $(_X, "|", $1($replacement(_i, $(_n, "-", 1))), "@", $())))))));
 	}
 	
 	public static final void supposeDefinitionOfProductReduction() {
@@ -629,7 +629,7 @@ public final class Computation extends AbstractNode<Computation> {
 			suppose("definition_of_vector_generator_to_java",
 					$forall(_X, _i,
 							$(FORALL, _n, IN, N,
-									$rule($(FORALL, _j, IN, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", _j)), "@", $()), IN, R)),
+									$rule($(FORALL, _j, IN, $(N, "_", $("<", _n)), $($(_X, "|", $1($replacement(_i, _j)), "@", $()), IN, R)),
 											$($("to_java", $(p(_X), "_", $(_i, "<", _n))), "=", sequence(";",
 													app("allocate", str("i"), 1),
 													app("repeat", $("to_java", _n), str("i"), 0,
@@ -846,7 +846,7 @@ public final class Computation extends AbstractNode<Computation> {
 				suppose("meaning_of_read_in_arguments",
 						$forall(_p, _f, _x, _a, _i,
 								$(instructions(_p, $(_f, "(", _x, ")")),
-										"=", instructions(_p, $(_f, "(", $(_x, "|", $1($(app("read", str(_a), _i), "=", valueAfterP)), "@", $()), ")")))));
+										"=", instructions(_p, $(_f, "(", $(_x, "|", $1($replacement(app("read", str(_a), _i), valueAfterP)), "@", $()), ")")))));
 			}
 		}
 		
@@ -856,8 +856,8 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			suppose("induction_principle",
 					$forall(_P, _n,
-							$rule($(_P, "|", $1($(_n, "=", 0)), "@", $()),
-									$(FORALL, _n, IN, N, $rule(_P, $(_P, "|", $1($(_n, "=", $(_n, "+", 1))), "@", $()))),
+							$rule($(_P, "|", $1($replacement(_n, 0)), "@", $()),
+									$(FORALL, _n, IN, N, $rule(_P, $(_P, "|", $1($replacement(_n, $(_n, "+", 1))), "@", $()))),
 									$(FORALL, _n, IN, N, _P))));
 		}
 		
@@ -875,13 +875,13 @@ public final class Computation extends AbstractNode<Computation> {
 							$(_n, IN, POS),
 							$(FORALL, _k, IN, $(N, "_", $("<", _n)), $($1(app("read", str("result"), _k)), IN, R)),
 							$forall(_p, $rule($($("to_java", $(p(_X), "_", $(_i, "<", _n))), "=", _p),
-									$(instructions(_p, app("read", _r, _j)), "=", $(_X, "|", $1($(_i, "=", _j)), "@", $())))))));
+									$(instructions(_p, app("read", _r, _j)), "=", $(_X, "|", $1($replacement(_i, _j)), "@", $())))))));
 			
 			goal().introduce();
 			
 			final Object _m = $new("m");
 			
-			bind("full_induction", "induction_principle", $(conclusion(goal().getProposition()), "|", $1($(_n, "=", $(1, "+", _m))), "@", $()), _m);
+			bind("full_induction", "induction_principle", $(conclusion(goal().getProposition()), "|", $1($replacement(_n, $(1, "+", _m))), "@", $()), _m);
 			
 			{
 				subdeduction("induction_condition_0_simplification");
@@ -1622,10 +1622,10 @@ public final class Computation extends AbstractNode<Computation> {
 		return list(indices).stream().mapToInt(i -> ((Number) i).intValue()).toArray(); 
 	}
 	
-	public static final Map<Object, Object> toMap(final Object equalities) {
+	public static final Map<Object, Object> toMap(final Object replacements) {
 		final Map<Object, Object> result = new LinkedHashMap<>();
 		
-		for (final Object equality : list(equalities)) {
+		for (final Object equality : list(replacements)) {
 			result.put(left(equality), right(equality));
 		}
 		
@@ -1642,10 +1642,10 @@ public final class Computation extends AbstractNode<Computation> {
 			suppose("definition_of_vector_generator_to_CL",
 					$forall(_X, _i,
 							$(FORALL, _n, IN, N,
-									$rule($(FORALL, _j, IN, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", _j)), "@", $()), IN, R)),
+									$rule($(FORALL, _j, IN, $(N, "_", $("<", _n)), $($(_X, "|", $1($replacement(_i, _j)), "@", $()), IN, R)),
 											$($("to_CL", $(p(_X), "_", $(_i, "<", _n))), "=", sequence(";\n",
 													"	int const gid = get_global_id(0)",
-													$("	result[gid] = ", $($("to_CL", _X), "|", $1($(_i, "=", "gid")), "@", $())),
+													$("	result[gid] = ", $($("to_CL", _X), "|", $1($replacement(_i, "gid")), "@", $())),
 													""))))));
 		}
 		
@@ -1822,7 +1822,7 @@ public final class Computation extends AbstractNode<Computation> {
 							}
 							
 							{
-								autobind("definition_of_forall_in", j, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", j)), "@", $()), IN, R));
+								autobind("definition_of_forall_in", j, $(N, "_", $("<", _n)), $($(_X, "|", $1($replacement(_i, j)), "@", $()), IN, R));
 								
 								rewriteRight(name(-2), name(-1));
 							}
@@ -1913,7 +1913,7 @@ public final class Computation extends AbstractNode<Computation> {
 							}
 							
 							{
-								autobind("definition_of_forall_in", j, $(N, "_", $("<", _n)), $($(_X, "|", $1($(_i, "=", j)), "@", $()), IN, R));
+								autobind("definition_of_forall_in", j, $(N, "_", $("<", _n)), $($(_X, "|", $1($replacement(_i, j)), "@", $()), IN, R));
 								
 								rewriteRight(name(-2), name(-1));
 							}
