@@ -1112,7 +1112,7 @@ public final class Computation extends AbstractNode<Computation> {
 						
 						new ToJavaHelper().compute(left(proposition(definitionOfP)));
 						rewrite(name(-1), definitionOfP);
-						simplifyArithmeticInLast();
+						canonicalizeLast();
 						
 						conclude();
 					}
@@ -1143,7 +1143,7 @@ public final class Computation extends AbstractNode<Computation> {
 							
 							simplifySequenceAppendInLast();
 							simplifySequenceConcatenateInLast();
-							simplifyArithmeticInLast();
+							canonicalizeLast();
 							
 							conclude();
 						}
@@ -1361,7 +1361,7 @@ public final class Computation extends AbstractNode<Computation> {
 				autobindTrim("equality_<" + LE, 0, _n);
 				
 				rewrite(name(-3), name(-1));
-				simplifyArithmeticInLast();
+				canonicalizeLast();
 				
 				conclude();
 			}
@@ -1452,95 +1452,6 @@ public final class Computation extends AbstractNode<Computation> {
 				.add(newSequenceConcatenateSimplificationRule())
 				.add(tryMatch(new Variable("*"), (e, m) -> false))
 				.simplifyCompletely(proposition(-1));
-	}
-	
-	public static final void simplifyArithmeticInLast() {
-		final Simplifier simplifier = new Simplifier();
-		
-		simplifier.add(newElementarySimplificationRule());
-		
-		{
-			final Variable vx = new Variable("x");
-			final Variable vy = new Variable("y");
-			final Variable vz = new Variable("z");
-			
-			simplifier.add(tryMatch($($(vx, "+", vy), "+", vz), (e, m) -> {
-				final Object y = vy.get();
-				final Object z = vz.get();
-				final Number ny = cast(Number.class, y);
-				final Number nz = cast(Number.class, z);
-				
-				if (ny == null && nz != null
-						|| ny == null && nz == null && y.toString().compareTo(z.toString()) > 0) {
-					subdeduction();	
-					
-					autobindTrim("associativity_of_addition", vx.get(), vy.get(), vz.get());
-					autobindTrim("commutativity_of_addition", vy.get(), vz.get());
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-					
-					return true;
-				}
-				
-				return false;
-			}));
-		}
-		
-		{
-			final Variable vx = new Variable("x");
-			final Variable vy = new Variable("y");
-			final Variable vz = new Variable("z");
-			
-			simplifier.add(tryMatch($(vx, "+", $(vy, "+", vz)), (e, m) -> {
-				{
-					subdeduction();	
-					
-					autobindTrim("associativity_of_addition", vx.get(), vy.get(), vz.get());
-					autobindTrim("commutativity_of_equality", left(proposition(-1)), right(proposition(-1)));
-					
-					conclude();	
-				}
-				
-				return true;
-			}));
-		}
-		
-		{
-			final Variable vx = new Variable("x");
-			final Variable vy = new Variable("y");
-			
-			simplifier.add(tryMatch($($(vx, "-", vy)), (e, m) -> {
-				autobindTrim("definition_of_subtraction", vx.get(), vy.get());
-				
-				return true;
-			}));
-		}
-		
-		{
-			final Variable vx = new Variable("x");
-			final Variable vy = new Variable("y");
-			
-			simplifier.add(tryMatch($($(vx, "+", vy)), (e, m) -> {
-				final Object x = vx.get();
-				final Object y = vy.get();
-				final Number nx = cast(Number.class, x);
-				final Number ny = cast(Number.class, y);
-				
-				if (nx == null && ny != null
-						|| nx == null && ny == null && x.toString().compareTo(y.toString()) > 0) {
-					autobindTrim("commutativity_of_addition", vx.get(), vy.get());
-					
-					return true;
-				}
-				
-				return false;
-			}));
-		}
-		
-		simplifier.add(tryMatch(new Variable("*"), (e, m) -> false));
-		
-		simplifier.simplifyCompletely(proposition(-1));
 	}
 	
 	public static final TryRule<Object> newSequenceAppendSimplificationRule() {
