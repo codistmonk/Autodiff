@@ -22,6 +22,7 @@ import multij.rules.Rules.Result;
 import multij.rules.TryRule;
 import multij.rules.Variable;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -338,6 +339,24 @@ public final class ScalarAlgebra {
 			final Object _x = $new("x");
 			final Object _y = $new("y");
 			
+			suppose("<_implies_" + LE,
+					$(FORALL, _x, ",", _y, IN, R,
+							$rule($(_x, "<", _y), $(_x, LE, _y))));
+		}
+		
+		{
+			final Object _x = $new("x");
+			final Object _y = $new("y");
+			
+			suppose(">_implies_" + GE,
+					$(FORALL, _x, ",", _y, IN, R,
+							$rule($(_x, ">", _y), $(_x, GE, _y))));
+		}
+		
+		{
+			final Object _x = $new("x");
+			final Object _y = $new("y");
+			
 			suppose("conversion<>",
 					$(FORALL, _x, ",", _y, IN, R,
 							$($(_x, "<", _y), "=", $(_y, ">", _x))));
@@ -354,24 +373,24 @@ public final class ScalarAlgebra {
 		
 		loadAutoHints();
 		
-		{
-			subdeduction("preservation_of_≤_under_nonnegative_multiplication");
+		for (final Object operator : array(LE, "<")){
+			subdeduction("preservation_of_" + operator + "_under_nonnegative_multiplication");
 			
 			{
 				final Object _x = subdeductionForallIn("x", R);
 				final Object _y = subdeductionForallIn("y", R);
 				final Object _z = subdeductionForallIn("z", R);
 				
-				suppose($(0, LE, _z));
-				suppose($(_x, LE, _y));
+				suppose($(0, operator, _z));
+				suppose($(_x, operator, _y));
 				
-				autobindTrim("preservation_of_" + LE + "_under_addition", _x, _y, $(-1, "*", _x));
+				autobindTrim("preservation_of_" + operator + "_under_addition", _x, _y, $(-1, "*", _x));
 				canonicalize(left(proposition(-1)));
 				rewrite(name(-2), name(-1), 0);
 				
-				autobindTrim("preservation_of_" + LE + "_under_multiplication", right(proposition(-1)), _z);
+				autobindTrim("preservation_of_" + operator + "_under_multiplication", right(proposition(-1)), _z);
 				
-				autobindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), $(_x, "*", _z));
+				autobindTrim("preservation_of_" + operator + "_under_addition", left(proposition(-1)), right(proposition(-1)), $(_x, "*", _z));
 				canonicalize(left(proposition(-1)));
 				rewrite(name(-2), name(-1));
 				canonicalize(right(proposition(-1)));
@@ -610,184 +629,286 @@ public final class ScalarAlgebra {
 			}));
 		}
 		
-		{
-			final Variable vx = new Variable("x");
-			
-			hintAutodeduce(tryMatch($(0, LE, vx), (e, m) -> {
-				final Object _x = vx.get();
+		for (final Object op : array(LE, "<")) {
+			{
+				final Variable vx = new Variable("x");
 				
-				subdeduction();
-				
-				canonicalize(_x);
-				
-				final Object _xx = right(proposition(-1));
-				
-				{
+				hintAutodeduce(tryMatch($(0, op, vx), (e, m) -> {
+					final Object _x = vx.get();
+					
 					subdeduction();
 					
-					final Map<Object, BigDecimal> leftBounds = new LinkedHashMap<>();
-					final Map<Object, BigDecimal> rightBounds = new LinkedHashMap<>();
+					canonicalize(_x);
 					
-					new ExpressionVisitor<Void>() {
+					final Object _xx = right(proposition(-1));
+					
+					{
+						subdeduction();
 						
-						@Override
-						public final Void visit(final Object expression) {
-							final Variable va = new Variable("?");
-							
-							for (final Pair<PropositionDescription, PatternMatching> d : potentialJustificationsFor($(va, LE, expression))) {
-								final BigDecimal n = cast(BigDecimal.class, $n(d.getSecond().getMapping().get(va)));
-								
-								if (n != null) {
-									leftBounds.compute(expression, (k, v) -> v == null ? n : v.max(n));
-								}
-							}
-							
-							return null;
-						}
+						final Map<Object, LeftBound> leftBounds = new LinkedHashMap<>();
+						final Map<Object, BigDecimal> rightBounds = new LinkedHashMap<>();
 						
-						@Override
-						public final Void visit(final List<?> expression) {
-							ExpressionVisitor.super.visit(expression);
+						new ExpressionVisitor<Void>() {
 							
-							final Variable vx = new Variable("x");
-							final Variable vy = new Variable("y");
-							
-							if (match($(vx, "+", vy), expression)) {
-								final Object _x = vx.get();
-								final Object _y = vy.get();
-								final BigDecimal nx = $N(_x);
-								final BigDecimal ny = $N(_y);
+							@Override
+							public final Void visit(final Object expression) {
+								final Variable va = new Variable("?");
 								
-								{
-									final BigDecimal a = leftBounds.get(_y);
+								for (final Pair<PropositionDescription, PatternMatching> d : potentialJustificationsFor($(va, LE, expression))) {
+									final BigDecimal n = cast(BigDecimal.class, $n(d.getSecond().getMapping().get(va)));
 									
-									if (nx != null && a != null) {
-										autobindTrim("preservation_of_≤_under_addition", a, _y, nx);
-										autobindTrim("commutativity_of_+_in_" + R, left(right(proposition(-1))), right(right(proposition(-1))));
-										rewrite(name(-2), name(-1));
-										canonicalize(left(proposition(-1)));
-										rewrite(name(-2), name(-1));
-										leftBounds.put(expression, a.add(nx));
+									if (n != null) {
+										leftBounds.computeIfAbsent(expression, __ -> new LeftBound()).update(n, false);
 									}
 								}
 								
-								{
-									final BigDecimal a = leftBounds.get(_x);
+								for (final Pair<PropositionDescription, PatternMatching> d : potentialJustificationsFor($(va, "<", expression))) {
+									final BigDecimal n = cast(BigDecimal.class, $n(d.getSecond().getMapping().get(va)));
 									
-									if (a != null && ny != null) {
-										autobindTrim("preservation_of_≤_under_addition", a, _x, ny);
+									if (n != null) {
+										leftBounds.computeIfAbsent(expression, __ -> new LeftBound()).update(n, true);
+									}
+								}
+								
+								return null;
+							}
+							
+							@Override
+							public final Void visit(final List<?> expression) {
+								ExpressionVisitor.super.visit(expression);
+								
+								final Variable vx = new Variable("x");
+								final Variable vy = new Variable("y");
+								
+								if (match($(vx, "+", vy), expression)) {
+									final Object _x = vx.get();
+									final Object _y = vy.get();
+									final BigDecimal nx = $N(_x);
+									final BigDecimal ny = $N(_y);
+									
+									{
+										final LeftBound a = leftBounds.get(_y);
 										
-										canonicalize(left(proposition(-1)));
-										rewrite(name(-2), name(-1));
-										leftBounds.put(expression, a.add(ny));
-									}
-								}
-							}
-							
-							if (match($(vx, "*", vy), expression)) {
-								final Object _x = vx.get();
-								final Object _y = vy.get();
-								final BigDecimal nx = $N(_x);
-								final BigDecimal ny = $N(_y);
-								
-								{
-									final BigDecimal a = leftBounds.get(_y);
-									
-									if (nx != null && a != null) {
-										if (0 <= nx.signum()) {
-											autobindTrim("preservation_of_≤_under_nonnegative_multiplication", a, _y, nx);
-											autobindTrim("commutativity_of_*_in_" + R, left(right(proposition(-1))), right(right(proposition(-1))));
+										if (nx != null && a != null) {
+											if (a.isStrict()) {
+												autobindTrim("preservation_of_<_under_addition", a.getValue(), _y, nx);
+											} else {
+												autobindTrim("preservation_of_≤_under_addition", a.getValue(), _y, nx);
+											}
+											autobindTrim("commutativity_of_+_in_" + R, left(right(proposition(-1))), right(right(proposition(-1))));
 											rewrite(name(-2), name(-1));
 											canonicalize(left(proposition(-1)));
 											rewrite(name(-2), name(-1));
-											leftBounds.put(expression, a.multiply(nx));
-										} else {
-											debugPrint("TODO");
-											abort();
+											leftBounds.put(expression, a.copy().add(nx));
 										}
 									}
-								}
-								
-								{
-									final BigDecimal a = leftBounds.get(_x);
 									
-									if (a != null && ny != null) {
-										if (0 <= ny.signum()) {
-											autobindTrim("preservation_of_≤_under_nonnegative_multiplication", a, _x, ny);
+									{
+										final LeftBound a = leftBounds.get(_x);
+										
+										if (a != null && ny != null) {
+											if (a.isStrict()) {
+												autobindTrim("preservation_of_<_under_addition", a.getValue(), _x, ny);
+											} else {
+												autobindTrim("preservation_of_≤_under_addition", a.getValue(), _x, ny);
+											}
 											
 											canonicalize(left(proposition(-1)));
 											rewrite(name(-2), name(-1));
-											leftBounds.put(expression, a.add(ny));
-										} else {
-											debugPrint("TODO");
-											abort();
+											leftBounds.put(expression, a.copy().add(ny));
 										}
 									}
 								}
+								
+								if (match($(vx, "*", vy), expression)) {
+									final Object _x = vx.get();
+									final Object _y = vy.get();
+									final BigDecimal nx = $N(_x);
+									final BigDecimal ny = $N(_y);
+									
+									{
+										final LeftBound a = leftBounds.get(_y);
+										
+										if (nx != null && a != null) {
+											if (0 <= nx.signum()) {
+												if (a.isStrict()) {
+													autobindTrim("preservation_of_<_under_nonnegative_multiplication", a.getValue(), _y, nx);
+												} else {
+													autobindTrim("preservation_of_≤_under_nonnegative_multiplication", a.getValue(), _y, nx);
+												}
+												autobindTrim("commutativity_of_*_in_" + R, left(right(proposition(-1))), right(right(proposition(-1))));
+												rewrite(name(-2), name(-1));
+												canonicalize(left(proposition(-1)));
+												rewrite(name(-2), name(-1));
+												leftBounds.put(expression, a.copy().multiply(nx));
+											} else {
+												debugPrint("TODO");
+												abort();
+											}
+										}
+									}
+									
+									{
+										final LeftBound a = leftBounds.get(_x);
+										
+										if (a != null && ny != null) {
+											if (0 <= ny.signum()) {
+												if (a.isStrict()) {
+													autobindTrim("preservation_of_<_under_nonnegative_multiplication", a.getValue(), _x, ny);
+												} else {
+													autobindTrim("preservation_of_≤_under_nonnegative_multiplication", a.getValue(), _x, ny);
+												}
+												
+												canonicalize(left(proposition(-1)));
+												rewrite(name(-2), name(-1));
+												leftBounds.put(expression, a.copy().add(ny));
+											} else {
+												debugPrint("TODO");
+												abort();
+											}
+										}
+									}
+								}
+								
+								return null;
 							}
 							
-							return null;
+							private static final long serialVersionUID = 7743324648699993537L;
+							
+						}.apply(_xx);
+						
+						if (_xx instanceof Number) {
+							autodeduce($(0, "<", _xx));
+						} else {
+							final LeftBound a = leftBounds.get(_xx);
+							
+							if (LE.equals(op)) {
+								if (a.isStrict()) {
+									autobindTrim("<_implies_" + LE, a.getValue(), _xx);
+								}
+								
+								autobindTrim("transitivity_of_≤", 0, a.getValue(), _xx);
+							} else {
+								if (!a.getValue().equals($(0))) {
+									autobindTrim("transitivity_of_<", 0, a.getValue(), _xx);
+								} else {
+									autodeduce($(0, "<", _xx));
+								}
+							}
 						}
 						
-						private static final long serialVersionUID = 7743324648699993537L;
-						
-					}.apply(_xx);
-					
-					{
-						final BigDecimal a = leftBounds.get(_xx);
-						
-						autobindTrim("transitivity_of_≤", 0, a, _xx);
+						conclude();
 					}
 					
+					rewriteRight(name(-1), name(-2));
+					
 					conclude();
-				}
-				
-				rewriteRight(name(-1), name(-2));
-				
-				conclude();
-				
-				return true;
-			}));
-		}
-		
-		{
-			final Variable vx = new Variable("x");
-			final Variable vy = new Variable("y");
+					
+					return true;
+				}));
+			}
 			
-			hintAutodeduce(tryMatch($(vx, LE, vy), (e, m) -> {
-				final Object _x = vx.get();
-				final Object _y = vy.get();
+			{
+				final Variable vx = new Variable("x");
+				final Variable vy = new Variable("y");
 				
-				if (match($(0), _x)) {
-					return false;
-				}
-				
-				subdeduction();
-				
-				canonicalize(_y);
-				
-				final Object _yy = right(proposition(-1));
-				
-				{
+				hintAutodeduce(tryMatch($(vx, op, vy), (e, m) -> {
+					final Object _x = vx.get();
+					final Object _y = vy.get();
+					
+					if (match($(0), _x)) {
+						return false;
+					}
+					
 					subdeduction();
 					
-					autodeduce($(0, LE, $(_yy, "-", _x)));
-					autobindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), _x);
-					canonicalize(left(proposition(-1)));
-					rewrite(name(-2), name(-1));
-					canonicalize(right(proposition(-1)));
-					rewrite(name(-2), name(-1));
+					canonicalize(_y);
+					
+					final Object _yy = right(proposition(-1));
+					
+					{
+						subdeduction();
+						
+						autodeduce($(0, op, $(_yy, "-", _x)));
+						
+						autobindTrim("preservation_of_" + op + "_under_addition", left(proposition(-1)), right(proposition(-1)), _x);
+						canonicalize(left(proposition(-1)));
+						rewrite(name(-2), name(-1));
+						canonicalize(right(proposition(-1)));
+						rewrite(name(-2), name(-1));
+						
+						conclude();
+					}
+					
+					rewriteRight(name(-1), name(-2));
 					
 					conclude();
-				}
-				
-				rewriteRight(name(-1), name(-2));
-				
-				conclude();
-				
-				return true;
-			}));
+					
+					return true;
+				}));
+			}
 		}
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-09-07)
+	 */
+	public static final class LeftBound implements Serializable {
+		
+		private BigDecimal value;
+		
+		private boolean strict;
+		
+		public final LeftBound copy() {
+			return new LeftBound().update(this.getValue(), this.isStrict());
+		}
+		
+		public final BigDecimal getValue() {
+			return this.value;
+		}
+		
+		public final boolean isStrict() {
+			return this.strict;
+		}
+		
+		public final LeftBound update(final BigDecimal value, final boolean strict) {
+			if (this.getValue() == null) {
+				this.value = value;
+				this.strict = strict;
+			} else {
+				final int cmp = this.getValue().compareTo(value);
+				
+				if (cmp == 0) {
+					this.strict |= strict;
+				} else if (cmp < 0) {
+					this.value = value;
+					this.strict = strict;
+				}
+			}
+			
+			return this;
+		}
+		
+		public final LeftBound add(final BigDecimal delta) {
+			this.value = this.value.add(delta);
+			
+			return this;
+		}
+		
+		public final LeftBound multiply(final BigDecimal delta) {
+			this.value = this.value.multiply(delta);
+			
+			return this;
+		}
+		
+		@Override
+		public final String toString() {
+			return this.getValue() + (this.isStrict() ? "<" : LE.toString());
+		}
+		
+		private static final long serialVersionUID = -6609892525772921169L;
+		
 	}
 	
 	public static final TryRule<Object> newIgnoreRule() {
@@ -1437,15 +1558,9 @@ public final class ScalarAlgebra {
 				final Object _y = vy.get();
 				final Object _z = vz.get();
 				
-				// XXX why is this case not handled by elementary rule? 
-				if (!(_y instanceof Number && _z instanceof Number)) {
-					autobindTrim("distributivity_of_*_over_+", _x, _y, _z);
-					
-					return true;
-				} else {
-					debugPrint(e);
-					abort();
-				}
+				autobindTrim("distributivity_of_*_over_+", _x, _y, _z);
+				
+				return true;
 			}
 			
 			if (match($($(vx, "+", vy), "*", vz), e)) {
@@ -1453,21 +1568,15 @@ public final class ScalarAlgebra {
 				final Object _y = vy.get();
 				final Object _z = vz.get();
 				
-				// XXX why is this case not handled by elementary rule? 
-				if (!(_x instanceof Number && _y instanceof Number)) {
-					subdeduction();
-					
-					autobindTrim("distributivity_of_*_over_+", _z, _x, _y);
-					autobindTrim("commutativity_of_*_in_" + R, left(left(proposition(-1))), right(left(proposition(-1))));
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-					
-					return true;
-				} else {
-					debugPrint(e);
-					abort();
-				}
+				subdeduction();
+				
+				autobindTrim("distributivity_of_*_over_+", _z, _x, _y);
+				autobindTrim("commutativity_of_*_in_" + R, left(left(proposition(-1))), right(left(proposition(-1))));
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+				
+				return true;
 			}
 			
 			final Variable va = new Variable("a");

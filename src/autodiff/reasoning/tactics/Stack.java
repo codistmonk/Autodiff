@@ -239,7 +239,11 @@ public final class Stack {
 	}
 	
 	public static final void abort() {
-		throw new AbortException();
+		abort("Aborted");
+	}
+	
+	public static final void abort(final String message) {
+		throw new AbortException(message);
 	}
 	
 	/**
@@ -247,8 +251,12 @@ public final class Stack {
 	 */
 	public static final class AbortException extends RuntimeException {
 		
+		public AbortException(final String message) {
+			super(message);
+		}
+		
 		public AbortException() {
-			super("Aborted");
+			this("Aborted");
 		}
 		
 		private static final long serialVersionUID = -3683176562496539944L;

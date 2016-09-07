@@ -115,6 +115,10 @@ public final class Auto {
 	}
 	
 	public static final void autobind(final String propositionName, final String targetName, final Object... objects) {
+		if (proposition(targetName) == null) {
+			abort("Missing proposition: " + targetName);
+		}
+		
 		final Deduction deduction = subdeduction(propositionName);
 		
 		String lastName = targetName;
