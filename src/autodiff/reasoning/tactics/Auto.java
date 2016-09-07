@@ -72,7 +72,7 @@ public final class Auto {
 				
 				for (Deduction d = deduction(); d != null; d = d.getParent()) {
 					try {
-						autodeduceRules.get(d).apply(proposition);
+						autodeduceRules.get(d).applyTo(proposition);
 						
 						conclude();
 						
@@ -141,7 +141,7 @@ public final class Auto {
 				
 				for (Deduction d = deduction(); d != null; d = d.getParent()) {
 					try {
-						autobindRules.get(d).apply(proposition(lastName));
+						autobindRules.get(d).applyTo(proposition(lastName));
 						rewrite(lastName, name(-1));
 						bind(name(-1), object);
 						ok = true;
@@ -315,7 +315,7 @@ public final class Auto {
 			final Deduction deduction = subdeduction();
 			
 			try {
-				if (this.getRules().apply(expression)) {
+				if (this.getRules().applyTo(expression)) {
 					if (this.isDefining()) {
 						final int targets = countIn(proposition(-2), left(proposition(-1)));
 						final int leftTargets = countIn(left(proposition(-2)), left(proposition(-1)));

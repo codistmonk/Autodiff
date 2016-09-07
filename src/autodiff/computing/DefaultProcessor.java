@@ -330,7 +330,7 @@ public final class DefaultProcessor implements NodeProcessor {
 			
 			@Override
 			public final Object visit(final List<?> expression) {
-				return this.rules.apply(expression);
+				return this.rules.applyTo(expression);
 			}
 			
 			private static final long serialVersionUID = -6614888521968958004L;

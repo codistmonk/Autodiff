@@ -367,7 +367,7 @@ public final class Sequences {
 		{
 			subdeduction(propositionName);
 			
-			rules.apply($(s, $1($(x, "=", x)), y));
+			rules.applyTo($(s, $1($(x, "=", x)), y));
 			
 			conclude();
 		}
@@ -410,7 +410,7 @@ public final class Sequences {
 			}));
 		}
 		
-		rules.apply($(s, $1($(x, "=", x)), y));
+		rules.applyTo($(s, $1($(x, "=", x)), y));
 	}
 	
 	public static final CaseDescription newSequenceConcatenateCase0() {
@@ -780,7 +780,7 @@ public final class Sequences {
 		{
 			subdeduction(propositionName);
 			
-			rules.apply($(s, $(x, "=", x), $(y, "=", y)));
+			rules.applyTo($(s, $(x, "=", x), $(y, "=", y)));
 			
 			conclude();
 		}
@@ -829,7 +829,7 @@ public final class Sequences {
 		{
 			subdeduction(propositionName);
 			
-			rules.apply($(s, $(x, "=", x), $(y, "=", y)));
+			rules.applyTo($(s, $(x, "=", x), $(y, "=", y)));
 			
 			conclude();
 		}

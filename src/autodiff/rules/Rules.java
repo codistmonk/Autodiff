@@ -20,7 +20,7 @@ public final class Rules<T, R> implements Rule<T, R> {
 		return this.rules;
 	}
 	
-	public final R apply(final T input) {
+	public final R applyTo(final T input) {
 		return this.apply(input, new LinkedHashMap<>()).get();
 	}
 	

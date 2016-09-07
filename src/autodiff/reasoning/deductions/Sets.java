@@ -703,7 +703,7 @@ public final class Sets {
 			}));
 		}
 		
-		rules.apply(formula);
+		rules.applyTo(formula);
 	}
 	
 	public static final Object pp(final Object... set) {
@@ -896,7 +896,7 @@ public final class Sets {
 			}));
 		}
 		
-		rules.apply(left(proposition));
+		rules.applyTo(left(proposition));
 		
 		result = new PropositionDescription().setIndex(-1).setName(name(-1)).setProposition(proposition(-1));
 		

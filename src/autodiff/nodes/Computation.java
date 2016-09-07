@@ -345,7 +345,7 @@ public final class Computation extends AbstractNode<Computation> {
 					}));
 		}
 		
-		rules.apply(formula);
+		rules.applyTo(formula);
 	}
 	
 	public static final Computation ones() {
@@ -1856,7 +1856,7 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 		
 		public final void compute(final Object proposition) {
-			this.rules.apply(proposition);
+			this.rules.applyTo(proposition);
 		}
 		
 		private static final long serialVersionUID = 3834061141856389415L;
@@ -1953,7 +1953,7 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 		
 		public final void compute(final Object expression) {
-			this.rules.apply(expression);
+			this.rules.applyTo(expression);
 		}
 		
 		private static final long serialVersionUID = 8767164056521982370L;
