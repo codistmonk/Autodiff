@@ -146,8 +146,8 @@ public final class Auto {
 				}
 			}
 			
-			final Variable vX = new Variable("X");
-			final Variable vP = new Variable("P");
+			final Variable vX = v("X");
+			final Variable vP = v("P");
 			final List<Object> pattern = $forall(vX, vP);
 			
 			if (match(pattern, proposition(lastName))) {
@@ -192,8 +192,8 @@ public final class Auto {
 	public static final void autoapply(final String propositionName, final String targetName) {
 		subdeduction(propositionName);
 		
-		final Variable vX = new Variable("X");
-		final Variable vY = new Variable("Y");
+		final Variable vX = v("X");
+		final Variable vY = v("Y");
 		final Object pattern = $rule(vX, vY);
 		String currentTargetName = targetName;
 		boolean concludeNeeded = false;
@@ -217,8 +217,8 @@ public final class Auto {
 	}
 	
 	public static final void autoapplyOnce(final String propositionName, final String targetName) {
-		final Variable vX = new Variable("X");
-		final Variable vY = new Variable("Y");
+		final Variable vX = v("X");
+		final Variable vY = v("Y");
 		final Object pattern = $rule(vX, vY);
 		
 		if (!match(pattern, proposition(targetName))) {
@@ -259,6 +259,14 @@ public final class Auto {
 			private static final long serialVersionUID = 5597439472888754461L;
 			
 		};
+	}
+	
+	public static final Variable v() {
+		return v("?");
+	}
+	
+	public static final Variable v(final String name) {
+		return new Variable(name);
 	}
 	
 	/**

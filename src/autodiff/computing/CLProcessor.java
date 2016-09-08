@@ -20,8 +20,8 @@ import autodiff.nodes.MatrixMultiplication;
 import autodiff.nodes.Node;
 import autodiff.nodes.NodeVisitor;
 import autodiff.nodes.Zipping;
-import autodiff.nodes.Computation.ToCLHelper;
 import autodiff.reasoning.deductions.Basics;
+import autodiff.reasoning.deductions.ToCLCode.ToCLHelper;
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
 

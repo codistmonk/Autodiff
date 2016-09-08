@@ -9,7 +9,6 @@ import static autodiff.reasoning.deductions.Sets.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
 import static autodiff.reasoning.tactics.Auto.*;
-import static autodiff.reasoning.tactics.Goal.*;
 import static autodiff.reasoning.tactics.PatternPredicate.rule;
 import static autodiff.reasoning.tactics.Stack.*;
 import static multij.rules.Variable.matchOrFail;
@@ -17,6 +16,8 @@ import static multij.tools.Tools.*;
 
 import autodiff.reasoning.deductions.Basics;
 import autodiff.reasoning.deductions.ScalarAlgebra;
+import autodiff.reasoning.deductions.ToCLCode;
+import autodiff.reasoning.deductions.ToJavaCode;
 import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
@@ -241,41 +242,11 @@ public final class Computation extends AbstractNode<Computation> {
 								$rule($(_y, LE, _x), $($(_x, "-", _y), IN, N))));
 			}
 			
-			supposeDefinitionsForJavaCode();
-			supposeDefinitionsForCLCode();
+			ToJavaCode.load();
+			ToCLCode.load();
 		}
 		
 	}, new Simple(1));
-	
-	public static final Object instructions(final Object instructionsBefore, final Object... newInstructions) {
-		Object result = instructionsBefore;
-		
-		for (final Object instruction : newInstructions) {
-			result = $("sequence_append", ";", result, instruction);
-		}
-		
-		return result;
-	}
-	
-	public static final Object block(final Object... arguments) {
-		return blockx(sequence(";", arguments));
-	}
-	
-	public static final Object blockx(final Object x) {
-		return $("()->{", x, "}");
-	}
-	
-	public static final Object app(final Object name, final Object... arguments) {
-		return appx(name, sequence(",", arguments));
-	}
-	
-	public static final Object appx(final Object name, final Object x) {
-		return $(name, "(", x, ")");
-	}
-	
-	public static final Object str(final Object object) {
-		return $("\"", object, "\"");
-	}
 	
 	public static final void computeVectorReductionByProduct(final Object formula) {
 		final Rules<Object, Void> rules = new Rules<>();
@@ -290,7 +261,7 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 		
 		{
-			final Variable _x0 = new Variable("x0");
+			final Variable _x0 = v("x0");
 			
 			rules.add(rule($(PI, $1(_x0)),
 					(_1, m) -> {
@@ -302,9 +273,9 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 		
 		{
-			final Variable _s = new Variable("s");
-			final Variable _x0 = new Variable("x0");
-			final Variable _x1 = new Variable("x1");
+			final Variable _s = v("s");
+			final Variable _x0 = v("x0");
+			final Variable _x1 = v("x1");
 			
 			rules.add(rule($(PI, $(_x0, $(_s, _x1))),
 					(_1, m) -> {
@@ -324,10 +295,10 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 		
 		{
-			final Variable _s = new Variable("s");
-			final Variable _x0 = new Variable("x0");
-			final Variable _x1 = new Variable("x1");
-			final Variable _x2 = new Variable("x2");
+			final Variable _s = v("s");
+			final Variable _x0 = v("x0");
+			final Variable _x1 = v("x1");
+			final Variable _x2 = v("x2");
 			
 			rules.add(rule($(PI, $(_x0, $(_s, _x1, _x2))),
 					(_1, m) -> {
@@ -597,725 +568,11 @@ public final class Computation extends AbstractNode<Computation> {
 	}
 	
 	public static final void testVectorReductionByProduct() {
-		{
-			subdeduction("vector_reduction_by_product.test1");
-			
-			computeVectorReductionByProduct($(PI, sequence(",", 1, 2, 3)));
-			
-			conclude();
-		}
-	}
-	
-	public static final void supposeDefinitionsForJavaCode() {
-		/*
-		 * (1)_i<2
-		 * 
-		 *   |
-		 *   V
-		 * 
-		 * allocate("i",1);repeat(2,"i",0,()->{write("result",read("i",0),1)})
-		 * 
-		 * 
-		 * forall X n
-		 *   to_java (X)_i<n = allocate("i",1);repeat(n,"i",0,()->{write("result",read("i",0),to_java X)})
-		 * 
-		 * forall X in R
-		 *   to_java X = X
-		 * 
-		 */
+		subdeduction("vector_reduction_by_product.test1");
 		
-		{
-			final Object _X = $new("X");
-			final Object _i = $new("i");
-			final Object _j = $new("j");
-			final Object _n = $new("n");
-			
-			suppose("definition_of_vector_generator_to_java",
-					$forall(_X, _i,
-							$(FORALL, _n, IN, N,
-									$rule($(FORALL, _j, IN, $(N, "_", $("<", _n)), $($(_X, "|", $1($replacement(_i, _j)), "@", $()), IN, R)),
-											$($("to_java", $(p(_X), "_", $(_i, "<", _n))), "=", sequence(";",
-													app("allocate", str("i"), 1),
-													app("repeat", $("to_java", _n), str("i"), 0,
-															block(app("write", str("result"), app("read", str("i"), 0) , $("to_java", _X))))))))));
-		}
+		computeVectorReductionByProduct($(PI, sequence(",", 1, 2, 3)));
 		
-		{
-			final Object _x = $new("x");
-			
-			suppose("definition_of_real_to_java",
-					$(FORALL, _x, IN, R,
-							$($("to_java", _x), "=", _x)));
-		}
-		
-		{
-			final String javacode = "javacode";
-			
-			{
-				suppose("javacode_in_Uhm",
-						$(javacode, IN, U));
-			}
-			
-			{
-				final Object _p = $new("p");
-				final Object _q = $new("q");
-				
-				suppose("sequence_in_javacode",
-						$(FORALL, _p, ",", _q, IN, javacode,
-								$(instructions(_p, _q), IN, javacode)));
-			}
-			
-			{
-				final Object _a = $new("a");
-				final Object _i = $new("i");
-				
-				suppose("read_in_javacode",
-						$forall(_a, _i,
-								$(app("read", str(_a), _i), IN, javacode)));
-			}
-			
-			{
-				final Object _a = $new("a");
-				final Object _n = $new("n");
-				
-				suppose("allocate_in_javacode",
-						$forall(_a, _n,
-								$(app("allocate", str(_a), _n), IN, javacode)));
-			}
-			
-			
-			{
-				final Object _a = $new("a");
-				final Object _n = $new("n");
-				final Object _b = $new("b");
-				final Object _i = $new("i");
-				final Object _p = $new("p");
-				
-				final Object valueBefore = instructions(_p, app("read", str(_b), _i));
-				final Object instruction = app("allocate", str(_a), _n);
-				final Object valueAfter = instructions(_p, instruction, app("read", str(_b), _i));
-				
-				suppose("meaning_of_allocate_0",
-						$forall(_p, _a, _n, _b, _i,
-								$rule($(LNOT, $(_a, "=", _b)), $(valueBefore, "=", valueAfter))));
-			}
-			
-			{
-				final Object _a = $new("a");
-				final Object _n = $new("n");
-				final Object _i = $new("i");
-				final Object _p = $new("p");
-				
-				final Object instruction = app("allocate", str(_a), _n);
-				final Object valueAfter = instructions(_p, instruction, app("read", str(_a), _i));
-				
-				suppose("meaning_of_allocate_1",
-						$forall(_a, _n, _i, _p,
-								$rule($(_i, IN, $(N, "_", $("<", _n))),
-										$(valueAfter, IN, R))));
-			}
-			
-			{
-				final Object _a = $new("a");
-				final Object _i = $new("i");
-				final Object _x = $new("x");
-				
-				suppose("write_in_javacode",
-						$forall(_a, _i, _x,
-								$(app("write", str(_a), _i, _x), IN, javacode)));
-			}
-			
-			{
-				final Object _a = $new("a");
-				final Object _i = $new("i");
-				final Object _b = $new("b");
-				final Object _j = $new("j");
-				final Object _x = $new("x");
-				final Object _p = $new("p");
-				
-				final Object valueBefore = instructions(_p, app("read", str(_b), _j));
-				final Object instruction = app("write", str(_a), _i, _x);
-				final Object valueAfter = instructions(_p, instruction, app("read", str(_b), _j));
-				
-				suppose("meaning_of_write_0",
-						$forall(_p, _a, _i, _b, _j, _x, 
-								$rule($($(LNOT, $(_a, "=", _b)), LOR, $(LNOT, $(_i, "=", _j))),
-										$(valueBefore, "=", valueAfter))));
-			}
-			
-			{
-				final Object _a = $new("a");
-				final Object _i = $new("i");
-				final Object _x = $new("x");
-				final Object _p = $new("p");
-				
-				final Object valueBefore = instructions(_p, app("read", str(_a), _i));
-				final Object instruction = app("write", str(_a), _i, _x);
-				final Object valueAfter = instructions(_p, instruction, app("read", str(_a), _i));
-				
-				suppose("meaning_of_write_1",
-						$forall(_a, _i, _x, _p,
-								$rule($(_x, IN, R),
-										$(valueBefore, IN, R),
-										$(valueAfter, "=", _x))));
-			}
-			
-			{
-				final Object _n = $new("n");
-				final Object _a = $new("a");
-				final Object _i = $new("i");
-				final Object _q = $new("q");
-				
-				suppose("repeat_in_javacode",
-						$forall(_n, _a, _i, _q,
-								$(app("repeat", _n, str(_a), _i, $("()->{", _q, "}")), IN, javacode)));
-			}
-			
-			{
-				final Object _a = $new("a");
-				final Object _i = $new("i");
-				final Object _b = $new("b");
-				final Object _j = $new("j");
-				final Object _p = $new("p");
-				final Object _q = $new("q");
-				
-				final Object valueBefore = instructions(_p, app("read", str(_b), _j));
-				final Object instruction = app("repeat", 0, str(_a), _i, $("()->{", _q, "}"));
-				final Object valueAfter = instructions(_p, instruction, app("read", str(_b), _j));
-				
-				suppose("meaning_of_repeat_0",
-						$forall(_p, _a, _i, _b, _j, _q,
-								$rule($($(LNOT, $(_a, "=", _b)), LOR, $(LNOT, $(_i, "=", _j))),
-										$(valueBefore, "=", valueAfter))));
-			}
-			
-			{
-				final Object _a = $new("a");
-				final Object _i = $new("i");
-				final Object _n = $new("n");
-				final Object _p = $new("p");
-				final Object _q = $new("q");
-				
-				final Object instruction = app("repeat", _n, str(_a), _i, $("()->{", _q, "}"));
-				final Object valueAfter = instructions(_p, instruction, app("read", str(_a), _i));
-				
-				suppose("meaning_of_repeat_1",
-						$forall(_p, _n, _a, _i, _q,
-								$rule($($(_n, IN, N)), $(valueAfter, "=", _n))));
-			}
-			
-			{
-				final Object _a = $new("a");
-				final Object _i = $new("i");
-				final Object _n = $new("n");
-				final Object _p = $new("p");
-				final Object _q = $new("q");
-				
-				final Object instruction = instructions(_p, app("repeat", _n, str(_a), _i, $("()->{", _q, "}")));
-				final Object instruction2 = $("sequence_concatenate", ";",
-						_p,
-						$("sequence_concatenate", ";",
-								$1(app("repeat", $(_n, "-", 1), str(_a), _i, $("()->{", _q, "}"))),
-								_q));
-				
-				suppose("meaning_of_repeat_2",
-						$forall(_p, _a, _i, _n, _q,
-								$rule($($(_n, IN, POS)), $(instruction, "=", instruction2))));
-			}
-			
-			{
-				final Object _a = $new("a");
-				final Object _i = $new("i");
-				final Object _p = $new("p");
-				final Object _q = $new("q");
-				final Object _r = $new("r");
-				
-				final Object valueAfterPQ = instructions(_p, _q, app("read", str(_a), _i));
-				final Object valueAfterPR = instructions(_p, _r, app("read", str(_a), _i));
-				
-				suppose("definition_of_javacode_equality",
-						$(FORALL, _p, ",", _q, IN, javacode,
-								$($(_q, "=", _r), "=", $forall(_p, _a, _i, $(valueAfterPQ, "=", valueAfterPR)))));
-			}
-			
-			{
-				final Object _p = $new("p");
-				final Object _f = $new("f");
-				final Object _x = $new("x");
-				final Object _a = $new("a");
-				final Object _i = $new("i");
-				
-				final Object valueAfterP = instructions(_p, app("read", str(_a), _i));
-				
-				suppose("meaning_of_read_in_arguments",
-						$forall(_p, _f, _x, _a, _i,
-								$(instructions(_p, $(_f, "(", _x, ")")),
-										"=", instructions(_p, $(_f, "(", $(_x, "|", $1($replacement(app("read", str(_a), _i), valueAfterP)), "@", $()), ")")))));
-			}
-		}
-		
-		{
-			final Object _P = $new("P");
-			final Object _n = $new("n");
-			
-			suppose("induction_principle",
-					$forall(_P, _n,
-							$rule($(_P, "|", $1($replacement(_n, 0)), "@", $()),
-									$(FORALL, _n, IN, N, $rule(_P, $(_P, "|", $1($replacement(_n, $(_n, "+", 1))), "@", $()))),
-									$(FORALL, _n, IN, N, _P))));
-		}
-		
-		{
-			final Object _X = $(1);
-			final Object _i = $new("i");
-			final Object _n = $new("n");
-			final Object _p = $new("p");
-			final Object _r = $(str("result"));
-			final Object _j = $(0); // TODO var in 0 .. n - 1
-			final Object _k = $new("k");
-			
-			newGoal("proof_of_to_java.test1",
-					$forall(_n, $rule(
-							$(_n, IN, POS),
-							$(FORALL, _k, IN, $(N, "_", $("<", _n)), $($1(app("read", str("result"), _k)), IN, R)),
-							$forall(_p, $rule($($("to_java", $(p(_X), "_", $(_i, "<", _n))), "=", _p),
-									$(instructions(_p, app("read", _r, _j)), "=", $(_X, "|", $1($replacement(_i, _j)), "@", $())))))));
-			
-			goal().introduce();
-			
-			final Object _m = $new("m");
-			
-			bind("full_induction", "induction_principle", $(conclusion(goal().getProposition()), "|", $1($replacement(_n, $(1, "+", _m))), "@", $()), _m);
-			
-			{
-				subdeduction("induction_condition_0_simplification");
-				
-				bind("identity", condition(proposition("full_induction")));
-				simplifySubstitutionsAndForallInsAndElementary(proposition(-1), Simplifier.Mode.DEFINE);
-				
-				conclude();
-			}
-			
-			{
-				newGoal("induction_simplified_condition_0", right(proposition("induction_condition_0_simplification")));
-				
-				goal().introduce();
-				
-				{
-					subdeduction();
-					
-					final Object p = forall("p");
-					
-					suppose($(left(condition(scope(goal().getProposition()))), "=", p));
-					
-					final String resultReality = name(-2);
-					
-					{
-						subdeduction();
-						
-						new ToJavaHelper().compute(left(proposition(-1)));
-						rewrite(name(-1), name(-2));
-						
-						conclude();
-					}
-					
-					{
-						subdeduction("replacement_of_repeat_1_q_with_repeat_0_q_q");
-						
-						sequenceUnappendInLast($(";"));
-						simplifyMeaningOfRepeat2InLast();
-						canonicalizeLast();
-						simplifySequenceAppendAndConcatenateInLast();
-						
-						conclude();
-					}
-					
-					{
-						{
-							subdeduction();
-							
-							{
-								subdeduction();
-								
-								sequenceUnappendInLast($(";"));
-								
-								{
-									final Variable vp = new Variable("p");
-									final Variable vy = new Variable("y");
-									
-									matchOrFail($("sequence_append", ";", vp, vy), right(proposition(-1)));
-									
-									final Variable vf = new Variable("f");
-									final Variable vx = new Variable("x");
-									
-									matchOrFail(appx(vf, vx), vy.get());
-									
-									bind("meaning_of_read_in_arguments", vp.get(), vf.get(), vx.get(), "i", 0);
-								}
-								
-								simplifySequenceAppendInLast();
-								
-								conclude();
-							}
-							
-							{
-								subdeduction();
-								
-								autobindTrim("meaning_of_repeat_1", $1(app("allocate", str("i"), 1)), 0, "i", 0, $1(app("write", str("result"), app("read", str("i"), 0), 1)));
-								
-								simplifySequenceAppendInLast();
-								
-								conclude();
-							}
-							
-							rewrite(name(-2), name(-1));
-							
-							simplifySubstitutionsAndElementaryInLast();
-							
-							conclude();
-						}
-						
-						rewrite(name(-2), name(-1));
-						
-						{
-							subdeduction();
-							
-							{
-								subdeduction();
-								
-								autobind("meaning_of_write_1", (Object) "result", 0, 1, sequence(";", app("allocate", str("i"), 1), app("repeat", 0, str("i"), 0, block(app("write", str("result"), app("read", str("i"), 0), 1)))));
-								autoapplyOnce(name(-1));
-								
-								simplifySequenceAppendInLast();
-								
-								conclude();
-							}
-							
-							{
-								subdeduction();
-								
-								bind("meaning_of_repeat_0",
-										$1(app("allocate", str("i"), 1)),
-										"i", 0, "result", 0,
-										$1(app("write", str("result"), app("read", str("i"), 0), 1)));
-								
-								leftEliminateDisjunction(name(-1));
-								
-								simplifySequenceAppendInLast();
-								
-								{
-									subdeduction();
-									
-									autobindTrim("meaning_of_allocate_0", $(), "i", 1, "result", 0);
-									
-									simplifySequenceAppendInLast();
-									
-									conclude();
-								}
-								
-								rewriteRight(name(-2), name(-1));
-								
-								conclude();
-							}
-							
-							rewriteRight(name(-2), name(-1));
-							
-							autobindTrim(resultReality, 0);
-							
-							autoapply(name(-2));
-							
-							final List<Object> l = flattenSequence(";", left(proposition(-1)));
-							
-							computeSequenceAppend(";", sequence(";", l.subList(0, l.size() - 1).toArray()), last(l));
-							
-							rewriteRight(name(-2), name(-1));
-							
-							conclude();
-						}
-						
-						rewriteRight(name(-1), name(-2));
-					}
-					
-					conclude();
-				}
-				
-				concludeGoal();
-			}
-			
-			rewriteRight("induction_condition_0", "induction_simplified_condition_0", "induction_condition_0_simplification");
-			
-			{
-				subdeduction("induction_condition_n_simplification");
-				
-				bind("identity", condition(conclusion(proposition("full_induction"))));
-				simplifySubstitutionsAndForallInsAndElementary(proposition(-1), Simplifier.Mode.DEFINE);
-				
-				conclude();
-			}
-			
-			{
-				newGoal("induction_simplified_condition_n", right(proposition("induction_condition_n_simplification")));
-				
-				final Object m = goal().introduce();
-				goal().introduce();
-				goal().introduce();
-				goal().introduce();
-				
-				{
-					subdeduction();
-					
-					final Object p = forall("p");
-					
-					suppose($(left(condition(scope(goal().getProposition()))), "=", p));
-					
-					final String definitionOfP = name(-1);
-					
-					{
-						subdeduction();
-						
-						new ToJavaHelper().compute(left(proposition(definitionOfP)));
-						rewrite(name(-1), definitionOfP);
-						canonicalizeLast();
-						
-						conclude();
-					}
-					
-					{
-						subdeduction();
-						
-						{
-							subdeduction();
-							
-							sequenceUnappendInLast($(";"));
-							simplifyMeaningOfRepeat2InLast();
-							simplifySequenceAppendAndConcatenateInLast();
-							canonicalizeLast();
-							
-							conclude();
-						}
-						
-						{
-							subdeduction();
-							
-							final Variable vp0 = new Variable("p0");
-							final Variable vp1 = new Variable("p1");
-							final Variable vf = new Variable("f");
-							final Variable vx = new Variable("x");
-							
-							matchOrFail(sequence(";", vp0, vp1, $(vf, "(", vx, ")")), right(proposition(-1)));
-							
-							final Object pp = sequence(";", vp0.get(), vp1.get());
-							
-							bind("meaning_of_read_in_arguments",
-									pp,
-									vf.get(),
-									vx.get(),
-									"i",
-									0);
-							
-							simplifySequenceAppendInLast();
-							
-							{
-								subdeduction();
-								
-								autobindTrim("meaning_of_repeat_1",
-										sequence(";", vp0.get()),
-										$(1, "+", m),
-										"i",
-										0,
-										sequence(";", $(vf.get(), "(", vx.get(), ")")));
-								simplifySequenceAppendInLast();
-								
-								conclude();
-							}
-							
-							rewrite(name(-2), name(-1));
-							
-							simplifySubstitutionsAndElementaryInLast();
-							
-							conclude();
-						}
-						
-						rewrite(name(-2), name(-1));
-						
-						conclude();
-					}
-					
-					{
-						subdeduction();
-						
-						computeSequenceAppend(";", right(proposition(-1)), app("read", str("result"), 0));
-						
-						rewriteRight(name(-1), name(-2));
-						
-						conclude();
-					}
-					
-					{
-						subdeduction();
-						
-						final Variable vp0 = new Variable("p0");
-						final Variable vp1 = new Variable("p1");
-						final Variable va = new Variable("a");
-						final Variable vi = new Variable("i");
-						
-						matchOrFail($(sequence(";", vp0, vp1, app("write", str(va), vi, 1))), right(proposition(-2)));
-						
-						autobind("meaning_of_write_0",
-								sequence(";", vp0.get(), vp1.get()),
-								va.get(),
-								vi.get(),
-								va.get(),
-								0,
-								1);
-						
-						simplifySequenceAppendInLast();
-						
-						autobindTrim(">_implies_not_equal", $(1, "+", m), 0);
-						
-						rightEliminateDisjunction(name(-2));
-						
-						commuteEquality(name(-1));
-						
-						conclude();
-					}
-					
-					rewrite(name(-2), name(-1));
-					
-					{
-						subdeduction("meaning_of_prefix");
-						
-						{
-							subdeduction();
-							
-							final Object k = forall("k");
-							
-							suppose($(k, IN, $(N, "_", $("<", $(1, "+", m)))));
-							
-							final String h = name(-1);
-							
-							bind("induction_simplified_condition_n.3", k);
-							
-							{
-								subdeduction();
-								
-								autobindTrim("definition_of_range", $(1, "+", $(m, "+", 1)), k);
-								
-								{
-									subdeduction();
-									
-									autobindTrim("definition_of_range", $(1, "+", m), k);
-									rewrite(h, name(-1));
-									breakConjunction(name(-1));
-									
-									{
-										subdeduction();
-										
-										autobindTrim("combination_of_<<", left(proposition(-1)), right(proposition(-1)), 0, 1);
-										canonicalize(left(proposition(-1)));
-										rewrite(name(-2), name(-1));
-										
-										{
-											final Variable va = new Variable("a");
-											final Variable vb = new Variable("b");
-											final Variable vc = new Variable("c");
-											
-											matchOrFail($($(va, "+", vb), "+", vc), right(proposition(-1)));
-											
-											autobindTrim("associativity_of_+_+_in_" + R, va.get(), vb.get(), vc.get());
-											rewrite(name(-2), name(-1));
-										}
-										
-										conclude();
-									}
-									
-									autobindTrim("introduction_of_conjunction", proposition(-3), proposition(-1));
-									
-									conclude();
-								}
-								
-								rewriteRight(name(-1), name(-2));
-								
-								conclude();
-							}
-							
-							autoapply(name(-2));
-							
-							conclude();
-						}
-						
-						autoapply("induction_simplified_condition_n.2");
-						
-						new ToJavaHelper().compute(left(condition(scope(proposition(-1)))));
-						autobindTrim(name(-2), right(proposition(-1)));
-						simplifySequenceAppendInLast();
-						
-						conclude();
-					}
-					
-					rewrite(name(-2), name(-1));
-					
-					conclude();
-				}
-				
-				concludeGoal();
-			}
-			
-			rewriteRight("induction_condition_n", "induction_simplified_condition_n", "induction_condition_n_simplification");
-			
-			goal().introduce();
-			
-			{
-				subdeduction();
-				
-				autobindTrim("definition_of_positives", _n);
-				rewrite(last(deduction().getParent().getConditionNames()), name(-1));
-				
-				conclude();
-			}
-			
-			breakConjunction(name(-1));
-			
-			{
-				subdeduction();
-				
-				autobindTrim("equality_<" + LE, 0, _n);
-				
-				rewrite(name(-2), name(-1));
-				canonicalizeLast();
-				
-				conclude();
-			}
-			
-			{
-				subdeduction();
-				
-				autoapply("full_induction");
-				
-				canonicalizeForallIn(proposition(-1));
-				rewrite(name(-2), name(-1));
-				
-				bind(name(-1), $(_n, "-", 1));
-				autoapply(name(-1));
-				
-				subsituteLast();
-				canonicalizeLast();
-				
-				conclude();
-			}
-			
-			concludeGoal();
-		}
-		
-		if (false) {
-			abort();
-		}
-	}
-	
-	public static final void simplifyMeaningOfRepeat2InLast() {
-		new Simplifier(Simplifier.Mode.DEFINE)
-		.add(newMeaningOfRepeat2SimplificationRule())
-		.apply(right(proposition(-1)));
+		conclude();
 	}
 	
 	public static final void sequenceUnappendInLast(final Object separator) {
@@ -1331,9 +588,9 @@ public final class Computation extends AbstractNode<Computation> {
 	}
 	
 	public static final void leftEliminateDisjunction(final String targetName) {
-		final Variable vx = new Variable("x");
-		final Variable vy = new Variable("y");
-		final Variable vz = new Variable("z");
+		final Variable vx = v("x");
+		final Variable vy = v("y");
+		final Variable vz = v("z");
 		
 		matchOrFail($rule($(vx, LOR, vy), vz), proposition(targetName));
 		
@@ -1341,9 +598,9 @@ public final class Computation extends AbstractNode<Computation> {
 	}
 	
 	public static final void rightEliminateDisjunction(final String targetName) {
-		final Variable vx = new Variable("x");
-		final Variable vy = new Variable("y");
-		final Variable vz = new Variable("z");
+		final Variable vx = v("x");
+		final Variable vy = v("y");
+		final Variable vz = v("z");
 		
 		matchOrFail($rule($(vx, LOR, vy), vz), proposition(targetName));
 		
@@ -1360,8 +617,8 @@ public final class Computation extends AbstractNode<Computation> {
 	}
 	
 	public static final void subsituteLast() {
-		final Variable vX = new Variable("X");
-		final Variable ve = new Variable("e");
+		final Variable vX = v("X");
+		final Variable ve = v("e");
 		
 		matchOrFail($(vX, "|", ve, "@", $()), proposition(-1));
 		
@@ -1453,24 +710,10 @@ public final class Computation extends AbstractNode<Computation> {
 		});
 	}
 	
-	public static final TryRule<Object> newMeaningOfRepeat2SimplificationRule() {
-		final Variable va = new Variable("a");
-		final Variable vi = new Variable("i");
-		final Variable vn = new Variable("n");
-		final Variable vp = new Variable("p");
-		final Variable vq = new Variable("q");
-		
-		return tryMatch(instructions(vp, app("repeat", vn, str(va), vi, $("()->{", vq, "}"))), (e, m) -> {
-			autobindTrim("meaning_of_repeat_2", vp.get(), va.get(), vi.get(), vn.get(), vq.get());
-			
-			return true;
-		});
-	}
-	
 	public static final TryRule<Object> newSequenceAppendSimplificationRule() {
-		final Variable vs = new Variable("s");
-		final Variable vx = new Variable("x");
-		final Variable vy = new Variable("y");
+		final Variable vs = v("s");
+		final Variable vx = v("x");
+		final Variable vy = v("y");
 		
 		return tryMatch($("sequence_append", vs, vx, vy), (e, m) -> {
 			computeSequenceAppend(vs.get(), vx.get(), vy.get());
@@ -1480,9 +723,9 @@ public final class Computation extends AbstractNode<Computation> {
 	}
 	
 	public static final TryRule<Object> newSequenceSubappendSimplificationRule() {
-		final Variable vs = new Variable("s");
-		final Variable vx = new Variable("x");
-		final Variable vy = new Variable("y");
+		final Variable vs = v("s");
+		final Variable vx = v("x");
+		final Variable vy = v("y");
 		
 		return tryMatch($("sequence_subappend", vs, vx, vy), (e, m) -> {
 			computeSequenceSubappend(vs.get(), vx.get(), vy.get());
@@ -1492,9 +735,9 @@ public final class Computation extends AbstractNode<Computation> {
 	}
 	
 	public static final TryRule<Object> newSequenceConcatenateSimplificationRule() {
-		final Variable vs = new Variable("s");
-		final Variable vx = new Variable("x");
-		final Variable vy = new Variable("y");
+		final Variable vs = v("s");
+		final Variable vx = v("x");
+		final Variable vy = v("y");
 		
 		return tryMatch($("sequence_concatenate", vs, vx, vy), (e, m) -> {
 			computeSequenceConcatenate(vs.get(), vx.get(), vy.get());
@@ -1504,9 +747,9 @@ public final class Computation extends AbstractNode<Computation> {
 	}
 	
 	public static final TryRule<Object> newSubstitutionSimplificationRule() {
-		final Variable vx = new Variable("x");
-		final Variable ve = new Variable("e");
-		final Variable vi = new Variable("i");
+		final Variable vx = v("x");
+		final Variable ve = v("e");
+		final Variable vi = v("i");
 		
 		return tryMatch($(vx, "|", ve, "@", vi), (e, m) -> {
 			substitute(vx.get(), toMap(ve.get()), toInts(vi.get()));
@@ -1516,9 +759,9 @@ public final class Computation extends AbstractNode<Computation> {
 	}
 	
 	public static final TryRule<Object> newForallInSimplificationRule() {
-		final Variable vx = new Variable("x");
-		final Variable vX = new Variable("X");
-		final Variable vP = new Variable("P");
+		final Variable vx = v("x");
+		final Variable vX = v("X");
+		final Variable vP = v("P");
 		
 		return tryMatch($(FORALL, vx, IN, vX, vP), (e, m) -> {
 			bind("definition_of_forall_in", vx.get(), vX.get(), vP.get());
@@ -1528,10 +771,10 @@ public final class Computation extends AbstractNode<Computation> {
 	}
 	
 	public static final TryRule<Object> newForallIn2SimplificationRule() {
-		final Variable vx = new Variable("x");
-		final Variable vy = new Variable("y");
-		final Variable vX = new Variable("X");
-		final Variable vP = new Variable("P");
+		final Variable vx = v("x");
+		final Variable vy = v("y");
+		final Variable vX = v("X");
+		final Variable vP = v("P");
 		
 		return tryMatch($(FORALL, vx, ",", vy, IN, vX, vP), (e, m) -> {
 			bind("definition_of_forall_in_2", vx.get(), vy.get(), vX.get(), vP.get());
@@ -1541,11 +784,11 @@ public final class Computation extends AbstractNode<Computation> {
 	}
 	
 	public static final TryRule<Object> newForallIn3SimplificationRule() {
-		final Variable vx = new Variable("x");
-		final Variable vy = new Variable("y");
-		final Variable vz = new Variable("z");
-		final Variable vX = new Variable("X");
-		final Variable vP = new Variable("P");
+		final Variable vx = v("x");
+		final Variable vy = v("y");
+		final Variable vz = v("z");
+		final Variable vX = v("X");
+		final Variable vP = v("P");
 		
 		return tryMatch($(FORALL, vx, ",", vy, ",", vz, IN, vX, vP), (e, m) -> {
 			bind("definition_of_forall_in_3", vx.get(), vy.get(), vz.get(), vX.get(), vP.get());
@@ -1566,32 +809,6 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 		
 		return result;
-	}
-	
-	public static final void supposeDefinitionsForCLCode() {
-		{
-			final Object _X = $new("X");
-			final Object _i = $new("i");
-			final Object _j = $new("j");
-			final Object _n = $new("n");
-			
-			suppose("definition_of_vector_generator_to_CL",
-					$forall(_X, _i,
-							$(FORALL, _n, IN, N,
-									$rule($(FORALL, _j, IN, $(N, "_", $("<", _n)), $($(_X, "|", $1($replacement(_i, _j)), "@", $()), IN, R)),
-											$($("to_CL", $(p(_X), "_", $(_i, "<", _n))), "=", sequence(";\n",
-													"	int const gid = get_global_id(0)",
-													$("	result[gid] = ", $($("to_CL", _X), "|", $1($replacement(_i, "gid")), "@", $())),
-													""))))));
-		}
-		
-		{
-			final Object _x = $new("x");
-			
-			suppose("definition_of_real_to_CL",
-					$(FORALL, _x, IN, R,
-							$($("to_CL", _x), "=", _x)));
-		}
 	}
 	
 	public static final void supposeDefinitionOfRange() {
@@ -1706,194 +923,6 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 		
 		private static final long serialVersionUID = 9145572614566666571L;
-		
-	}
-	
-	/**
-	 * @author codistmonk (creation 2016-08-18)
-	 */
-	public static final class ToCLHelper implements Serializable {
-		
-		private final Rules<Object, Void> rules = new Rules<>();
-		
-		{
-			{
-				final Variable vX = new Variable("X");
-				final Variable vi = new Variable("i");
-				final Variable vn = new Variable("n");
-				
-				this.rules.add(rule($("to_CL", $(p(vX), "_", $(vi, "<", vn))), (__, m) -> {
-					final Object _X = m.get(vX);
-					final Object _i = m.get(vi);
-					final Object _n = m.get(vn);
-					
-					autobind("definition_of_vector_generator_to_CL", _X, _i, _n);
-					autoapplyOnce(name(-1));
-					
-					{
-						subdeduction();
-						
-						{
-							subdeduction();
-							
-							final Object j = second(left(proposition(-1)));
-							
-							{
-								subdeduction();
-								
-								final Object _j = forall("j");
-								
-								suppose($(_j, IN, $(N, "_", $("<", _n))));
-								
-								substitute(_X, map(_i, _j));
-								
-								{
-									final Object proposition = $(right(proposition(-1)), IN, R);
-									final PropositionDescription justication = justicationFor(proposition);
-									
-									rewriteRight(justication.getName(), name(-2));
-								}
-								
-								conclude();
-							}
-							
-							{
-								autobind("definition_of_forall_in", j, $(N, "_", $("<", _n)), $($(_X, "|", $1($replacement(_i, j)), "@", $()), IN, R));
-								
-								rewriteRight(name(-2), name(-1));
-							}
-							
-							conclude();
-						}
-						
-						autoapplyOnce(name(-2));
-						
-						this.compute($("to_CL", _X));
-						rewrite(name(-2), name(-1));
-						
-						substitute(_X, map(_i, "gid"));
-						rewrite(name(-2), name(-1));
-						
-						conclude();
-					}
-					
-					return null;
-				}));
-			}
-			
-			{
-				final Variable vX = new Variable("X");
-				
-				this.rules.add(rule($("to_CL", vX), (__, m) -> {
-					autobindTrim("definition_of_real_to_CL", m.get(vX));
-					
-					return null;
-				}));
-			}
-		}
-		
-		public final void compute(final Object proposition) {
-			this.rules.applyTo(proposition);
-		}
-		
-		private static final long serialVersionUID = 3834061141856389415L;
-		
-	}
-	
-	/**
-	 * @author codistmonk (creation 2016-08-18)
-	 */
-	public static final class ToJavaHelper implements Serializable {
-		
-		private final Rules<Object, Void> rules = new Rules<>();
-		
-		{
-			{
-				final Variable vX = new Variable("X");
-				final Variable vi = new Variable("i");
-				final Variable vn = new Variable("n");
-				
-				this.rules.add(rule($("to_java", $(p(vX), "_", $(vi, "<", vn))), (__, m) -> {
-					final Object _X = m.get(vX);
-					final Object _i = m.get(vi);
-					final Object _n = m.get(vn);
-					
-					{
-						subdeduction();
-						
-						autobind("definition_of_vector_generator_to_java", _X, _i, _n);
-						autoapplyOnce(name(-1));
-						
-						{
-							subdeduction();
-							
-							final Object j = second(left(proposition(-1)));
-							
-							{
-								subdeduction();
-								
-								final Object _j = forall("j");
-								
-								suppose($(_j, IN, $(N, "_", $("<", _n))));
-								
-								substitute(_X, map(_i, _j));
-								
-								{
-									final Object proposition = $(right(proposition(-1)), IN, R);
-									final PropositionDescription justication = justicationFor(proposition);
-									
-									rewriteRight(justication.getName(), name(-2));
-								}
-								
-								conclude();
-							}
-							
-							{
-								autobind("definition_of_forall_in", j, $(N, "_", $("<", _n)), $($(_X, "|", $1($replacement(_i, j)), "@", $()), IN, R));
-								
-								rewriteRight(name(-2), name(-1));
-							}
-							
-							conclude();
-						}
-						
-						autoapplyOnce(name(-2));
-						
-						{
-							this.compute($("to_java", _n));
-							
-							rewrite(name(-2), name(-1));
-						}
-						
-						{
-							this.compute($("to_java", _X));
-							
-							rewrite(name(-2), name(-1));
-						}
-						
-						conclude();
-					}
-					
-					return null;
-				}));
-			}
-			
-			{
-				final Variable vX = new Variable("X");
-				
-				this.rules.add(rule($("to_java", vX), (__, m) -> {
-					autobindTrim("definition_of_real_to_java", m.get(vX));
-					
-					return null;
-				}));
-			}
-		}
-		
-		public final void compute(final Object expression) {
-			this.rules.applyTo(expression);
-		}
-		
-		private static final long serialVersionUID = 8767164056521982370L;
 		
 	}
 	
