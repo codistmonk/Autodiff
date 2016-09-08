@@ -1077,18 +1077,14 @@ public final class Computation extends AbstractNode<Computation> {
 							autodeduce($(0, LE, m));
 							autodeduce($(0, "<", $(1, "+", $(m, "+", 1))));
 							
-							autobindTrim("meaning_of_repeat_2",
-									sequence(";", app("allocate", str("i"), 1)), "i", 0, $(1, "+", $(m, "+", 1)),
-									sequence(";", app("write", str("result"), app("read", str("i"), 0), 1)));
-							
-							simplifySequenceAppendInLast();
-							simplifySequenceConcatenateInLast();
+							recall(name(-3));
+							sequenceUnappendInLast($(";"));
+							simplifyMeaningOfRepeat2InLast();
+							simplifySequenceAppendAndConcatenateInLast();
 							canonicalizeLast();
 							
 							conclude();
 						}
-						
-						rewrite(name(-2), name(-1));
 						
 						{
 							subdeduction();
@@ -1306,8 +1302,7 @@ public final class Computation extends AbstractNode<Computation> {
 				rewrite(name(-2), name(-1));
 				
 				bind(name(-1), $(_n, "-", 1));
-				autobindTrim("subtraction_in_naturals", _n, 1);
-				autoapply(name(-2));
+				autoapply(name(-1));
 				
 				subsituteLast();
 				canonicalizeLast();
