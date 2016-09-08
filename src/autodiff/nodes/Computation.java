@@ -21,6 +21,7 @@ import autodiff.reasoning.expressions.ExpressionVisitor;
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.tactics.Auto.Simplifier;
+import autodiff.reasoning.tactics.Auto.Simplifier.Mode;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -922,19 +923,21 @@ public final class Computation extends AbstractNode<Computation> {
 					}
 					
 					{
-						final Variable va = new Variable("a");
-						final Variable vb = new Variable("b");
-						final Variable vc = new Variable("c");
-						
-						matchOrFail(sequence(";", va, vb, vc), right(proposition(-1)));
-						
 						{
 							subdeduction();
 							
 							{
 								subdeduction();
 								
-								bind("meaning_of_read_in_arguments", sequence(";", va.get(), vb.get()), first(vc.get()), list(vc.get()).get(2), "i", 0);
+								
+								sequenceUnappendInLast($(";"));
+								
+								{
+									final Variable vx = new Variable("x");
+									final Variable vy = new Variable("y");
+									matchOrFail($("sequence_append", ";", vx, vy), right(proposition(-1)));
+									bind("meaning_of_read_in_arguments", vx.get(), first(vy.get()), list(vy.get()).get(2), "i", 0);
+								}
 								
 								simplifySequenceAppendInLast();
 								
@@ -1421,6 +1424,10 @@ public final class Computation extends AbstractNode<Computation> {
 			} else {
 				autobindTrim("definition_of_sequence_append_2",
 						separator, prefix, first(prefix), second(prefix), last(s));
+				
+				new Simplifier(Mode.DEFINE)
+				.add(newSequenceSubappendSimplificationRule())
+				.simplifyCompletely(proposition(-1));
 			}
 			
 			autobindTrim("commutativity_of_equality",
@@ -1433,25 +1440,6 @@ public final class Computation extends AbstractNode<Computation> {
 	}
 	
 	public static final TryRule<Object> newMeaningOfRepeat2SimplificationRule() {
-//		{
-//			final Object _a = $new("a");
-//			final Object _i = $new("i");
-//			final Object _n = $new("n");
-//			final Object _p = $new("p");
-//			final Object _q = $new("q");
-//			
-//			final Object instruction = instructions(_p, app("repeat", _n, str(_a), _i, $("()->{", _q, "}")));
-//			final Object instruction2 = $("sequence_concatenate", ";",
-//					_p,
-//					$("sequence_concatenate", ";",
-//							$1(app("repeat", $(_n, "-", 1), str(_a), _i, $("()->{", _q, "}"))),
-//							_q));
-//			
-//			suppose("meaning_of_repeat_2",
-//					$forall(_p, _a, _i, _n, _q,
-//							$rule($($(_n, IN, POS)), $(instruction, "=", instruction2))));
-//		}
-		
 		final Variable va = new Variable("a");
 		final Variable vi = new Variable("i");
 		final Variable vn = new Variable("n");
@@ -1472,6 +1460,18 @@ public final class Computation extends AbstractNode<Computation> {
 		
 		return tryMatch($("sequence_append", vs, vx, vy), (e, m) -> {
 			computeSequenceAppend(vs.get(), vx.get(), vy.get());
+			
+			return true;
+		});
+	}
+	
+	public static final TryRule<Object> newSequenceSubappendSimplificationRule() {
+		final Variable vs = new Variable("s");
+		final Variable vx = new Variable("x");
+		final Variable vy = new Variable("y");
+		
+		return tryMatch($("sequence_subappend", vs, vx, vy), (e, m) -> {
+			computeSequenceSubappend(vs.get(), vx.get(), vy.get());
 			
 			return true;
 		});
