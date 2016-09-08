@@ -8,12 +8,7 @@ import static autodiff.reasoning.deductions.Sequences.*;
 import static autodiff.reasoning.deductions.Sets.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
-import static autodiff.reasoning.tactics.Auto.autoapply;
-import static autodiff.reasoning.tactics.Auto.autoapplyOnce;
-import static autodiff.reasoning.tactics.Auto.autobind;
-import static autodiff.reasoning.tactics.Auto.autobindTrim;
-import static autodiff.reasoning.tactics.Auto.autodeduce;
-import static autodiff.reasoning.tactics.Auto.tryMatch;
+import static autodiff.reasoning.tactics.Auto.*;
 import static autodiff.reasoning.tactics.Goal.*;
 import static autodiff.reasoning.tactics.PatternPredicate.rule;
 import static autodiff.reasoning.tactics.Stack.*;
@@ -1074,10 +1069,6 @@ public final class Computation extends AbstractNode<Computation> {
 						{
 							subdeduction();
 							
-							autodeduce($(0, LE, m));
-							autodeduce($(0, "<", $(1, "+", $(m, "+", 1))));
-							
-							recall(name(-3));
 							sequenceUnappendInLast($(";"));
 							simplifyMeaningOfRepeat2InLast();
 							simplifySequenceAppendAndConcatenateInLast();
@@ -1163,17 +1154,7 @@ public final class Computation extends AbstractNode<Computation> {
 						
 						simplifySequenceAppendInLast();
 						
-						{
-							subdeduction();
-							
-							autodeduce($(0, LE, m));
-							autodeduce($(0, "<", $(1, "+", m)));
-							autobindTrim("conversion<>", left(proposition(-1)), right(proposition(-1)));
-							rewrite(name(-2), name(-1));
-							autobindTrim(">_implies_not_equal", left(proposition(-1)), right(proposition(-1)));
-							
-							conclude();
-						}
+						autobindTrim(">_implies_not_equal", $(1, "+", m), 0);
 						
 						rightEliminateDisjunction(name(-2));
 						
@@ -1278,20 +1259,16 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			breakConjunction(name(-1));
 			
-			autodeduce($(_n, IN, Z));
-			
 			{
 				subdeduction();
 				
 				autobindTrim("equality_<" + LE, 0, _n);
 				
-				rewrite(name(-3), name(-1));
+				rewrite(name(-2), name(-1));
 				canonicalizeLast();
 				
 				conclude();
 			}
-			
-			autodeduce($(_n, IN, R));
 			
 			{
 				subdeduction();

@@ -646,6 +646,26 @@ public final class ScalarAlgebra {
 		
 		{
 			final Variable vx = new Variable("x");
+			final Variable vy = new Variable("y");
+			
+			hintAutodeduce(tryMatch($(vx, ">", vy), (e, m) -> {
+				final Object _x = vx.get();
+				final Object _y = vy.get();
+				
+				subdeduction();
+				
+				autodeduce($(_y, "<", _x));
+				autobindTrim("conversion<>", left(proposition(-1)), right(proposition(-1)));
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+				
+				return true;
+			}));
+		}
+		
+		{
+			final Variable vx = new Variable("x");
 			
 			hintAutodeduce(tryMatch($(0, LE, vx), (e, m) -> {
 				final Object _x = vx.get();
@@ -680,6 +700,18 @@ public final class ScalarAlgebra {
 							@Override
 							public final Void visit(final Object expression) {
 								final Variable va = new Variable("?");
+								
+								{
+									final Deduction deduction = deduction();
+									
+									try {
+										autodeduce($(0, LE, expression));
+									} catch (final AbortException exception) {
+										throw exception;
+									} catch (final Exception exception) {
+										popTo(deduction);
+									}
+								}
 								
 								for (final Pair<PropositionDescription, PatternMatching> d : potentialJustificationsFor($(va, LE, expression))) {
 									final BigDecimal n = cast(BigDecimal.class, $n(d.getSecond().getMapping().get(va)));

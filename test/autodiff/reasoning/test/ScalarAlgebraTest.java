@@ -152,6 +152,8 @@ public final class ScalarAlgebraTest {
 				testAutodeduce($(0, "<", $(_a, "*", 2)));
 				testAutodeduce($(_a, "<", $(_a, "+", 1)));
 				testAutodeduce($(_a, "<", $(_a, "*", 2)));
+				
+				testAutodeduce($(_a, ">", 0));
 			}
 			
 		});
