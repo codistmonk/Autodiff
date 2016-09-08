@@ -11,10 +11,12 @@ import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.tactics.Stack.AbortException;
 import autodiff.reasoning.tactics.Stack.PropositionDescription;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.WeakHashMap;
 
 import multij.rules.Predicate;
@@ -266,15 +268,42 @@ public final class Auto {
 		
 		private final Rules<Object, Boolean> rules;
 		
+		private final Collection<Integer> indices;
+		
 		private final Mode mode;
 		
+		private final Traversal traversal;
+		
+		private int currentIndex;
+		
 		public Simplifier() {
-			this(Mode.REWRITE);
+			this(Mode.REWRITE, Traversal.PREFIX);
 		}
 		
 		public Simplifier(final Mode mode) {
+			this(mode, Traversal.PREFIX);
+		}
+		
+		public Simplifier(final Mode mode, final Traversal traversal) {
 			this.rules = new Rules<>();
+			this.indices = new TreeSet<>();
 			this.mode = mode;
+			this.traversal = traversal;
+		}
+		
+		public final Collection<Integer> getIndices() {
+			return this.indices;
+		}
+		
+		public final Simplifier setIndices(final Integer... indices) {
+			this.getIndices().clear();
+			this.getIndices().addAll(Arrays.asList(indices));
+			
+			return this;
+		}
+		
+		public final int getCurrentIndex() {
+			return this.currentIndex;
 		}
 		
 		public final Rules<Object, Boolean> getRules() {
@@ -283,6 +312,10 @@ public final class Auto {
 		
 		public final Mode getMode() {
 			return this.mode;
+		}
+		
+		public final Traversal getTraversal() {
+			return this.traversal;
 		}
 		
 		public final Simplifier add(final TryRule<Object> rule) {
@@ -312,7 +345,7 @@ public final class Auto {
 		
 		@Override
 		public final Boolean visit(final List<?> expression) {
-			if (this.tryRules(expression)) {
+			if (Traversal.PREFIX.equals(this.getTraversal()) && this.tryRules(expression)) {
 				return true;
 			}
 			
@@ -320,6 +353,10 @@ public final class Auto {
 				if (this.apply(subExpression)) {
 					return true;
 				}
+			}
+			
+			if (Traversal.POSTFIX.equals(this.getTraversal()) && this.tryRules(expression)) {
+				return true;
 			}
 			
 			return false;
@@ -351,7 +388,13 @@ public final class Auto {
 						rewrite(name(-2), name(-1));
 					}
 					
-					conclude();
+					if (!this.getIndices().isEmpty() && !this.getIndices().contains(this.currentIndex)) {
+						pop();
+					} else {
+						conclude();
+					}
+					
+					++this.currentIndex;
 					
 					return true;
 				}
@@ -378,6 +421,15 @@ public final class Auto {
 		public static enum Mode {
 			
 			REWRITE, DEFINE;
+			
+		}
+		
+		/**
+		 * @author codistmonk (creation 2016-09-08)
+		 */
+		public static enum Traversal {
+			
+			PREFIX, POSTFIX;
 			
 		}
 		
