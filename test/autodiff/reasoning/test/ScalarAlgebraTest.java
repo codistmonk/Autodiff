@@ -158,8 +158,31 @@ public final class ScalarAlgebraTest {
 	}
 	
 	@Test
-	@Ignore//XXX
 	public final void testComparisons4() {
+		build(new Runnable() {
+			
+			@Override
+			public final void run() {
+				ScalarAlgebra.load();
+				
+				final Object _a = $new("a");
+				
+				suppose($(_a, IN, N));
+				
+				testAutodeduce($(0, LE, _a));
+				testAutodeduce($(0, "<", $(_a, "+", 1)));
+				
+				suppose($(1, LE, _a));
+				
+				testAutodeduce($($(_a, "-", 1), IN, N));
+			}
+			
+		});
+	}
+	
+	@Test
+	@Ignore//XXX
+	public final void testComparisons5() {
 		build(new Runnable() {
 			
 			@Override

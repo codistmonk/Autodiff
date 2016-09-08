@@ -1091,19 +1091,8 @@ public final class Computation extends AbstractNode<Computation> {
 						{
 							subdeduction();
 							
-							{
-								subdeduction();
-								
-								autobindTrim("nonnegativity_of_naturals", m);
-								autobindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), 1);
-								autobindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), 1);
-								autobindTrim("commutativity_of_addition", left(right(proposition(-1))), right(right(proposition(-1))));
-								rewrite(name(-2), name(-1));
-								simplifySubstitutionsAndElementaryInLast(Simplifier.Mode.REWRITE);
-								autobindTrim("transitivity_of_<" + LE, 0, left(proposition(-1)), right(proposition(-1)));
-								
-								conclude();
-							}
+							autodeduce($(0, LE, m));
+							autodeduce($(0, "<", $(1, "+", $(m, "+", 1))));
 							
 							autobindTrim("meaning_of_repeat_2",
 									sequence(";", app("allocate", str("i"), 1)), "i", 0, $(1, "+", $(m, "+", 1)),
@@ -1198,11 +1187,8 @@ public final class Computation extends AbstractNode<Computation> {
 						{
 							subdeduction();
 							
-							autobindTrim("nonnegativity_of_naturals", m);
-							autobindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), 1);
-							autobindTrim("transitivity_of_<" + LE, 0, left(proposition(-1)), right(proposition(-1)));
-							autobindTrim("commutativity_of_addition", left(right(proposition(-1))), right(right(proposition(-1))));
-							rewrite(name(-2), name(-1));
+							autodeduce($(0, LE, m));
+							autodeduce($(0, "<", $(1, "+", m)));
 							autobindTrim("conversion<>", left(proposition(-1)), right(proposition(-1)));
 							rewrite(name(-2), name(-1));
 							autobindTrim(">_implies_not_equal", left(proposition(-1)), right(proposition(-1)));

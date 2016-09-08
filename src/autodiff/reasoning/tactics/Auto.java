@@ -11,6 +11,8 @@ import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.tactics.Stack.AbortException;
 import autodiff.reasoning.tactics.Stack.PropositionDescription;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -35,6 +37,8 @@ public final class Auto {
 	
 	private static final Map<Deduction, Rules<Object, Boolean>> autobindRules = new WeakHashMap<>();
 	
+	private static final Collection<Object> pending = new HashSet<>();
+	
 	public static final void hintAutodeduce(final TryRule<Object> rule) {
 		autodeduceRules.computeIfAbsent(deduction(), __ -> new Rules<>()).add(rule);
 	}
@@ -48,52 +52,58 @@ public final class Auto {
 	}
 	
 	public static final void autodeduce(final String propositionName, final Object proposition) {
-		{
-			final PropositionDescription justification = PropositionDescription.existingJustificationFor(proposition);
-			
-			if (justification != null) {
-				recall(propositionName, justification.getName());
-				
-				return;
-			}
-		}
-		
-		final Deduction deduction = subdeduction(propositionName);
+		checkState(pending.add(proposition), "Loop detected trying to autodeduce " + proposition);
 		
 		try {
-			try {
-				verifyElementaryProposition(proposition);
+			{
+				final PropositionDescription justification = PropositionDescription.existingJustificationFor(proposition);
 				
-				conclude();
+				if (justification != null) {
+					recall(propositionName, justification.getName());
+					
+					return;
+				}
+			}
+			
+			final Deduction deduction = subdeduction(propositionName);
+			
+			try {
+				try {
+					verifyElementaryProposition(proposition);
+					
+					conclude();
+				} catch (final AbortException exception) {
+					throw exception;
+				} catch (final Exception exception) {
+					popTo(deduction);
+					
+					for (Deduction d = deduction(); d != null; d = d.getParent()) {
+						try {
+							autodeduceRules.get(d).applyTo(proposition);
+							
+							conclude();
+							
+							return;
+						} catch (final AbortException exception2) {
+							throw exception2;
+						} catch (final Exception exception2) {
+							ignore(exception2);
+							
+							popTo(deduction);
+						}
+					}
+					
+					throw exception;
+				}
 			} catch (final AbortException exception) {
 				throw exception;
 			} catch (final Exception exception) {
-				popTo(deduction);
-				
-				for (Deduction d = deduction(); d != null; d = d.getParent()) {
-					try {
-						autodeduceRules.get(d).applyTo(proposition);
-						
-						conclude();
-						
-						return;
-					} catch (final AbortException exception2) {
-						throw exception2;
-					} catch (final Exception exception2) {
-						ignore(exception2);
-						
-						popTo(deduction);
-					}
-				}
+				popTo(deduction.getParent());
 				
 				throw exception;
 			}
-		} catch (final AbortException exception) {
-			throw exception;
-		} catch (final Exception exception) {
-			popTo(deduction.getParent());
-			
-			throw exception;
+		} finally {
+			pending.remove(proposition);
 		}
 	}
 	

@@ -528,6 +528,16 @@ public final class ScalarAlgebra {
 	}
 	
 	public static final void loadAutoHints() {
+		{
+			final Variable vx = new Variable("x");
+			
+			hintAutodeduce(tryMatch($(vx, IN, N), (e, m) -> {
+				autobindTrim("conversion_from_" + Z + "_to_" + N, vx.get());
+				
+				return true;
+			}));
+		}
+		
 		for (final Object type : NUMERIC_TYPES) {
 			for (final Object operator : array($("+"), $("*"))) {
 				final Variable vx = new Variable("x");
@@ -541,12 +551,12 @@ public final class ScalarAlgebra {
 			}
 		}
 		
-		{
+		for (final Object type : RELATIVE_TYPES) {
 			final Variable vx = new Variable("x");
 			final Variable vy = new Variable("y");
 			
-			hintAutodeduce(tryMatch($($(vx, "-", vy), IN, R), (e, m) -> {
-				autobindTrim("stability_of_-_in_" + R, vx.get(), vy.get());
+			hintAutodeduce(tryMatch($($(vx, "-", vy), IN, type), (e, m) -> {
+				autobindTrim("stability_of_-_in_" + type, vx.get(), vy.get());
 				
 				return true;
 			}));
@@ -580,10 +590,12 @@ public final class ScalarAlgebra {
 			hintAutodeduce(tryMatch($(vx, IN, Sets.POS), (e, m) -> {
 				subdeduction();
 				
-				autodeduce($(vx.get(), IN, N));
-				autodeduce($(0, "<", vx.get()));
+				final Object _x = vx.get();
+				
+				autodeduce($(_x, IN, N));
+				autodeduce($(0, "<", _x));
 				autobindTrim("introduction_of_conjunction", proposition(-2), proposition(-1));
-				bind("definition_of_positives", vx.get());
+				bind("definition_of_positives", _x);
 				rewriteRight(name(-2), name(-1));
 				
 				conclude();
@@ -599,10 +611,13 @@ public final class ScalarAlgebra {
 			hintAutodeduce(tryMatch($(vx, IN, $(N, "_", $("<", vn))), (e, m) -> {
 				subdeduction();
 				
-				autodeduce($(vx.get(), IN, N));
-				autodeduce($(vx.get(), "<", vn.get()));
+				final Object _x = vx.get();
+				final Object _n = vn.get();
+				
+				autodeduce($(_x, IN, N));
+				autodeduce($(_x, "<", _n));
 				autobindTrim("introduction_of_conjunction", proposition(-2), proposition(-1));
-				autobind("definition_of_range", vn.get(), vx.get());
+				autobind("definition_of_range", _n, _x);
 				rewriteRight(name(-2), name(-1));
 				
 				conclude();
@@ -624,6 +639,18 @@ public final class ScalarAlgebra {
 				rewriteRight(name(-1), name(-2));
 				
 				conclude();
+				
+				return true;
+			}));
+		}
+		
+		{
+			final Variable vx = new Variable("x");
+			
+			hintAutodeduce(tryMatch($(0, LE, vx), (e, m) -> {
+				final Object _x = vx.get();
+				
+				autobindTrim("<_implies_" + LE, 0, _x);
 				
 				return true;
 			}));
@@ -790,7 +817,11 @@ public final class ScalarAlgebra {
 								autobindTrim("transitivity_of_≤", 0, a.getValue(), _xx);
 							} else {
 								if (!a.getValue().equals($(0))) {
-									autobindTrim("transitivity_of_<", 0, a.getValue(), _xx);
+									if (a.isStrict()) {
+										autobindTrim("transitivity_of_<", 0, a.getValue(), _xx);
+									} else {
+										autobindTrim("transitivity_of_<≤", 0, a.getValue(), _xx);
+									}
 								} else {
 									autodeduce($(0, "<", _xx));
 								}

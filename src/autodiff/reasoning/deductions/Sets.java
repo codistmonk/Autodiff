@@ -82,7 +82,6 @@ public final class Sets {
 		
 		// TODO use auto tactics in proofs
 		
-		supposeNaturalsSubsetReals();
 		deduceNaturalsInUhm();
 		supposeDefinitionOfPositives();
 		
@@ -199,31 +198,38 @@ public final class Sets {
 			final Variable vX = new Variable("X");
 			
 			hintAutodeduce(tryMatch($(vx, IN, vX), (e, m) -> {
+				final Object _x = vx.get();
+				final Object _X = vX.get();
 				final Variable vY = new Variable("Y");
-				final List<Pair<PropositionDescription, PatternMatching>> candidates = PropositionDescription.potentialJustificationsFor($(vx.get(), IN, vY));
-				final Deduction deduction = subdeduction();
+				final List<Pair<PropositionDescription, PatternMatching>> candidates = PropositionDescription.potentialJustificationsFor($(_x, IN, vY));
 				
 				for (final Pair<PropositionDescription, PatternMatching> pair : candidates) {
 					pair.getSecond().getMapping().forEach(Variable::set);
 					
+					final Deduction deduction = subdeduction();
+					
+					final Object _Y = vY.get();
+					
 					try {
-						autodeduce($(vY.get(), SUBSET, vX.get()));
-						autobind("definition_of_subset", vY.get(), vX.get());
+						autodeduce($(_Y, SUBSET, _X));
+						autobind("definition_of_subset", _Y, _X);
 						rewrite(name(-2), name(-1));
-						bind(name(-1), vx.get());
+						bind(name(-1), _x);
 						autoapplyOnce(name(-1));
+						
+						conclude();
+						
+						return true;
 					} catch (final AbortException exception) {
 						throw exception;
 					} catch (final Exception exception) {
 						ignore(exception);
 						
-						popTo(deduction);
+						popTo(deduction.getParent());
 					}
 				}
 				
-				conclude();
-				
-				return true;
+				return false;
 			}));
 		}
 		
@@ -279,11 +285,6 @@ public final class Sets {
 	public static final void supposeRealsInUhm() {
 		suppose("reals_in_Uhm",
 				$(R, IN, U));
-	}
-	
-	public static final void supposeNaturalsSubsetReals() {
-		suppose("naturals_subset_reals",
-				$(N, SUBSET, R));
 	}
 	
 	public static final void deduceNaturalsInUhm() {
