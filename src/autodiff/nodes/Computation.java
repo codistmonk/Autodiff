@@ -918,27 +918,10 @@ public final class Computation extends AbstractNode<Computation> {
 					{
 						subdeduction("replacement_of_repeat_1_q_with_repeat_0_q_q");
 						
-						{
-							subdeduction();
-							
-							{
-								final Variable vp0 = new Variable("p0");
-								final Variable va = new Variable("a");
-								final Variable vq = new Variable("q");
-								
-								matchOrFail(sequence(";", vp0, app("repeat", 1, str(va), 0, $("()->{", vq, "}"))), right(proposition(-1)));
-								
-								autobindTrim("meaning_of_repeat_2", $1(vp0.get()), va.get(), 0, 1, vq.get());
-							}
-							
-							canonicalizeLast();
-							
-							simplifySequenceAppendAndConcatenateInLast();
-							
-							conclude();
-						}
-						
-						rewrite(name(-2), name(-1));
+						sequenceUnappendInLast($(";"));
+						simplifyMeaningOfRepeat2InLast();
+						canonicalizeLast();
+						simplifySequenceAppendAndConcatenateInLast();
 						
 						conclude();
 					}
@@ -1340,6 +1323,18 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 	}
 	
+	public static final void simplifyMeaningOfRepeat2InLast() {
+		new Simplifier(Simplifier.Mode.DEFINE)
+		.add(newMeaningOfRepeat2SimplificationRule())
+		.apply(right(proposition(-1)));
+	}
+	
+	public static final void sequenceUnappendInLast(final Object separator) {
+		new Simplifier(Simplifier.Mode.DEFINE)
+		.add(newSequenceUnappendRule(separator))
+		.apply(right(proposition(-1)));
+	}
+	
 	public static final void commuteEquality(final String targetName) {
 		final Object target = proposition(targetName);
 		
@@ -1423,15 +1418,79 @@ public final class Computation extends AbstractNode<Computation> {
 	public static final void simplifySequenceAppendInLast() {
 		new Simplifier()
 				.add(newSequenceAppendSimplificationRule())
-				.add(tryMatch(new Variable("*"), (e, m) -> false))
 				.simplifyCompletely(proposition(-1));
 	}
 	
 	public static final void simplifySequenceConcatenateInLast() {
 		new Simplifier()
 				.add(newSequenceConcatenateSimplificationRule())
-				.add(tryMatch(new Variable("*"), (e, m) -> false))
 				.simplifyCompletely(proposition(-1));
+	}
+	
+	public static final TryRule<Object> newSequenceUnappendRule(final Object separator) {
+		return tryMatch(new Variable("*"), (e, m) -> {
+			final List<Object> s = flattenSequence(separator, e);
+			
+			if (s.isEmpty()) {
+				return false;
+			}
+			
+			final int n = s.size();
+			final List<Object> prefix = sequence(separator, s.subList(0, n - 1).toArray());
+			
+			subdeduction();
+			
+			if (1 == n) {
+				autobindTrim("definition_of_sequence_append_0",
+						separator, prefix, last(s));
+			} else if (2 == n) {
+				autobindTrim("definition_of_sequence_append_1",
+						separator, prefix, first(prefix), last(s));
+			} else {
+				autobindTrim("definition_of_sequence_append_2",
+						separator, prefix, first(prefix), second(prefix), last(s));
+			}
+			
+			autobindTrim("commutativity_of_equality",
+					left(proposition(-1)), right(proposition(-1)));
+			
+			conclude();
+			
+			return true;
+		});
+	}
+	
+	public static final TryRule<Object> newMeaningOfRepeat2SimplificationRule() {
+//		{
+//			final Object _a = $new("a");
+//			final Object _i = $new("i");
+//			final Object _n = $new("n");
+//			final Object _p = $new("p");
+//			final Object _q = $new("q");
+//			
+//			final Object instruction = instructions(_p, app("repeat", _n, str(_a), _i, $("()->{", _q, "}")));
+//			final Object instruction2 = $("sequence_concatenate", ";",
+//					_p,
+//					$("sequence_concatenate", ";",
+//							$1(app("repeat", $(_n, "-", 1), str(_a), _i, $("()->{", _q, "}"))),
+//							_q));
+//			
+//			suppose("meaning_of_repeat_2",
+//					$forall(_p, _a, _i, _n, _q,
+//							$rule($($(_n, IN, POS)), $(instruction, "=", instruction2))));
+//		}
+		
+		final Variable va = new Variable("a");
+		final Variable vi = new Variable("i");
+		final Variable vn = new Variable("n");
+		final Variable vp = new Variable("p");
+		final Variable vq = new Variable("q");
+		
+		return tryMatch(instructions(vp, app("repeat", vn, str(va), vi, $("()->{", vq, "}"))), (e, m) -> {
+			autobindTrim("meaning_of_repeat_2", vp.get(), va.get(), vi.get(), vn.get(), vq.get());
+			
+			return true;
+		});
 	}
 	
 	public static final TryRule<Object> newSequenceAppendSimplificationRule() {

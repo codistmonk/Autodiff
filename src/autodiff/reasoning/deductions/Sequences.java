@@ -76,6 +76,8 @@ public final class Sequences {
 				if (3 == tmp.size() && separator.equals(first(tmp))) {
 					result.add(second(tmp));
 					tmp = list(tmp.get(2));
+				} else {
+					throw new IllegalArgumentException();
 				}
 			}
 		} else if (1 != list.size()) {
@@ -272,9 +274,10 @@ public final class Sequences {
 		}
 	}
 	
-	public static final Object sequence(final Object separator, final Object... elements) {
+	@SuppressWarnings("unchecked")
+	public static final List<Object> sequence(final Object separator, final Object... elements) {
 		if (elements.length == 0) {
-			return $();
+			return (List<Object>) $();
 		}
 		
 		if (elements.length == 1) {
