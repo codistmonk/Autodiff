@@ -258,11 +258,19 @@ public final class Computation extends AbstractNode<Computation> {
 	}
 	
 	public static final Object block(final Object... arguments) {
-		return $("()->{", sequence(";", arguments), "}");
+		return blockx(sequence(";", arguments));
+	}
+	
+	public static final Object blockx(final Object x) {
+		return $("()->{", x, "}");
 	}
 	
 	public static final Object app(final Object name, final Object... arguments) {
-		return $(name, "(", sequence(",", arguments), ")");
+		return appx(name, sequence(",", arguments));
+	}
+	
+	public static final Object appx(final Object name, final Object x) {
+		return $(name, "(", x, ")");
 	}
 	
 	public static final Object str(final Object object) {
@@ -929,14 +937,20 @@ public final class Computation extends AbstractNode<Computation> {
 							{
 								subdeduction();
 								
-								
 								sequenceUnappendInLast($(";"));
 								
 								{
-									final Variable vx = new Variable("x");
+									final Variable vp = new Variable("p");
 									final Variable vy = new Variable("y");
-									matchOrFail($("sequence_append", ";", vx, vy), right(proposition(-1)));
-									bind("meaning_of_read_in_arguments", vx.get(), first(vy.get()), list(vy.get()).get(2), "i", 0);
+									
+									matchOrFail($("sequence_append", ";", vp, vy), right(proposition(-1)));
+									
+									final Variable vf = new Variable("f");
+									final Variable vx = new Variable("x");
+									
+									matchOrFail(appx(vf, vx), vy.get());
+									
+									bind("meaning_of_read_in_arguments", vp.get(), vf.get(), vx.get(), "i", 0);
 								}
 								
 								simplifySequenceAppendInLast();
