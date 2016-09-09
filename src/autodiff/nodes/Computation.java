@@ -7,17 +7,18 @@ import static autodiff.reasoning.deductions.Sets.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.tactics.Auto.*;
 import static autodiff.reasoning.tactics.Stack.*;
-import static multij.tools.Tools.*;
+import static multij.rules.Variable.matchOrFail;
 
 import autodiff.reasoning.deductions.Basics;
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import multij.rules.Variable;
 
 /**
  * @author codistmonk (creation 2016-08-09)
@@ -27,8 +28,6 @@ public final class Computation extends AbstractNode<Computation> {
 	private final Map<String, Object> bindings;
 	
 	private List<Object> definition;
-	
-	private final List<BindListener> bindListeners;
 	
 	private String typeName;
 	
@@ -40,16 +39,11 @@ public final class Computation extends AbstractNode<Computation> {
 		super(new ArrayList<>());
 		this.bindings = new LinkedHashMap<>();
 		this.definition = new ArrayList<>();
-		this.bindListeners = new ArrayList<>();
 	}
 	
 	@Override
 	public final boolean isComputationNode() {
 		return true;
-	}
-	
-	public final List<BindListener> getBindListeners() {
-		return this.bindListeners;
 	}
 	
 	public final Map<String, Object> getBindings() {
@@ -61,9 +55,7 @@ public final class Computation extends AbstractNode<Computation> {
 	}
 	
 	public final Computation set(final String key, final Object value) {
-		this.getBindListeners().forEach(l -> l.beforeBind(key, value));
 		this.getBindings().put(key, value);
-		this.getBindListeners().forEach(l -> l.afterBind(key, value));
 		
 		return this;
 	}
@@ -112,11 +104,17 @@ public final class Computation extends AbstractNode<Computation> {
 	public final Computation autoShape() {
 		final Deduction deduction = this.getBoundForm();
 		final Object proposition = deduction.getProposition(deduction.getPropositionName(-1));
-		final Object shapeExpression = right(middle(right(proposition)));
 		
-		setShape(toInts(flattenSequence(",", shapeExpression)));
-		
-		return this;
+		{
+			final Variable vX = v("X");
+			final Variable vi = v("i");
+			final Variable vs = v("s");
+			final Variable vn = v("n");
+			
+			matchOrFail(p(sequence(",", $(p(vX), "_", $(vi, "<", vn)), vs)), right(proposition));
+			
+			return this.setShape(toInts(flattenSequence(",", vs.get())));
+		}
 	}
 	
 	public final Deduction getBoundForm() {
@@ -140,26 +138,9 @@ public final class Computation extends AbstractNode<Computation> {
 		result.setDefinition(
 				list($(FORALL, n, IN, POS,
 						$(FORALL, s, IN, $(POS, "^", n),
-								$($("ones", " ", s), "=", p($(p(1), "_", $(i, "<", $(PI, s))), ",", s))))));
+								$($("ones", " ", s), "=", p(sequence(",", $(p(1), "_", $(i, "<", $(PI, s))), s)))))));
 		
 		result.set("s", null);
-		
-		result.getBindListeners().add(new BindListener() {
-			
-			@Override
-			public final void beforeBind(final String key, final Object value) {
-				if ("s".equals(key)) {
-					final int[] shape = (int[]) value;
-					
-					NodesTools.check(0 < shape.length, () -> "Invalid shape: []");
-					
-					result.set("n", shape.length);
-				}
-			}
-			
-			private static final long serialVersionUID = -64734290035563118L;
-			
-		});
 		
 		result.setBinder(new Runnable() {
 			
@@ -172,7 +153,7 @@ public final class Computation extends AbstractNode<Computation> {
 					
 					final Object[] s = toObjects((int[]) result.get("s"));
 					
-					autobindTrim(name(-1), $(result.get("n")));
+					autobindTrim(name(-1), $(s.length));
 					
 					canonicalizeForallIn(name(-1));
 					
@@ -182,16 +163,23 @@ public final class Computation extends AbstractNode<Computation> {
 					
 					apply(name(-2), name(-1));
 					
-					final Object valuesExpression = left(middle(right(proposition(-1))));
-					final Object nExpression = right(right(valuesExpression));
-					
 					{
-						subdeduction();
+						final Variable vX = v("X");
+						final Variable vi = v("i");
+						final Variable vs = v("s");
+						final Variable vn = v("n");
 						
-						computeVectorReductionByProduct(nExpression);
-						rewrite(name(-2), name(-1));
+						matchOrFail(p(sequence(",", $(p(vX), "_", $(vi, "<", vn)), vs)), right(proposition(-1)));
+						matchOrFail($(PI, vs), vn.get());
 						
-						conclude();
+						{
+							subdeduction();
+							
+							computeVectorReductionByProduct(vn.get());
+							rewrite(name(-2), name(-1));
+							
+							conclude();
+						}
 					}
 					
 					conclude();
@@ -211,23 +199,6 @@ public final class Computation extends AbstractNode<Computation> {
 		}
 		
 		return result;
-	}
-	
-	/**
-	 * @author codistmonk (creation 2016-08-10)
-	 */
-	public static abstract interface BindListener extends Serializable {
-		
-		public default void beforeBind(final String key, final Object value) {
-			ignore(key);
-			ignore(value);
-		}
-		
-		public default void afterBind(final String key, final Object value) {
-			ignore(key);
-			ignore(value);
-		}
-		
 	}
 	
 }
