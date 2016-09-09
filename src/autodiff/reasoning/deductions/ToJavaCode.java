@@ -14,24 +14,20 @@ import static autodiff.reasoning.proofs.ElementaryVerification.N;
 import static autodiff.reasoning.proofs.ElementaryVerification.R;
 import static autodiff.reasoning.tactics.Auto.*;
 import static autodiff.reasoning.tactics.Goal.*;
-import static autodiff.reasoning.tactics.PatternPredicate.rule;
+import static autodiff.reasoning.tactics.PatternMatching.matchOrFail;
 import static autodiff.reasoning.tactics.Stack.*;
-import static multij.rules.Variable.matchOrFail;
-import static multij.tools.Tools.ignore;
-import static multij.tools.Tools.last;
+import static multij.tools.Tools.*;
 
-import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.tactics.Auto.Simplifier;
-import autodiff.reasoning.tactics.Stack.PropositionDescription;
+import autodiff.reasoning.tactics.Auto.Simplifier.Mode;
 
-import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
 
-import multij.rules.Rules;
 import multij.rules.TryRule;
 import multij.rules.Variable;
 import multij.tools.IllegalInstantiationException;
-import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2016-09-09)
@@ -90,15 +86,14 @@ public final class ToJavaCode {
 		
 		{
 			final Object _X = $new("X");
-			final Object _p = $new("p");
 			final Object _i = $new("i");
 			final Object _n = $new("n");
 			final Object tojava = $("to_java", $(p(_X), "_", $(_i, "<", _n)));
 			
 			suppose("definition_of_index_to_java",
-					$forall(_X, _i, _p,
+					$forall(_X, _i,
 							$(FORALL, _n, IN, N,
-									$rule($(tojava, "=", _p), $($("to_java", _i), "=", app("read", str("i"), 0))))));
+									$(tojava, "=", $(tojava, GIVEN, $1($replacement($("to_java", _i), app("read", "i", 0))), AT, $())))));
 		}
 		
 		{
@@ -366,7 +361,15 @@ public final class ToJavaCode {
 					{
 						subdeduction();
 						
-						new ToJavaHelper().compute(left(proposition(-1)));
+//						new ToJavaHelper().compute(left(proposition(-1)));
+						{
+							subdeduction();
+							
+							bind("identity", left(proposition(-1)));
+							computeToJava(proposition(-1));
+							
+							conclude();
+						}
 						rewrite(name(-1), name(-2));
 						
 						conclude();
@@ -526,7 +529,15 @@ public final class ToJavaCode {
 					{
 						subdeduction();
 						
-						new ToJavaHelper().compute(left(proposition(definitionOfP)));
+//						new ToJavaHelper().compute(left(proposition(definitionOfP)));
+						{
+							subdeduction();
+							
+							bind("identity", left(proposition(definitionOfP)));
+							computeToJava(proposition(-1));
+							
+							conclude();
+						}
 						rewrite(name(-1), definitionOfP);
 						canonicalizeLast();
 						
@@ -699,7 +710,15 @@ public final class ToJavaCode {
 						
 						autoapply("induction_simplified_condition_n.2");
 						
-						new ToJavaHelper().compute(left(condition(scope(proposition(-1)))));
+//						new ToJavaHelper().compute(left(condition(scope(proposition(-1)))));
+						{
+							subdeduction();
+							
+							bind("identity", left(condition(scope(proposition(-1)))));
+							computeToJava(proposition(-1));
+							
+							conclude();
+						}
 						autobindTrim(name(-2), right(proposition(-1)));
 						simplifySequenceAppendInLast();
 						
@@ -815,153 +834,100 @@ public final class ToJavaCode {
 		return $("\"", object, "\"");
 	}
 	
-	/**
-	 * @author codistmonk (creation 2016-08-18)
-	 */
-	public static final class ToJavaHelper implements Serializable {
-		
-		private final Rules<Object, Void> rules = new Rules<>();
-		
-		{
+	public static final void computeToJava(final Object expression) {
+		new Simplifier(Mode.DEFINE)
+		.add(tryRule((e, m) -> {
+			final Variable vX = v("X");
+			final Variable vi = v("i");
+			final Variable vn = v("n");
+			
+			matchOrFail($("to_java", $(p(vX), "_", $(vi, "<", vn))), e);
+			
+			final Object _X = vX.get();
+			final Object _i = vi.get();
+			final Object _n = vn.get();
+			
 			{
-				final Variable vX = v("X");
-				final Variable vi = v("i");
-				final Variable vn = v("n");
+				subdeduction();
 				
-				this.rules.add(rule($("to_java", $(p(vX), "_", $(vi, "<", vn))), (__, m) -> {
-					final Object _X = m.get(vX);
-					final Object _i = m.get(vi);
-					final Object _n = m.get(vn);
+				autobind("definition_of_vector_generator_to_java", _X, _i, _n);
+				autoapplyOnce(name(-1));
+				
+				{
+					subdeduction();
+					
+					final Variable vj = v("j");
+					final Variable vJ = v("J");
+					final Variable vS = v("S");
+					
+					matchOrFail($(FORALL, vj, IN, vJ, vS), condition(proposition(-1)));
+					
+					final Object _S = vS.get();
+					
+					matchOrFail($($(_X, GIVEN, $1($replacement(_i, vj.get())), AT, $()), IN, R), _S);
+					
+					final Object _J = vJ.get();
+					
+					matchOrFail($(N, "_", $("<", _n)), _J);
 					
 					{
 						subdeduction();
 						
-						autobind("definition_of_vector_generator_to_java", _X, _i, _n);
-						autoapplyOnce(name(-1));
+						final Object _j = forall("j");
 						
-						{
-							subdeduction();
-							
-							final Object j = second(left(proposition(-1)));
-							
-							{
-								subdeduction();
-								
-								final Object _j = forall("j");
-								
-								suppose($(_j, IN, $(N, "_", $("<", _n))));
-								
-								substitute(_X, map(_i, _j));
-								
-								{
-									final Object proposition = $(right(proposition(-1)), IN, R);
-									final PropositionDescription justification = justicationFor(proposition);
-									
-									if (justification == null) {
-										Tools.debugPrint(proposition);
-										abort();
-									}
-									rewriteRight(justification.getName(), name(-2));
-								}
-								
-								conclude();
-							}
-							
-							{
-								autobind("definition_of_forall_in", j, $(N, "_", $("<", _n)), $($(_X, "|", $1($replacement(_i, j)), "@", $()), IN, R));
-								
-								rewriteRight(name(-2), name(-1));
-							}
-							
-							conclude();
-						}
-						
-						autoapplyOnce(name(-2));
-						
-						{
-							this.compute($("to_java", _n));
-							
-							rewrite(name(-2), name(-1));
-						}
-						
-						{
-							this.compute($("to_java", _X));
-							
-							rewrite(name(-2), name(-1));
-						}
-						
+						suppose($(_j, IN, _J));
+						substitute(_X, map(_i, _j));
+						autodeduce($(right(proposition(-1)), IN, R));
+						rewriteRight(name(-1), name(-2));
 						conclude();
 					}
 					
-					return null;
-				}));
-			}
-			
-			{
-				final Variable vx = v("x");
+					bind("definition_of_forall_in", vj.get(), _J, _S);
+					rewriteRight(name(-2), name(-1));
+					
+					conclude();
+				}
 				
-				this.rules.add(rule($("to_java", vx), (e, m) -> {
-					if (tryDeduction(() -> {
-						autobindTrim("definition_of_real_to_java", vx.get());
-					})) {
-						return null;
-					}
-					
-					{
-						final Variable vX = v("X");
-						final Variable vp = v("p");
-						final Variable vi = v("i");
-						final Variable vn = v("n");
-						
-						if (Variable.match($($("to_java", $(p(vX), "_", $(vi, "<", vn))), "=", vp), proposition(-1))
-								&& tryDeduction(() -> {
-									autobindTrim("definition_of_index_to_java", vX.get(), vi.get(), vp.get(), vn.get());
-								})) {
-							return null;
-						}
-					}
-					
-					abort();
-					
-					return null;
-				}));
-			}
-		}
-		
-		public final void compute(final Object expression) {
-			this.rules.applyTo(expression);
-		}
-		
-		private static final long serialVersionUID = 8767164056521982370L;
-		
-		public static final boolean tryNewDeduction(final Runnable tactic) {
-			return tryDeduction(() -> {
-				subdeduction();
-				
-				tactic.run();
+				autoapply(name(-2));
 				
 				conclude();
-			});
-		}
-		
-		public static final boolean tryDeduction(final Runnable tactic) {
-			final Deduction deduction = deduction();
-			
-			try {
-				tactic.run();
-				
-				return true;
-			} catch (final AbortException exception) {
-				throw exception;
-			} catch (final Exception exception) {
-				ignore(exception);
-				
-				popTo(deduction);
 			}
+		}))
+		.add(tryRule((e, m) -> {
+			final Variable vx = v("x");
 			
-			return false;
-		}
-		
+			matchOrFail($("to_java", vx), e);
+			
+			autobindTrim("definition_of_real_to_java", vx.get());
+		}))
+		.add(tryRule((e, m) -> {
+			final Variable vi = v("i");
+			
+			matchOrFail($("to_java", vi), e);
+			
+			final Object _i = vi.get();
+			
+			final Variable vX = v("X");
+			final Variable vn = v("n");
+			final Variable vp = v("p");
+			
+			matchOrFail($($("to_java", $(p(vX), "_", $(_i, "<", vn))), "=", vp), proposition(-1));
+			
+			{
+				subdeduction();
+				
+				autobindTrim("definition_of_index_to_java", vX.get(), _i, vn.get());
+				rewrite(name(-1), name(-2));
+				simplifySubstitutionsAndElementaryInLast();
+				
+				conclude();
+			}
+		}))
+		.simplifyCompletely(expression);
+	}
+	
+	public static final TryRule<Object> tryRule(final BiConsumer<Object, Map<Variable, Object>> tactic) {
+		return (e, m) -> tryDeduction(() -> tactic.accept(e, m)) ? TryRule.T : null;
 	}
 	
 }

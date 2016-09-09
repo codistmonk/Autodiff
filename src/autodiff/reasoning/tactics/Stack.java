@@ -2,6 +2,7 @@ package autodiff.reasoning.tactics;
 
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.Substitution.equal;
+import static multij.tools.Tools.ignore;
 import static multij.tools.Tools.last;
 import static multij.tools.Tools.unchecked;
 
@@ -61,6 +62,34 @@ public final class Stack {
 		while (deduction() != deduction) {
 			pop();
 		}
+	}
+	
+	public static final boolean trySubdeduction(final Runnable tactic) {
+		return tryDeduction(() -> {
+			subdeduction();
+			
+			tactic.run();
+			
+			conclude();
+		});
+	}
+	
+	public static final boolean tryDeduction(final Runnable tactic) {
+		final Deduction deduction = deduction();
+		
+		try {
+			tactic.run();
+			
+			return true;
+		} catch (final AbortException exception) {
+			throw exception;
+		} catch (final Exception exception) {
+			ignore(exception);
+			
+			popTo(deduction);
+		}
+		
+		return false;
 	}
 	
 	public static final Deduction deduction() {
@@ -246,6 +275,14 @@ public final class Stack {
 		throw new AbortException(message);
 	}
 	
+	public static final void fail() {
+		abort("Aborted");
+	}
+	
+	public static final void fail(final String message) {
+		throw new FailureException(message);
+	}
+	
 	/**
 	 * @author codistmonk (creation 2016-08-23)
 	 */
@@ -260,6 +297,23 @@ public final class Stack {
 		}
 		
 		private static final long serialVersionUID = -3683176562496539944L;
+		
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-23)
+	 */
+	public static final class FailureException extends RuntimeException {
+		
+		public FailureException(final String message) {
+			super(message);
+		}
+		
+		public FailureException() {
+			this("Failed");
+		}
+		
+		private static final long serialVersionUID = 4121322072895050560L;
 		
 	}
 	

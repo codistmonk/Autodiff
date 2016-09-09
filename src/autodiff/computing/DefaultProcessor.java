@@ -16,11 +16,12 @@ import autodiff.nodes.NodeVisitor;
 import autodiff.nodes.Zipping;
 import autodiff.reasoning.deductions.Basics;
 import autodiff.reasoning.deductions.Sequences;
-import autodiff.reasoning.deductions.ToJavaCode.ToJavaHelper;
+import autodiff.reasoning.deductions.ToJavaCode;
 import autodiff.reasoning.expressions.ExpressionRewriter;
 import autodiff.reasoning.expressions.Expressions;
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
+import autodiff.reasoning.tactics.Stack;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
@@ -206,7 +207,9 @@ public final class DefaultProcessor implements NodeProcessor {
 						final Object boundForm = proposition(-1);
 						final Object valuesExpression = left(middle(right(boundForm)));
 						
-						new ToJavaHelper().compute($$("to_java", valuesExpression));
+//						new ToJavaHelper().compute($$("to_java", valuesExpression));
+						Stack.bind("identity", $$("to_java", valuesExpression));
+						ToJavaCode.computeToJava(proposition(-1));
 					}
 					
 				}, new Simple(1));
