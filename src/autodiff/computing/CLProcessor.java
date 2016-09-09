@@ -21,9 +21,10 @@ import autodiff.nodes.Node;
 import autodiff.nodes.NodeVisitor;
 import autodiff.nodes.Zipping;
 import autodiff.reasoning.deductions.Basics;
-import autodiff.reasoning.deductions.ToCLCode.ToCLHelper;
+import autodiff.reasoning.deductions.ToCLCode;
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
+import autodiff.reasoning.tactics.Stack;
 
 import java.io.Serializable;
 import java.nio.Buffer;
@@ -333,7 +334,8 @@ public final class CLProcessor implements NodeProcessor {
 						final Object boundForm = proposition(-1);
 						final Object valuesExpression = left(middle(right(boundForm)));
 						
-						new ToCLHelper().compute($("to_CL", valuesExpression));
+						Stack.bind("identity", $("to_CL", valuesExpression));
+						ToCLCode.computeToCL(proposition(-1));
 					}
 					
 				}, new Simple(1));

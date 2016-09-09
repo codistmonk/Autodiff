@@ -22,8 +22,6 @@ import autodiff.reasoning.tactics.Auto.Simplifier;
 import autodiff.reasoning.tactics.Auto.Simplifier.Mode;
 
 import java.util.List;
-import java.util.Map;
-import java.util.function.BiConsumer;
 
 import multij.rules.TryRule;
 import multij.rules.Variable;
@@ -73,7 +71,7 @@ public final class ToJavaCode {
 											$($("to_java", $(p(_X), "_", $(_i, "<", _n))), "=", sequence(";",
 													app("allocate", str("i"), 1),
 													app("repeat", $("to_java", _n), str("i"), 0,
-															block(app("write", str("result"), app("read", str("i"), 0) , $("to_java", _X))))))))));
+															block(app("write", str("result"), app("read", str("i"), 0) , $($("to_java", _X), GIVEN, $1($replacement($("to_java", _i), app("read", str("i"), 0))), AT, $()))))))))));
 		}
 		
 		{
@@ -82,18 +80,6 @@ public final class ToJavaCode {
 			suppose("definition_of_real_to_java",
 					$(FORALL, _x, IN, R,
 							$($("to_java", _x), "=", _x)));
-		}
-		
-		{
-			final Object _X = $new("X");
-			final Object _i = $new("i");
-			final Object _n = $new("n");
-			final Object tojava = $("to_java", $(p(_X), "_", $(_i, "<", _n)));
-			
-			suppose("definition_of_index_to_java",
-					$forall(_X, _i,
-							$(FORALL, _n, IN, N,
-									$(tojava, "=", $(tojava, GIVEN, $1($replacement($("to_java", _i), app("read", "i", 0))), AT, $())))));
 		}
 		
 		{
@@ -890,6 +876,8 @@ public final class ToJavaCode {
 				
 				autoapply(name(-2));
 				
+				simplifySubstitutionsAndElementaryInLast();
+				
 				conclude();
 			}
 		}))
@@ -900,34 +888,7 @@ public final class ToJavaCode {
 			
 			autobindTrim("definition_of_real_to_java", vx.get());
 		}))
-		.add(tryRule((e, m) -> {
-			final Variable vi = v("i");
-			
-			matchOrFail($("to_java", vi), e);
-			
-			final Object _i = vi.get();
-			
-			final Variable vX = v("X");
-			final Variable vn = v("n");
-			final Variable vp = v("p");
-			
-			matchOrFail($($("to_java", $(p(vX), "_", $(_i, "<", vn))), "=", vp), proposition(-1));
-			
-			{
-				subdeduction();
-				
-				autobindTrim("definition_of_index_to_java", vX.get(), _i, vn.get());
-				rewrite(name(-1), name(-2));
-				simplifySubstitutionsAndElementaryInLast();
-				
-				conclude();
-			}
-		}))
 		.simplifyCompletely(expression);
-	}
-	
-	public static final TryRule<Object> tryRule(final BiConsumer<Object, Map<Variable, Object>> tactic) {
-		return (e, m) -> tryDeduction(() -> tactic.accept(e, m)) ? TryRule.T : null;
 	}
 	
 }

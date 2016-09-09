@@ -1,22 +1,20 @@
 package autodiff.reasoning.deductions;
 
-import static autodiff.reasoning.deductions.Basics.rewrite;
+import static autodiff.reasoning.deductions.Autodiff.simplifySubstitutionsAndElementaryInLast;
+import static autodiff.reasoning.deductions.Autodiff.tryRule;
 import static autodiff.reasoning.deductions.Basics.rewriteRight;
 import static autodiff.reasoning.deductions.Sequences.sequence;
-import static autodiff.reasoning.deductions.Sets.justicationFor;
 import static autodiff.reasoning.deductions.Sets.p;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.N;
 import static autodiff.reasoning.proofs.ElementaryVerification.R;
 import static autodiff.reasoning.tactics.Auto.*;
-import static autodiff.reasoning.tactics.PatternPredicate.rule;
+import static autodiff.reasoning.tactics.PatternMatching.matchOrFail;
 import static autodiff.reasoning.tactics.Stack.*;
 
-import autodiff.reasoning.tactics.Stack.PropositionDescription;
+import autodiff.reasoning.tactics.Auto.Simplifier;
+import autodiff.reasoning.tactics.Auto.Simplifier.Mode;
 
-import java.io.Serializable;
-
-import multij.rules.Rules;
 import multij.rules.Variable;
 import multij.tools.IllegalInstantiationException;
 
@@ -46,7 +44,7 @@ public final class ToCLCode {
 									$rule($(FORALL, _j, IN, $(N, "_", $("<", _n)), $($(_X, "|", $1($replacement(_i, _j)), "@", $()), IN, R)),
 											$($("to_CL", $(p(_X), "_", $(_i, "<", _n))), "=", sequence(";\n",
 													"	int const gid = get_global_id(0)",
-													$("	result[gid] = ", $($("to_CL", _X), "|", $1($replacement(_i, "gid")), "@", $())),
+													$("	result[gid] = ", $($("to_CL", _X), "|", $1($replacement($("to_CL", _i), "gid")), "@", $())),
 													""))))));
 		}
 		
@@ -59,95 +57,74 @@ public final class ToCLCode {
 		}
 	}
 	
-	/**
-	 * @author codistmonk (creation 2016-08-18)
-	 */
-	public static final class ToCLHelper implements Serializable {
-		
-		private final Rules<Object, Void> rules = new Rules<>();
-		
-		{
+	public static final void computeToCL(final Object expression) {
+		new Simplifier(Mode.DEFINE)
+		.add(tryRule((e, m) -> {
+			final Variable vX = v("X");
+			final Variable vi = v("i");
+			final Variable vn = v("n");
+			
+			matchOrFail($("to_CL", $(p(vX), "_", $(vi, "<", vn))), e);
+			
+			final Object _X = vX.get();
+			final Object _i = vi.get();
+			final Object _n = vn.get();
+			
 			{
-				final Variable vX = v("X");
-				final Variable vi = v("i");
-				final Variable vn = v("n");
+				subdeduction();
 				
-				this.rules.add(rule($("to_CL", $(p(vX), "_", $(vi, "<", vn))), (__, m) -> {
-					final Object _X = m.get(vX);
-					final Object _i = m.get(vi);
-					final Object _n = m.get(vn);
+				autobind("definition_of_vector_generator_to_CL", _X, _i, _n);
+				autoapplyOnce(name(-1));
+				
+				{
+					subdeduction();
 					
-					autobind("definition_of_vector_generator_to_CL", _X, _i, _n);
-					autoapplyOnce(name(-1));
+					final Variable vj = v("j");
+					final Variable vJ = v("J");
+					final Variable vS = v("S");
+					
+					matchOrFail($(FORALL, vj, IN, vJ, vS), condition(proposition(-1)));
+					
+					final Object _S = vS.get();
+					
+					matchOrFail($($(_X, GIVEN, $1($replacement(_i, vj.get())), AT, $()), IN, R), _S);
+					
+					final Object _J = vJ.get();
+					
+					matchOrFail($(N, "_", $("<", _n)), _J);
 					
 					{
 						subdeduction();
 						
-						{
-							subdeduction();
-							
-							final Object j = second(left(proposition(-1)));
-							
-							{
-								subdeduction();
-								
-								final Object _j = forall("j");
-								
-								suppose($(_j, IN, $(N, "_", $("<", _n))));
-								
-								substitute(_X, map(_i, _j));
-								
-								{
-									final Object proposition = $(right(proposition(-1)), IN, R);
-									final PropositionDescription justication = justicationFor(proposition);
-									
-									rewriteRight(justication.getName(), name(-2));
-								}
-								
-								conclude();
-							}
-							
-							{
-								autobind("definition_of_forall_in", j, $(N, "_", $("<", _n)), $($(_X, "|", $1($replacement(_i, j)), "@", $()), IN, R));
-								
-								rewriteRight(name(-2), name(-1));
-							}
-							
-							conclude();
-						}
-						
-						autoapplyOnce(name(-2));
-						
-						this.compute($("to_CL", _X));
-						rewrite(name(-2), name(-1));
-						
-						substitute(_X, map(_i, "gid"));
-						rewrite(name(-2), name(-1));
-						
+						final Object _j = forall("j");
+						suppose($(_j, IN, _J));
+						substitute(_X, map(_i, _j));
+						autodeduce($(right(proposition(-1)), IN, R));
+						rewriteRight(name(-1), name(-2));
 						conclude();
 					}
 					
-					return null;
-				}));
-			}
-			
-			{
-				final Variable vX = v("X");
-				
-				this.rules.add(rule($("to_CL", vX), (__, m) -> {
-					autobindTrim("definition_of_real_to_CL", m.get(vX));
+					bind("definition_of_forall_in", vj.get(), _J, _S);
+					rewriteRight(name(-2), name(-1));
 					
-					return null;
-				}));
+					conclude();
+				}
+				
+				autoapply(name(-2));
+				
+				simplifySubstitutionsAndElementaryInLast();
+				
+				conclude();
 			}
-		}
-		
-		public final void compute(final Object proposition) {
-			this.rules.applyTo(proposition);
-		}
-		
-		private static final long serialVersionUID = 3834061141856389415L;
-		
+		}))
+		.add(tryRule((e, m) -> {
+			final Variable vx = v("x");
+			
+			matchOrFail($("to_CL", vx), e);
+			
+			autobindTrim("definition_of_real_to_CL", vx.get());
+		}))
+		.simplifyCompletely(expression);
 	}
 	
 }

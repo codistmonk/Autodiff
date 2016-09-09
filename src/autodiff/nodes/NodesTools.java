@@ -107,7 +107,7 @@ public final class NodesTools {
 	}
 	
 	public static final Node<?> range(final int n) {
-		if (false) {
+		if (true) {
 			return Computation.range().set("n", n).autoShape();
 		}
 		

@@ -51,6 +51,7 @@ import static autodiff.reasoning.tactics.Stack.proposition;
 import static autodiff.reasoning.tactics.Stack.subdeduction;
 import static autodiff.reasoning.tactics.Stack.substitute;
 import static autodiff.reasoning.tactics.Stack.suppose;
+import static autodiff.reasoning.tactics.Stack.tryDeduction;
 import static multij.rules.Variable.matchOrFail;
 import static multij.tools.Tools.array;
 import static multij.tools.Tools.last;
@@ -58,6 +59,7 @@ import static multij.tools.Tools.last;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
@@ -653,6 +655,10 @@ public final class Autodiff {
 			
 			return true;
 		});
+	}
+	
+	public static final TryRule<Object> tryRule(final BiConsumer<Object, Map<Variable, Object>> tactic) {
+		return (e, m) -> tryDeduction(() -> tactic.accept(e, m)) ? TryRule.T : null;
 	}
 	
 }
