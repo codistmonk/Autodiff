@@ -85,4 +85,19 @@ public final class NodeTest {
 		assertArrayEquals(new float[] { 1F, 1F, 1F, 1F, 1F, 1F }, node.get(new float[node.getLength()]), 0F);
 	}
 	
+	@Test
+	public final void testComputation3() {
+		final Computation node = Computation.range();
+		
+		node.set("n", 3);
+		
+		node.autoShape();
+		
+		assertArrayEquals(new int[] { 3 }, node.getShape());
+		
+		DefaultProcessor.INSTANCE.fullForward(node);
+		
+		assertArrayEquals(new float[] { 0F, 1F, 2F }, node.get(new float[node.getLength()]), 0F);
+	}
+	
 }

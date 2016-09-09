@@ -1,11 +1,13 @@
 package autodiff.reasoning.deductions;
 
 import static autodiff.reasoning.deductions.Basics.*;
+import static autodiff.reasoning.deductions.Sets.SUBSET;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
 import static autodiff.reasoning.tactics.Auto.*;
 import static autodiff.reasoning.tactics.PatternMatching.match;
 import static autodiff.reasoning.tactics.Stack.*;
+import static autodiff.reasoning.tactics.Stack.PropositionDescription.existingJustificationFor;
 import static autodiff.reasoning.tactics.Stack.PropositionDescription.potentialJustificationsFor;
 import static multij.tools.Tools.*;
 
@@ -17,6 +19,7 @@ import autodiff.reasoning.proofs.Substitution;
 import autodiff.reasoning.tactics.Auto;
 import autodiff.reasoning.tactics.PatternMatching;
 import autodiff.reasoning.tactics.Stack.AbortException;
+import autodiff.reasoning.tactics.Stack.PropositionDescription;
 import multij.rules.Predicate;
 import multij.rules.Rules.Result;
 import multij.rules.TryRule;
@@ -538,6 +541,61 @@ public final class ScalarAlgebra {
 			}));
 		}
 		
+		for (int i = 0; i + 1 < NUMERIC_TYPES.length; ++i) {
+			final Object _X = NUMERIC_TYPES[i];
+			final Object _Y = NUMERIC_TYPES[i + 1];
+			final Variable vx = new Variable("x");
+			
+			hintAutodeduce(tryMatch($(vx, IN, _Y), (e, m) -> {
+				final Object _x = vx.get();
+				
+				subdeduction();
+				
+				autodeduce($(_x, IN, _X));
+				autobindTrim("definition_of_subset", _X, _Y);
+				rewrite(existingJustificationFor($(_X, SUBSET, _Y)).getName(), name(-1));
+				autobindTrim(name(-1), _x);
+				
+				conclude();
+				
+				return true;
+			}));
+		}
+		
+		{
+			final Variable vx = new Variable("x");
+			
+			hintAutodeduce(tryMatch($(vx, IN, N), (e, m) -> {
+				final Object _x = vx.get();
+				final Variable vn = v("n");
+				final List<Pair<PropositionDescription, PatternMatching>> justifications = potentialJustificationsFor($(_x, IN, $(N, "_", $("<", vn))));
+				final Deduction deduction = deduction();
+				
+				for (final Pair<PropositionDescription, PatternMatching> pair : justifications) {
+					final Object _n = pair.getSecond().getMapping().get(vn);
+					try {
+						subdeduction();
+						
+						autobindTrim("definition_of_range", _n, _x);
+						rewrite(pair.getFirst().getName(), name(-1));
+						Propositions.deduceConjunctionLeft(name(-1));
+						
+						conclude();
+						
+						return true;
+					} catch (final AbortException exception) {
+						throw exception;
+					} catch (final Exception exception) {
+						ignore(exception);
+						
+						popTo(deduction);
+					}
+				}
+				
+				return false;
+			}));
+		}
+		
 		for (final Object type : NUMERIC_TYPES) {
 			for (final Object operator : array($("+"), $("*"))) {
 				final Variable vx = new Variable("x");
@@ -802,7 +860,7 @@ public final class ScalarAlgebra {
 												leftBounds.put(expression, a.copy().multiply(nx));
 											} else {
 												debugPrint("TODO");
-												abort();
+//												abort();
 											}
 										}
 									}
@@ -823,7 +881,7 @@ public final class ScalarAlgebra {
 												leftBounds.put(expression, a.copy().add(ny));
 											} else {
 												debugPrint("TODO");
-												abort();
+//												abort();
 											}
 										}
 									}

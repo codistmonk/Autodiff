@@ -29,6 +29,7 @@ import multij.rules.Rules;
 import multij.rules.TryRule;
 import multij.rules.Variable;
 import multij.tools.IllegalInstantiationException;
+import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2016-09-09)
@@ -839,9 +840,13 @@ public final class ToJavaCode {
 								
 								{
 									final Object proposition = $(right(proposition(-1)), IN, R);
-									final PropositionDescription justication = justicationFor(proposition);
+									final PropositionDescription justification = justicationFor(proposition);
 									
-									rewriteRight(justication.getName(), name(-2));
+									if (justification == null) {
+										Tools.debugPrint(proposition);
+										abort();
+									}
+									rewriteRight(justification.getName(), name(-2));
 								}
 								
 								conclude();

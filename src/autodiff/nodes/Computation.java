@@ -128,17 +128,48 @@ public final class Computation extends AbstractNode<Computation> {
 	
 	private static final long serialVersionUID = 2834011599617369367L;
 	
+	public static final Computation range() {
+		final Computation result = new Computation().setTypeName("range");
+		
+		{
+			final Object _n = $new("n");
+			final Object _i = $new("i");
+			
+			result.setDefinition(
+					list($(FORALL, _n, IN, POS,
+							$($("range", " ", _n), "=", p(sequence(",", $(p(_i), "_", $(_i, "<", _n)), sequence(",", _n)))))));
+		}
+		
+		result.set("n", null);
+		
+		result.setBinder(new Runnable() {
+			
+			@Override
+			public final void run() {
+				suppose(result.getDefinition());
+				
+				final Object n = $n(result.get("n"));
+				
+				autobindTrim(name(-1), n);
+			}
+		});
+		
+		return result;
+	}
+	
 	public static final Computation ones() {
 		final Computation result = new Computation().setTypeName("ones");
 		
-		final Object n = $new("n");
-		final Object s = $new("s");
-		final Object i = $new("i");
-		
-		result.setDefinition(
-				list($(FORALL, n, IN, POS,
-						$(FORALL, s, IN, $(POS, "^", n),
-								$($("ones", " ", s), "=", p(sequence(",", $(p(1), "_", $(i, "<", $(PI, s))), s)))))));
+		{
+			final Object _n = $new("n");
+			final Object _s = $new("s");
+			final Object _i = $new("i");
+			
+			result.setDefinition(
+					list($(FORALL, _n, IN, POS,
+							$(FORALL, _s, IN, $(POS, "^", _n),
+									$($("ones", " ", _s), "=", p(sequence(",", $(p(1), "_", $(_i, "<", $(PI, _s))), _s)))))));
+		}
 		
 		result.set("s", null);
 		

@@ -724,37 +724,22 @@ public final class Sets {
 		PropositionDescription result = PropositionDescription.existingJustificationFor(proposition);
 		
 		if (result == null) {
-			{
-				final Deduction deduction = deduction();
-				
-				try {
-					verifyElementaryProposition(proposition);
-				} catch (final Exception exception) {
-					ignore(exception);
-					
-					while (deduction() != deduction) {
-						pop();
-					}
-					
-					if (isIdentity(proposition)) {
-						bind("identity", left(proposition));
-					} else if (isArithmeticTyping(proposition)) {
-						return justifyArithmeticTyping(proposition);
-					} else if (isPositivity(proposition)) {
-						deducePositivity(left(proposition));
-					} else if(isCartesianProductity(proposition)) {
-						debugPrint(proposition);
-						deduceCartesianProduct(left(right(proposition)), flattenSequence(",", left(proposition)).toArray());
-					} else {
-						throw new IllegalStateException("Failed to justify: " + proposition);
-					}
-				}
-			}
+			final Deduction deduction = deduction();
 			
-			result = new PropositionDescription()
-			.setIndex(-1)
-			.setName(name(-1))
-			.setProposition(proposition(-1));
+			try {
+				autodeduce(proposition);
+				
+				result = new PropositionDescription()
+						.setIndex(-1)
+						.setName(name(-1))
+						.setProposition(proposition(-1));
+			} catch (final AbortException exception) {
+				throw exception;
+			} catch (final Exception exception) {
+				ignore(exception);
+				
+				popTo(deduction);
+			}
 		}
 		
 		return result;
