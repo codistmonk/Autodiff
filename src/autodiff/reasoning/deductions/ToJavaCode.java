@@ -1,6 +1,6 @@
 package autodiff.reasoning.deductions;
 
-import static autodiff.nodes.Computation.*;
+import static autodiff.reasoning.deductions.Autodiff.*;
 import static autodiff.reasoning.deductions.Basics.rewrite;
 import static autodiff.reasoning.deductions.Basics.rewriteRight;
 import static autodiff.reasoning.deductions.Propositions.breakConjunction;

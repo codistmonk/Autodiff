@@ -3,6 +3,7 @@ package autodiff.reasoning.deductions;
 import static autodiff.reasoning.deductions.Basics.*;
 import static autodiff.reasoning.deductions.Sequences.*;
 import static autodiff.reasoning.expressions.Expressions.*;
+import static autodiff.reasoning.expressions.Expressions.list;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
 import static autodiff.reasoning.tactics.Auto.*;
 import static autodiff.reasoning.tactics.PatternMatching.match;
@@ -10,12 +11,12 @@ import static autodiff.reasoning.tactics.PatternPredicate.rule;
 import static autodiff.reasoning.tactics.Stack.*;
 import static multij.tools.Tools.*;
 
-import autodiff.nodes.Computation.RepeatHelper;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.tactics.PatternMatching;
 import autodiff.reasoning.tactics.Stack.AbortException;
 import autodiff.reasoning.tactics.Stack.PropositionDescription;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1043,6 +1044,59 @@ public final class Sets {
 		rewrite(targetName, name(-1));
 		
 		conclude();
+	}
+	
+	/**
+	 * @author codistmonk (creation 2016-08-15)
+	 */
+	public static final class RepeatHelper implements Serializable {
+		
+		private final Object s;
+		
+		private final Object x;
+		
+		private final int n;
+		
+		public RepeatHelper(final Object s, final Object x, final int n) {
+			this.s = s;
+			this.x = x;
+			this.n = n;
+			
+			if (n < 0) {
+				throw new IllegalArgumentException();
+			}
+		}
+		
+		public final void compute() {
+			if (this.n == 0) {
+				autobind("definition_of_repeat_0", this.s, this.x);
+			} else {
+				subdeduction();
+				
+				{
+					subdeduction();
+					
+					autobindTrim("definition_of_repeat_n", this.s, this.x, this.n);
+					verifyElementaryProposition($($(this.n, "-", 1), "=", this.n - 1));
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				new RepeatHelper(this.s, this.x, this.n - 1).compute();
+				rewrite(name(-2), name(-1));
+				
+				final List<?> formula = list(right(proposition(-1)));
+				
+				computeSequenceAppend(this.s, formula.get(2), formula.get(3));
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+			}
+		}
+		
+		private static final long serialVersionUID = -3837963189941891310L;
+		
 	}
 	
 }
