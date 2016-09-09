@@ -17,8 +17,10 @@ import static autodiff.reasoning.tactics.Goal.*;
 import static autodiff.reasoning.tactics.PatternPredicate.rule;
 import static autodiff.reasoning.tactics.Stack.*;
 import static multij.rules.Variable.matchOrFail;
+import static multij.tools.Tools.ignore;
 import static multij.tools.Tools.last;
 
+import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.tactics.Auto.Simplifier;
 import autodiff.reasoning.tactics.Stack.PropositionDescription;
 
@@ -84,6 +86,19 @@ public final class ToJavaCode {
 			suppose("definition_of_real_to_java",
 					$(FORALL, _x, IN, R,
 							$($("to_java", _x), "=", _x)));
+		}
+		
+		{
+			final Object _X = $new("X");
+			final Object _p = $new("p");
+			final Object _i = $new("i");
+			final Object _n = $new("n");
+			final Object tojava = $("to_java", $(p(_X), "_", $(_i, "<", _n)));
+			
+			suppose("definition_of_index_to_java",
+					$forall(_X, _i, _p,
+							$(FORALL, _n, IN, N,
+									$rule($(tojava, "=", _p), $($("to_java", _i), "=", app("read", str("i"), 0))))));
 		}
 		
 		{
@@ -883,10 +898,30 @@ public final class ToJavaCode {
 			}
 			
 			{
-				final Variable vX = v("X");
+				final Variable vx = v("x");
 				
-				this.rules.add(rule($("to_java", vX), (__, m) -> {
-					autobindTrim("definition_of_real_to_java", m.get(vX));
+				this.rules.add(rule($("to_java", vx), (e, m) -> {
+					if (tryDeduction(() -> {
+						autobindTrim("definition_of_real_to_java", vx.get());
+					})) {
+						return null;
+					}
+					
+					{
+						final Variable vX = v("X");
+						final Variable vp = v("p");
+						final Variable vi = v("i");
+						final Variable vn = v("n");
+						
+						if (Variable.match($($("to_java", $(p(vX), "_", $(vi, "<", vn))), "=", vp), proposition(-1))
+								&& tryDeduction(() -> {
+									autobindTrim("definition_of_index_to_java", vX.get(), vi.get(), vp.get(), vn.get());
+								})) {
+							return null;
+						}
+					}
+					
+					abort();
 					
 					return null;
 				}));
@@ -898,6 +933,34 @@ public final class ToJavaCode {
 		}
 		
 		private static final long serialVersionUID = 8767164056521982370L;
+		
+		public static final boolean tryNewDeduction(final Runnable tactic) {
+			return tryDeduction(() -> {
+				subdeduction();
+				
+				tactic.run();
+				
+				conclude();
+			});
+		}
+		
+		public static final boolean tryDeduction(final Runnable tactic) {
+			final Deduction deduction = deduction();
+			
+			try {
+				tactic.run();
+				
+				return true;
+			} catch (final AbortException exception) {
+				throw exception;
+			} catch (final Exception exception) {
+				ignore(exception);
+				
+				popTo(deduction);
+			}
+			
+			return false;
+		}
 		
 	}
 	
