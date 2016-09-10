@@ -38,7 +38,7 @@ public abstract class ProcessorTest {
 	public final void testComputation1() {
 		final Computation node = Computation.ones();
 		
-		node.set("s", new int[] { 2 });
+		node.set("shape", new int[] { 2 });
 		
 		node.autoShape();
 		
@@ -62,6 +62,23 @@ public abstract class ProcessorTest {
 		this.getProcessor().fullForward(node);
 		
 		assertArrayEquals(new float[] { 0F, 1F, 2F }, node.get(new float[node.getLength()]), 0F);
+	}
+	
+	@Test
+	public final void testComputation3() {
+		final Computation node = Computation.repeatAndIncrease();
+		
+		node.set("n", 3);
+		node.set("stride", 2);
+		node.set("delta", 5);
+		
+		node.autoShape();
+		
+		assertArrayEquals(new int[] { 6 }, node.getShape());
+		
+		this.getProcessor().fullForward(node);
+		
+		assertArrayEquals(new float[] { 0F, 0F, 5F, 5F, 10F, 10F }, node.get(new float[node.getLength()]), 0F);
 	}
 	
 	@Test

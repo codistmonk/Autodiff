@@ -276,7 +276,7 @@ public final class Stack {
 	}
 	
 	public static final void fail() {
-		abort("Aborted");
+		fail("Failed");
 	}
 	
 	public static final void fail(final String message) {

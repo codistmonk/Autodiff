@@ -14,6 +14,7 @@ import static autodiff.reasoning.proofs.ElementaryVerification.N;
 import static autodiff.reasoning.proofs.ElementaryVerification.R;
 import static autodiff.reasoning.tactics.Auto.*;
 import static autodiff.reasoning.tactics.Goal.*;
+import static autodiff.reasoning.tactics.PatternMatching.match;
 import static autodiff.reasoning.tactics.PatternMatching.matchOrFail;
 import static autodiff.reasoning.tactics.Stack.*;
 import static multij.tools.Tools.*;
@@ -80,6 +81,23 @@ public final class ToJavaCode {
 			suppose("definition_of_real_to_java",
 					$(FORALL, _x, IN, R,
 							$($("to_java", _x), "=", _x)));
+		}
+		
+		{
+			final Object _X = $new("X");
+			
+			suppose("definition_of_floor_to_java",
+					$forall(_X,
+							$($("to_java", floor(_X)), "=", app("floor", $("to_java", _X)))));
+		}
+		
+		for (final Object op : array("+", "-", "*", "/")) {
+			final Object _X = $new("X");
+			final Object _Y = $new("Y");
+			
+			suppose("definition_of_" + op + "_to_java",
+					$forall(_X, _Y,
+							$($("to_java", $(_X, op, _Y)), "=", $($("to_java", _X), op, $("to_java", _Y)))));
 		}
 		
 		{
@@ -299,7 +317,7 @@ public final class ToJavaCode {
 									$(FORALL, _n, IN, N, _P))));
 		}
 		
-		{
+		if (true) {
 			final Object _X = $(1);
 			final Object _i = $new("i");
 			final Object _n = $new("n");
@@ -876,10 +894,42 @@ public final class ToJavaCode {
 				
 				autoapply(name(-2));
 				
+				{
+					subdeduction();
+					
+					bind("identity", $("to_java", _X));
+					computeToJava(proposition(-1));
+					
+					conclude();
+				}
+				
+				rewrite(name(-2), name(-1));
+				
 				simplifySubstitutionsAndElementaryInLast();
 				
 				conclude();
 			}
+		}))
+		.add(tryRule((e, m) -> {
+			final Variable vX = v("X");
+			
+			matchOrFail($("to_java", floor(vX)), e);
+			
+			autobindTrim("definition_of_floor_to_java", vX.get());
+		}))
+		.add(tryRule((e, m) -> {
+			final Variable vX = v("X");
+			final Variable vY = v("Y");
+			
+			for (final String op : array("+", "-", "*", "/")) {
+				if (match($("to_java", $(vX, op, vY)), e)) {
+					autobindTrim("definition_of_" + op + "_to_java", vX.get(), vY.get());
+					
+					return;
+				}
+			}
+			
+			fail();
 		}))
 		.add(tryRule((e, m) -> {
 			final Variable vx = v("x");

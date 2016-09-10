@@ -374,6 +374,14 @@ public final class ScalarAlgebra {
 							$($(_x, "<", _y), "=", $($(_x, "+", 1), LE, _y))));
 		}
 		
+		{
+			final Object _x = $new("x");
+			
+			suppose("floor_in_" + Z,
+					$(FORALL, _x, IN, R,
+							$($("floor", _x), IN, Z)));
+		}
+		
 		loadAutoHints();
 		
 		for (final Object operator : array(LE, "<")){
@@ -536,6 +544,16 @@ public final class ScalarAlgebra {
 			
 			hintAutodeduce(tryMatch($(vx, IN, N), (e, m) -> {
 				autobindTrim("conversion_from_" + Z + "_to_" + N, vx.get());
+				
+				return true;
+			}));
+		}
+		
+		{
+			final Variable vx = new Variable("x");
+			
+			hintAutodeduce(tryMatch($($("floor", vx), IN, Z), (e, m) -> {
+				autobindTrim("floor_in_" + Z, vx.get());
 				
 				return true;
 			}));

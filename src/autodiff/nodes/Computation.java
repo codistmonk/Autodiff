@@ -5,6 +5,7 @@ import static autodiff.reasoning.deductions.Basics.*;
 import static autodiff.reasoning.deductions.Sequences.*;
 import static autodiff.reasoning.deductions.Sets.*;
 import static autodiff.reasoning.expressions.Expressions.*;
+import static autodiff.reasoning.proofs.ElementaryVerification.R;
 import static autodiff.reasoning.tactics.Auto.*;
 import static autodiff.reasoning.tactics.Stack.*;
 import static multij.rules.Variable.matchOrFail;
@@ -128,6 +129,58 @@ public final class Computation extends AbstractNode<Computation> {
 	
 	private static final long serialVersionUID = 2834011599617369367L;
 	
+	public static final Object ptuple(final Object... objects) {
+		return p(tuple(objects));
+	}
+	
+	public static List<Object> tuple(final Object... objects) {
+		return sequence(",", objects);
+	}
+	
+	public static final Computation repeatAndIncrease() {
+		final Computation result = new Computation().setTypeName("repinc");
+		
+		{
+			final Object _n = $new("n");
+			final Object _s = $new("s");
+			final Object _d = $new("d");
+			final Object _i = $new("i");
+			
+			result.setDefinition(
+					list($(FORALL, _n, ",", _s, IN, POS,
+							$(FORALL, _d, IN, R,
+									$($("repinc", " ", _n, " ", _s, " ", _d),
+											"=", ptuple($(p($(floor($(_i, "/", _s)), "*", _d)), "_", $(_i, "<", $(_n, "*", _s))), tuple($(_n, "*", _s))))))));
+		}
+		
+		result.set("n", null);
+		result.set("stride", null);
+		result.set("delta", null);
+		
+		result.setBinder(new Runnable() {
+			
+			@Override
+			public final void run() {
+				suppose(result.getDefinition());
+				
+				final Object n = $n(result.get("n"));
+				final Object s = $n(result.get("stride"));
+				final Object d = $n(result.get("delta"));
+				
+				{
+					subdeduction();
+					
+					autobindTrim(name(-1), n, s, d);
+					canonicalizeLast();
+					
+					conclude();
+				}
+			}
+		});
+		
+		return result;
+	}
+	
 	public static final Computation range() {
 		final Computation result = new Computation().setTypeName("range");
 		
@@ -171,7 +224,7 @@ public final class Computation extends AbstractNode<Computation> {
 									$($("ones", " ", _s), "=", p(sequence(",", $(p(1), "_", $(_i, "<", $(PI, _s))), _s)))))));
 		}
 		
-		result.set("s", null);
+		result.set("shape", null);
 		
 		result.setBinder(new Runnable() {
 			
@@ -182,13 +235,13 @@ public final class Computation extends AbstractNode<Computation> {
 				{
 					subdeduction();
 					
-					final Object[] s = toObjects((int[]) result.get("s"));
+					final Object[] s = toObjects((int[]) result.get("shape"));
 					
 					autobindTrim(name(-1), $(s.length));
 					
 					canonicalizeForallIn(name(-1));
 					
-					bind(name(-1), sequence(",", s));
+					bind(name(-1), tuple(s));
 					
 					deduceCartesianProduct(POS, s);
 					

@@ -1,7 +1,9 @@
 package autodiff.reasoning.deductions;
 
+import static autodiff.reasoning.deductions.Autodiff.floor;
 import static autodiff.reasoning.deductions.Autodiff.simplifySubstitutionsAndElementaryInLast;
 import static autodiff.reasoning.deductions.Autodiff.tryRule;
+import static autodiff.reasoning.deductions.Basics.rewrite;
 import static autodiff.reasoning.deductions.Basics.rewriteRight;
 import static autodiff.reasoning.deductions.Sequences.sequence;
 import static autodiff.reasoning.deductions.Sets.p;
@@ -9,8 +11,10 @@ import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.N;
 import static autodiff.reasoning.proofs.ElementaryVerification.R;
 import static autodiff.reasoning.tactics.Auto.*;
+import static autodiff.reasoning.tactics.PatternMatching.match;
 import static autodiff.reasoning.tactics.PatternMatching.matchOrFail;
 import static autodiff.reasoning.tactics.Stack.*;
+import static multij.tools.Tools.array;
 
 import autodiff.reasoning.tactics.Auto.Simplifier;
 import autodiff.reasoning.tactics.Auto.Simplifier.Mode;
@@ -46,6 +50,23 @@ public final class ToCLCode {
 													"	int const gid = get_global_id(0)",
 													$("	result[gid] = ", $($("to_CL", _X), "|", $1($replacement($("to_CL", _i), "gid")), "@", $())),
 													""))))));
+		}
+		
+		{
+			final Object _X = $new("X");
+			
+			suppose("definition_of_floor_to_CL",
+					$forall(_X,
+							$($("to_CL", $("floor", _X)), "=", $("(int)", "(", $("to_CL", _X), ")"))));
+		}
+		
+		for (final Object op : array("+", "-", "*", "/")) {
+			final Object _X = $new("X");
+			final Object _Y = $new("Y");
+			
+			suppose("definition_of_" + op + "_to_CL",
+					$forall(_X, _Y,
+							$($("to_CL", $(_X, op, _Y)), "=", $($("to_CL", _X), op, $("to_CL", _Y)))));
 		}
 		
 		{
@@ -112,10 +133,42 @@ public final class ToCLCode {
 				
 				autoapply(name(-2));
 				
+				{
+					subdeduction();
+					
+					bind("identity", $("to_CL", _X));
+					computeToCL(proposition(-1));
+					
+					conclude();
+				}
+				
+				rewrite(name(-2), name(-1));
+				
 				simplifySubstitutionsAndElementaryInLast();
 				
 				conclude();
 			}
+		}))
+		.add(tryRule((e, m) -> {
+			final Variable vX = v("X");
+			
+			matchOrFail($("to_CL", floor(vX)), e);
+			
+			autobindTrim("definition_of_floor_to_CL", vX.get());
+		}))
+		.add(tryRule((e, m) -> {
+			final Variable vX = v("X");
+			final Variable vY = v("Y");
+			
+			for (final String op : array("+", "-", "*", "/")) {
+				if (match($("to_CL", $(vX, op, vY)), e)) {
+					autobindTrim("definition_of_" + op + "_to_CL", vX.get(), vY.get());
+					
+					return;
+				}
+			}
+			
+			fail();
 		}))
 		.add(tryRule((e, m) -> {
 			final Variable vx = v("x");

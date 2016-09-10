@@ -37,6 +37,8 @@ public final class ScalarAlgebraTest {
 				testAutodeduce($($(_a, "-", 1), IN, R));
 				testAutodeduce($($(_a, "/", 1), IN, R));
 				testAutodeduce($($(_a, "^", 1), IN, R));
+				
+				testAutodeduce($($("floor", _a), IN, R));
 			}
 			
 		});

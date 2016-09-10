@@ -314,6 +314,11 @@ public final class Autodiff {
 		return numbers.stream().mapToInt(n -> ((Number) n).intValue()).toArray();
 	}
 	
+	public static final Object floor(final Object expression) {
+//		return $("⎣", expression, "⎦");
+		return $("floor", expression);
+	}
+	
 	public static final void supposeDefinitionOfMs() {
 		final Object _n = $new("n");
 		final Object _s = $new("s");

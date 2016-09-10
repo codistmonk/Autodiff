@@ -3,6 +3,7 @@ package autodiff.computing;
 import static autodiff.computing.Functions.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.R;
+import static autodiff.reasoning.tactics.Auto.v;
 import static autodiff.reasoning.tactics.Stack.proposition;
 import static multij.rules.PatternPredicate.matchWith;
 import static java.lang.Math.*;
@@ -207,7 +208,6 @@ public final class DefaultProcessor implements NodeProcessor {
 						final Object boundForm = proposition(-1);
 						final Object valuesExpression = left(middle(right(boundForm)));
 						
-//						new ToJavaHelper().compute($$("to_java", valuesExpression));
 						Stack.bind("identity", $$("to_java", valuesExpression));
 						ToJavaCode.computeToJava(proposition(-1));
 					}
@@ -274,8 +274,20 @@ public final class DefaultProcessor implements NodeProcessor {
 		}
 		
 		public final void addTo(final String targetName, final Number targetIndex, final String sourceName, final Number sourceIndex) {
+			this.addTo(targetName, targetIndex, this.read(sourceName, sourceIndex));
+		}
+		
+		public final void addTo(final String targetName, final Number targetIndex, final Number value) {
 			this.write(targetName, targetIndex,
-					this.read(targetName, targetIndex) + this.read(sourceName, sourceIndex));
+					this.read(targetName, targetIndex) + value.floatValue());
+		}
+		
+		public final float floor(final String sourceName, final Number index) {
+			return this.floor(this.read(sourceName, index));
+		}
+		
+		public final float floor(final Number value) {
+			return (float) Math.floor(value.floatValue());
 		}
 		
 		public final FloatBuffer getBuffer(final String name) {
@@ -295,13 +307,13 @@ public final class DefaultProcessor implements NodeProcessor {
 			
 			{
 				{
-					final multij.rules.Variable s = new multij.rules.Variable("s");
+					final multij.rules.Variable s = v("s");
 					
 					this.rules.add(matchWith(Expressions.$("\"", s, "\""), (__, m) -> (Object) m.get(s).toString()));
 				}
 				
 				{
-					final multij.rules.Variable p = new multij.rules.Variable("p");
+					final multij.rules.Variable p = v("p");
 					
 					this.rules.add(matchWith(Expressions.$("()->{", p, "}"), (__, m) -> new Runnable() {
 						
@@ -316,19 +328,58 @@ public final class DefaultProcessor implements NodeProcessor {
 				}
 				
 				{
-					final multij.rules.Variable f = new multij.rules.Variable("f");
-					final multij.rules.Variable x = new multij.rules.Variable("x");
+					final multij.rules.Variable vf = v("f");
+					final multij.rules.Variable vx = v("x");
 					
-					this.rules.add(matchWith(Expressions.$(f, "(", x, ")"), (__, m) -> {
-						final List<Object> arguments = Sequences.flattenSequence(",", this.apply(m.get(x)));
+					this.rules.add(matchWith(Expressions.$(vf, "(", vx, ")"), (__, m) -> {
+						final Object _f = vf.get();
+						final Object _x = vx.get();
+						final List<Object> arguments = Sequences.flattenSequence(",", this.apply(_x));
 						
-						return invoke(JavaCodeContext.this, m.get(f).toString(), arguments.toArray());
+						return invoke(JavaCodeContext.this, _f.toString(), arguments.toArray());
+					}));
+				}
+				
+				{
+					final multij.rules.Variable vx = v("x");
+					final multij.rules.Variable vy = v("y");
+					
+					this.rules.add(matchWith(Expressions.$(vx, "+", vy), (e, m) -> {
+						final Object x = vx.get();
+						final Object y = vy.get();
+						
+						return this.f(x) + this.f(y);
+					}));
+					
+					this.rules.add(matchWith(Expressions.$(vx, "-", vy), (e, m) -> {
+						final Object x = vx.get();
+						final Object y = vy.get();
+						
+						return this.f(x) - this.f(y);
+					}));
+					
+					this.rules.add(matchWith(Expressions.$(vx, "*", vy), (e, m) -> {
+						final Object x = vx.get();
+						final Object y = vy.get();
+						
+						return this.f(x) * this.f(y);
+					}));
+					
+					this.rules.add(matchWith(Expressions.$(vx, "/", vy), (e, m) -> {
+						final Object x = vx.get();
+						final Object y = vy.get();
+						
+						return this.f(x) / this.f(y);
 					}));
 				}
 				
 				{
 					this.rules.add(matchWith(new multij.rules.Variable("*"), (e, __) -> ExpressionRewriter.super.visit((List<?>) e)));
 				}
+			}
+			
+			public final float f(final Object object) {
+				return JavaCodeContext.f(this.apply(object));
 			}
 			
 			@Override
@@ -341,6 +392,10 @@ public final class DefaultProcessor implements NodeProcessor {
 		}
 		
 		private static final long serialVersionUID = -7818200319668460156L;
+		
+		public static final float f(final Object object) {
+			return ((Number) object).floatValue();
+		}
 		
 	}
 	
