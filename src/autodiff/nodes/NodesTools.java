@@ -94,8 +94,16 @@ public final class NodesTools {
 		return new Selection().setVectors(vectors).setIndices(indices).autoShape();
 	}
 	
-	public static final Node<?> shiftData(final int vectorCount, final int indicesCount, final int indicesStride) {
-		return new ShiftData(vectorCount, indicesCount, indicesStride).autoShape();
+	public static final Node<?> repeatAndIncrease(final int delta, final int n, final int stride) {
+		if (true) {
+			return Computation.repeatAndIncrease()
+					.set("n", n)
+					.set("stride", stride)
+					.set("delta", delta)
+					.autoShape();
+		}
+		
+		return new RepeatAndIncrease(delta, n, stride).autoShape();
 	}
 	
 	public static final Node<?> innerReplicator(final int stride, final int replications) {
@@ -735,7 +743,7 @@ public final class NodesTools {
 	/**
 	 * @author codistmonk (creation 2016-08-03)
 	 */
-	public static final class ShiftData extends CustomNode<ShiftData> {
+	public static final class RepeatAndIncrease extends CustomNode<RepeatAndIncrease> {
 		
 		private final int vectorCount;
 		
@@ -743,14 +751,14 @@ public final class NodesTools {
 		
 		private final int indicesStride;
 		
-		public ShiftData(final int vectorCount, final int indicesCount, final int indicesStride) {
+		public RepeatAndIncrease(final int vectorCount, final int indicesCount, final int indicesStride) {
 			this.vectorCount = vectorCount;
 			this.indicesCount = indicesCount;
 			this.indicesStride = indicesStride;
 		}
 		
 		@Override
-		public final ShiftData autoShape() {
+		public final RepeatAndIncrease autoShape() {
 			return this.setShape(this.indicesCount * this.indicesStride);
 		}
 		
@@ -825,7 +833,7 @@ public final class NodesTools {
 			final int indicesCount = indicesShape[0];
 			final int indicesStride = indicesShape[1];
 			final int vectorsStride = vectorCount * indicesCount;
-			final Node<?> shiftData = shiftData(vectorCount, indicesCount, indicesStride);
+			final Node<?> shiftData = repeatAndIncrease(vectorCount, indicesCount, indicesStride);
 			final Node<?> shift = $(indices, "+", shiftData);
 			final Node<?> replicationMatrix = innerReplicator(indicesStride, vectorsStride);
 			final Node<?> replicatedIndices = $(shape(shift, indices.getLength() / indicesStride, indicesStride), replicationMatrix);
