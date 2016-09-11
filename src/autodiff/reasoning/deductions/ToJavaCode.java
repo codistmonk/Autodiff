@@ -101,7 +101,45 @@ public final class ToJavaCode {
 			
 			suppose("definition_of_" + op + "_to_java",
 					$forall(_X, _Y,
-							$($("to_java", $(_X, op, _Y)), "=", $($("to_java", _X), op, $("to_java", _Y)))));
+							$($("to_java", $(_X, op, _Y)), "=", p($("to_java", _X), op, $("to_java", _Y)))));
+		}
+		
+		{
+			final Object _x = $new("x");
+			
+			suppose("definition_of_()_to_java",
+					$forall(_x,
+							$($("to_java", p(_x)), "=", p("to_java", _x))));
+		}
+		
+		{
+			final Object _x = $new("x");
+			
+			suppose("definition_of_cases_otherwise_to_java",
+					$forall(_x,
+							$($("to_java", $("cases", $("", $(_x, "otherwise")))), "=", $("to_java", _x))));
+		}
+		
+		{
+			final Object _x = $new("x");
+			final Object _y = $new("y");
+			final Object _c = $new("c");
+			
+			suppose("definition_of_cases_if_otherwise_to_java",
+					$forall(_x,
+							$($("to_java", $("cases", $("", $(_x, "if", _c), $("", $(_y, "otherwise"))))), "=", $(p("to_java", _c), "?", p("to_java", _x), ":", p("to_java", _y)))));
+		}
+		
+		{
+			final Object _x = $new("x");
+			final Object _y = $new("y");
+			final Object _z = $new("z");
+			final Object _c = $new("c");
+			final Object _d = $new("d");
+			
+			suppose("definition_of_cases_if_if_to_java",
+					$forall(_x,
+							$($("to_java", $("cases", $("", $(_x, "if", _c), $("", $(_y, "if", _d), _z)))), "=", $(p("to_java", _c), "?", p("to_java", _x), ":", p("to_java", $("cases", $("", $(_y, "if", _d), _z)))))));
 		}
 		
 		{
@@ -321,7 +359,7 @@ public final class ToJavaCode {
 									$(FORALL, _n, IN, N, _P))));
 		}
 		
-		if (true) {
+		if (false) {
 			final Object _X = $(1);
 			final Object _i = $new("i");
 			final Object _n = $new("n");
@@ -369,7 +407,6 @@ public final class ToJavaCode {
 					{
 						subdeduction();
 						
-//						new ToJavaHelper().compute(left(proposition(-1)));
 						{
 							subdeduction();
 							
@@ -537,7 +574,6 @@ public final class ToJavaCode {
 					{
 						subdeduction();
 						
-//						new ToJavaHelper().compute(left(proposition(definitionOfP)));
 						{
 							subdeduction();
 							
@@ -718,7 +754,6 @@ public final class ToJavaCode {
 						
 						autoapply("induction_simplified_condition_n.2");
 						
-//						new ToJavaHelper().compute(left(condition(scope(proposition(-1)))));
 						{
 							subdeduction();
 							
@@ -885,6 +920,7 @@ public final class ToJavaCode {
 						
 						suppose($(_j, IN, _J));
 						substitute(_X, map(_i, _j));
+						debugPrint($(right(proposition(-1)), IN, R));
 						autodeduce($(right(proposition(-1)), IN, R));
 						rewriteRight(name(-1), name(-2));
 						conclude();
@@ -934,6 +970,37 @@ public final class ToJavaCode {
 			}
 			
 			fail();
+		}))
+		.add(tryRule((e, m) -> {
+			final Variable vx = v("x");
+			
+			matchOrFail($("to_java", $("cases", $("", $(vx, "otherwise")))), e);
+			
+			autobindTrim("definition_of_cases_otherwise_to_java", vx.get());
+		}))
+		.add(tryRule((e, m) -> {
+			final Variable vx = v("x");
+			final Variable vy = v("y");
+			final Variable vc = v("c");
+			
+			matchOrFail($("to_java", $("cases", $("", $(vx, "if", vc), $("", $(vy, "otherwise"))))), e);
+			
+			autobindTrim("definition_of_cases_if_otherwise_to_java", vx.get(), vy.get(), vc.get());
+		}))
+		.add(tryRule((e, m) -> {
+			final Variable vx = v("x");
+			
+			matchOrFail($("to_java", p(vx)), e);
+			
+			autobindTrim("definition_of_()_to_java", vx.get());
+		}))
+		.add(tryRule((e, m) -> {
+			final Variable vf = v("f");
+			final Variable vx = v("x");
+			
+			matchOrFail($("to_java", $(vf, vx)), e);
+			
+			abort();
 		}))
 		.add(tryRule((e, m) -> {
 			final Variable vx = v("x");

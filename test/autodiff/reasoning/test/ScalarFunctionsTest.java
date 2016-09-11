@@ -1,14 +1,13 @@
 package autodiff.reasoning.test;
 
+import static autodiff.reasoning.deductions.Cases.simplifyCasesInLast;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.tactics.Auto.*;
 import static autodiff.reasoning.tactics.Goal.*;
 import static autodiff.reasoning.tactics.PatternMatching.matchOrFail;
-import static autodiff.reasoning.tactics.Stack.*;
 import static autodiff.reasoning.test.BasicsTest.build;
 
 import autodiff.reasoning.deductions.ScalarFunctions;
-import autodiff.reasoning.tactics.Auto.Simplifier.Mode;
 
 import multij.rules.Variable;
 
@@ -111,47 +110,6 @@ public final class ScalarFunctionsTest {
 			}
 			
 		});
-	}
-	
-	public static final void simplifyCasesInLast() {
-		new Simplifier(Mode.DEFINE)
-		.add(tryRule((e, m) -> {
-			final Variable vx = v("x");
-			final Variable vc = v("c");
-			
-			matchOrFail($("cases", $("", $(vx, "if", vc))), e);
-			
-			autobindTrim("try_cases_if", vx.get(), vc.get());
-		}))
-		.add(tryRule((e, m) -> {
-			final Variable vx = v("x");
-			final Variable vc = v("c");
-			final Variable vy = v("y");
-			
-			matchOrFail($("cases", $("", $(vx, "if", vc), vy)), e);
-			
-			final Object _x = vx.get();
-			final Object _c = vc.get();
-			final Object _y = vy.get();
-			
-			if (tryDeduction(() -> autobindTrim("try_cases_if_stop", _x, _y, _c))) {
-				return;
-			}
-			
-			if (tryDeduction(() -> autobindTrim("try_cases_if_not", _x, _y, _c))) {
-				return;
-			}
-			
-			fail();
-		}))
-		.add(tryRule((e, m) -> {
-			final Variable vx = v("x");
-			
-			matchOrFail($("cases", $("", $(vx, "otherwise"))), e);
-			
-			autobind("try_cases_otherwise", vx.get());
-		}))
-		.simplifyCompletely(proposition(-1));
 	}
 	
 }

@@ -110,6 +110,7 @@ public final class ScalarAlgebra {
 			}
 		}
 		
+		
 		for (final Object type : array(Z)) {
 			for (final Object operator : array($("/"))) {
 				final Object _x = $new("x");
@@ -119,6 +120,15 @@ public final class ScalarAlgebra {
 						$(FORALL, _x, ",", _y, IN, type,
 								$rule($($(_x, "%", _y), "=", 0), $($(_x, operator, _y), IN, type))));
 			}
+		}
+		
+		{
+			final Object _x = $new("x");
+			final Object _y = $new("y");
+			
+			suppose("stability_of_%_in_" + Z,
+					$(FORALL, _x, ",", _y, IN, Z,
+							$rule($(LNOT, $(_y, "=", 0)), $($(_x, "%", _y), IN, Z))));
 		}
 		
 		for (final Object operator : array($("+"), $("*"))) {
@@ -558,6 +568,56 @@ public final class ScalarAlgebra {
 			
 			hintAutodeduce(tryMatch($($("floor", vx), IN, Z), (e, m) -> {
 				autobindTrim("floor_in_" + Z, vx.get());
+				
+				return true;
+			}));
+		}
+		
+		{
+			final Variable vx = new Variable("x");
+			final Variable vy = new Variable("y");
+			
+			hintAutodeduce(tryMatch($($(vx, "%", vy), IN, Z), (e, m) -> {
+				autobindTrim("stability_of_%_in_" + Z, vx.get(), vy.get());
+				
+				return true;
+			}));
+		}
+		
+		{
+			final Variable vx = new Variable("x");
+			final Variable vy = new Variable("y");
+			
+			hintAutodeduce(tryMatch($(LNOT, $(vx, "=", vy)), (e, m) -> {
+				autobindTrim("<_implies_not_equal", vx.get(), vy.get());
+				
+				return true;
+			}));
+		}
+		
+		{
+			final Variable vx = new Variable("x");
+			final Variable vy = new Variable("y");
+			
+			hintAutodeduce(tryMatch($(LNOT, $(vx, "=", vy)), (e, m) -> {
+				autobindTrim(">_implies_not_equal", vx.get(), vy.get());
+				
+				return true;
+			}));
+		}
+		
+		{
+			final Variable vx = new Variable("x");
+			
+			hintAutodeduce(tryMatch($(0, "<", vx), (e, m) -> {
+				subdeduction();
+				
+				autobindTrim("definition_of_positives", vx.get());
+				autodeduce(left(proposition(-1)));
+				rewrite(name(-1), name(-2));
+				Propositions.deduceConjunctionRight(name(-1));
+				
+				conclude();
 				
 				return true;
 			}));

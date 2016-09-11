@@ -137,8 +137,50 @@ public final class Computation extends AbstractNode<Computation> {
 		return sequence(",", objects);
 	}
 	
+	public static final Computation innerReplicator() {
+		final String name = "inner_rep";
+		final Computation result = new Computation().setTypeName(name);
+		
+		{
+			final Object _n = $new("n");
+			final Object _s = $new("s");
+			final Object _i = $new("i");
+			
+			result.setDefinition(
+					list($(FORALL, _n, ",", _s, IN, POS,
+								$($(name, " ", _n, " ", _s),
+										"=", ptuple($(p($("step_1", $(_s, "-", $(_i, "%", $($(_s, "+", 1), "*", _n))))), "_", $(_i, "<", $(_s, "*", $(_s, "*", _n)))), tuple(_s, $(_s, "*", _n)))))));
+		}
+		
+		result.set("n", null);
+		result.set("stride", null);
+		
+		result.setBinder(new Runnable() {
+			
+			@Override
+			public final void run() {
+				suppose(result.getDefinition());
+				
+				final Object n = $n(result.get("n"));
+				final Object s = $n(result.get("stride"));
+				
+				{
+					subdeduction();
+					
+					autobindTrim(name(-1), n, s);
+					canonicalizeLast();
+					
+					conclude();
+				}
+			}
+		});
+		
+		return result;
+	}
+	
 	public static final Computation repeatAndIncrease() {
-		final Computation result = new Computation().setTypeName("repinc");
+		final String name = "repeat_inc";
+		final Computation result = new Computation().setTypeName(name);
 		
 		{
 			final Object _n = $new("n");
@@ -149,7 +191,7 @@ public final class Computation extends AbstractNode<Computation> {
 			result.setDefinition(
 					list($(FORALL, _n, ",", _s, IN, POS,
 							$(FORALL, _d, IN, R,
-									$($("repinc", " ", _n, " ", _s, " ", _d),
+									$($(name, " ", _n, " ", _s, " ", _d),
 											"=", ptuple($(p($(floor($(_i, "/", _s)), "*", _d)), "_", $(_i, "<", $(_n, "*", _s))), tuple($(_n, "*", _s))))))));
 		}
 		

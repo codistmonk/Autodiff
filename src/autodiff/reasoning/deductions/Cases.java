@@ -1,34 +1,17 @@
 package autodiff.reasoning.deductions;
 
 import static autodiff.reasoning.deductions.Basics.rewrite;
-import static autodiff.reasoning.expressions.Expressions.$;
-import static autodiff.reasoning.expressions.Expressions.$forall;
-import static autodiff.reasoning.expressions.Expressions.$new;
-import static autodiff.reasoning.expressions.Expressions.$rule;
-import static autodiff.reasoning.expressions.Expressions.LNOT;
-import static autodiff.reasoning.expressions.Expressions.condition;
-import static autodiff.reasoning.expressions.Expressions.second;
-import static autodiff.reasoning.tactics.Stack.abort;
-import static autodiff.reasoning.tactics.Stack.apply;
-import static autodiff.reasoning.tactics.Stack.bind;
-import static autodiff.reasoning.tactics.Stack.conclude;
-import static autodiff.reasoning.tactics.Stack.forall;
-import static autodiff.reasoning.tactics.Stack.name;
-import static autodiff.reasoning.tactics.Stack.proposition;
-import static autodiff.reasoning.tactics.Stack.setMetadatumOnce;
-import static autodiff.reasoning.tactics.Stack.subdeduction;
-import static autodiff.reasoning.tactics.Stack.suppose;
-import static autodiff.reasoning.tactics.Stack.verifyElementaryProposition;
-import static multij.tools.Tools.append;
-import static multij.tools.Tools.array;
-import static multij.tools.Tools.debugPrint;
+import static autodiff.reasoning.expressions.Expressions.*;
+import static autodiff.reasoning.tactics.Auto.*;
+import static autodiff.reasoning.tactics.PatternMatching.matchOrFail;
+import static autodiff.reasoning.tactics.Stack.*;
+import static multij.tools.Tools.*;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import autodiff.reasoning.tactics.Auto.Simplifier;
+import autodiff.reasoning.tactics.Auto.Simplifier.Mode;
 
+import multij.rules.Variable;
 import multij.tools.IllegalInstantiationException;
-import multij.tools.Pair;
 
 /**
  * @author codistmonk (creation 2016-08-28)
@@ -184,143 +167,45 @@ public final class Cases {
 		return Sequences.sequence("", append(array((Object) "cases"), cases));
 	}
 	
-	public static final void tryCasesIfNot(final Object condition, final Object value, final Object _y) {
-		subdeduction();
-		
-		{
-			subdeduction();
+	public static final void simplifyCasesInLast() {
+		new Simplifier(Mode.DEFINE)
+		.add(tryRule((e, m) -> {
+			final Variable vx = v("x");
+			final Variable vc = v("c");
 			
-			bind("try_cases_if_not", value, _y, condition);
-
-			// TODO autodetect required verification
-			final Object formula = second(condition(proposition(-1)));
+			matchOrFail($("cases", $("", $(vx, "if", vc))), e);
 			
-			debugPrint(formula);
-			debugPrint(condition);
+			autobindTrim("try_cases_if", vx.get(), vc.get());
+		}))
+		.add(tryRule((e, m) -> {
+			final Variable vx = v("x");
+			final Variable vc = v("c");
+			final Variable vy = v("y");
 			
-			verifyElementaryProposition(formula);
+			matchOrFail($("cases", $("", $(vx, "if", vc), vy)), e);
 			
-			abort();
-//			evaluateStructuralFormula(formula);
+			final Object _x = vx.get();
+			final Object _c = vc.get();
+			final Object _y = vy.get();
 			
-			apply(name(-2), name(-1));
-			
-			conclude();
-		}
-		
-		rewrite(name(-2), name(-1));
-		
-		conclude();
-	}
-	
-	public static final void tryCasesIf(final Object condition, final Object value) {
-		subdeduction();
-		
-		{
-			subdeduction();
-			
-			bind("try_cases_if", value, condition);
-			
-			// TODO autodetect required verification
-//			evaluateStructuralFormula(condition(proposition(-1)));
-			
-			abort();
-			
-			apply(name(-2), name(-1));
-			
-			conclude();
-		}
-		
-		rewrite(name(-2), name(-1));
-		
-		conclude();
-	}
-	
-	public static final void tryCasesIfStop(final Object condition, final Object value, final Object _y) {
-		subdeduction();
-		
-		{
-			subdeduction();
-			
-			bind("try_cases_if_stop", value, _y, condition);
-			
-			// TODO autodetect required verification
-//			evaluateStructuralFormula(condition(proposition(-1)));
-			abort();
-			
-			
-			apply(name(-2), name(-1));
-			
-			conclude();
-		}
-		
-		rewrite(name(-2), name(-1));
-		
-		conclude();
-	}
-	
-	public static final void tryCasesOtherwise(final Object value) {
-		subdeduction();
-		
-		bind("try_cases_otherwise", value);
-		rewrite(name(-2), name(-1));
-		
-		conclude();
-	}
-	
-	/**
-	 * @author codistmonk (creation 2016-08-14)
-	 */
-	public static final class CasesHelper implements Serializable {
-		
-		private final List<Pair<Object, Object>> cases = new ArrayList<>();
-		
-		public final CasesHelper addCase(final Object value) {
-			return this.addCase(value, null);
-		}
-		
-		public final CasesHelper addCase(final Object value, final Object condition) {
-			this.cases.add(new Pair<>(value, condition));
-			
-			return this;
-		}
-		
-		public final void selectCase(final int index) {
-			final int n = this.cases.size();
-			final Object[] continuations = new Object[n];
-			
-			for (int i = n - 2; 0 <= i; --i) {
-				final Pair<Object, Object> nextCase = this.cases.get(i + 1);
-				final Object nextItem = nextCase.getSecond() == null
-						? $(nextCase.getFirst(), "otherwise")
-								: $(nextCase.getFirst(), "if", nextCase.getSecond());
-				
-				if (i == n - 2) {
-					continuations[i] = $("", nextItem);
-				} else {
-					continuations[i] = $("", nextItem, continuations[i + 1]);
-				}
+			if (tryDeduction(() -> autobindTrim("try_cases_if_stop", _x, _y, _c))) {
+				return;
 			}
 			
-			for (int i = 0; i < index; ++i) {
-				final Pair<Object, Object> c = this.cases.get(i);
-				
-				tryCasesIfNot(c.getSecond(), c.getFirst(), continuations[i]);
+			if (tryDeduction(() -> autobindTrim("try_cases_if_not", _x, _y, _c))) {
+				return;
 			}
 			
-			final Pair<Object, Object> c = this.cases.get(index);
+			fail();
+		}))
+		.add(tryRule((e, m) -> {
+			final Variable vx = v("x");
 			
-			if (c.getSecond() == null) {
-				tryCasesOtherwise(c.getFirst());
-			} else if (continuations[index] == null) {
-				tryCasesIf(c.getSecond(), c.getFirst());
-			} else {
-				tryCasesIfStop(c.getSecond(), c.getFirst(), continuations[index]);
-			}
-		}
-		
-		private static final long serialVersionUID = -598430379891995844L;
-		
+			matchOrFail($("cases", $("", $(vx, "otherwise"))), e);
+			
+			autobind("try_cases_otherwise", vx.get());
+		}))
+		.simplifyCompletely(proposition(-1));
 	}
 	
 }

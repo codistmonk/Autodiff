@@ -1,11 +1,23 @@
 package autodiff.reasoning.deductions;
 
 import static autodiff.reasoning.deductions.Cases.cases;
+import static autodiff.reasoning.deductions.Cases.simplifyCasesInLast;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.R;
+import static autodiff.reasoning.tactics.Auto.*;
 import static autodiff.reasoning.tactics.Stack.*;
+import static autodiff.reasoning.tactics.Stack.PropositionDescription.potentialJustificationsFor;
+import static multij.tools.Tools.debugPrint;
 
+import java.util.List;
+
+import autodiff.reasoning.tactics.Auto;
+import autodiff.reasoning.tactics.PatternMatching;
+import autodiff.reasoning.tactics.Stack.PropositionDescription;
+import multij.rules.Variable;
 import multij.tools.IllegalInstantiationException;
+import multij.tools.Pair;
+import multij.tools.Tools;
 
 /**
  * @author codistmonk (creation 2016-09-11)
@@ -54,6 +66,23 @@ public final class ScalarFunctions {
 							$($("delta_", $(_x, "", _y)), "=", cases(
 									$(1, "if", $(_x, "=", _y)),
 									$(0, "otherwise")))));
+		}
+		
+		loadAutoHints();
+	}
+	
+	public static final void loadAutoHints() {
+		{
+			final Variable vx = v("x");
+			final Variable vX = v("X");
+			
+			hintAutodeduce(tryMatch($($("step_1", vx), IN, vX), (e, m) -> {
+				autobindTrim("definition_of_step_1", vx.get());
+				simplifyCasesInLast();
+//				abort();
+				
+				return false;
+			}));
 		}
 	}
 	

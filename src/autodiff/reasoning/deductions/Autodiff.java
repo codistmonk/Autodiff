@@ -43,7 +43,7 @@ public final class Autodiff {
 		
 		@Override
 		public final void run() {
-			ScalarAlgebra.load();
+			ScalarFunctions.load();
 			
 			supposeEliminationOfParentheses();
 			

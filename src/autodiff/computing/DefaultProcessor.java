@@ -371,6 +371,12 @@ public final class DefaultProcessor implements NodeProcessor {
 						
 						return this.f(x) / this.f(y);
 					}));
+					
+					this.rules.add(matchWith(Expressions.$("(", vx, ")"), (e, m) -> {
+						final Object x = vx.get();
+						
+						return this.f(x);
+					}));
 				}
 				
 				{

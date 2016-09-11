@@ -1,6 +1,7 @@
 package autodiff.reasoning.test;
 
 import static autodiff.reasoning.deductions.ScalarAlgebra.canonicalize;
+import static autodiff.reasoning.deductions.Sets.POS;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
 import static autodiff.reasoning.tactics.Auto.autodeduce;
@@ -9,6 +10,7 @@ import static autodiff.reasoning.tactics.Stack.*;
 import static autodiff.reasoning.test.BasicsTest.build;
 
 import autodiff.reasoning.deductions.ScalarAlgebra;
+import autodiff.reasoning.deductions.Sets;
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.tactics.Goal;
 
@@ -78,6 +80,11 @@ public final class ScalarAlgebraTest {
 				suppose($(_b, IN, N));
 				
 				testAutodeduce($($($($(_a, "+", 1), "*", $(_b, "-", 2)), "/", 6), IN, R));
+				
+				suppose($(_a, IN, Z));
+				suppose($(_b, IN, POS));
+				
+				testAutodeduce($($(_a, "%", _b), IN, R));
 			}
 			
 		});
