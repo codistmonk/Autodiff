@@ -28,6 +28,10 @@ public final class Basics {
 	}
 	
 	public static final void load() {
+		if (!setMetadatumOnce(Basics.class, "loaded")) {
+			return;
+		}
+		
 		supposeRewrite();
 		deduceIdentity();
 		deduceCommutativityOfEquality();

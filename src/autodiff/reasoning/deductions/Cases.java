@@ -15,6 +15,7 @@ import static autodiff.reasoning.tactics.Stack.conclude;
 import static autodiff.reasoning.tactics.Stack.forall;
 import static autodiff.reasoning.tactics.Stack.name;
 import static autodiff.reasoning.tactics.Stack.proposition;
+import static autodiff.reasoning.tactics.Stack.setMetadatumOnce;
 import static autodiff.reasoning.tactics.Stack.subdeduction;
 import static autodiff.reasoning.tactics.Stack.suppose;
 import static autodiff.reasoning.tactics.Stack.verifyElementaryProposition;
@@ -39,6 +40,10 @@ public final class Cases {
 	}
 	
 	public static final void load() {
+		if (!setMetadatumOnce(Cases.class, "loaded")) {
+			return;
+		}
+		
 		supposeEliminationsOfCases();
 		testEliminationOfCases();
 	}

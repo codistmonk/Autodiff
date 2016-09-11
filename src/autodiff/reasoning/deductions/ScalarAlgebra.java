@@ -59,6 +59,10 @@ public final class ScalarAlgebra {
 	public static final Object[] RATIONAL_TYPES = { Q, R };
 	
 	public static final void load() {
+		if (!setMetadatumOnce(ScalarAlgebra.class, "loaded")) {
+			return;
+		}
+		
 		Sets.load();
 		
 		for (final Object type : NUMERIC_TYPES) {

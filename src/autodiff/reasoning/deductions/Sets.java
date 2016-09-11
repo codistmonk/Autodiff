@@ -3,7 +3,6 @@ package autodiff.reasoning.deductions;
 import static autodiff.reasoning.deductions.Basics.*;
 import static autodiff.reasoning.deductions.Sequences.*;
 import static autodiff.reasoning.expressions.Expressions.*;
-import static autodiff.reasoning.expressions.Expressions.list;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
 import static autodiff.reasoning.tactics.Auto.*;
 import static autodiff.reasoning.tactics.PatternMatching.match;
@@ -53,6 +52,10 @@ public final class Sets {
 	public static final Object CROSS = $("×");
 	
 	public static final void load() {
+		if (!setMetadatumOnce(Sets.class, "loaded")) {
+			return;
+		}
+		
 		Propositions.load();
 		Sequences.load();
 		

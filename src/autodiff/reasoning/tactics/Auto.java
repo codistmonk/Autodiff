@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.WeakHashMap;
+import java.util.function.BiConsumer;
 
 import multij.rules.Predicate;
 import multij.rules.Rules;
@@ -231,6 +232,10 @@ public final class Auto {
 		apply(targetName, name(-1));
 		
 		conclude();
+	}
+	
+	public static final TryRule<Object> tryRule(final BiConsumer<Object, Map<Variable, Object>> tactic) {
+		return (e, m) -> tryDeduction(() -> tactic.accept(e, m)) ? TryRule.T : null;
 	}
 	
 	public static final <T> TryRule<T> tryMatch(final Object pattern, Predicate<T> continuation) {

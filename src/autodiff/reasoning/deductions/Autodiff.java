@@ -1,70 +1,28 @@
 package autodiff.reasoning.deductions;
 
-import static autodiff.reasoning.deductions.Basics.rewrite;
-import static autodiff.reasoning.deductions.Basics.rewriteRight;
-import static autodiff.reasoning.deductions.Basics.simplifyElementaryExpression;
+import static autodiff.reasoning.deductions.Basics.*;
 import static autodiff.reasoning.deductions.Propositions.deduceConjunctionLeft;
 import static autodiff.reasoning.deductions.ScalarAlgebra.canonicalize;
 import static autodiff.reasoning.deductions.ScalarAlgebra.newElementarySimplificationRule;
-import static autodiff.reasoning.deductions.Sequences.computeSequenceAppend;
-import static autodiff.reasoning.deductions.Sequences.computeSequenceConcatenate;
-import static autodiff.reasoning.deductions.Sequences.computeSequenceSubappend;
-import static autodiff.reasoning.deductions.Sequences.flattenSequence;
-import static autodiff.reasoning.deductions.Sequences.sequence;
-import static autodiff.reasoning.deductions.Sets.CROSS;
-import static autodiff.reasoning.deductions.Sets.POS;
-import static autodiff.reasoning.deductions.Sets.SUBSET;
-import static autodiff.reasoning.deductions.Sets.U;
-import static autodiff.reasoning.deductions.Sets.c;
-import static autodiff.reasoning.deductions.Sets.p;
-import static autodiff.reasoning.deductions.Sets.pp;
-import static autodiff.reasoning.deductions.Sets.supposeDefinitionOfSingleton;
-import static autodiff.reasoning.expressions.Expressions.$;
-import static autodiff.reasoning.expressions.Expressions.$1;
-import static autodiff.reasoning.expressions.Expressions.$forall;
-import static autodiff.reasoning.expressions.Expressions.$new;
-import static autodiff.reasoning.expressions.Expressions.$replacement;
-import static autodiff.reasoning.expressions.Expressions.$rule;
-import static autodiff.reasoning.expressions.Expressions.FORALL;
-import static autodiff.reasoning.expressions.Expressions.IN;
-import static autodiff.reasoning.expressions.Expressions.LAND;
-import static autodiff.reasoning.expressions.Expressions.LE;
-import static autodiff.reasoning.expressions.Expressions.LOR;
-import static autodiff.reasoning.expressions.Expressions.first;
-import static autodiff.reasoning.expressions.Expressions.left;
-import static autodiff.reasoning.expressions.Expressions.list;
-import static autodiff.reasoning.expressions.Expressions.map;
-import static autodiff.reasoning.expressions.Expressions.right;
-import static autodiff.reasoning.expressions.Expressions.second;
-import static autodiff.reasoning.proofs.ElementaryVerification.N;
-import static autodiff.reasoning.proofs.ElementaryVerification.R;
-import static autodiff.reasoning.proofs.ElementaryVerification.Z;
-import static autodiff.reasoning.tactics.Auto.autobindTrim;
-import static autodiff.reasoning.tactics.Auto.tryMatch;
-import static autodiff.reasoning.tactics.Auto.v;
+import static autodiff.reasoning.deductions.Sequences.*;
+import static autodiff.reasoning.deductions.Sets.*;
+import static autodiff.reasoning.expressions.Expressions.*;
+import static autodiff.reasoning.proofs.ElementaryVerification.*;
+import static autodiff.reasoning.tactics.Auto.*;
 import static autodiff.reasoning.tactics.PatternPredicate.rule;
-import static autodiff.reasoning.tactics.Stack.bind;
-import static autodiff.reasoning.tactics.Stack.conclude;
-import static autodiff.reasoning.tactics.Stack.forall;
-import static autodiff.reasoning.tactics.Stack.name;
-import static autodiff.reasoning.tactics.Stack.proposition;
-import static autodiff.reasoning.tactics.Stack.subdeduction;
-import static autodiff.reasoning.tactics.Stack.substitute;
-import static autodiff.reasoning.tactics.Stack.suppose;
-import static autodiff.reasoning.tactics.Stack.tryDeduction;
+import static autodiff.reasoning.tactics.Stack.*;
 import static multij.rules.Variable.matchOrFail;
-import static multij.tools.Tools.array;
-import static multij.tools.Tools.last;
-
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiConsumer;
+import static multij.tools.Tools.*;
 
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.tactics.Auto.Simplifier;
 import autodiff.reasoning.tactics.Auto.Simplifier.Mode;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import multij.rules.Rules;
 import multij.rules.TryRule;
 import multij.rules.Variable;
@@ -660,10 +618,6 @@ public final class Autodiff {
 			
 			return true;
 		});
-	}
-	
-	public static final TryRule<Object> tryRule(final BiConsumer<Object, Map<Variable, Object>> tactic) {
-		return (e, m) -> tryDeduction(() -> tactic.accept(e, m)) ? TryRule.T : null;
 	}
 	
 }

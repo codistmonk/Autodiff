@@ -32,6 +32,10 @@ public final class Sequences {
 	}
 	
 	public static final void load() {
+		if (!setMetadatumOnce(Sequences.class, "loaded")) {
+			return;
+		}
+		
 //		debugPrint(sequence(",", $(1, 2, 3)));
 //		debugPrint(sequence(",", 1));
 //		debugPrint(sequence(",", 1, 2));

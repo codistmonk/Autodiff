@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import multij.rules.Rules.Result;
 import multij.tools.IllegalInstantiationException;
 import multij.tools.Pair;
 
@@ -102,6 +103,31 @@ public final class Stack {
 		deduction().forall(result);
 		
 		return result;
+	}
+	
+	public static final boolean setMetadatumOnce(final Object key, final Object value) {
+		if (getMetadatum(key) != null) {
+			return false;
+		}
+		
+		deduction().getMetadata().put(key, value);
+		
+		return true;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static final <T> Result<T> getMetadatum(final Object key) {
+		Deduction deduction = deduction();
+		
+		while (deduction != null) {
+			if (deduction.getMetadata().containsKey(key)) {
+				return new Result<>((T) deduction.getMetadata().get(key));
+			}
+			
+			deduction = deduction.getParent();
+		}
+		
+		return null;
 	}
 	
 	public static final void suppose(final Object proposition) {

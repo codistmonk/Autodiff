@@ -2,7 +2,6 @@ package autodiff.reasoning.deductions;
 
 import static autodiff.reasoning.deductions.Autodiff.floor;
 import static autodiff.reasoning.deductions.Autodiff.simplifySubstitutionsAndElementaryInLast;
-import static autodiff.reasoning.deductions.Autodiff.tryRule;
 import static autodiff.reasoning.deductions.Basics.rewrite;
 import static autodiff.reasoning.deductions.Basics.rewriteRight;
 import static autodiff.reasoning.deductions.Sequences.sequence;
@@ -32,6 +31,10 @@ public final class ToCLCode {
 	}
 	
 	public static final void load() {
+		if (!setMetadatumOnce(ToCLCode.class, "loaded")) {
+			return;
+		}
+		
 		supposeDefinitionsForCLCode();
 	}
 	

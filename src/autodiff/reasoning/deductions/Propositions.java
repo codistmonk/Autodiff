@@ -18,6 +18,10 @@ public final class Propositions {
 	}
 	
 	public static final void load() {
+		if (!setMetadatumOnce(Propositions.class, "loaded")) {
+			return;
+		}
+		
 		Basics.load();
 		
 		supposeLeftEliminationOfDisjunction();

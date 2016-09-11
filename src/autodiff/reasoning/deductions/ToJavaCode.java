@@ -38,6 +38,10 @@ public final class ToJavaCode {
 	}
 	
 	public static final void load() {
+		if (!setMetadatumOnce(ToJavaCode.class, "loaded")) {
+			return;
+		}
+		
 		supposeDefinitionsForJavaCode();
 	}
 	

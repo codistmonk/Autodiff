@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ListIterator;
@@ -21,6 +22,8 @@ import multij.tools.Tools;
  * @author codistmonk (creation 2015-04-11)
  */
 public final class Deduction extends Proof.Abstract {
+	
+	private final Map<Object, Object> metadata;
 	
 	private final Deduction parent;
 	
@@ -38,6 +41,7 @@ public final class Deduction extends Proof.Abstract {
 	
 	public Deduction(final Deduction parent, final String provedPropositionName) {
 		super(provedPropositionName, new ArrayList<>(Arrays.asList("By deduction in", null, "step(s)")));
+		this.metadata = new LinkedHashMap<>();
 		this.parent = parent;
 		this.parameters = new LinkedHashSet<>();
 		this.propositions = new HashMap<>();
@@ -57,6 +61,10 @@ public final class Deduction extends Proof.Abstract {
 				"Invalid proposition name: " + provedPropositionName);
 //		checkArgument(parent == null || parent.getProposition(provedPropositionName) == null,
 //				"Duplicate proposition name: " + provedPropositionName);
+	}
+	
+	public final Map<Object, Object> getMetadata() {
+		return this.metadata;
 	}
 	
 	public final Deduction getParent() {
