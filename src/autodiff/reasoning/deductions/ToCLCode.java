@@ -35,6 +35,8 @@ public final class ToCLCode {
 			return;
 		}
 		
+		ScalarFunctions.load();
+		
 		supposeDefinitionsForCLCode();
 	}
 	
@@ -63,13 +65,51 @@ public final class ToCLCode {
 							$($("to_CL", $("floor", _X)), "=", $("(int)", "(", $("to_CL", _X), ")"))));
 		}
 		
-		for (final Object op : array("+", "-", "*", "/")) {
+		for (final Object op : array("+", "-", "*", "/", "%", "<", ">")) {
 			final Object _X = $new("X");
 			final Object _Y = $new("Y");
 			
 			suppose("definition_of_" + op + "_to_CL",
 					$forall(_X, _Y,
 							$($("to_CL", $(_X, op, _Y)), "=", $($("to_CL", _X), op, $("to_CL", _Y)))));
+		}
+		
+		{
+			final Object _x = $new("x");
+			
+			suppose("definition_of_()_to_CL",
+					$forall(_x,
+							$($("to_CL", p(_x)), "=", p("to_CL", _x))));
+		}
+		
+		{
+			final Object _x = $new("x");
+			
+			suppose("definition_of_cases_otherwise_to_CL",
+					$forall(_x,
+							$($("to_CL", $("cases", $("", $(_x, "otherwise")))), "=", $("to_CL", _x))));
+		}
+		
+		{
+			final Object _x = $new("x");
+			final Object _y = $new("y");
+			final Object _c = $new("c");
+			
+			suppose("definition_of_cases_if_otherwise_to_CL",
+					$forall(_x, _c, _y,
+							$($("to_CL", $("cases", $("", $(_x, "if", _c), $("", $(_y, "otherwise"))))), "=", $(p("to_CL", _c), "?", p("to_CL", _x), ":", p("to_CL", _y)))));
+		}
+		
+		{
+			final Object _x = $new("x");
+			final Object _y = $new("y");
+			final Object _z = $new("z");
+			final Object _c = $new("c");
+			final Object _d = $new("d");
+			
+			suppose("definition_of_cases_if_if_to_CL",
+					$forall(_x, _c, _y, _d, _z,
+							$($("to_CL", $("cases", $("", $(_x, "if", _c), $("", $(_y, "if", _d), _z)))), "=", $(p("to_CL", _c), "?", p("to_CL", _x), ":", p("to_CL", $("cases", $("", $(_y, "if", _d), _z)))))));
 		}
 		
 		{
@@ -163,7 +203,7 @@ public final class ToCLCode {
 			final Variable vX = v("X");
 			final Variable vY = v("Y");
 			
-			for (final String op : array("+", "-", "*", "/")) {
+			for (final String op : array("+", "-", "*", "/", "%", "<", ">")) {
 				if (match($("to_CL", $(vX, op, vY)), e)) {
 					autobindTrim("definition_of_" + op + "_to_CL", vX.get(), vY.get());
 					
@@ -172,6 +212,35 @@ public final class ToCLCode {
 			}
 			
 			fail();
+		}))
+		.add(tryRule((e, m) -> {
+			final Variable vx = v("x");
+			
+			matchOrFail($("to_CL", $("cases", $("", $(vx, "otherwise")))), e);
+			
+			autobindTrim("definition_of_cases_otherwise_to_CL", vx.get());
+		}))
+		.add(tryRule((e, m) -> {
+			final Variable vx = v("x");
+			final Variable vy = v("y");
+			final Variable vc = v("c");
+			
+			matchOrFail($("to_CL", $("cases", $("", $(vx, "if", vc), $("", $(vy, "otherwise"))))), e);
+			
+			autobindTrim("definition_of_cases_if_otherwise_to_CL", vx.get(), vc.get(), vy.get());
+		}))
+		.add(tryRule((e, m) -> {
+			final Variable vx = v("x");
+			
+			matchOrFail($("to_CL", $("step_1", vx)), e);
+			
+			subdeduction();
+			
+			autobindTrim("definition_of_step_1", vx.get());
+			
+			rewrite(name(-2), name(-1), 1);
+			
+			conclude();
 		}))
 		.add(tryRule((e, m) -> {
 			final Variable vx = v("x");
