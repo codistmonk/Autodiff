@@ -42,6 +42,8 @@ public final class ToJavaCode {
 			return;
 		}
 		
+		ScalarFunctions.load();
+		
 		supposeDefinitionsForJavaCode();
 	}
 	
@@ -95,7 +97,7 @@ public final class ToJavaCode {
 							$($("to_java", floor(_X)), "=", app("floor", $("to_java", _X)))));
 		}
 		
-		for (final Object op : array("+", "-", "*", "/")) {
+		for (final Object op : array("+", "-", "*", "/", "%", "<", ">")) {
 			final Object _X = $new("X");
 			final Object _Y = $new("Y");
 			
@@ -126,7 +128,7 @@ public final class ToJavaCode {
 			final Object _c = $new("c");
 			
 			suppose("definition_of_cases_if_otherwise_to_java",
-					$forall(_x,
+					$forall(_x, _c, _y,
 							$($("to_java", $("cases", $("", $(_x, "if", _c), $("", $(_y, "otherwise"))))), "=", $(p("to_java", _c), "?", p("to_java", _x), ":", p("to_java", _y)))));
 		}
 		
@@ -138,7 +140,7 @@ public final class ToJavaCode {
 			final Object _d = $new("d");
 			
 			suppose("definition_of_cases_if_if_to_java",
-					$forall(_x,
+					$forall(_x, _c, _y, _d, _z,
 							$($("to_java", $("cases", $("", $(_x, "if", _c), $("", $(_y, "if", _d), _z)))), "=", $(p("to_java", _c), "?", p("to_java", _x), ":", p("to_java", $("cases", $("", $(_y, "if", _d), _z)))))));
 		}
 		
@@ -920,9 +922,9 @@ public final class ToJavaCode {
 						
 						suppose($(_j, IN, _J));
 						substitute(_X, map(_i, _j));
-						debugPrint($(right(proposition(-1)), IN, R));
 						autodeduce($(right(proposition(-1)), IN, R));
 						rewriteRight(name(-1), name(-2));
+						
 						conclude();
 					}
 					
@@ -961,7 +963,7 @@ public final class ToJavaCode {
 			final Variable vX = v("X");
 			final Variable vY = v("Y");
 			
-			for (final String op : array("+", "-", "*", "/")) {
+			for (final String op : array("+", "-", "*", "/", "%", "<", ">")) {
 				if (match($("to_java", $(vX, op, vY)), e)) {
 					autobindTrim("definition_of_" + op + "_to_java", vX.get(), vY.get());
 					
@@ -985,7 +987,7 @@ public final class ToJavaCode {
 			
 			matchOrFail($("to_java", $("cases", $("", $(vx, "if", vc), $("", $(vy, "otherwise"))))), e);
 			
-			autobindTrim("definition_of_cases_if_otherwise_to_java", vx.get(), vy.get(), vc.get());
+			autobindTrim("definition_of_cases_if_otherwise_to_java", vx.get(), vc.get(), vy.get());
 		}))
 		.add(tryRule((e, m) -> {
 			final Variable vx = v("x");
@@ -995,12 +997,17 @@ public final class ToJavaCode {
 			autobindTrim("definition_of_()_to_java", vx.get());
 		}))
 		.add(tryRule((e, m) -> {
-			final Variable vf = v("f");
 			final Variable vx = v("x");
 			
-			matchOrFail($("to_java", $(vf, vx)), e);
+			matchOrFail($("to_java", $("step_1", vx)), e);
 			
-			abort();
+			subdeduction();
+			
+			autobindTrim("definition_of_step_1", vx.get());
+			
+			rewrite(name(-2), name(-1), 1);
+			
+			conclude();
 		}))
 		.add(tryRule((e, m) -> {
 			final Variable vx = v("x");

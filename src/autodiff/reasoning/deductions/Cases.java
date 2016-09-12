@@ -70,8 +70,35 @@ public final class Cases {
 							$rule($(LNOT, _c),
 									$($("cases", $("", $(_x, "if", _c), _y)), "=", $("cases", _y)))));
 		}
+		
+		{
+			final Object _X = $new("X");
+			final Object _x = $new("x");
+			final Object _y = $new("y");
+			final Object _c = $new("c");
+			
+			suppose("type_of_cases_0",
+					$forall(_X,
+							$(FORALL, _x, ",", _y, IN, _X,
+									$forall(_c,
+											$($("cases", $("", $(_x, "if", _c), $("", $(_y, "otherwise")))), IN, _X)))));
+		}
+		
+		{
+			final Object _X = $new("X");
+			final Object _x = $new("x");
+			final Object _y = $new("y");
+			final Object _z = $new("z");
+			final Object _c = $new("c");
+			
+			suppose("type_of_cases_1",
+					$forall(_X,
+							$(FORALL, _x, IN, _X,
+									$forall(_c, _y, _z,
+											$rule($($("cases", $("", _y, _z)), IN, _X), $($("cases", $("", $(_x, "if", _c), $("", _y, _z))), IN, _X))))));
+		}
 	}
-
+	
 	public static final void testEliminationOfCases() {
 		{
 			subdeduction("try_cases.test1");

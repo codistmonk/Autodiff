@@ -107,6 +107,13 @@ public final class NodesTools {
 	}
 	
 	public static final Node<?> innerReplicator(final int stride, final int replications) {
+		if (true) {
+			return Computation.innerReplicator()
+					.set("stride", stride)
+					.set("n", replications)
+					.autoShape();
+		}
+		
 		return new InnerReplicator(stride, replications).autoShape();
 	}
 	

@@ -94,7 +94,9 @@ public abstract class ProcessorTest {
 		
 		this.getProcessor().fullForward(node);
 		
-		assertArrayEquals(new float[] { 0F, 0F, 5F, 5F, 10F, 10F }, node.get(new float[node.getLength()]), 0F);
+		assertArrayEquals(new float[] {
+				1F, 1F, 1F, 0F, 0F, 0F,
+				0F, 0F, 0F, 1F, 1F, 1F }, node.get(new float[node.getLength()]), 0F);
 	}
 	
 	@Test

@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import multij.rules.Rules;
 import multij.rules.PatternPredicate;
@@ -210,6 +211,7 @@ public final class DefaultProcessor implements NodeProcessor {
 						
 						Stack.bind("identity", $$("to_java", valuesExpression));
 						ToJavaCode.computeToJava(proposition(-1));
+//						Stack.abort();
 					}
 					
 				}, new Simple(1));
@@ -298,6 +300,10 @@ public final class DefaultProcessor implements NodeProcessor {
 			this.buffers.put(name, buffer);
 		}
 		
+		public final Object ifThenElse(final boolean condition, final Supplier<Object> thenWhat, final Supplier<Object> whatElse) {
+			return condition ? thenWhat.get() : whatElse.get();
+		}
+		
 		/**
 		 * @author codistmonk (creation 2016-08-16)
 		 */
@@ -342,6 +348,21 @@ public final class DefaultProcessor implements NodeProcessor {
 				
 				{
 					final multij.rules.Variable vx = v("x");
+					final multij.rules.Variable vc = v("c");
+					final multij.rules.Variable vy = v("y");
+					
+					this.rules.add(matchWith(Expressions.$(vc, "?", vx, ":", vy), (__, m) -> {
+						final Object _x = vx.get();
+						final Object _c = vc.get();
+						final Object _y = vy.get();
+						
+						return JavaCodeContext.this.ifThenElse(this.b(this.apply(_c)),
+								() -> this.apply(_x), () -> this.apply(_y));
+					}));
+				}
+				
+				{
+					final multij.rules.Variable vx = v("x");
 					final multij.rules.Variable vy = v("y");
 					
 					this.rules.add(matchWith(Expressions.$(vx, "+", vy), (e, m) -> {
@@ -372,10 +393,29 @@ public final class DefaultProcessor implements NodeProcessor {
 						return this.f(x) / this.f(y);
 					}));
 					
-					this.rules.add(matchWith(Expressions.$("(", vx, ")"), (e, m) -> {
+					this.rules.add(matchWith(Expressions.$(vx, "%", vy), (e, m) -> {
 						final Object x = vx.get();
+						final Object y = vy.get();
 						
-						return this.f(x);
+						return this.f(x) % this.f(y);
+					}));
+					
+					this.rules.add(matchWith(Expressions.$(vx, "<", vy), (e, m) -> {
+						final Object x = vx.get();
+						final Object y = vy.get();
+						
+						return this.f(x) < this.f(y);
+					}));
+					
+					this.rules.add(matchWith(Expressions.$(vx, ">", vy), (e, m) -> {
+						final Object x = vx.get();
+						final Object y = vy.get();
+						
+						return this.f(x) > this.f(y);
+					}));
+					
+					this.rules.add(matchWith(Expressions.$("(", vx, ")"), (e, m) -> {
+						return this.apply(vx.get());
 					}));
 				}
 				
@@ -386,6 +426,10 @@ public final class DefaultProcessor implements NodeProcessor {
 			
 			public final float f(final Object object) {
 				return JavaCodeContext.f(this.apply(object));
+			}
+			
+			public final boolean b(final Object object) {
+				return JavaCodeContext.b(this.apply(object));
 			}
 			
 			@Override
@@ -401,6 +445,10 @@ public final class DefaultProcessor implements NodeProcessor {
 		
 		public static final float f(final Object object) {
 			return ((Number) object).floatValue();
+		}
+		
+		public static final boolean b(final Object object) {
+			return (Boolean) object;
 		}
 		
 	}

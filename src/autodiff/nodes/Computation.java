@@ -149,7 +149,7 @@ public final class Computation extends AbstractNode<Computation> {
 			result.setDefinition(
 					list($(FORALL, _n, ",", _s, IN, POS,
 								$($(name, " ", _n, " ", _s),
-										"=", ptuple($(p($("step_1", $(_s, "-", $(_i, "%", $($(_s, "+", 1), "*", _n))))), "_", $(_i, "<", $(_s, "*", $(_s, "*", _n)))), tuple(_s, $(_s, "*", _n)))))));
+										"=", ptuple($(p($("step_1", $(_n, "-", $(_i, "%", $($(_s, "+", 1), "*", _n))))), "_", $(_i, "<", $(_s, "*", $(_s, "*", _n)))), tuple(_s, $(_s, "*", _n)))))));
 		}
 		
 		result.set("n", null);
