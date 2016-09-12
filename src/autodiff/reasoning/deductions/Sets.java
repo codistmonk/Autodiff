@@ -1,6 +1,7 @@
 package autodiff.reasoning.deductions;
 
 import static autodiff.reasoning.deductions.Basics.*;
+import static autodiff.reasoning.deductions.Propositions.deduceConjunctionLeft;
 import static autodiff.reasoning.deductions.Sequences.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
@@ -109,6 +110,46 @@ public final class Sets {
 		supposeSimplificationOfTypeOfTuple();
 		
 		supposeDefinitionsForVectorAccess();
+		
+		supposeDefinitionOfRange();
+		
+		{
+			subdeduction("range_subset_naturals");
+			
+			{
+				subdeduction();
+				
+				final Object _n = forall("n");
+				
+				suppose($(_n, IN, POS));
+				
+				final Object range = $(N, "_", $("<", _n));
+				
+				{
+					subdeduction();
+					
+					final Object _x = forall("x");
+					
+					suppose($(_x, IN, range));
+					
+					autobindTrim("definition_of_range", _n, _x);
+					rewrite(name(-2), name(-1));
+					deduceConjunctionLeft(name(-1));
+					
+					conclude();
+				}
+				
+				autobindTrim("definition_of_subset", range, N);
+				
+				rewriteRight(name(-2), name(-1));
+				
+				conclude();
+			}
+			
+			compactForallIn(name(-1));
+			
+			conclude();
+		}
 	}
 	
 	public static final void supposeNumbersInclusions() {
@@ -118,6 +159,17 @@ public final class Sets {
 				$(Z, SUBSET, Q));
 		suppose("rational_subset_reals",
 				$(Q, SUBSET, R));
+	}
+	
+	public static final void supposeDefinitionOfRange() {
+		final Object _i = $new("i");
+		final Object _n = $new("n");
+		
+		suppose("definition_of_range",
+				$(FORALL, _n, IN, POS,
+						$forall(_i,
+								$($(_i, IN, $(N, "_", $("<", _n))),
+										"=", $($(_i, IN, N), LAND, $(_i, "<", _n))))));
 	}
 	
 	public static final void loadAutoHints() {
@@ -176,18 +228,30 @@ public final class Sets {
 		}
 		
 		{
+			final Variable vn = new Variable("n");
+			
+			hintAutodeduce(tryMatch($($(N, "_", $("<", vn)), SUBSET, N), (e, m) -> {
+				autobindTrim("range_subset_naturals", vn.get());
+				
+				return true;
+			}));
+		}
+		
+		{
 			final Variable vX = new Variable("X");
 			final Variable vY = new Variable("Y");
 			
 			hintAutodeduce(tryMatch($(vX, SUBSET, vY), (e, m) -> {
-				final List<PropositionDescription> inclusionPath = inclusionPath(vX.get(), vY.get(), new HashSet<>());
+				final Object _X = vX.get();
+				final Object _Y = vY.get();
+				final List<PropositionDescription> inclusionPath = inclusionPath(_X, _Y, new HashSet<>());
 				
 				subdeduction();
 				
 				for (int i = 1; i < inclusionPath.size(); ++i) {
 					final PropositionDescription d = inclusionPath.get(i);
 					
-					autobind("transitivity_of_subset", vX.get(), left(d.getProposition()), right(d.getProposition()));
+					autobind("transitivity_of_subset", _X, left(d.getProposition()), right(d.getProposition()));
 					autoapply(name(-1));
 				}
 				

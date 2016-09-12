@@ -49,8 +49,6 @@ public final class Autodiff {
 			
 			supposeTypeOfPowersetOfReals();
 			
-			supposeDefinitionOfRange();
-			
 			deducePositivesSubsetNaturals();
 			deducePositivesInUhm();
 			supposeDefinitionOfMs();
@@ -285,17 +283,6 @@ public final class Autodiff {
 				$(FORALL, _n, IN, POS,
 						$(FORALL, _s, IN, $(POS, "^", _n,
 								$($("M", "_", _s), "=", $($(R, "^", $(PI, _s)), CROSS, c(_s)))))));
-	}
-	
-	public static final void supposeDefinitionOfRange() {
-		final Object _i = $new("i");
-		final Object _n = $new("n");
-		
-		suppose("definition_of_range",
-				$(FORALL, _n, IN, N,
-						$forall(_i,
-								$($(_i, IN, $(N, "_", $("<", _n))),
-										"=", $($(_i, IN, N), LAND, $(_i, "<", _n))))));
 	}
 	
 	public static final void supposeTypeOfFlat() {

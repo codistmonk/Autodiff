@@ -178,6 +178,47 @@ public final class Computation extends AbstractNode<Computation> {
 		return result;
 	}
 	
+	public static final Computation outerReplicator() {
+		final String name = "outer_rep";
+		final Computation result = new Computation().setTypeName(name);
+		
+		{
+			final Object _n = $new("n");
+			final Object _s = $new("s");
+			final Object _i = $new("i");
+			
+			result.setDefinition(
+					list($(FORALL, _n, ",", _s, IN, POS,
+							$($(name, " ", _n, " ", _s),
+									"=", ptuple($(p($("delta_", $(floor($(_i, "/", $(_s, "*", _n))), "", $($(_i, "%", $(_s, "*", _n)), "%", _s)))), "_", $(_i, "<", $(_s, "*", $(_s, "*", _n)))), tuple(_s, $(_s, "*", _n)))))));
+		}
+		
+		result.set("n", null);
+		result.set("stride", null);
+		
+		result.setBinder(new Runnable() {
+			
+			@Override
+			public final void run() {
+				suppose(result.getDefinition());
+				
+				final Object n = $n(result.get("n"));
+				final Object s = $n(result.get("stride"));
+				
+				{
+					subdeduction();
+					
+					autobindTrim(name(-1), n, s);
+					canonicalizeLast();
+					
+					conclude();
+				}
+			}
+		});
+		
+		return result;
+	}
+	
 	public static final Computation repeatAndIncrease() {
 		final String name = "repeat_inc";
 		final Computation result = new Computation().setTypeName(name);

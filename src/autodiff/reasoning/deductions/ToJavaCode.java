@@ -107,6 +107,15 @@ public final class ToJavaCode {
 		}
 		
 		{
+			final Object _X = $new("X");
+			final Object _Y = $new("Y");
+			
+			suppose("definition_of_=_to_java",
+					$forall(_X, _Y,
+							$($("to_java", $(_X, "=", _Y)), "=", p($("to_java", _X), "==", $("to_java", _Y)))));
+		}
+		
+		{
 			final Object _x = $new("x");
 			
 			suppose("definition_of_()_to_java",
@@ -941,7 +950,6 @@ public final class ToJavaCode {
 					
 					bind("identity", $("to_java", _X));
 					computeToJava(proposition(-1));
-					
 					conclude();
 				}
 				
@@ -963,7 +971,7 @@ public final class ToJavaCode {
 			final Variable vX = v("X");
 			final Variable vY = v("Y");
 			
-			for (final String op : array("+", "-", "*", "/", "%", "<", ">")) {
+			for (final String op : array("+", "-", "*", "/", "%", "<", ">", "=")) {
 				if (match($("to_java", $(vX, op, vY)), e)) {
 					autobindTrim("definition_of_" + op + "_to_java", vX.get(), vY.get());
 					
@@ -1004,6 +1012,20 @@ public final class ToJavaCode {
 			subdeduction();
 			
 			autobindTrim("definition_of_step_1", vx.get());
+			
+			rewrite(name(-2), name(-1), 1);
+			
+			conclude();
+		}))
+		.add(tryRule((e, m) -> {
+			final Variable vx = v("x");
+			final Variable vy = v("y");
+			
+			matchOrFail($("to_java", $("delta_", $(vx, "", vy))), e);
+			
+			subdeduction();
+			
+			autobindTrim("definition_of_kronecker_function", vx.get(), vy.get());
 			
 			rewrite(name(-2), name(-1), 1);
 			

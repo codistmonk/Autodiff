@@ -75,6 +75,15 @@ public final class ToCLCode {
 		}
 		
 		{
+			final Object _X = $new("X");
+			final Object _Y = $new("Y");
+			
+			suppose("definition_of_=_to_CL",
+					$forall(_X, _Y,
+							$($("to_CL", $(_X, "=", _Y)), "=", $($("to_CL", _X), "==", $("to_CL", _Y)))));
+		}
+		
+		{
 			final Object _x = $new("x");
 			
 			suppose("definition_of_()_to_CL",
@@ -203,7 +212,7 @@ public final class ToCLCode {
 			final Variable vX = v("X");
 			final Variable vY = v("Y");
 			
-			for (final String op : array("+", "-", "*", "/", "%", "<", ">")) {
+			for (final String op : array("+", "-", "*", "/", "%", "<", ">", "=")) {
 				if (match($("to_CL", $(vX, op, vY)), e)) {
 					autobindTrim("definition_of_" + op + "_to_CL", vX.get(), vY.get());
 					
@@ -237,6 +246,20 @@ public final class ToCLCode {
 			subdeduction();
 			
 			autobindTrim("definition_of_step_1", vx.get());
+			
+			rewrite(name(-2), name(-1), 1);
+			
+			conclude();
+		}))
+		.add(tryRule((e, m) -> {
+			final Variable vx = v("x");
+			final Variable vy = v("y");
+			
+			matchOrFail($("to_CL", $("delta_", $(vx, "", vy))), e);
+			
+			subdeduction();
+			
+			autobindTrim("definition_of_kronecker_function", vx.get(), vy.get());
 			
 			rewrite(name(-2), name(-1), 1);
 			

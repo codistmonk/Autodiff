@@ -118,6 +118,13 @@ public final class NodesTools {
 	}
 	
 	public static final Node<?> outerReplicator(final int stride, final int replications) {
+		if (true) {
+			return Computation.outerReplicator()
+					.set("stride", stride)
+					.set("n", replications)
+					.autoShape();
+		}
+		
 		return new OuterReplicator(stride, replications).autoShape();
 	}
 	
