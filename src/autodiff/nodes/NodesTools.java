@@ -47,8 +47,14 @@ public final class NodesTools {
 		return new SortIndices().setInputs(inputs).autoShape();
 	}
 	
-	public static final Node<?> indexGreaterness(final int n) {
-		return new IndexGreaterness(n).autoShape();
+	public static final Node<?> lowerTriangularOnes(final int n) {
+		if (true) {
+			return Computation.lowerTriangularOnes()
+					.set("n", n)
+					.autoShape();
+		}
+		
+		return new LowerTriangularOnes(n).autoShape();
 	}
 	
 	public static final Node<?> percentileMask(final Node<?> inputs, final Node<?> ratio) {
@@ -905,7 +911,7 @@ public final class NodesTools {
 			final Node<?> difference = $(inrep, "-", outrep);
 			final Node<?> greaterness = $(STEP1, difference);
 			final Node<?> equality = $(KRONECKER, inrep, outrep);
-			final Node<?> indexGreaterness = indexGreaterness(n);
+			final Node<?> indexGreaterness = lowerTriangularOnes(n);
 			final Node<?> aboveness = $(greaterness, "+", $(equality, "*", indexGreaterness));
 			
 			return sum(aboveness, 1, n).setStorage(this);
@@ -918,16 +924,16 @@ public final class NodesTools {
 	/**
 	 * @author codistmonk (creation 2016-08-04)
 	 */
-	public static final class IndexGreaterness extends CustomNode<IndexGreaterness> {
+	public static final class LowerTriangularOnes extends CustomNode<LowerTriangularOnes> {
 		
 		private final int n;
 		
-		public IndexGreaterness(final int n) {
+		public LowerTriangularOnes(final int n) {
 			this.n = n;
 		}
 		
 		@Override
-		public final IndexGreaterness autoShape() {
+		public final LowerTriangularOnes autoShape() {
 			return this.setShape(1, this.n * this.n);
 		}
 		

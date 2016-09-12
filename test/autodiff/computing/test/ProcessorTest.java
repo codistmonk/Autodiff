@@ -118,6 +118,24 @@ public abstract class ProcessorTest {
 	}
 	
 	@Test
+	public final void testComputation6() {
+		final Computation node = Computation.lowerTriangularOnes();
+		
+		node.set("n", 3);
+		
+		node.autoShape();
+		
+		assertArrayEquals(new int[] { 1, 9 }, node.getShape());
+		
+		this.getProcessor().fullForward(node);
+		
+		assertArrayEquals(new float[] {
+				0F, 0F, 0F,
+				1F, 0F, 0F,
+				1F, 1F, 0F }, node.get(new float[node.getLength()]), 0F);
+	}
+	
+	@Test
 	public final void testSortIndices1() {
 		final Node<?> x = new Data().setShape(1, 5).set(5F, 4F, 2F, 3F, 1F);
 		final Node<?> y = NodesTools.sortIndices(x);

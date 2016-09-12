@@ -149,7 +149,9 @@ public final class Computation extends AbstractNode<Computation> {
 			result.setDefinition(
 					list($(FORALL, _n, ",", _s, IN, POS,
 								$($(name, " ", _n, " ", _s),
-										"=", ptuple($(p($("step_1", $(_n, "-", $(_i, "%", $($(_s, "+", 1), "*", _n))))), "_", $(_i, "<", $(_s, "*", $(_s, "*", _n)))), tuple(_s, $(_s, "*", _n)))))));
+										"=", ptuple(
+												$(p($("step_1", $(_n, "-", $(_i, "%", $($(_s, "+", 1), "*", _n))))), "_", $(_i, "<", $(_s, "*", $(_s, "*", _n)))),
+												tuple(_s, $(_s, "*", _n)))))));
 		}
 		
 		result.set("n", null);
@@ -190,7 +192,9 @@ public final class Computation extends AbstractNode<Computation> {
 			result.setDefinition(
 					list($(FORALL, _n, ",", _s, IN, POS,
 							$($(name, " ", _n, " ", _s),
-									"=", ptuple($(p($("delta_", $(floor($(_i, "/", $(_s, "*", _n))), "", $($(_i, "%", $(_s, "*", _n)), "%", _s)))), "_", $(_i, "<", $(_s, "*", $(_s, "*", _n)))), tuple(_s, $(_s, "*", _n)))))));
+									"=", ptuple(
+											$(p($("delta_", $(floor($(_i, "/", $(_s, "*", _n))), "", $($(_i, "%", $(_s, "*", _n)), "%", _s)))), "_", $(_i, "<", $(_s, "*", $(_s, "*", _n)))),
+											tuple(_s, $(_s, "*", _n)))))));
 		}
 		
 		result.set("n", null);
@@ -219,6 +223,46 @@ public final class Computation extends AbstractNode<Computation> {
 		return result;
 	}
 	
+	public static final Computation lowerTriangularOnes() {
+		final String name = "lower_ones";
+		final Computation result = new Computation().setTypeName(name);
+		
+		{
+			final Object _n = $new("n");
+			final Object _i = $new("i");
+			
+			result.setDefinition(
+					list($(FORALL, _n, IN, POS,
+							$($(name, " ", _n),
+									"=", ptuple(
+											$(p($("step_1", $(floor($(_i, "/", _n)), "-", $(_i, "%", _n)))), "_", $(_i, "<", $(_n, "*", _n))),
+											tuple(1, $(_n, "*", _n)))))));
+		}
+		
+		result.set("n", null);
+		
+		result.setBinder(new Runnable() {
+			
+			@Override
+			public final void run() {
+				suppose(result.getDefinition());
+				
+				final Object n = $n(result.get("n"));
+				
+				{
+					subdeduction();
+					
+					autobindTrim(name(-1), n);
+					canonicalizeLast();
+					
+					conclude();
+				}
+			}
+		});
+		
+		return result;
+	}
+	
 	public static final Computation repeatAndIncrease() {
 		final String name = "repeat_inc";
 		final Computation result = new Computation().setTypeName(name);
@@ -233,7 +277,9 @@ public final class Computation extends AbstractNode<Computation> {
 					list($(FORALL, _n, ",", _s, IN, POS,
 							$(FORALL, _d, IN, R,
 									$($(name, " ", _n, " ", _s, " ", _d),
-											"=", ptuple($(p($(floor($(_i, "/", _s)), "*", _d)), "_", $(_i, "<", $(_n, "*", _s))), tuple($(_n, "*", _s))))))));
+											"=", ptuple(
+													$(p($(floor($(_i, "/", _s)), "*", _d)), "_", $(_i, "<", $(_n, "*", _s))),
+													tuple($(_n, "*", _s))))))));
 		}
 		
 		result.set("n", null);
@@ -273,7 +319,10 @@ public final class Computation extends AbstractNode<Computation> {
 			
 			result.setDefinition(
 					list($(FORALL, _n, IN, POS,
-							$($("range", " ", _n), "=", p(sequence(",", $(p(_i), "_", $(_i, "<", _n)), sequence(",", _n)))))));
+							$($("range", " ", _n),
+									"=", ptuple(
+											$(p(_i), "_", $(_i, "<", _n)),
+											tuple(_n))))));
 		}
 		
 		result.set("n", null);
@@ -304,7 +353,10 @@ public final class Computation extends AbstractNode<Computation> {
 			result.setDefinition(
 					list($(FORALL, _n, IN, POS,
 							$(FORALL, _s, IN, $(POS, "^", _n),
-									$($("ones", " ", _s), "=", p(sequence(",", $(p(1), "_", $(_i, "<", $(PI, _s))), _s)))))));
+									$($("ones", " ", _s),
+											"=", ptuple(
+													$(p(1), "_", $(_i, "<", $(PI, _s))),
+													_s))))));
 		}
 		
 		result.set("shape", null);
