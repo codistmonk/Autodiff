@@ -49,7 +49,6 @@ public final class ScalarFunctions {
 			final Object _x = $new("x");
 			
 			suppose("definition_of_heaviside_function",
-//					$(FORALL, _x, IN, R,
 					$forall(_x,
 							$($("step_0", _x), "=", cases(
 									$(1, "if", $(0, LE, _x)),
@@ -60,7 +59,6 @@ public final class ScalarFunctions {
 			final Object _x = $new("x");
 			
 			suppose("definition_of_step_1",
-//					$(FORALL, _x, IN, R,
 					$forall(_x,
 							$($("step_1", _x), "=", cases(
 									$(1, "if", $(0, "<", _x)),
@@ -72,8 +70,7 @@ public final class ScalarFunctions {
 			final Object _y = $new("y");
 			
 			suppose("definition_of_kronecker_function",
-//					$(FORALL, _x, IN, R,
-					$forall(_x,
+					$forall(_x, _y,
 							$($("delta_", $(_x, "", _y)), "=", cases(
 									$(1, "if", $(_x, "=", _y)),
 									$(0, "otherwise")))));
