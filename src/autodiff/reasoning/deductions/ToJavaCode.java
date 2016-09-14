@@ -359,17 +359,6 @@ public final class ToJavaCode {
 			}
 		}
 		
-		{
-			final Object _P = $new("P");
-			final Object _n = $new("n");
-			
-			suppose("induction_principle",
-					$forall(_P, _n,
-							$rule($(_P, "|", $1($replacement(_n, 0)), "@", $()),
-									$(FORALL, _n, IN, N, $rule(_P, $(_P, "|", $1($replacement(_n, $(_n, "+", 1))), "@", $()))),
-									$(FORALL, _n, IN, N, _P))));
-		}
-		
 		if (false) {
 			final Object _X = $(1);
 			final Object _i = $new("i");
@@ -933,7 +922,7 @@ public final class ToJavaCode {
 						
 						suppose($(_j, IN, _J));
 						substitute(_X, map(_i, _j));
-						debugPrint();
+						debugPrint($(right(proposition(-1)), IN, R));
 						autodeduce($(right(proposition(-1)), IN, R));
 						debugPrint();
 						rewriteRight(name(-1), name(-2));

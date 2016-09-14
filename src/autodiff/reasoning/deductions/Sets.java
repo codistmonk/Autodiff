@@ -12,7 +12,9 @@ import static autodiff.reasoning.tactics.Stack.*;
 import static multij.tools.Tools.*;
 
 import autodiff.reasoning.proofs.Deduction;
+import autodiff.reasoning.proofs.Substitution;
 import autodiff.reasoning.tactics.PatternMatching;
+import autodiff.reasoning.tactics.Stack;
 import autodiff.reasoning.tactics.Stack.AbortException;
 import autodiff.reasoning.tactics.Stack.PropositionDescription;
 
@@ -203,6 +205,22 @@ public final class Sets {
 			
 			hintAutobind(tryMatch($(FORALL, vx, IN, vX, vP), (e, m) -> {
 				bind("definition_of_forall_in", vx.get(), vX.get(), vP.get());
+				
+				return true;
+			}));
+			
+			final Variable vy = new Variable("y");
+			final Variable vQ = new Variable("Q");
+			
+			hintAutodeduce(tryMatch($($(FORALL, vx, IN, vX, vP), "=", $(FORALL, vy, IN, vX, vQ)), (e, m) -> {
+				subdeduction();
+				
+				bind("definition_of_forall_in", vx.get(), vX.get(), vP.get());
+				bind("definition_of_forall_in", vy.get(), vX.get(), vQ.get());
+				
+				rewriteRight(name(-2), name(-1));
+				
+				conclude();
 				
 				return true;
 			}));

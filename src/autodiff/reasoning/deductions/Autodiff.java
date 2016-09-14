@@ -9,6 +9,8 @@ import static autodiff.reasoning.deductions.Sets.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
 import static autodiff.reasoning.tactics.Auto.*;
+import static autodiff.reasoning.tactics.Goal.concludeGoal;
+import static autodiff.reasoning.tactics.Goal.newGoal;
 import static autodiff.reasoning.tactics.PatternPredicate.rule;
 import static autodiff.reasoning.tactics.Stack.*;
 import static autodiff.reasoning.tactics.Stack.PropositionDescription.potentialJustificationsFor;
@@ -18,9 +20,11 @@ import static multij.tools.Tools.*;
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.tactics.Auto;
+import autodiff.reasoning.tactics.Goal;
 import autodiff.reasoning.tactics.Auto.Simplifier;
 import autodiff.reasoning.tactics.Auto.Simplifier.Mode;
 import autodiff.reasoning.tactics.PatternMatching;
+import autodiff.reasoning.tactics.Stack;
 import autodiff.reasoning.tactics.Stack.PropositionDescription;
 
 import java.util.LinkedHashMap;
@@ -138,6 +142,17 @@ public final class Autodiff {
 			}
 			
 			{
+				final Object _P = $new("P");
+				final Object _n = $new("n");
+				
+				suppose("induction_principle",
+						$forall(_P, _n,
+								$rule($(_P, "|", $1($replacement(_n, 0)), "@", $()),
+										$(FORALL, _n, IN, N, $rule(_P, $(_P, "|", $1($replacement(_n, $(_n, "+", 1))), "@", $()))),
+										$(FORALL, _n, IN, N, _P))));
+			}
+			
+			{
 				final Object _x = $new("x");
 				final Object _i = $new("i");
 				final Object _X = $new("X");
@@ -150,6 +165,218 @@ public final class Autodiff {
 								$(FORALL, _x, IN, $(_X, "^", _n),
 										$(FORALL, _i, IN, $(N, "_", $("<", _n)),
 												$($(_x, "_", _i), IN, _X)))));
+			}
+			
+			{
+				final Object _X = $new("X");
+				final Object _i = $new("i");
+				
+				suppose("definition_of_sum_0",
+						$forall(_X, _i,
+								$($("sum", "_", $(_i, "<", 0), _X), "=", 0)));
+			}
+			
+			{
+				final Object _X = $new("X");
+				final Object _i = $new("i");
+				final Object _n = $new("n");
+				
+				final Object m = $(_n, "-", 1);
+				
+				suppose("definition_of_sum_1",
+						$forall(_X, _i,
+								$(FORALL, _n, IN, POS,
+										$($("sum", "_", $(_i, "<", _n), _X), "=", $($("sum", "_", $(_i, "<", m), _X), "+", $(_X, GIVEN, $1($replacement(_i, m)), AT, $()))))));
+			}
+			
+			for (final Object type : array(N, Z, Q, R)) {
+				subdeduction("stability_of_sum_in_" + type);
+				
+				final Object _X = forall("X");
+				final Object _i = forall("i");
+				final Object _l = forall("l");
+				
+				suppose($(_l, IN, POS));
+				
+				{
+					final Object _j = $new("j");
+					
+					suppose("stability_of_X",
+							$(FORALL, _j, IN, $(N, "_", $("<", _l)), $($(_X, GIVEN, $1($replacement(_i, _j)), AT, $()), IN, type)));
+				}
+				
+				final Object _n = $new("n");
+				final Object sum = $("sum", "_", $(_i, "<", _n), _X);
+				final Object _Pn = $rule($(_n, "<", _l), $(sum, IN, type));
+				
+				bind("induction_principle", _Pn, _n);
+				
+				{
+					subdeduction("induction_0");
+					
+					substitute(_Pn, map(_n, 0));
+					
+					{
+						subdeduction();
+						
+						suppose($(0, "<", _l));
+						
+						bind("definition_of_sum_0", _X, _i);
+						autodeduce($(right(proposition(-1)), IN, type));
+						rewriteRight(name(-1), name(-2));
+						
+						conclude();
+					}
+					
+					rewriteRight(name(-1), name(-2));
+					
+					conclude();
+				}
+				
+				apply(name(-2), name(-1));
+				
+				{
+					subdeduction("induction_n");
+					
+					{
+						subdeduction();
+						
+						final Object _m = forall("m");
+						
+						suppose($(_m, IN, N));
+						
+						{
+							subdeduction();
+							
+							final Object _Pm = $rule($(_m, "<", _l), $($("sum", "_", $(_i, "<", _m), _X), IN, type));
+							
+							suppose("induction_n_condition", _Pm);
+							
+							final Object _m1 = $(_m, "+", 1);
+							
+							{
+								subdeduction();
+								
+								substitute(_Pm, map(_m, _m1));
+								
+								{
+									subdeduction();
+									
+									autodeduce($(_m1, IN, POS));
+									
+									autobindTrim("definition_of_sum_1", _X, _i, _m1);
+									
+									canonicalize(right(proposition(-1)));
+									
+									rewrite(name(-2), name(-1));
+									
+									conclude();
+								}
+								
+								rewrite(name(-2), name(-1));
+								
+								conclude();
+							}
+							
+							{
+								subdeduction();
+								
+								final Object inductionNSimplification = proposition(-1);
+								
+								suppose($(_m1, "<", _l));
+								
+								{
+									subdeduction();
+									
+									autodeduce($(_m, "<", _m1));
+									autobindTrim("transitivity_of_<", _m, _m1, _l);
+									
+									conclude();
+								}
+								
+								autobindTrim("stability_of_X", _m);
+								
+								autoapply("induction_n_condition");
+								
+								{
+									final Variable vx = v("x");
+									final Variable vy = v("y");
+									
+									matchOrFail($(v("?"), "=", $rule(v("?"), $($(vx, "+", vy), IN, type))), inductionNSimplification);
+									
+									autobindTrim("stability_of_+_in_" + type, vx.get(), vy.get());
+								}
+								
+								conclude();
+							}
+							
+							rewriteRight(name(-1), name(-2));
+							
+							conclude();
+						}
+						
+						conclude();
+					}
+					
+					compactForallIn(name(-1));
+					
+					conclude();
+				}
+				
+				{
+					subdeduction();
+					
+					autodeduce($(proposition(-1), "=", condition(proposition(-2))));
+					rewrite(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				apply("conclusion", name(-3), name(-1));
+				
+				conclude();
+			}
+			
+			{
+				final Variable vX = v("X");
+				final Variable vi = v("i");
+				final Variable vn = v("n");
+				final Variable vT = v("T");
+				
+				Auto.hintAutodeduce(tryMatch($($("sum", "_", $(vi, "<", vn), vX), IN, vT), (e, m) -> {
+					final Object _X = vX.get();
+					final Object _i = vi.get();
+					final Object _n = vn.get();
+					final Object _T = vT.get();
+					debugPrint(_X);
+					debugPrint(_i);
+					debugPrint(_n);
+					debugPrint(_T);
+					
+					autobind("stability_of_sum_in_" + _T, _X, _i, $(_n, "+", 1));
+					autoapplyOnce(name(-1));
+					canonicalizeLast();
+					
+					{
+						final Variable vJ = v("J");
+						
+						matchOrFail($(FORALL, v("?"), IN, vJ, v("?")), condition(proposition(-1)));
+						
+						subdeduction();
+						
+						final Object _j = forall("j");
+						
+						suppose($(_j, IN, vJ.get()));
+						
+						substitute(_X, map(_i, _j));
+						
+						abort();
+						
+						conclude();
+					}
+					
+					return false;
+				}));
 			}
 			
 			{
