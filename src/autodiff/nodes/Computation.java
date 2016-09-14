@@ -133,8 +133,78 @@ public final class Computation extends AbstractNode<Computation> {
 		return p(tuple(objects));
 	}
 	
-	public static List<Object> tuple(final Object... objects) {
-		return sequence(",", objects);
+	public static final Computation matrixMultiplication() {
+		final String name = "mat_mul";
+		final Computation result = new Computation().setTypeName(name);
+		
+		{
+			final Object _l = $new("l");
+			final Object _m = $new("m");
+			final Object _n = $new("n");
+			final Object _A = $new("A");
+			final Object _B = $new("B");
+			final Object _C = $new("C");
+			final Object _i = $new("i");
+			final Object _j = $new("j");
+			
+			final Object _r = floor($(_i, "/", _n));
+			final Object _c = $(_i, "%", _n);
+			
+			result.setDefinition(
+					list($(FORALL, _l, ",", _m, ",", _n, IN, POS,
+							$(FORALL, _A, IN, $("M", "_", tuple(_l, _m)),
+									$(FORALL, _B, IN, $("M", "_", tuple(_m, _n)),
+											$(FORALL, _C, IN, $(R, "^", $(_l, "*", _n)),
+													$($($(name, _C), tuple(_A, _B)),
+															"=", ptuple(
+																	$(p($($(_C, "_", _i), "+", $("sum", "_", $(_j, "<", _m), $($(_A, "_", tuple(_r, _j)), "*", $(_B, "_", tuple(_j, _c)))))), "_", $(_i, "<", $(_l, "*", _n))),
+																	tuple(_l, _n)))))))));
+		}
+		
+		result.set("A", null);
+		result.set("B", null);
+		
+		result.setBinder(new Runnable() {
+			
+			@Override
+			public final void run() {
+				suppose("definition_of_" + name, result.getDefinition());
+				
+				final Node<?> nA = (Node<?>) result.get("A");
+				final Node<?> nB = (Node<?>) result.get("B");
+				
+				final int[] lm = nA.getShape();
+				final int[] mn = nB.getShape();
+				
+				checkArgument(lm.length == 2, "Expected length: 2 but was: " + lm.length);
+				checkArgument(mn.length == 2, "Expected length: 2 but was: " + mn.length);
+				
+				final Object _l = $n(lm[0]);
+				final Object _m = $n(lm[1]);
+				final Object _n = $n(mn[1]);
+				
+				checkArgument(_m.equals($n(mn[0])), _m + " != " + mn[0]);
+				
+				final Object _A = $new("A");
+				final Object _B = $new("B");
+				final Object _C = $new("C");
+				
+				suppose($(_A, IN, $("M", "_", tuple(_l, _m))));
+				suppose($(_B, IN, $("M", "_", tuple(_m, _n))));
+				suppose($(_C, IN, $(R, "^", $(_l, "*", _n))));
+				
+				{
+					subdeduction();
+					
+					autobindTrim("definition_of_" + name, _l, _m, _n, _A, _B, _C);
+					canonicalizeLast();
+					
+					conclude();
+				}
+			}
+		});
+		
+		return result;
 	}
 	
 	public static final Computation innerReplicator() {

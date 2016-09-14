@@ -136,6 +136,25 @@ public abstract class ProcessorTest {
 	}
 	
 	@Test
+	public final void testComputation7() {
+		final Computation node = Computation.matrixMultiplication();
+		final Node<?> a = new Data().setShape(1, 2).set(1F, 2F);
+		final Node<?> b = new Data().setShape(2, 1).set(3F, 4F);
+		
+		node.set("A", a);
+		node.set("B", b);
+		
+		node.autoShape();
+		
+		assertArrayEquals(new int[] { 1, 1 }, node.getShape());
+		
+		this.getProcessor().fullForward(node);
+		
+		assertArrayEquals(new float[] {
+				11F }, node.get(new float[node.getLength()]), 0F);
+	}
+	
+	@Test
 	public final void testSortIndices1() {
 		final Node<?> x = new Data().setShape(1, 5).set(5F, 4F, 2F, 3F, 1F);
 		final Node<?> y = NodesTools.sortIndices(x);

@@ -150,6 +150,29 @@ public final class Sets {
 			
 			conclude();
 		}
+		
+		{
+			subdeduction("subset_reflexivity");
+			
+			final Object _X = forall("X");
+			
+			{
+				subdeduction();
+				
+				final Object _x = forall("x");
+				
+				suppose($(_x, IN, _X));
+				recall(name(-1));
+				
+				conclude();
+			}
+			
+			bind("definition_of_subset", _X, _X);
+			
+			rewriteRight(name(-2), name(-1));
+			
+			conclude();
+		}
 	}
 	
 	public static final void supposeNumbersInclusions() {
@@ -222,6 +245,16 @@ public final class Sets {
 			
 			hintAutobind(tryMatch($(FORALL, va, ",", vb, ",", vc, ",", vd, IN, vX, vP), (e, m) -> {
 				bind("definition_of_forall_in_4", va.get(), vb.get(), vc.get(), vd.get(), vX.get(), vP.get());
+				
+				return true;
+			}));
+		}
+		
+		{
+			final Variable vX = new Variable("X");
+			
+			hintAutodeduce(tryMatch($(vX, SUBSET, vX), (e, m) -> {
+				autobindTrim("subset_reflexivity", vX.get());
 				
 				return true;
 			}));
@@ -319,6 +352,10 @@ public final class Sets {
 				
 			});
 		}
+	}
+	
+	public static List<Object> tuple(final Object... objects) {
+		return sequence(",", objects);
 	}
 	
 	public static final List<PropositionDescription> inclusionPath(final Object origin, final Object target, final Collection<Object> ignore) {

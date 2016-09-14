@@ -172,7 +172,7 @@ public final class Auto {
 				}
 				
 				if (!ok) {
-					abort();
+					abort("Failed to autobind " + lastName + "(" + proposition(lastName) + ") with " + object);
 				}
 			}
 			

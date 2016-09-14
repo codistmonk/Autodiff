@@ -11,13 +11,17 @@ import static autodiff.reasoning.proofs.ElementaryVerification.*;
 import static autodiff.reasoning.tactics.Auto.*;
 import static autodiff.reasoning.tactics.PatternPredicate.rule;
 import static autodiff.reasoning.tactics.Stack.*;
+import static autodiff.reasoning.tactics.Stack.PropositionDescription.potentialJustificationsFor;
 import static multij.rules.Variable.matchOrFail;
 import static multij.tools.Tools.*;
 
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
+import autodiff.reasoning.tactics.Auto;
 import autodiff.reasoning.tactics.Auto.Simplifier;
 import autodiff.reasoning.tactics.Auto.Simplifier.Mode;
+import autodiff.reasoning.tactics.PatternMatching;
+import autodiff.reasoning.tactics.Stack.PropositionDescription;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,6 +31,7 @@ import multij.rules.Rules;
 import multij.rules.TryRule;
 import multij.rules.Variable;
 import multij.tools.IllegalInstantiationException;
+import multij.tools.Pair;
 
 /**
  * @author codistmonk (creation 2016-09-09)
@@ -130,6 +135,91 @@ public final class Autodiff {
 				suppose("subtraction_in_naturals",
 						$(FORALL, _x, ",", _y, IN, Z,
 								$rule($(_y, LE, _x), $($(_x, "-", _y), IN, N))));
+			}
+			
+			{
+				final Object _x = $new("x");
+				final Object _i = $new("i");
+				final Object _X = $new("X");
+				final Object _n = $new("n");
+				
+				// TODO prove
+				
+				suppose("type_of_vector_access",
+						$forall(_X, _n,
+								$(FORALL, _x, IN, $(_X, "^", _n),
+										$(FORALL, _i, IN, $(N, "_", $("<", _n)),
+												$($(_x, "_", _i), IN, _X)))));
+			}
+			
+			{
+				final Variable vx = v("x");
+				final Variable vi = v("i");
+				final Variable vj = v("j");
+				final Variable vX = v("X");
+				
+				Auto.hintAutodeduce(tryMatch($($(vx, "_", tuple(vi, vj)), IN, vX), (e, m) -> {
+					abort();
+					
+					return false;
+				}));
+			}
+			
+			{
+				final Variable vx = v("x");
+				final Variable vi = v("i");
+				final Variable vX = v("X");
+				
+				Auto.hintAutodeduce(tryMatch($($(vx, "_", vi), IN, vX), (e, m) -> {
+					final Object _x = vx.get();
+					final Object _i = vi.get();
+					final Object _X = vX.get();
+					
+					debugPrint(e);
+					
+					final Variable vY = v("Y");
+					final Variable vn = v("n");
+					
+					for (final Pair<PropositionDescription, PatternMatching> pair : potentialJustificationsFor($(_x, IN, $(vY, "^", vn)))) {
+						pair.getSecond().getMapping().forEach(Variable::set);
+						
+						debugPrint(pair);
+						
+						final Object _Y = vY.get();
+						final Object _n = vn.get();
+						
+						if (trySubdeduction(() -> {
+							{
+								subdeduction();
+								
+								autobindTrim("definition_of_subset", _X, _Y);
+								autodeduce(left(proposition(-1)));
+								rewrite(name(-1), name(-2));
+								
+								conclude();
+							}
+							
+							{
+								subdeduction();
+								
+								canonicalizeIn(pair.getFirst().getName());
+								
+								autobind("type_of_vector_access", _Y, _n, _x, _i);
+								canonicalizeLast();
+								autoapply(name(-1));
+								
+								conclude();
+							}
+							
+							bind(name(-2), left(proposition(-1)));
+							apply(name(-1), name(-2));
+						})) {
+							return true;
+						}
+					}
+					
+					return false;
+				}));
 			}
 			
 			ToJavaCode.load();
@@ -418,10 +508,14 @@ public final class Autodiff {
 	}
 	
 	public static final void canonicalizeLast() {
+		canonicalizeIn(name(-1));
+	}
+	
+	public static final void canonicalizeIn(final String targetName) {
 		subdeduction();
 		
-		canonicalize(proposition(-1));
-		rewrite(name(-2), name(-1));
+		canonicalize(proposition(targetName));
+		rewrite(targetName, name(-1));
 		
 		conclude();
 	}

@@ -924,6 +924,8 @@ public final class ToJavaCode {
 					
 					matchOrFail($(N, "_", $("<", _n)), _J);
 					
+					debugPrint();
+					
 					{
 						subdeduction();
 						
@@ -931,7 +933,9 @@ public final class ToJavaCode {
 						
 						suppose($(_j, IN, _J));
 						substitute(_X, map(_i, _j));
+						debugPrint();
 						autodeduce($(right(proposition(-1)), IN, R));
+						debugPrint();
 						rewriteRight(name(-1), name(-2));
 						
 						conclude();
@@ -942,6 +946,8 @@ public final class ToJavaCode {
 					
 					conclude();
 				}
+				
+				debugPrint();
 				
 				autoapply(name(-2));
 				
@@ -958,6 +964,8 @@ public final class ToJavaCode {
 				simplifySubstitutionsAndElementaryInLast();
 				
 				conclude();
+				
+				debugPrint();
 			}
 		}))
 		.add(tryRule((e, m) -> {
