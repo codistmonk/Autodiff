@@ -609,7 +609,8 @@ public final class Sets {
 		final Object _y = $new("y");
 		
 		suppose("type_of_tuple",
-				$(FORALL, _X, ",", _Y, IN, U,
+//				$forall(FORALL, _X, ",", _Y, IN, U,
+				$forall(_X, _Y,
 						$(FORALL, _x, IN, _X,
 								$(FORALL, _y, IN, _Y,
 										$($("sequence_append", ",", _x, _y), IN, $("sequence_append", CROSS, _X, _Y))))));

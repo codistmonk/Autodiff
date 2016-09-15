@@ -179,6 +179,91 @@ public final class Autodiff {
 			}
 			
 			{
+				final Object _s = $new("s");
+				final Object _y = $new("y");
+				
+				suppose("definition_of_sequence_prepend_0",
+						$forall(_s, _y,
+								$($("sequence_prepend", _s, _y, $()), "=", $1(_y))));
+			}
+			
+			{
+				final Object _s = $new("s");
+				final Object _x0 = $new("x0");
+				final Object _y = $new("y");
+				
+				suppose("definition_of_sequence_prepend_1",
+						$forall(_s, _x0, _y,
+								$($("sequence_prepend", _s, _y, $1(_x0)), "=", $(_y, $(_s, _x0)))));
+			}
+			
+			{
+				final Object _s = $new("s");
+				final Object _x0 = $new("x0");
+				final Object _x1 = $new("x1");
+				final Object _y = $new("y");
+				
+				suppose("definition_of_sequence_prepend_2",
+						$forall(_s, _x0, _x1, _y,
+								$($("sequence_prepend", _s, _y, $(_x0, _x1)), "=", $(_y, $(_s, _x0, _x1)))));
+			}
+			
+			{
+				final Object _s = $new("s");
+				final Object _x0 = $new("x0");
+				
+				suppose("definition_of_sequence_prefix_0",
+						$forall(_s, _x0,
+								$($("sequence_prefix", _s, $1(_x0)), "=", $())));
+			}
+			
+			{
+				final Object _s = $new("s");
+				final Object _x0 = $new("x0");
+				final Object _x1 = $new("x1");
+				
+				suppose("definition_of_sequence_prefix_1",
+						$forall(_s, _x0, _x1,
+								$($("sequence_prefix", _s, $(_x0, $(_s, _x1))), "=", $1(_x0))));
+			}
+			
+			{
+				final Object _s = $new("s");
+				final Object _x0 = $new("x0");
+				final Object _x1 = $new("x1");
+				final Object _x2 = $new("x2");
+				
+				suppose("definition_of_sequence_prefix_2",
+						$forall(_s, _x0, _x1, _x2,
+								$($("sequence_prefix", _s, $(_x0, $(_s, _x1, _x2))), "=", $("sequence_prepend", _s, _x0, $("sequence_prefix", _s, $(_x1, _x2))))));
+			}
+			
+			{
+				final Object _n = $(1);
+				final Object _s = $new("s");
+				final Object _j = $new("j");
+				
+				suppose("definition_of_indices_type_0",
+						$(FORALL, _s, IN, $(POS, "^", _n),
+								$($(CROSS, "_", $(_j, "<", _n), $(N, "_", $("<", $(_s, "_", _j)))),
+										"=", $("sequence_append", ",", $(), $(N, "_", $("<", $(_s, "_", 0)))))));
+			}
+			
+			{
+				final Object _n = $new("n");
+				final Object _s = $new("s");
+				final Object _j = $new("j");
+				
+				final Object _m = $(_n, "-", 1);
+				
+				suppose("definition_of_indices_type_1",
+						$(FORALL, _n, IN, POS,
+								$(FORALL, _s, IN, $(POS, "^", _n),
+										$($(CROSS, "_", $(_j, "<", _n), $(N, "_", $("<", $(_s, "_", _j)))),
+												"=", $("sequence_append", ",", $(CROSS, "_", $(_j, "<", _m), $(N, "_", $("<", $($("sequence_prefix", ",", _s), "_", _j)))), $(N, "_", $("<", $(_s, "_", _m))))))));
+			}
+			
+			{
 				final Object _n = $new("n");
 				final Object _s = $new("s");
 				final Object _i = $new("i");
@@ -426,7 +511,12 @@ public final class Autodiff {
 						
 						canonicalizeLast();
 						
-						abort();
+						if (R.equals(_T)) {
+							autodeduce($(left(right(proposition(-1))), IN, R));
+							abort();
+						} else {
+							return false;
+						}
 						
 						conclude();
 					}
@@ -442,6 +532,27 @@ public final class Autodiff {
 				final Variable vX = v("X");
 				
 				Auto.hintAutodeduce(tryMatch($($(vx, "_", tuple(vi, vj)), IN, vX), (e, m) -> {
+					final Object _x = vx.get();
+					final Object _i = vi.get();
+					final Object _j = vj.get();
+					final Object _X = vX.get();
+					debugPrint(_x);
+					debugPrint(_i);
+					debugPrint(_j);
+					debugPrint(_X);
+					
+					final Variable vs = v("s");
+					
+					for (final Pair<PropositionDescription, PatternMatching> pair : potentialJustificationsFor($(_x, IN, $("M", "_", vs)))) {
+						debugPrint(pair);
+						
+						pair.getSecond().getMapping().forEach(Variable::set);
+						
+						final Object _s = vs.get();
+						
+						abort();
+					}
+					
 					abort();
 					
 					return false;
