@@ -142,7 +142,15 @@ public final class ElementaryVerification extends Proof.Abstract {
 					final BigDecimal nx = $N(vx.get());
 					final BigDecimal ny = $N(vy.get());
 					
-					return nx != null && ny != null ? nx.pow(ny.intValueExact()) : e;
+					if (nx == null || ny == null) {
+						return e;
+					}
+					
+					if (ny.signum() < 0) {
+						return BigDecimal.ONE.divide(nx.pow(-ny.intValueExact()));
+					}
+					
+					return nx.pow(ny.intValueExact());
 				}));
 			}
 			
@@ -151,8 +159,8 @@ public final class ElementaryVerification extends Proof.Abstract {
 				final Variable vy = new Variable("y");
 				
 				this.rules.add(matchWith($(vx, "%", vy), (e, m) -> {
-					final BigDecimal nx = $n(vx.get());
-					final BigDecimal ny = $n(vy.get());
+					final BigDecimal nx = $N(vx.get());
+					final BigDecimal ny = $N(vy.get());
 					
 					return nx.remainder(ny);
 				}));

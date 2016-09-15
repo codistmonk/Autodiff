@@ -46,6 +46,9 @@ public final class ScalarAlgebra {
 	public static final Auto.Simplifier CANONICALIZER = new Simplifier(Simplifier.Mode.DEFINE)
 			.add(newElementarySimplificationRule())
 			.add(newSubtractionSimplificationRule())
+			.add(newDivisionSimplificationRule())
+			.add(newModuloSimplificationRule())
+			.add(newFloorSimplificationRule())
 			.add(newAdditionAssociativitySimplificationRule())
 			.add(newMultiplicationAssociativitySimplificationRule())
 			.add(newAdditionSimplificationRule())
@@ -129,6 +132,26 @@ public final class ScalarAlgebra {
 			suppose("stability_of_%_in_" + Z,
 					$(FORALL, _x, ",", _y, IN, Z,
 							$rule($(LNOT, $(_y, "=", 0)), $($(_x, "%", _y), IN, Z))));
+		}
+		
+		{
+			final Object _x = $new("x");
+			
+			// TODO prove
+			
+			suppose("floor_of_integer",
+					$(FORALL, _x, IN, Z,
+							$($("floor", _x), "=", _x)));
+		}
+		
+		{
+			final Object _x = $new("x");
+			
+			// TODO prove
+			
+			suppose("integer_modulo_1",
+					$(FORALL, _x, IN, Z,
+							$($(_x, "%", 1), "=", 0)));
 		}
 		
 		for (final Object operator : array($("+"), $("*"))) {
@@ -1703,6 +1726,56 @@ public final class ScalarAlgebra {
 				final Object _y = vy.get();
 				
 				autobindTrim("definition_of_-_in_" + R, _x, _y);
+				
+				return true;
+			}
+			
+			return false;
+		});
+	}
+	
+	public static final TryRule<Object> newDivisionSimplificationRule() {
+		return tryPredicate((e, m) -> {
+			final Variable vx = new Variable("x");
+			final Variable vy = new Variable("y");
+			
+			if (match($(vx, "/", vy), e)) {
+				final Object _x = vx.get();
+				final Object _y = vy.get();
+				
+				autobindTrim("definition_of_/_in_" + R, _x, _y);
+				
+				return true;
+			}
+			
+			return false;
+		});
+	}
+	
+	public static final TryRule<Object> newModuloSimplificationRule() {
+		return tryPredicate((e, m) -> {
+			final Variable vx = new Variable("x");
+			
+			if (match($(vx, "%", 1), e)) {
+				final Object _x = vx.get();
+				
+				autobindTrim("integer_modulo_1", _x);
+				
+				return true;
+			}
+			
+			return false;
+		});
+	}
+	
+	public static final TryRule<Object> newFloorSimplificationRule() {
+		return tryPredicate((e, m) -> {
+			final Variable vx = new Variable("x");
+			
+			if (match($("floor", vx), e)) {
+				final Object _x = vx.get();
+				
+				autobindTrim("floor_of_integer", _x);
 				
 				return true;
 			}

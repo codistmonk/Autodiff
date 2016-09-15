@@ -10,7 +10,6 @@ import static autodiff.reasoning.tactics.Stack.*;
 import static autodiff.reasoning.test.BasicsTest.build;
 
 import autodiff.reasoning.deductions.ScalarAlgebra;
-import autodiff.reasoning.deductions.Sets;
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.tactics.Goal;
 

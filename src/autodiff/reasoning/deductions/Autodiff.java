@@ -153,6 +153,60 @@ public final class Autodiff {
 			}
 			
 			{
+				final Object _n = $new("n");
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				final Object _X = $new("X");
+				final Object _i = $new("i");
+				
+				suppose("definition_of_dot_product",
+						$forall(_X,
+								$(FORALL, _n, IN, POS,
+										$(FORALL, _x, ",", _y, IN, $(_X, "^", _n),
+												$($(_x, "⋅", _y), "=", $("sum", "_", $(_i, "<", _n), $($(_x, "_", _i), "*", $(_y, "_", _i))))))));
+			}
+			
+			{
+				final Object _n = $new("n");
+				final Object _s = $new("s");
+				final Object _i = $new("i");
+				final Object _j = $new("j");
+				
+				suppose("definition_of_multidimensional_strides",
+						$(FORALL, _n, IN, POS,
+								$(FORALL, _s, IN, $(POS, "^", _n),
+										$($("strides", _s), "=", $(p($(PI, "_", $(_j, "<", $($(_n, "-", 1), "-", _i)), $(_s, "_", _j))), "_", $(_i, "<", _n))))));
+			}
+			
+			{
+				final Object _n = $new("n");
+				final Object _s = $new("s");
+				final Object _i = $new("i");
+				final Object _j = $new("j");
+				
+				suppose("definition_of_index_from_indices",
+						$(FORALL, _n, IN, POS,
+								$(FORALL, _s, IN, $(POS, "^", _n),
+										$(FORALL, _i, IN, $(CROSS, "_", $(_j, "<", _n), $(N, "_", $("<", $(_s, "_", _j)))),
+												$($("index_from_indices", _s, _i), "=", $(_i, "⋅", $("strides", _s)))))));
+			}
+			
+			{
+				final Object _n = $new("n");
+				final Object _s = $new("s");
+				final Object _x = $new("x");
+				final Object _i = $new("i");
+				final Object _j = $new("j");
+				
+				suppose("definition_of_multidimensional_access",
+						$(FORALL, _n, IN, POS,
+								$(FORALL, _s, IN, $(POS, "^", _n),
+										$(FORALL, _x, IN, $("M", "_", _s),
+												$(FORALL, _i, IN, $(CROSS, "_", $(_j, "<", _n), $(N, "_", $("<", $(_s, "_", _j)))),
+														$($(_x, "_", _i), "=", $($(_x, ".v"), "_", $("index_from_indices", _s, _i))))))));
+			}
+			
+			{
 				final Object _x = $new("x");
 				final Object _i = $new("i");
 				final Object _X = $new("X");
@@ -369,6 +423,8 @@ public final class Autodiff {
 						suppose($(_j, IN, vJ.get()));
 						
 						substitute(_X, map(_i, _j));
+						
+						canonicalizeLast();
 						
 						abort();
 						
