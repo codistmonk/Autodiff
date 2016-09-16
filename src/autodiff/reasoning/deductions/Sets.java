@@ -589,9 +589,9 @@ public final class Sets {
 		final Object _x = $new("x");
 		
 		suppose("type_of_single",
-				$(FORALL, _X, IN, U,
-						$forall(_x,
-								$($(_x, IN, _X), "=", $($1(_x), IN, $1(_X))))));
+//				$(FORALL, _X, IN, U,
+					$forall(_X, _x,
+							$($(_x, IN, _X), "=", $($1(_x), IN, $1(_X)))));
 	}
 	
 	public static final void supposeTypeOfSingleInUhm() {
@@ -744,7 +744,8 @@ public final class Sets {
 			final Object _n = $new("n");
 			
 			suppose("definition_of_vector_access_0",
-					$(FORALL, _X, IN, U,
+//					$(FORALL, _X, IN, U,
+					$forall(_X,
 							$(FORALL, _n, IN, POS,
 									$(FORALL, _x, IN, $(_X, "^", _n),
 											$($(_x, "_", 0), "=", $("sequence_head", _x))))));
@@ -757,7 +758,8 @@ public final class Sets {
 			final Object _i = $new("i");
 			
 			suppose("definition_of_vector_access_i",
-					$(FORALL, _X, IN, U,
+//					$(FORALL, _X, IN, U,
+					$forall(_X,
 							$(FORALL, _n, ",", _i, IN, POS,
 									$(FORALL, _x, IN, $(_X, "^", _n),
 											$($(_x, "_", _i), "=", $($("sequence_tail", ",", _x), "_", $(_i, "-", 1)))))));
@@ -906,7 +908,7 @@ public final class Sets {
 		final Object previousValue = left(proposition(-1));
 		final Object previousType = right(proposition(-1));
 		
-		{
+		if (false) {
 			subdeduction();
 			
 			autobindTrim("type_of_tuple_in_Uhm", previousType, type);
@@ -942,13 +944,7 @@ public final class Sets {
 		
 		subdeduction();
 		
-		{
-			subdeduction();
-			
-			autobindTrim("type_of_single", right(proposition), left(proposition));
-			
-			conclude();
-		}
+		autobindTrim("type_of_single", right(proposition), left(proposition));
 		
 		rewrite(targetName, name(-1));
 		

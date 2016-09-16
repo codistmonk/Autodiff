@@ -245,8 +245,9 @@ public final class Autodiff {
 				
 				suppose("definition_of_indices_type_0",
 						$(FORALL, _s, IN, $(POS, "^", _n),
-								$($(CROSS, "_", $(_j, "<", _n), $(N, "_", $("<", $(_s, "_", _j)))),
-										"=", $("sequence_append", ",", $(), $(N, "_", $("<", $(_s, "_", 0)))))));
+								$forall(_j,
+										$($(CROSS, "_", $(_j, "<", _n), $(N, "_", $("<", $(_s, "_", _j)))),
+												"=", $("sequence_append", CROSS, $(), $(N, "_", $("<", $(_s, "_", 0))))))));
 			}
 			
 			{
@@ -259,8 +260,9 @@ public final class Autodiff {
 				suppose("definition_of_indices_type_1",
 						$(FORALL, _n, IN, POS,
 								$(FORALL, _s, IN, $(POS, "^", _n),
-										$($(CROSS, "_", $(_j, "<", _n), $(N, "_", $("<", $(_s, "_", _j)))),
-												"=", $("sequence_append", ",", $(CROSS, "_", $(_j, "<", _m), $(N, "_", $("<", $($("sequence_prefix", ",", _s), "_", _j)))), $(N, "_", $("<", $(_s, "_", _m))))))));
+										$forall(_j,
+												$($(CROSS, "_", $(_j, "<", _n), $(N, "_", $("<", $(_s, "_", _j)))),
+														"=", $("sequence_append", CROSS, $(CROSS, "_", $(_j, "<", _m), $(N, "_", $("<", $($("sequence_prefix", ",", _s), "_", _j)))), $(N, "_", $("<", $(_s, "_", _m)))))))));
 			}
 			
 			{
@@ -346,7 +348,7 @@ public final class Autodiff {
 				
 				final Object _n = $new("n");
 				final Object sum = $("sum", "_", $(_i, "<", _n), _X);
-				final Object _Pn = $rule($(_n, "<", _l), $(sum, IN, type));
+				final Object _Pn = $rule($(_n, "<", $(_l, "+", 1)), $(sum, IN, type));
 				
 				bind("induction_principle", _Pn, _n);
 				
@@ -358,7 +360,7 @@ public final class Autodiff {
 					{
 						subdeduction();
 						
-						suppose($(0, "<", _l));
+						suppose($(0, "<", $(_l, "+", 1)));
 						
 						bind("definition_of_sum_0", _X, _i);
 						autodeduce($(right(proposition(-1)), IN, type));
@@ -387,7 +389,7 @@ public final class Autodiff {
 						{
 							subdeduction();
 							
-							final Object _Pm = $rule($(_m, "<", _l), $($("sum", "_", $(_i, "<", _m), _X), IN, type));
+							final Object _Pm = $rule($(_m, "<", $(_l, "+", 1)), $($("sum", "_", $(_i, "<", _m), _X), IN, type));
 							
 							suppose("induction_n_condition", _Pm);
 							
@@ -422,18 +424,27 @@ public final class Autodiff {
 								
 								final Object inductionNSimplification = proposition(-1);
 								
-								suppose($(_m1, "<", _l));
+								suppose($(_m1, "<", $(_l, "+", 1)));
 								
 								{
 									subdeduction();
 									
-									autodeduce($(_m, "<", _m1));
-									autobindTrim("transitivity_of_<", _m, _m1, _l);
+									autobindTrim("preservation_of_<_under_addition", left(proposition(-1)), right(proposition(-1)), -1);
+									canonicalizeLast();
 									
 									conclude();
 								}
 								
 								autobindTrim("stability_of_X", _m);
+								
+								{
+									subdeduction();
+									
+									autodeduce($(_m, "<", _m1));
+									autobindTrim("transitivity_of_<", _m, _m1, $(_l, "+", 1));
+									
+									conclude();
+								}
 								
 								autoapply("induction_n_condition");
 								
@@ -492,7 +503,8 @@ public final class Autodiff {
 					debugPrint(_n);
 					debugPrint(_T);
 					
-					autobind("stability_of_sum_in_" + _T, _X, _i, $(_n, "+", 1));
+//					autobind("stability_of_sum_in_" + _T, _X, _i, $(_n, "+", 1));
+					autobind("stability_of_sum_in_" + _T, _X, _i, _n);
 					autoapplyOnce(name(-1));
 					canonicalizeLast();
 					
@@ -550,7 +562,49 @@ public final class Autodiff {
 						
 						final Object _s = vs.get();
 						
-						abort();
+						if (trySubdeduction(() -> {
+							{
+								subdeduction();
+								
+								autobindTrim("definition_of_indices_type_1", sequenceLength(",", _s), _s, $new("k"));
+								canonicalizeLast();
+								simplifySequencePrefixInLast();
+								
+								simplifyDefinitionOfIndicesInLast();
+								
+								debugPrint(right(proposition(-1)));
+								simplifySequenceAppendInLast();
+								simplifyVectorAccessInLast();
+								simplifySequenceTailInLast();
+								simplifyVectorAccessInLast();
+								simplifySequenceTailInLast();
+								simplifySequenceHeadInLast();
+								
+								conclude();
+							}
+							
+							{
+								final Variable vX_ = v("X");
+								final Variable vY_ = v("Y");
+								
+								matchOrFail($(v("?"), "=", sequence(CROSS, vX_, vY_)), proposition(-1));
+								
+								subdeduction();
+								
+								beginCartesianProduct(_i, vX_.get());
+								appendToCartesianProduct(_j, vY_.get());
+								
+								conclude();
+							}
+							
+							rewriteRight(name(-1), name(-2));
+							
+							autobind("definition_of_multidimensional_access", 2, _s, _x, tuple(_i, _j));
+							
+							abort();
+						})) {
+							break;
+						}
 					}
 					
 					abort();
@@ -1093,6 +1147,161 @@ public final class Autodiff {
 			
 			return true;
 		});
+	}
+
+	public static void simplifySequencePrefixInLast() {
+		final Simplifier s = new Simplifier(Mode.DEFINE);
+		
+		{
+			final Variable vsep = v("sep");
+			final Variable vx0 = v("x0");
+			
+			s.add(tryMatch($("sequence_prefix", vsep, $1(vx0)), (_e, _m) -> {
+				bind("definition_of_sequence_prefix_0", vsep.get(), vx0.get());
+				
+				return true;
+			}));
+		}
+		
+		{
+			final Variable vsep = v("sep");
+			final Variable vx0 = v("x0");
+			final Variable vx1 = v("x1");
+			
+			s.add(tryMatch($("sequence_prefix", vsep, $(vx0, $(vsep, vx1))), (_e, _m) -> {
+				bind("definition_of_sequence_prefix_1", vsep.get(), vx0.get(), vx1.get());
+				
+				return true;
+			}));
+		}
+		
+		s.simplifyCompletely(proposition(-1));
+	}
+
+	public static void simplifyDefinitionOfIndicesInLast() {
+		final Simplifier simplifier = new Simplifier(Mode.DEFINE);
+		
+		{
+			final Object _n = $(1);
+			final Variable vs_ = v("s");
+			final Variable vj_ = v("j");
+			
+			simplifier.add(tryMatch($(CROSS, "_", $(vj_, "<", _n), $(N, "_", $("<", $(vs_, "_", vj_)))), (_e, _m) -> {
+				autobindTrim("definition_of_indices_type_0", vs_.get(), vj_.get());
+				
+				return true;
+			}));
+		}
+		
+		{
+			final Variable vn = v("n");
+			final Variable vs_ = v("s");
+			final Variable vj_ = v("j");
+			
+			simplifier.add(tryMatch($(CROSS, "_", $(vj_, "<", vn), $(N, "_", $("<", $(vs_, "_", vj_)))), (_e, _m) -> {
+				autobindTrim("definition_of_indices_type_1", vn.get(), vs_.get(), vj_.get());
+				
+				return true;
+			}));
+		}
+		
+		simplifier.simplifyCompletely(proposition(-1));
+	}
+
+	public static void simplifyVectorAccessInLast() {
+		{
+			final Simplifier simplifier = new Simplifier(Mode.DEFINE);
+			
+			{
+				final Variable vx_ = v("x");
+				
+				simplifier.add(tryMatch($(vx_, "_", 0), (_e, _m) -> {
+					autobindTrim("definition_of_vector_access_0", R, sequenceLength(",", vx_.get()), vx_.get());
+					
+					return true;
+				}));
+			}
+			
+			{
+				final Variable vx_ = v("x");
+				final Variable vi_ = v("i");
+				
+				simplifier.add(tryMatch($(vx_, "_", vi_), (_e, _m) -> {
+					subdeduction();
+					
+					autobindTrim("definition_of_vector_access_i", R, sequenceLength(",", vx_.get()), vi_.get(), vx_.get());
+					canonicalizeLast();
+					
+					conclude();
+					
+					return true;
+				}));
+			}
+			
+			simplifier.simplifyCompletely(proposition(-1));
+		}
+	}
+
+	public static void simplifySequenceHeadInLast() {
+		{
+			final Simplifier simplifier = new Simplifier(Mode.DEFINE);
+			
+			{
+				final Variable vx0 = v("x0");
+				
+				simplifier.add(tryMatch($("sequence_head", $1(vx0)), (e_, m_) -> {
+					bind("definition_of_sequence_head_1", vx0.get());
+					
+					return true;
+				}));
+			}
+			
+			{
+				final Variable vx0 = v("x0");
+				final Variable vx1 = v("x1");
+				
+				simplifier.add(tryMatch($("sequence_head", $(vx0, vx1)), (e_, m_) -> {
+					bind("definition_of_sequence_head_2", vx0.get(), vx1.get());
+					
+					return true;
+				}));
+			}
+
+			simplifier.simplifyCompletely(proposition(-1));
+		}
+	}
+
+	public static void simplifySequenceTailInLast() {
+		{
+			final Simplifier simplifier = new Simplifier(Mode.DEFINE);
+			
+			{
+				final Variable vs_ = v("s");
+				final Variable vx0 = v("x0");
+				final Variable vx1 = v("x1");
+				
+				simplifier.add(tryMatch($("sequence_tail", vs_, $(vx0, $(vs_, vx1))), (e_, m_) -> {
+					bind("definition_of_sequence_tail_1", vs_.get(), vx0.get(), vx1.get());
+					
+					return true;
+				}));
+			}
+			
+			{
+				final Variable vs_ = v("s");
+				final Variable vx0 = v("x0");
+				final Variable vx1 = v("x1");
+				final Variable vx2 = v("x2");
+				
+				simplifier.add(tryMatch($("sequence_tail", vs_, $(vx0, $(vs_, vx1, vx2))), (e_, m_) -> {
+					bind("definition_of_sequence_tail_2", vs_.get(), vx0.get(), vx1.get(), vx2.get());
+					
+					return true;
+				}));
+			}
+			
+			simplifier.simplifyCompletely(proposition(-1));
+		}
 	}
 	
 }
