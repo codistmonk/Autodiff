@@ -723,6 +723,28 @@ public final class Autodiff {
 							
 							rewrite(name(-2), name(-1));
 							
+							{
+								final Variable vx_ = v("x");
+								final Variable vy_ = v("y");
+								
+								matchOrFail($(v(), "=", $(v(), "_", $(vx_, "⋅", vy_))), proposition(-1));
+								
+								subdeduction();
+								
+								autobindTrim("definition_of_dot_product", N, 2, vx_.get(), vy_.get());
+								
+								simplifySumInLast();
+								simplifySubstitutionsAndElementaryInLast();
+								simplifyVectorAccessInLast();
+								simplifySequenceTailInLast();
+								simplifyVectorAccessInLast();
+								simplifySequenceHeadInLast();
+								canonicalizeLast();
+								
+								conclude();
+							}
+							
+							rewrite(name(-2), name(-1));
 							abort();
 						})) {
 							break;
@@ -1478,6 +1500,41 @@ public final class Autodiff {
 				subdeduction();
 				
 				autobindTrim("definition_of_product_1", vX_.get(), vi_.get(), vn_.get());
+				canonicalize(right(proposition(-1)));
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+				
+				return true;
+			}));
+		}
+		
+		simplifier.simplifyCompletely(proposition(-1));
+	}
+	
+	public static final void simplifySumInLast() {
+		final Simplifier simplifier = new Simplifier(Mode.DEFINE);
+		
+		{
+			final Variable vX_ = v("X");
+			final Variable vi_ = v("i");
+			
+			simplifier.add(tryMatch($($("sum", "_", $(vi_, "<", 0), vX_)), (e_, m_) -> {
+				bind("definition_of_sum_0", vX_.get(), vi_.get());
+				
+				return true;
+			}));
+		}
+		
+		{
+			final Variable vX_ = v("X");
+			final Variable vi_ = v("i");
+			final Variable vn_ = v("n");
+			
+			simplifier.add(tryMatch($($("sum", "_", $(vi_, "<", vn_), vX_)), (e_, m_) -> {
+				subdeduction();
+				
+				autobindTrim("definition_of_sum_1", vX_.get(), vi_.get(), vn_.get());
 				canonicalize(right(proposition(-1)));
 				rewrite(name(-2), name(-1));
 				
