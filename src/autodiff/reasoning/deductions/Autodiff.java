@@ -9,8 +9,6 @@ import static autodiff.reasoning.deductions.Sets.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
 import static autodiff.reasoning.tactics.Auto.*;
-import static autodiff.reasoning.tactics.Goal.concludeGoal;
-import static autodiff.reasoning.tactics.Goal.newGoal;
 import static autodiff.reasoning.tactics.PatternPredicate.rule;
 import static autodiff.reasoning.tactics.Stack.*;
 import static autodiff.reasoning.tactics.Stack.PropositionDescription.potentialJustificationsFor;
@@ -20,11 +18,9 @@ import static multij.tools.Tools.*;
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
 import autodiff.reasoning.tactics.Auto;
-import autodiff.reasoning.tactics.Goal;
 import autodiff.reasoning.tactics.Auto.Simplifier;
 import autodiff.reasoning.tactics.Auto.Simplifier.Mode;
 import autodiff.reasoning.tactics.PatternMatching;
-import autodiff.reasoning.tactics.Stack;
 import autodiff.reasoning.tactics.Stack.PropositionDescription;
 
 import java.util.LinkedHashMap;
@@ -306,6 +302,29 @@ public final class Autodiff {
 								$(FORALL, _x, IN, $(_X, "^", _n),
 										$(FORALL, _i, IN, $(N, "_", $("<", _n)),
 												$($(_x, "_", _i), IN, _X)))));
+			}
+			
+			{
+				final Object _X = $new("X");
+				final Object _i = $new("i");
+				
+				suppose("definition_of_vector_generator_0",
+						$forall(_X, _i,
+								$($(p(_X), "_", $(_i, "<", 0)), "=", $())));
+			}
+			
+			{
+				final Object _X = $new("X");
+				final Object _i = $new("i");
+				final Object _n = $new("n");
+				
+				final Object _m = $(_n, "-", 1);
+				
+				suppose("definition_of_vector_generator_1",
+						$forall(_X, _i,
+								$(FORALL, _n, IN, POS,
+										$($(p(_X), "_", $(_i, "<", _n)),
+												"=", $("sequence_append", ",", $(p(_X), "_", $(_i, "<", _m)), $(_X, GIVEN, $1($replacement(_i, _m)), AT, $()))))));
 			}
 			
 			{
@@ -664,6 +683,10 @@ public final class Autodiff {
 							rewrite(name(-2), name(-1));
 							
 							autobindTrim("definition_of_multidimensional_strides", 2, _s);
+							
+							simplifyVectorGeneratorInLast();
+							simplifySequenceAppendInLast();
+							simplifySubstitutionsAndElementaryInLast();
 							
 							abort();
 						})) {
@@ -1212,8 +1235,8 @@ public final class Autodiff {
 			return true;
 		});
 	}
-
-	public static void simplifySequencePrefixInLast() {
+	
+	public static final void simplifySequencePrefixInLast() {
 		final Simplifier s = new Simplifier(Mode.DEFINE);
 		
 		{
@@ -1241,8 +1264,8 @@ public final class Autodiff {
 		
 		s.simplifyCompletely(proposition(-1));
 	}
-
-	public static void simplifyDefinitionOfIndicesInLast() {
+	
+	public static final void simplifyDefinitionOfIndicesInLast() {
 		final Simplifier simplifier = new Simplifier(Mode.DEFINE);
 		
 		{
@@ -1271,101 +1294,130 @@ public final class Autodiff {
 		
 		simplifier.simplifyCompletely(proposition(-1));
 	}
-
-	public static void simplifyVectorAccessInLast() {
+	
+	public static final void simplifyVectorAccessInLast() {
+		final Simplifier simplifier = new Simplifier(Mode.DEFINE);
+		
 		{
-			final Simplifier simplifier = new Simplifier(Mode.DEFINE);
+			final Variable vx_ = v("x");
 			
-			{
-				final Variable vx_ = v("x");
+			simplifier.add(tryMatch($(vx_, "_", 0), (_e, _m) -> {
+				autobindTrim("definition_of_vector_access_0", R, sequenceLength(",", vx_.get()), vx_.get());
 				
-				simplifier.add(tryMatch($(vx_, "_", 0), (_e, _m) -> {
-					autobindTrim("definition_of_vector_access_0", R, sequenceLength(",", vx_.get()), vx_.get());
-					
-					return true;
-				}));
-			}
-			
-			{
-				final Variable vx_ = v("x");
-				final Variable vi_ = v("i");
-				
-				simplifier.add(tryMatch($(vx_, "_", vi_), (_e, _m) -> {
-					subdeduction();
-					
-					autobindTrim("definition_of_vector_access_i", R, sequenceLength(",", vx_.get()), vi_.get(), vx_.get());
-					canonicalizeLast();
-					
-					conclude();
-					
-					return true;
-				}));
-			}
-			
-			simplifier.simplifyCompletely(proposition(-1));
+				return true;
+			}));
 		}
+		
+		{
+			final Variable vx_ = v("x");
+			final Variable vi_ = v("i");
+			
+			simplifier.add(tryMatch($(vx_, "_", vi_), (_e, _m) -> {
+				subdeduction();
+				
+				autobindTrim("definition_of_vector_access_i", R, sequenceLength(",", vx_.get()), vi_.get(), vx_.get());
+				canonicalizeLast();
+				
+				conclude();
+				
+				return true;
+			}));
+		}
+		
+		simplifier.simplifyCompletely(proposition(-1));
 	}
-
-	public static void simplifySequenceHeadInLast() {
+	
+	public static final void simplifySequenceHeadInLast() {
+		final Simplifier simplifier = new Simplifier(Mode.DEFINE);
+		
 		{
-			final Simplifier simplifier = new Simplifier(Mode.DEFINE);
+			final Variable vx0 = v("x0");
 			
-			{
-				final Variable vx0 = v("x0");
+			simplifier.add(tryMatch($("sequence_head", $1(vx0)), (e_, m_) -> {
+				bind("definition_of_sequence_head_1", vx0.get());
 				
-				simplifier.add(tryMatch($("sequence_head", $1(vx0)), (e_, m_) -> {
-					bind("definition_of_sequence_head_1", vx0.get());
-					
-					return true;
-				}));
-			}
-			
-			{
-				final Variable vx0 = v("x0");
-				final Variable vx1 = v("x1");
-				
-				simplifier.add(tryMatch($("sequence_head", $(vx0, vx1)), (e_, m_) -> {
-					bind("definition_of_sequence_head_2", vx0.get(), vx1.get());
-					
-					return true;
-				}));
-			}
-
-			simplifier.simplifyCompletely(proposition(-1));
+				return true;
+			}));
 		}
+		
+		{
+			final Variable vx0 = v("x0");
+			final Variable vx1 = v("x1");
+			
+			simplifier.add(tryMatch($("sequence_head", $(vx0, vx1)), (e_, m_) -> {
+				bind("definition_of_sequence_head_2", vx0.get(), vx1.get());
+				
+				return true;
+			}));
+		}
+		
+		simplifier.simplifyCompletely(proposition(-1));
 	}
-
-	public static void simplifySequenceTailInLast() {
+	
+	public static final void simplifySequenceTailInLast() {
+		final Simplifier simplifier = new Simplifier(Mode.DEFINE);
+		
 		{
-			final Simplifier simplifier = new Simplifier(Mode.DEFINE);
+			final Variable vs_ = v("s");
+			final Variable vx0 = v("x0");
+			final Variable vx1 = v("x1");
 			
-			{
-				final Variable vs_ = v("s");
-				final Variable vx0 = v("x0");
-				final Variable vx1 = v("x1");
+			simplifier.add(tryMatch($("sequence_tail", vs_, $(vx0, $(vs_, vx1))), (e_, m_) -> {
+				bind("definition_of_sequence_tail_1", vs_.get(), vx0.get(), vx1.get());
 				
-				simplifier.add(tryMatch($("sequence_tail", vs_, $(vx0, $(vs_, vx1))), (e_, m_) -> {
-					bind("definition_of_sequence_tail_1", vs_.get(), vx0.get(), vx1.get());
-					
-					return true;
-				}));
-			}
-			
-			{
-				final Variable vs_ = v("s");
-				final Variable vx0 = v("x0");
-				final Variable vx1 = v("x1");
-				final Variable vx2 = v("x2");
-				
-				simplifier.add(tryMatch($("sequence_tail", vs_, $(vx0, $(vs_, vx1, vx2))), (e_, m_) -> {
-					bind("definition_of_sequence_tail_2", vs_.get(), vx0.get(), vx1.get(), vx2.get());
-					
-					return true;
-				}));
-			}
-			
-			simplifier.simplifyCompletely(proposition(-1));
+				return true;
+			}));
 		}
+		
+		{
+			final Variable vs_ = v("s");
+			final Variable vx0 = v("x0");
+			final Variable vx1 = v("x1");
+			final Variable vx2 = v("x2");
+			
+			simplifier.add(tryMatch($("sequence_tail", vs_, $(vx0, $(vs_, vx1, vx2))), (e_, m_) -> {
+				bind("definition_of_sequence_tail_2", vs_.get(), vx0.get(), vx1.get(), vx2.get());
+				
+				return true;
+			}));
+		}
+		
+		simplifier.simplifyCompletely(proposition(-1));
+	}
+	
+	public static final void simplifyVectorGeneratorInLast() {
+		final Simplifier simplifier = new Simplifier(Mode.DEFINE);
+		
+		{
+			final Variable vX_ = v("X");
+			final Variable vi_ = v("i");
+			
+			simplifier.add(tryMatch($($(p(vX_), "_", $(vi_, "<", 0))), (e_, m_) -> {
+				bind("definition_of_vector_generator_0", vX_.get(), vi_.get());
+				
+				return true;
+			}));
+		}
+		
+		{
+			final Variable vX_ = v("X");
+			final Variable vi_ = v("i");
+			final Variable vn_ = v("n");
+			
+			simplifier.add(tryMatch($($(p(vX_), "_", $(vi_, "<", vn_))), (e_, m_) -> {
+				subdeduction();
+				
+				autobindTrim("definition_of_vector_generator_1", vX_.get(), vi_.get(), vn_.get());
+				canonicalize(right(proposition(-1)));
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+				
+				return true;
+			}));
+		}
+		
+		simplifier.simplifyCompletely(proposition(-1));
 	}
 	
 }
