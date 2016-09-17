@@ -157,7 +157,7 @@ public final class Computation extends AbstractNode<Computation> {
 											$(FORALL, _C, IN, $(R, "^", $(_l, "*", _n)),
 													$($($(name, _C), tuple(_A, _B)),
 															"=", ptuple(
-																	$(p($($(_C, "_", _i), "+", $("sum", "_", $(_j, "<", _m), $($(_A, "_", tuple(_r, _j)), "*", $(_B, "_", tuple(_j, _c)))))), "_", $(_i, "<", $(_l, "*", _n))),
+																	$(p($($(_C, "_", _i), "+", $(SUM, "_", $(_j, "<", _m), $($(_A, "_", tuple(_r, _j)), "*", $(_B, "_", tuple(_j, _c)))))), "_", $(_i, "<", $(_l, "*", _n))),
 																	tuple(_l, _n)))))))));
 		}
 		

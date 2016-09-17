@@ -44,6 +44,8 @@ public final class Autodiff {
 	
 	public static final Object PI = $("Π");
 	
+	public static final Object SUM = $("∑");
+	
 	public static final Deduction AUTODIFF = Basics.build("autodiff", new Runnable() {
 		
 		@Override
@@ -60,8 +62,6 @@ public final class Autodiff {
 			supposeTypeOfFlat();
 			supposeDefinitionOfSingleton();
 			
-			supposeDefinitionOfProductLoop0();
-			supposeDefinitionOfProductLoopN();
 			supposeDefinitionOfProductReduction();
 			
 			{
@@ -159,7 +159,7 @@ public final class Autodiff {
 						$forall(_X,
 								$(FORALL, _n, IN, POS,
 										$(FORALL, _x, ",", _y, IN, $(_X, "^", _n),
-												$($(_x, "⋅", _y), "=", $("sum", "_", $(_i, "<", _n), $($(_x, "_", _i), "*", $(_y, "_", _i))))))));
+												$($(_x, "⋅", _y), "=", $(SUM, "_", $(_i, "<", _n), $($(_x, "_", _i), "*", $(_y, "_", _i))))))));
 			}
 			
 			{
@@ -333,7 +333,7 @@ public final class Autodiff {
 				
 				suppose("definition_of_sum_0",
 						$forall(_X, _i,
-								$($("sum", "_", $(_i, "<", 0), _X), "=", 0)));
+								$($(SUM, "_", $(_i, "<", 0), _X), "=", 0)));
 			}
 			
 			{
@@ -346,7 +346,7 @@ public final class Autodiff {
 				suppose("definition_of_sum_1",
 						$forall(_X, _i,
 								$(FORALL, _n, IN, POS,
-										$($("sum", "_", $(_i, "<", _n), _X), "=", $($("sum", "_", $(_i, "<", m), _X), "+", $(_X, GIVEN, $1($replacement(_i, m)), AT, $()))))));
+										$($(SUM, "_", $(_i, "<", _n), _X), "=", $($(SUM, "_", $(_i, "<", m), _X), "+", $(_X, GIVEN, $1($replacement(_i, m)), AT, $()))))));
 			}
 			
 			{
@@ -371,6 +371,20 @@ public final class Autodiff {
 										$($(PI, "_", $(_i, "<", _n), _X), "=", $($(PI, "_", $(_i, "<", m), _X), "*", $(_X, GIVEN, $1($replacement(_i, m)), AT, $()))))));
 			}
 			
+			{
+				final Object _X = $new("X");
+				final Object _n = $new("n");
+				final Object _s = $new("s");
+				final Object _i = $new("i");
+				
+				suppose("type_of_multidimensional_data",
+						$(FORALL, _n, IN, POS,
+								$(FORALL, _s, IN, $(POS, "^", _n),
+										$(FORALL, _X, IN, $("M", "_", _s),
+												$forall(_i,
+														$($(_X, ".v"), IN, $(R, "^", $(PI, "_", $(_i, "<", _n), $(_s, "_", _i)))))))));
+			}
+			
 			for (final Object type : array(N, Z, Q, R)) {
 				subdeduction("stability_of_sum_in_" + type);
 				
@@ -388,7 +402,7 @@ public final class Autodiff {
 				}
 				
 				final Object _n = $new("n");
-				final Object sum = $("sum", "_", $(_i, "<", _n), _X);
+				final Object sum = $(SUM, "_", $(_i, "<", _n), _X);
 				final Object _Pn = $rule($(_n, "<", $(_l, "+", 1)), $(sum, IN, type));
 				
 				bind("induction_principle", _Pn, _n);
@@ -430,7 +444,7 @@ public final class Autodiff {
 						{
 							subdeduction();
 							
-							final Object _Pm = $rule($(_m, "<", $(_l, "+", 1)), $($("sum", "_", $(_i, "<", _m), _X), IN, type));
+							final Object _Pm = $rule($(_m, "<", $(_l, "+", 1)), $($(SUM, "_", $(_i, "<", _m), _X), IN, type));
 							
 							suppose("induction_n_condition", _Pm);
 							
@@ -574,7 +588,7 @@ public final class Autodiff {
 				final Variable vn = v("n");
 				final Variable vT = v("T");
 				
-				Auto.hintAutodeduce(tryMatch($($("sum", "_", $(vi, "<", vn), vX), IN, vT), (e, m) -> {
+				Auto.hintAutodeduce(tryMatch($($(SUM, "_", $(vi, "<", vn), vX), IN, vT), (e, m) -> {
 					final Object _X = vX.get();
 					final Object _i = vi.get();
 					final Object _n = vn.get();
@@ -745,6 +759,48 @@ public final class Autodiff {
 							}
 							
 							rewrite(name(-2), name(-1));
+							
+							{
+								subdeduction();
+								
+								final Variable vx_ = v("x");
+								final Variable vi_ = v("i");
+								
+								matchOrFail($(v(), "=", $(vx_, "_", vi_)), proposition(-1));
+								
+								final Object _k = $new("k");
+								
+								autobindTrim("type_of_multidimensional_data", $(2), _s, _x, _k);
+								
+								final Variable vX_ = v("X");
+								final Variable vn_ = v("n");
+								
+								matchOrFail($(v(), IN, $(vX_, "^", vn_)), proposition(-1));
+								
+								autobind("type_of_vector_access", vX_.get(), vn_.get(), vx_.get(), vi_.get());
+								
+								{
+									subdeduction();
+									
+									bind("identity", proposition(-1));
+									simplifyProductInLast();
+									simplifySubstitutionsAndElementaryInLast();
+									simplifyVectorAccessInLast();
+									simplifySequenceTailInLast();
+									simplifyVectorAccessInLast();
+									simplifySequenceHeadInLast();
+									
+									canonicalize(right(proposition(-1)));
+									rewrite(name(-2), name(-1));
+									
+									conclude();
+								}
+								
+								rewrite(name(-2), name(-1));
+								
+								conclude();
+							}
+							
 							abort();
 						})) {
 							break;
@@ -986,28 +1042,6 @@ public final class Autodiff {
 		autobindTrim("subset_in_Uhm", POS, N);
 		
 		conclude();
-	}
-	
-	public static final void supposeDefinitionOfProductLoop0() {
-		final Object _X = $new("X");
-		final Object _i = $new("i");
-		
-		suppose("definition_of_product_loop_0",
-				$forall(_i, _X,
-						$($(PI, "_", $(_i, "<", 0), _X), "=", 1)));
-	}
-	
-	public static final void supposeDefinitionOfProductLoopN() {
-		final Object _n = $new("n");
-		final Object _X = $new("X");
-		final Object _i = $new("i");
-		
-		suppose("definition_of_product_loop_n",
-				$(FORALL, _n, IN, POS,
-						$forall(_i, _X,
-								$rule($rule($(_i, IN, $(N, "_", $("<", _n))), $(_X, IN, R)),
-										$($(PI, "_", $(_i, "<", _n), _X),
-												"=", $($(PI, "_", $(_i, "<", $(_n, "-", 1)), _X), "*", $(_X, "|", $1($replacement(_i, $(_n, "-", 1))), "@", $())))))));
 	}
 	
 	public static final void supposeDefinitionOfProductReduction() {
@@ -1519,7 +1553,7 @@ public final class Autodiff {
 			final Variable vX_ = v("X");
 			final Variable vi_ = v("i");
 			
-			simplifier.add(tryMatch($($("sum", "_", $(vi_, "<", 0), vX_)), (e_, m_) -> {
+			simplifier.add(tryMatch($($(SUM, "_", $(vi_, "<", 0), vX_)), (e_, m_) -> {
 				bind("definition_of_sum_0", vX_.get(), vi_.get());
 				
 				return true;
@@ -1531,7 +1565,7 @@ public final class Autodiff {
 			final Variable vi_ = v("i");
 			final Variable vn_ = v("n");
 			
-			simplifier.add(tryMatch($($("sum", "_", $(vi_, "<", vn_), vX_)), (e_, m_) -> {
+			simplifier.add(tryMatch($($(SUM, "_", $(vi_, "<", vn_), vX_)), (e_, m_) -> {
 				subdeduction();
 				
 				autobindTrim("definition_of_sum_1", vX_.get(), vi_.get(), vn_.get());
