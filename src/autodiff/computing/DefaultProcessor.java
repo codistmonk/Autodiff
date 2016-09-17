@@ -211,7 +211,7 @@ public final class DefaultProcessor implements NodeProcessor {
 						
 						Stack.bind("identity", $$("to_java", valuesExpression));
 						ToJavaCode.computeToJava(proposition(-1));
-						Stack.abort();
+//						Stack.abort();
 					}
 					
 				}, new Simple(1));

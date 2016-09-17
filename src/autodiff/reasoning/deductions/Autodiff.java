@@ -488,6 +488,46 @@ public final class Autodiff {
 			}
 			
 			{
+				final Object _X = $new("X");
+				final Object _i = $new("i");
+				final Object _Y = $new("Y");
+				final Object _j = $new("j");
+				final Object _n = $new("n");
+				
+				suppose("equality_of_" + CROSS + "_sequence",
+						$forall(_X, _i, _Y, _j,
+								$(FORALL, _n, IN, N,
+										$rule($($(_X, GIVEN, $1($replacement(_i, _j)), AT, $()), "=", _Y), $($(_Y, GIVEN, $1($replacement(_j, _i)), AT, $()), "=", _X),
+												$($(CROSS, "_", $(_i, "<", _n), _X), "=", $(CROSS, "_", $(_j, "<", _n), _Y))))));
+			}
+			
+			{
+				final Variable vX = v("X");
+				final Variable vi = v("i");
+				final Variable vY = v("Y");
+				final Variable vj = v("j");
+				final Variable vn = v("n");
+				
+				Auto.hintAutodeduce(tryMatch($($(CROSS, "_", $(vi, "<", vn), vX), "=", $(CROSS, "_", $(vj, "<", vn), vY)), (e, m) -> {
+					final Object _X = vX.get();
+					final Object _i = vi.get();
+					final Object _Y = vY.get();
+					final Object _j = vj.get();
+					final Object _n = vn.get();
+					
+					subdeduction();
+					
+					substitute(_X, map(_i, _j));
+					substitute(_Y, map(_j, _i));
+					autobindTrim("equality_of_" + CROSS + "_sequence", _X, _i, _Y, _j, _n);
+					
+					conclude();
+					
+					return true;
+				}));
+			}
+			
+			{
 				final Variable vX = v("X");
 				final Variable vi = v("i");
 				final Variable vn = v("n");
@@ -599,7 +639,31 @@ public final class Autodiff {
 							
 							rewriteRight(name(-1), name(-2));
 							
-							autobind("definition_of_multidimensional_access", 2, _s, _x, tuple(_i, _j));
+							{
+								subdeduction();
+								
+								autobind("definition_of_multidimensional_access", 2, _s, _x, tuple(_i, _j));
+								autodeduce($(right(proposition(-2)), "=", right(condition(proposition(-1)))));
+								rewrite(name(-3), name(-1));
+								autoapply(name(-3));
+								
+								conclude();
+							}
+							
+							{
+								subdeduction();
+								
+								autobind("definition_of_index_from_indices", 2, _s, tuple(_i, _j));
+								autodeduce($(right(proposition(-3)), "=", right(condition(proposition(-1)))));
+								rewrite(name(-4), name(-1));
+								autoapply(name(-3));
+								
+								conclude();
+							}
+							
+							rewrite(name(-2), name(-1));
+							
+							autobindTrim("definition_of_multidimensional_strides", 2, _s);
 							
 							abort();
 						})) {
