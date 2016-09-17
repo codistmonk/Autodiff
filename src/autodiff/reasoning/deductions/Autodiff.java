@@ -349,6 +349,28 @@ public final class Autodiff {
 										$($("sum", "_", $(_i, "<", _n), _X), "=", $($("sum", "_", $(_i, "<", m), _X), "+", $(_X, GIVEN, $1($replacement(_i, m)), AT, $()))))));
 			}
 			
+			{
+				final Object _X = $new("X");
+				final Object _i = $new("i");
+				
+				suppose("definition_of_product_0",
+						$forall(_X, _i,
+								$($(PI, "_", $(_i, "<", 0), _X), "=", 1)));
+			}
+			
+			{
+				final Object _X = $new("X");
+				final Object _i = $new("i");
+				final Object _n = $new("n");
+				
+				final Object m = $(_n, "-", 1);
+				
+				suppose("definition_of_product_1",
+						$forall(_X, _i,
+								$(FORALL, _n, IN, POS,
+										$($(PI, "_", $(_i, "<", _n), _X), "=", $($(PI, "_", $(_i, "<", m), _X), "*", $(_X, GIVEN, $1($replacement(_i, m)), AT, $()))))));
+			}
+			
 			for (final Object type : array(N, Z, Q, R)) {
 				subdeduction("stability_of_sum_in_" + type);
 				
@@ -682,11 +704,24 @@ public final class Autodiff {
 							
 							rewrite(name(-2), name(-1));
 							
-							autobindTrim("definition_of_multidimensional_strides", 2, _s);
+							{
+								subdeduction();
+								
+								autobindTrim("definition_of_multidimensional_strides", 2, _s);
+								
+								simplifyVectorGeneratorInLast();
+								simplifySequenceAppendInLast();
+								simplifySubstitutionsAndElementaryInLast();
+								simplifyProductInLast();
+								simplifySubstitutionsAndElementaryInLast();
+								simplifyVectorAccessInLast();
+								simplifySequenceHeadInLast();
+								canonicalizeLast();
+								
+								conclude();
+							}
 							
-							simplifyVectorGeneratorInLast();
-							simplifySequenceAppendInLast();
-							simplifySubstitutionsAndElementaryInLast();
+							rewrite(name(-2), name(-1));
 							
 							abort();
 						})) {
@@ -1408,6 +1443,41 @@ public final class Autodiff {
 				subdeduction();
 				
 				autobindTrim("definition_of_vector_generator_1", vX_.get(), vi_.get(), vn_.get());
+				canonicalize(right(proposition(-1)));
+				rewrite(name(-2), name(-1));
+				
+				conclude();
+				
+				return true;
+			}));
+		}
+		
+		simplifier.simplifyCompletely(proposition(-1));
+	}
+	
+	public static final void simplifyProductInLast() {
+		final Simplifier simplifier = new Simplifier(Mode.DEFINE);
+		
+		{
+			final Variable vX_ = v("X");
+			final Variable vi_ = v("i");
+			
+			simplifier.add(tryMatch($($(PI, "_", $(vi_, "<", 0), vX_)), (e_, m_) -> {
+				bind("definition_of_product_0", vX_.get(), vi_.get());
+				
+				return true;
+			}));
+		}
+		
+		{
+			final Variable vX_ = v("X");
+			final Variable vi_ = v("i");
+			final Variable vn_ = v("n");
+			
+			simplifier.add(tryMatch($($(PI, "_", $(vi_, "<", vn_), vX_)), (e_, m_) -> {
+				subdeduction();
+				
+				autobindTrim("definition_of_product_1", vX_.get(), vi_.get(), vn_.get());
 				canonicalize(right(proposition(-1)));
 				rewrite(name(-2), name(-1));
 				
