@@ -848,7 +848,7 @@ public final class Autodiff {
 									breakConjunction(name(-1));
 									
 									autobindTrim("combination_of_<<_in_" + Z, _i, s.get(0), _j, s.get(1));
-									// FIXME consider a _i + b _j instead of _ + _j
+									// FIXME consider a _i + b _j instead of _i + _j
 									abort();
 									
 									canonicalizeLast();

@@ -523,6 +523,28 @@ public final class ScalarAlgebraTest {
 		}, new Simple(1));
 	}
 	
+	@Test
+	public final void testCanonicalizeMultiplication3() {
+		build(new Runnable() {
+			
+			@Override
+			public final void run() {
+				ScalarAlgebra.load();
+				
+				final Object _x = $new("x");
+				final Object _y = $new("y");
+				
+				suppose($(_x, IN, R));
+				suppose($(_y, IN, R));
+				
+				testCanonicalize(
+						$($(_x, "+", 1), "*", _y),
+						$($(_x, "*", _y), "+",_y));
+			}
+			
+		}, new Simple(1));
+	}
+	
 	public static final void testCanonicalize(final Object expression, final Object expectedCanonicalized) {
 		final Goal goal = newGoal($(expression, "=", expectedCanonicalized));
 		

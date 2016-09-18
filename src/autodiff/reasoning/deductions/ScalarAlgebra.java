@@ -422,7 +422,7 @@ public final class ScalarAlgebra {
 		
 		loadAutoHints();
 		
-		for (final Object operator : array(LE, "<")){
+		for (final Object operator : array(LE, "<")) {
 			subdeduction("preservation_of_" + operator + "_under_nonnegative_multiplication");
 			
 			{
@@ -496,7 +496,6 @@ public final class ScalarAlgebra {
 		}
 		
 		{
-			
 			subdeduction("combination_of_<<_in_" + Z);
 			
 			{
@@ -555,6 +554,61 @@ public final class ScalarAlgebra {
 			conclude();
 		}
 		
+		{
+			subdeduction("preservation_of_<_under_nonnegative_multiplication_in_" + Z);
+			
+			{
+				final Object _a = subdeductionForallIn("a", Z);
+				final Object _b = subdeductionForallIn("b", Z);
+				
+				{
+					final Object _c = subdeductionForallIn("c", N);
+					
+					suppose($(_a, "<", _b));
+					
+					{
+						subdeduction();
+						
+						autobindTrim("equality_<≤", _a, _b);
+						rewrite(name(-2), name(-1));
+						
+						conclude();
+					}
+					
+					{
+						subdeduction();
+						
+						autobindTrim("preservation_of_≤_under_nonnegative_multiplication", left(proposition(-1)), right(proposition(-1)), _c);
+						autobindTrim("preservation_of_≤_under_addition", left(proposition(-1)), right(proposition(-1)), $(1, "-", _c));
+						canonicalizeLast();
+						
+						conclude();
+					}
+					
+					{
+						subdeduction();
+						
+						autobindTrim("equality_<≤", $(_a, "*", _c), right(proposition(-1)));
+						canonicalizeLast();
+						
+						conclude();
+					}
+					
+					rewriteRight(name(-2), name(-1));
+					
+					conclude();
+				}
+				
+				buildForallIn();
+				
+				repeatConclude(2);
+			}
+			
+			buildForallIn2();
+			
+			conclude();
+		}
+		
 		Sets.testSimplificationOfTypeOfTuple();
 		Sets.testVectorAccess();
 	}
@@ -568,6 +622,42 @@ public final class ScalarAlgebra {
 		
 		canonicalize(proposition(targetName));
 		rewrite(targetName, name(-1));
+		
+		conclude();
+	}
+	
+	public static final void buildForallIn() {
+		final Variable vx = new Variable("x");
+		final Variable vX = new Variable("X");
+		final Variable vP = new Variable("P");
+		
+		Variable.matchOrFail(
+				$forall(vx, $rule($(vx, IN, vX),
+								vP)), proposition(-1));
+		
+		subdeduction();
+		
+		autobindTrim("definition_of_forall_in", vx.get(), vX.get(), vP.get());
+		rewriteRight(name(-2), name(-1));
+		
+		conclude();
+	}
+	
+	public static final void buildForallIn2() {
+		final Variable vx = new Variable("x");
+		final Variable vy = new Variable("y");
+		final Variable vX = new Variable("X");
+		final Variable vP = new Variable("P");
+		
+		Variable.matchOrFail(
+				$forall(vx, $rule($(vx, IN, vX),
+						$forall(vy, $rule($(vy, IN, vX),
+									vP)))), proposition(-1));
+		
+		subdeduction();
+		
+		autobindTrim("definition_of_forall_in_2", vx.get(), vy.get(), vX.get(), vP.get());
+		rewriteRight(name(-2), name(-1));
 		
 		conclude();
 	}
@@ -1327,6 +1417,10 @@ public final class ScalarAlgebra {
 			final Object _a = get(va);
 			final Object _b = get(vb);
 			
+			if (!(_a instanceof Number) || !(_b instanceof Number)) {
+				return null;
+			}
+			
 			final boolean vaIs1 = "1".equals(va.toString());
 			final boolean vbIs1 = "1".equals(vb.toString());
 			
@@ -1572,6 +1666,11 @@ public final class ScalarAlgebra {
 			final Object _x = get(vx);
 			final Object _a = get(va);
 			final Object _b = get(vb);
+			
+			if (!(_a instanceof Number) || !(_b instanceof Number)) {
+				return null;
+			}
+			
 			final Object _ax = get(vax);
 			final Object _bx = get(vbx);
 			final Object _z = get(vz);
