@@ -2,6 +2,7 @@ package autodiff.nodes;
 
 import static autodiff.reasoning.deductions.Autodiff.*;
 import static autodiff.reasoning.deductions.Basics.*;
+import static autodiff.reasoning.deductions.ScalarAlgebra.canonicalizeLast;
 import static autodiff.reasoning.deductions.Sequences.*;
 import static autodiff.reasoning.deductions.Sets.*;
 import static autodiff.reasoning.expressions.Expressions.*;
@@ -11,6 +12,7 @@ import static autodiff.reasoning.tactics.Stack.*;
 import static multij.rules.Variable.matchOrFail;
 
 import autodiff.reasoning.deductions.Basics;
+import autodiff.reasoning.deductions.ScalarAlgebra;
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
 

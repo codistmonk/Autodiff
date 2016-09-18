@@ -1,6 +1,7 @@
 package autodiff.reasoning.deductions;
 
 import static autodiff.reasoning.deductions.Basics.*;
+import static autodiff.reasoning.deductions.ScalarAlgebra.canonicalize;
 import static autodiff.reasoning.deductions.Sets.SUBSET;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
@@ -494,8 +495,81 @@ public final class ScalarAlgebra {
 			conclude();
 		}
 		
+		{
+			
+			subdeduction("combination_of_<<_in_" + Z);
+			
+			{
+				final Object _a = subdeductionForallIn("a", Z);
+				final Object _b = subdeductionForallIn("b", Z);
+				final Object _c = subdeductionForallIn("c", Z);
+				final Object _d = subdeductionForallIn("d", Z);
+				
+				suppose("a<b", $(_a, "<", _b));
+				suppose("c<d", $(_c, "<", _d));
+				
+				{
+					subdeduction();
+					
+					autobindTrim("equality_<≤", _a, _b);
+					rewrite("a<b", name(-1));
+					
+					conclude();
+				}
+				
+				{
+					subdeduction();
+					
+					autobindTrim("equality_<≤", _c, _d);
+					rewrite("c<d", name(-1));
+					
+					conclude();
+				}
+				
+				{
+					subdeduction();
+					
+					autobindTrim("combination_of_" + LE + LE, left(proposition(-2)), right(proposition(-2)), left(proposition(-1)), right(proposition(-1)));
+					autobindTrim("preservation_of_" + LE + "_under_addition", left(proposition(-1)), right(proposition(-1)), -1);
+					canonicalizeLast();
+					
+					conclude();
+				}
+				
+				{
+					subdeduction();
+					
+					autobindTrim("equality_<≤", $(_a, "+", _c), right(proposition(-1)));
+					canonicalizeLast();
+					
+					conclude();
+				}
+				
+				rewriteRight(name(-2), name(-1));
+				
+				repeatConclude(4);
+			}
+			
+			buildForallIn4();
+			
+			conclude();
+		}
+		
 		Sets.testSimplificationOfTypeOfTuple();
 		Sets.testVectorAccess();
+	}
+	
+	public static final void canonicalizeLast() {
+		canonicalizeIn(name(-1));
+	}
+	
+	public static final void canonicalizeIn(final String targetName) {
+		subdeduction();
+		
+		canonicalize(proposition(targetName));
+		rewrite(targetName, name(-1));
+		
+		conclude();
 	}
 	
 	public static final void buildForallIn3() {

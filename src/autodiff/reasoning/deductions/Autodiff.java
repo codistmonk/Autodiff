@@ -1,8 +1,11 @@
 package autodiff.reasoning.deductions;
 
 import static autodiff.reasoning.deductions.Basics.*;
+import static autodiff.reasoning.deductions.Propositions.breakConjunction;
 import static autodiff.reasoning.deductions.Propositions.deduceConjunctionLeft;
 import static autodiff.reasoning.deductions.ScalarAlgebra.canonicalize;
+import static autodiff.reasoning.deductions.ScalarAlgebra.canonicalizeIn;
+import static autodiff.reasoning.deductions.ScalarAlgebra.canonicalizeLast;
 import static autodiff.reasoning.deductions.ScalarAlgebra.newElementarySimplificationRule;
 import static autodiff.reasoning.deductions.Sequences.*;
 import static autodiff.reasoning.deductions.Sets.*;
@@ -168,10 +171,12 @@ public final class Autodiff {
 				final Object _i = $new("i");
 				final Object _j = $new("j");
 				
+				final Object _n1 = $(_n, "-", 1);
+				
 				suppose("definition_of_multidimensional_strides",
 						$(FORALL, _n, IN, POS,
 								$(FORALL, _s, IN, $(POS, "^", _n),
-										$($("strides", _s), "=", $(p($(PI, "_", $(_j, "<", $($(_n, "-", 1), "-", _i)), $(_s, "_", _j))), "_", $(_i, "<", _n))))));
+										$($("strides", _s), "=", $(p($(PI, "_", $(_j, "<", $(_n1, "-", _i)), $(_s, "_", $(_n1, "-", _j)))), "_", $(_i, "<", _n))))));
 			}
 			
 			{
@@ -598,7 +603,6 @@ public final class Autodiff {
 					debugPrint(_n);
 					debugPrint(_T);
 					
-//					autobind("stability_of_sum_in_" + _T, _X, _i, $(_n, "+", 1));
 					autobind("stability_of_sum_in_" + _T, _X, _i, _n);
 					autoapplyOnce(name(-1));
 					canonicalizeLast();
@@ -618,11 +622,14 @@ public final class Autodiff {
 						
 						canonicalizeLast();
 						
+						autodeduce($(left(right(proposition(-1))), IN, _T));
+						
 						if (R.equals(_T)) {
-							autodeduce($(left(right(proposition(-1))), IN, R));
+							setGlobal("autodiff.debug", true);
+							
+							autodeduce($(right(right(proposition(-2))), IN, _T));
+							
 							abort();
-						} else {
-							return false;
 						}
 						
 						conclude();
@@ -661,7 +668,7 @@ public final class Autodiff {
 							{
 								subdeduction();
 								
-								autobindTrim("definition_of_indices_type_1", sequenceLength(",", _s), _s, $new("k"));
+								autobindTrim("definition_of_indices_type_1", $(sequenceLength(",", _s)), _s, $new("k"));
 								canonicalizeLast();
 								simplifySequencePrefixInLast();
 								
@@ -697,7 +704,7 @@ public final class Autodiff {
 							{
 								subdeduction();
 								
-								autobind("definition_of_multidimensional_access", 2, _s, _x, tuple(_i, _j));
+								autobind("definition_of_multidimensional_access", $(2), _s, _x, tuple(_i, _j));
 								autodeduce($(right(proposition(-2)), "=", right(condition(proposition(-1)))));
 								rewrite(name(-3), name(-1));
 								autoapply(name(-3));
@@ -708,7 +715,7 @@ public final class Autodiff {
 							{
 								subdeduction();
 								
-								autobind("definition_of_index_from_indices", 2, _s, tuple(_i, _j));
+								autobind("definition_of_index_from_indices", $(2), _s, tuple(_i, _j));
 								autodeduce($(right(proposition(-3)), "=", right(condition(proposition(-1)))));
 								rewrite(name(-4), name(-1));
 								autoapply(name(-3));
@@ -721,7 +728,7 @@ public final class Autodiff {
 							{
 								subdeduction();
 								
-								autobindTrim("definition_of_multidimensional_strides", 2, _s);
+								autobindTrim("definition_of_multidimensional_strides", $(2), _s);
 								
 								simplifyVectorGeneratorInLast();
 								simplifySequenceAppendInLast();
@@ -729,10 +736,17 @@ public final class Autodiff {
 								simplifyProductInLast();
 								simplifySubstitutionsAndElementaryInLast();
 								simplifyVectorAccessInLast();
+								simplifySequenceTailInLast();
+								simplifyVectorAccessInLast();
 								simplifySequenceHeadInLast();
+								
 								canonicalizeLast();
 								
 								conclude();
+							}
+							
+							if (asBoolean(getGlobal("autodiff.debug")) && R.equals(_X)) {
+								abort();
 							}
 							
 							rewrite(name(-2), name(-1));
@@ -745,7 +759,7 @@ public final class Autodiff {
 								
 								subdeduction();
 								
-								autobindTrim("definition_of_dot_product", N, 2, vx_.get(), vy_.get());
+								autobindTrim("definition_of_dot_product", N, $(2), vx_.get(), vy_.get());
 								
 								simplifySumInLast();
 								simplifySubstitutionsAndElementaryInLast();
@@ -763,51 +777,95 @@ public final class Autodiff {
 							{
 								subdeduction();
 								
-								final Variable vx_ = v("x");
-								final Variable vi_ = v("i");
-								
-								matchOrFail($(v(), "=", $(vx_, "_", vi_)), proposition(-1));
-								
-								final Object _k = $new("k");
-								
-								autobindTrim("type_of_multidimensional_data", $(2), _s, _x, _k);
-								
-								final Variable vX_ = v("X");
-								final Variable vn_ = v("n");
-								
-								matchOrFail($(v(), IN, $(vX_, "^", vn_)), proposition(-1));
-								
-								autobind("type_of_vector_access", vX_.get(), vn_.get(), vx_.get(), vi_.get());
-								
 								{
 									subdeduction();
 									
-									bind("identity", proposition(-1));
-									simplifyProductInLast();
-									simplifySubstitutionsAndElementaryInLast();
-									simplifyVectorAccessInLast();
-									simplifySequenceTailInLast();
-									simplifyVectorAccessInLast();
-									simplifySequenceHeadInLast();
+									final Variable vx_ = v("x");
+									final Variable vi_ = v("i");
 									
-									canonicalize(right(proposition(-1)));
+									matchOrFail($(v(), "=", $(vx_, "_", vi_)), proposition(-1));
+									
+									final Object _k = $new("k");
+									
+									autobindTrim("type_of_multidimensional_data", $(2), _s, _x, _k);
+									
+									final Variable vX_ = v("X");
+									final Variable vn_ = v("n");
+									
+									matchOrFail($(v(), IN, $(vX_, "^", vn_)), proposition(-1));
+									
+									autobind("type_of_vector_access", vX_.get(), vn_.get(), vx_.get(), vi_.get());
+									
+									{
+										subdeduction();
+										
+										bind("identity", proposition(-1));
+										simplifyProductInLast();
+										simplifySubstitutionsAndElementaryInLast();
+										simplifyVectorAccessInLast();
+										simplifySequenceTailInLast();
+										simplifyVectorAccessInLast();
+										simplifySequenceHeadInLast();
+										
+										canonicalize(right(proposition(-1)));
+										rewrite(name(-2), name(-1));
+										
+										conclude();
+									}
+									
 									rewrite(name(-2), name(-1));
 									
 									conclude();
 								}
 								
-								rewrite(name(-2), name(-1));
+								{
+									subdeduction();
+									
+									final List<Object> s = flattenSequence(",", _s);
+									
+									{
+										subdeduction();
+										
+										autodeduce($(_i, IN, $(N, "_", $("<", s.get(0)))));
+										autobindTrim("definition_of_range", s.get(0), _i);
+										rewrite(name(-2), name(-1));
+										
+										conclude();
+									}
+									
+									breakConjunction(name(-1));
+									
+									{
+										subdeduction();
+										
+										autodeduce($(_j, IN, $(N, "_", $("<", s.get(1)))));
+										autobindTrim("definition_of_range", s.get(1), _j);
+										rewrite(name(-2), name(-1));
+										
+										conclude();
+									}
+									
+									breakConjunction(name(-1));
+									
+									autobindTrim("combination_of_<<_in_" + Z, _i, s.get(0), _j, s.get(1));
+									// FIXME consider a _i + b _j instead of _ + _j
+									abort();
+									
+									canonicalizeLast();
+									
+									conclude();
+								}
+								
+								autoapply(name(-2));
 								
 								conclude();
 							}
 							
-							abort();
+							rewriteRight(name(-1), name(-2));
 						})) {
-							break;
+							return true;
 						}
 					}
-					
-					abort();
 					
 					return false;
 				}));
@@ -823,15 +881,11 @@ public final class Autodiff {
 					final Object _i = vi.get();
 					final Object _X = vX.get();
 					
-					debugPrint(e);
-					
 					final Variable vY = v("Y");
 					final Variable vn = v("n");
 					
 					for (final Pair<PropositionDescription, PatternMatching> pair : potentialJustificationsFor($(_x, IN, $(vY, "^", vn)))) {
 						pair.getSecond().getMapping().forEach(Variable::set);
-						
-						debugPrint(pair);
 						
 						final Object _Y = vY.get();
 						final Object _n = vn.get();
@@ -1131,19 +1185,6 @@ public final class Autodiff {
 		matchOrFail($rule($(vx, LOR, vy), vz), proposition(targetName));
 		
 		autobindTrim("right_elimination_of_disjunction", vx.get(), vy.get(), vz.get());
-	}
-	
-	public static final void canonicalizeLast() {
-		canonicalizeIn(name(-1));
-	}
-	
-	public static final void canonicalizeIn(final String targetName) {
-		subdeduction();
-		
-		canonicalize(proposition(targetName));
-		rewrite(targetName, name(-1));
-		
-		conclude();
 	}
 	
 	public static final void subsituteLast() {

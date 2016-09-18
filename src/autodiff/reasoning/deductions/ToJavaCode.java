@@ -5,6 +5,7 @@ import static autodiff.reasoning.deductions.Basics.rewrite;
 import static autodiff.reasoning.deductions.Basics.rewriteRight;
 import static autodiff.reasoning.deductions.Propositions.breakConjunction;
 import static autodiff.reasoning.deductions.ScalarAlgebra.canonicalize;
+import static autodiff.reasoning.deductions.ScalarAlgebra.canonicalizeLast;
 import static autodiff.reasoning.deductions.Sequences.computeSequenceAppend;
 import static autodiff.reasoning.deductions.Sequences.flattenSequence;
 import static autodiff.reasoning.deductions.Sequences.sequence;
