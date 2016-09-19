@@ -598,44 +598,50 @@ public final class Autodiff {
 					final Object _i = vi.get();
 					final Object _n = vn.get();
 					final Object _T = vT.get();
-					debugPrint(_X);
-					debugPrint(_i);
-					debugPrint(_n);
-					debugPrint(_T);
+					
+					subdeduction();
 					
 					autobind("stability_of_sum_in_" + _T, _X, _i, _n);
 					autoapplyOnce(name(-1));
-					canonicalizeLast();
 					
 					{
-						final Variable vJ = v("J");
-						
-						matchOrFail($(FORALL, v("?"), IN, vJ, v("?")), condition(proposition(-1)));
-						
 						subdeduction();
 						
-						final Object _j = forall("j");
-						
-						suppose($(_j, IN, vJ.get()));
-						
-						substitute(_X, map(_i, _j));
-						
-						canonicalizeLast();
-						
-						autodeduce($(left(right(proposition(-1))), IN, _T));
-						
-						if (R.equals(_T)) {
-							setGlobal("autodiff.debug", true);
+						{
+							final Variable vJ = v("J");
 							
-							autodeduce($(right(right(proposition(-2))), IN, _T));
+							matchOrFail($(FORALL, v("?"), IN, vJ, v("?")), condition(proposition(-1)));
 							
-							abort();
+							subdeduction();
+							
+							final Object _j = forall("j");
+							
+							suppose($(_j, IN, vJ.get()));
+							
+							substitute(_X, map(_i, _j));
+							canonicalize(right(proposition(-1)));
+							rewrite(name(-2), name(-1));
+							
+							autodeduce($(right(proposition(-1)), IN, _T));
+							rewriteRight(name(-1), name(-2));
+							
+							conclude();
 						}
+						
+						ScalarAlgebra.buildForallIn();
+						
+						autodeduce($(proposition(-1), "=", condition(proposition(-3))));
+						
+						rewrite(name(-2), name(-1));
 						
 						conclude();
 					}
 					
-					return false;
+					autobindTrim(name(-2), _n);
+					
+					conclude();
+					
+					return true;
 				}));
 			}
 			
@@ -650,16 +656,10 @@ public final class Autodiff {
 					final Object _i = vi.get();
 					final Object _j = vj.get();
 					final Object _X = vX.get();
-					debugPrint(_x);
-					debugPrint(_i);
-					debugPrint(_j);
-					debugPrint(_X);
 					
 					final Variable vs = v("s");
 					
 					for (final Pair<PropositionDescription, PatternMatching> pair : potentialJustificationsFor($(_x, IN, $("M", "_", vs)))) {
-						debugPrint(pair);
-						
 						pair.getSecond().getMapping().forEach(Variable::set);
 						
 						final Object _s = vs.get();
@@ -674,7 +674,6 @@ public final class Autodiff {
 								
 								simplifyDefinitionOfIndicesInLast();
 								
-								debugPrint(right(proposition(-1)));
 								simplifySequenceAppendInLast();
 								simplifyVectorAccessInLast();
 								simplifySequenceTailInLast();
@@ -743,10 +742,6 @@ public final class Autodiff {
 								canonicalizeLast();
 								
 								conclude();
-							}
-							
-							if (asBoolean(getGlobal("autodiff.debug")) && R.equals(_X)) {
-								abort();
 							}
 							
 							rewrite(name(-2), name(-1));
