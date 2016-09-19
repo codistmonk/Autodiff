@@ -1151,19 +1151,12 @@ public final class ScalarAlgebra {
 												} else if (a1.isStrict() && a2.isStrict()) {
 													subdeduction();
 													
-													final BigDecimal newBound;
-													
-													if (trySubdeduction(() -> autodeduce($(_x, IN, Z)))
-															&& trySubdeduction(() -> autodeduce($(_y, IN, Z)))) {
-														autobindTrim("combination_of_<<_in_" + Z, a1.getValue(), _x, a2.getValue(), _y);
+													if (tryDeduction(() -> autobindTrim("combination_of_<<_in_" + Z, a1.getValue(), _x, a2.getValue(), _y))) {
 														autobindTrim("preservation_of_<_under_addition", left(proposition(-1)), right(proposition(-1)), $(1));
 														canonicalize(right(proposition(-1)));
 														rewrite(name(-2), name(-1));
-														
-														newBound = a1.getValue().add(a2.getValue()).add(BigDecimal.ONE);
 													} else {
 														autobindTrim("combination_of_<<", a1.getValue(), _x, a2.getValue(), _y);
-														newBound = a1.getValue().add(a2.getValue());
 													}
 													
 													canonicalize(left(proposition(-1)));
@@ -1171,7 +1164,7 @@ public final class ScalarAlgebra {
 													
 													conclude();
 													
-													leftBounds.put(expression, new LeftBound().update(newBound, true));
+													leftBounds.put(expression, new LeftBound().update($N(left(proposition(-1))), true));
 												}
 											}
 										}
@@ -1198,15 +1191,8 @@ public final class ScalarAlgebra {
 												} else if (b1.isStrict() && b2.isStrict()) {
 													subdeduction();
 													
-													final BigDecimal newBound;
-													
-													if (trySubdeduction(() -> autodeduce($(_x, IN, Z)))
-															&& trySubdeduction(() -> autodeduce($(_y, IN, Z)))) {
-														autobindTrim("combination_of_<<_in_" + Z, _x, b1.getValue(), _y, b2.getValue());
-														newBound = b1.getValue().add(b2.getValue()).subtract(BigDecimal.ONE);
-													} else {
+													if (!tryDeduction(() -> autobindTrim("combination_of_<<_in_" + Z, _x, b1.getValue(), _y, b2.getValue()))) {
 														autobindTrim("combination_of_<<", _x, b1.getValue(), _y, b2.getValue());
-														newBound = b1.getValue().add(b2.getValue());
 													}
 													
 													canonicalize(right(proposition(-1)));
@@ -1214,7 +1200,7 @@ public final class ScalarAlgebra {
 													
 													conclude();
 													
-													rightBounds.put(expression, new RightBound().update(newBound, true));
+													rightBounds.put(expression, new RightBound().update($N(right(proposition(-1))), true));
 												}
 											}
 										}
@@ -1303,17 +1289,21 @@ public final class ScalarAlgebra {
 											if (a != null) {
 												if (0 <= nx.signum()) {
 													if (a.isStrict()) {
-														autobindTrim("preservation_of_<_under_nonnegative_multiplication", a.getValue(), _y, nx);
+														if (tryDeduction(() -> autobindTrim("preservation_of_<_under_nonnegative_multiplication_in_" + Z, a.getValue(), _y, nx))) {
+															autobindTrim("preservation_of_<_under_addition", left(proposition(-1)), right(proposition(-1)), $(nx, "-", 1));
+														} else {
+															autobindTrim("preservation_of_<_under_nonnegative_multiplication", a.getValue(), _y, nx);
+														}
 													} else {
 														autobindTrim("preservation_of_≤_under_nonnegative_multiplication", a.getValue(), _y, nx);
 													}
 													
-													autobindTrim("commutativity_of_*_in_" + R, left(right(proposition(-1))), right(right(proposition(-1))));
-													rewrite(name(-2), name(-1));
 													canonicalize(left(proposition(-1)));
 													rewrite(name(-2), name(-1));
+													canonicalize(right(proposition(-1)));
+													rewrite(name(-2), name(-1));
 													
-													leftBounds.put(expression, a.copy().multiply(nx));
+													leftBounds.put(expression, new LeftBound().update($N(left(proposition(-1))), a.isStrict()));
 												} else {
 													if (a.isStrict()) {
 														autobindTrim("nonpreservation_of_<_under_negative_multiplication", a.getValue(), _y, nx);
@@ -1321,7 +1311,7 @@ public final class ScalarAlgebra {
 														autobindTrim("nonpreservation_of_≤_under_negative_multiplication", a.getValue(), _y, nx);
 													}
 													
-													autobindTrim("commutativity_of_*_in_" + R, left(right(proposition(-1))), right(right(proposition(-1))));
+													autobindTrim("commutativity_of_*_in_" + R, left(left(proposition(-1))), right(left(proposition(-1))));
 													rewrite(name(-2), name(-1));
 													canonicalize(right(proposition(-1)));
 													rewrite(name(-2), name(-1));
@@ -1333,17 +1323,20 @@ public final class ScalarAlgebra {
 											if (b != null) {
 												if (0 <= nx.signum()) {
 													if (b.isStrict()) {
-														autobindTrim("preservation_of_<_under_nonnegative_multiplication", _y, b.getValue(), nx);
+														if (!tryDeduction(() -> {
+															autobindTrim("preservation_of_<_under_nonnegative_multiplication_in_" + Z, _y, b.getValue(), nx);
+														})) {
+															autobindTrim("preservation_of_<_under_nonnegative_multiplication", _y, b.getValue(), nx);
+														}
 													} else {
 														autobindTrim("preservation_of_≤_under_nonnegative_multiplication", _y, b.getValue(), nx);
 													}
 													
-													autobindTrim("commutativity_of_*_in_" + R, left(right(proposition(-1))), right(right(proposition(-1))));
+													autobindTrim("commutativity_of_*_in_" + R, left(left(proposition(-1))), right(left(proposition(-1))));
 													rewrite(name(-2), name(-1));
 													canonicalize(right(proposition(-1)));
 													rewrite(name(-2), name(-1));
-													
-													rightBounds.put(expression, b.copy().multiply(nx));
+													rightBounds.put(expression, new RightBound().update($N(right(proposition(-1))), b.isStrict()));
 												} else {
 													if (b.isStrict()) {
 														autobindTrim("nonpreservation_of_<_under_negative_multiplication", _y, b.getValue(), nx);
@@ -1369,6 +1362,7 @@ public final class ScalarAlgebra {
 											if (0 <= ny.signum()) {
 												if (a.isStrict()) {
 													autobindTrim("preservation_of_<_under_nonnegative_multiplication", a.getValue(), _x, ny);
+													debugPrint("TODO");
 												} else {
 													autobindTrim("preservation_of_≤_under_nonnegative_multiplication", a.getValue(), _x, ny);
 												}
@@ -1455,10 +1449,13 @@ public final class ScalarAlgebra {
 						autodeduce($(0, op, $(_yy, "-", _x)));
 						
 						autobindTrim("preservation_of_" + op + "_under_addition", left(proposition(-1)), right(proposition(-1)), _x);
+						
 						canonicalize(left(proposition(-1)));
 						rewrite(name(-2), name(-1));
 						canonicalize(right(proposition(-1)));
 						rewrite(name(-2), name(-1));
+						canonicalize(_x);
+						rewriteRight(name(-2), name(-1));
 						
 						conclude();
 					}

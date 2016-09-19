@@ -818,45 +818,7 @@ public final class Autodiff {
 									conclude();
 								}
 								
-								{
-									subdeduction();
-									
-									final List<Object> s = flattenSequence(",", _s);
-									
-									{
-										subdeduction();
-										
-										autodeduce($(_i, IN, $(N, "_", $("<", s.get(0)))));
-										autobindTrim("definition_of_range", s.get(0), _i);
-										rewrite(name(-2), name(-1));
-										
-										conclude();
-									}
-									
-									breakConjunction(name(-1));
-									
-									{
-										subdeduction();
-										
-										autodeduce($(_j, IN, $(N, "_", $("<", s.get(1)))));
-										autobindTrim("definition_of_range", s.get(1), _j);
-										rewrite(name(-2), name(-1));
-										
-										conclude();
-									}
-									
-									breakConjunction(name(-1));
-									
-									autobindTrim("combination_of_<<_in_" + Z, _i, s.get(0), _j, s.get(1));
-									// FIXME consider a _i + b _j instead of _i + _j
-									abort();
-									
-									canonicalizeLast();
-									
-									conclude();
-								}
-								
-								autoapply(name(-2));
+								autoapply(name(-1));
 								
 								conclude();
 							}

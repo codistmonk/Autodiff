@@ -212,10 +212,12 @@ public final class ScalarAlgebraTest {
 				
 				testAutodeduce($(_b, "<", 2));
 				testAutodeduce($(_b, "<", 3));
-				setGlobal("debug", true);
 				testAutodeduce($($(_a, "+", _b), "<", 5));
 				testAutodeduce($($(_a, "+", _b), "<", 4));
 				testAutodeduce($($(_a, "+", _b), "<", 3));
+				
+				setGlobal("debug", true);
+				testAutodeduce($($(_a, "*", 4), "<", 5));
 			}
 			
 		});
