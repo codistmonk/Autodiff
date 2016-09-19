@@ -191,8 +191,39 @@ public final class ScalarAlgebraTest {
 	}
 	
 	@Test
-	@Ignore//XXX
 	public final void testComparisons5() {
+		build(new Runnable() {
+			
+			@Override
+			public final void run() {
+				ScalarAlgebra.load();
+				
+				final Object _a = $new("a");
+				
+				suppose($(_a, IN, N));
+				suppose($(_a, "<", 2));
+				
+				testAutodeduce($(_a, "<", 2));
+				testAutodeduce($(_a, "<", 3));
+				
+				final Object _b = $new("b");
+				
+				suppose($(_b, IN, $(N, "_", $("<", 2))));
+				
+				testAutodeduce($(_b, "<", 2));
+				testAutodeduce($(_b, "<", 3));
+				setGlobal("debug", true);
+				testAutodeduce($($(_a, "+", _b), "<", 5));
+				testAutodeduce($($(_a, "+", _b), "<", 4));
+				testAutodeduce($($(_a, "+", _b), "<", 3));
+			}
+			
+		});
+	}
+	
+	@Test
+	@Ignore//XXX
+	public final void testComparisons6() {
 		build(new Runnable() {
 			
 			@Override
@@ -282,6 +313,9 @@ public final class ScalarAlgebraTest {
 						1);
 				testCanonicalize(
 						$(1, "+", $(-1, "+", _x)),
+						_x);
+				testCanonicalize(
+						$(-1, "+", $(1, "+", _x)),
 						_x);
 				testCanonicalize(
 						$($(_x, "+", _y), "+", _z),

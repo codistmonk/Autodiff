@@ -1,7 +1,7 @@
 package autodiff.reasoning.deductions;
 
 import static autodiff.reasoning.deductions.Basics.*;
-import static autodiff.reasoning.deductions.Propositions.deduceConjunctionLeft;
+import static autodiff.reasoning.deductions.Propositions.*;
 import static autodiff.reasoning.deductions.Sequences.*;
 import static autodiff.reasoning.expressions.Expressions.*;
 import static autodiff.reasoning.proofs.ElementaryVerification.*;
@@ -12,9 +12,7 @@ import static autodiff.reasoning.tactics.Stack.*;
 import static multij.tools.Tools.*;
 
 import autodiff.reasoning.proofs.Deduction;
-import autodiff.reasoning.proofs.Substitution;
 import autodiff.reasoning.tactics.PatternMatching;
-import autodiff.reasoning.tactics.Stack;
 import autodiff.reasoning.tactics.Stack.AbortException;
 import autodiff.reasoning.tactics.Stack.PropositionDescription;
 
@@ -199,9 +197,9 @@ public final class Sets {
 	
 	public static final void loadAutoHints() {
 		{
-			final Variable vx = new Variable("x");
-			final Variable vX = new Variable("X");
-			final Variable vP = new Variable("P");
+			final Variable vx = v("x");
+			final Variable vX = v("X");
+			final Variable vP = v("P");
 			
 			hintAutobind(tryMatch($(FORALL, vx, IN, vX, vP), (e, m) -> {
 				bind("definition_of_forall_in", vx.get(), vX.get(), vP.get());
@@ -209,8 +207,8 @@ public final class Sets {
 				return true;
 			}));
 			
-			final Variable vy = new Variable("y");
-			final Variable vQ = new Variable("Q");
+			final Variable vy = v("y");
+			final Variable vQ = v("Q");
 			
 			hintAutodeduce(tryMatch($($(FORALL, vx, IN, vX, vP), "=", $(FORALL, vy, IN, vX, vQ)), (e, m) -> {
 				subdeduction();
@@ -227,10 +225,10 @@ public final class Sets {
 		}
 		
 		{
-			final Variable vx = new Variable("x");
-			final Variable vy = new Variable("y");
-			final Variable vX = new Variable("X");
-			final Variable vP = new Variable("P");
+			final Variable vx = v("x");
+			final Variable vy = v("y");
+			final Variable vX = v("X");
+			final Variable vP = v("P");
 			
 			hintAutobind(tryMatch($(FORALL, vx, ",", vy, IN, vX, vP), (e, m) -> {
 				bind("definition_of_forall_in_2", vx.get(), vy.get(), vX.get(), vP.get());
@@ -240,11 +238,11 @@ public final class Sets {
 		}
 		
 		{
-			final Variable vx = new Variable("x");
-			final Variable vy = new Variable("y");
-			final Variable vz = new Variable("z");
-			final Variable vX = new Variable("X");
-			final Variable vP = new Variable("P");
+			final Variable vx = v("x");
+			final Variable vy = v("y");
+			final Variable vz = v("z");
+			final Variable vX = v("X");
+			final Variable vP = v("P");
 			
 			hintAutobind(tryMatch($(FORALL, vx, ",", vy, ",", vz, IN, vX, vP), (e, m) -> {
 				bind("definition_of_forall_in_3", vx.get(), vy.get(), vz.get(), vX.get(), vP.get());
@@ -254,12 +252,12 @@ public final class Sets {
 		}
 		
 		{
-			final Variable va = new Variable("a");
-			final Variable vb = new Variable("b");
-			final Variable vc = new Variable("c");
-			final Variable vd = new Variable("d");
-			final Variable vX = new Variable("X");
-			final Variable vP = new Variable("P");
+			final Variable va = v("a");
+			final Variable vb = v("b");
+			final Variable vc = v("c");
+			final Variable vd = v("d");
+			final Variable vX = v("X");
+			final Variable vP = v("P");
 			
 			hintAutobind(tryMatch($(FORALL, va, ",", vb, ",", vc, ",", vd, IN, vX, vP), (e, m) -> {
 				bind("definition_of_forall_in_4", va.get(), vb.get(), vc.get(), vd.get(), vX.get(), vP.get());
@@ -269,7 +267,7 @@ public final class Sets {
 		}
 		
 		{
-			final Variable vX = new Variable("X");
+			final Variable vX = v("X");
 			
 			hintAutodeduce(tryMatch($(vX, SUBSET, vX), (e, m) -> {
 				autobindTrim("subset_reflexivity", vX.get());
@@ -279,7 +277,7 @@ public final class Sets {
 		}
 		
 		{
-			final Variable vn = new Variable("n");
+			final Variable vn = v("n");
 			
 			hintAutodeduce(tryMatch($($(N, "_", $("<", vn)), SUBSET, N), (e, m) -> {
 				autobindTrim("range_subset_naturals", vn.get());
@@ -289,8 +287,8 @@ public final class Sets {
 		}
 		
 		{
-			final Variable vX = new Variable("X");
-			final Variable vY = new Variable("Y");
+			final Variable vX = v("X");
+			final Variable vY = v("Y");
 			
 			hintAutodeduce(tryMatch($(vX, SUBSET, vY), (e, m) -> {
 				final Object _X = vX.get();
@@ -313,13 +311,13 @@ public final class Sets {
 		}
 		
 		{
-			final Variable vx = new Variable("x");
-			final Variable vX = new Variable("X");
+			final Variable vx = v("x");
+			final Variable vX = v("X");
 			
 			hintAutodeduce(tryMatch($(vx, IN, vX), (e, m) -> {
 				final Object _x = vx.get();
 				final Object _X = vX.get();
-				final Variable vY = new Variable("Y");
+				final Variable vY = v("Y");
 				final List<Pair<PropositionDescription, PatternMatching>> candidates = PropositionDescription.potentialJustificationsFor($(_x, IN, vY));
 				
 				for (final Pair<PropositionDescription, PatternMatching> pair : candidates) {
@@ -353,6 +351,27 @@ public final class Sets {
 		}
 		
 		{
+			final Variable vx = v("x");
+			final Variable vy = v("y");
+			
+			hintAutodeduce(tryMatch($(vx, "<", vy), (e, m) -> {
+				final Object _x = vx.get();
+				final Object _y = vy.get();
+				
+				subdeduction();
+				
+				autodeduce($(_x, IN, $(N, "_", $("<", _y))));
+				autobindTrim("definition_of_range", _y, _x);
+				rewrite(name(-2), name(-1));
+				deduceConjunctionRight(name(-1));
+				
+				conclude();
+				
+				return true;
+			}));
+		}
+		
+		{
 			hintAutodeduce(new TryRule<Object>() {
 				
 				@Override
@@ -377,7 +396,7 @@ public final class Sets {
 	}
 	
 	public static final List<PropositionDescription> inclusionPath(final Object origin, final Object target, final Collection<Object> ignore) {
-		final Variable right = new Variable("?");
+		final Variable right = v("?");
 		
 		for (final PropositionDescription d : PropositionDescription.iterateBackward(deduction())) {
 			if (match($(origin, SUBSET, right), d.getProposition())) {
@@ -789,7 +808,7 @@ public final class Sets {
 		final Rules<Object, Void> rules = new Rules<>();
 		
 		{
-			final Variable _x = new Variable("x");
+			final Variable _x = v("x");
 			
 			rules.add(rule($(_x, "_", 0), (__, m) -> {
 				{
@@ -807,8 +826,8 @@ public final class Sets {
 		}
 		
 		{
-			final Variable _x = new Variable("x");
-			final Variable _i = new Variable("i");
+			final Variable _x = v("x");
+			final Variable _i = v("i");
 			
 			rules.add(rule($(_x, "_", _i), (__, m) -> {
 				{
@@ -977,8 +996,8 @@ public final class Sets {
 		final Rules<Object, Void> rules = new Rules<>();
 		
 		{
-			final Variable vx = new Variable("x");
-			final Variable vy = new Variable("y");
+			final Variable vx = v("x");
+			final Variable vy = v("y");
 			
 			rules.add(rule($(vx, "+", vy), (e, m) -> {
 				{
@@ -1028,9 +1047,9 @@ public final class Sets {
 	}
 	
 	public static final boolean isArithmeticTyping(final Object proposition) {
-		final Variable vt = new Variable("T");
+		final Variable vt = v("T");
 		
-		if (match($(new Variable("*"), IN, vt), proposition)) {
+		if (match($(v("*"), IN, vt), proposition)) {
 			return Tools.set(N, R).contains(vt.get());
 		}
 		
