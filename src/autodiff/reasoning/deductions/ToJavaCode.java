@@ -18,16 +18,21 @@ import static autodiff.reasoning.tactics.Goal.*;
 import static autodiff.reasoning.tactics.PatternMatching.match;
 import static autodiff.reasoning.tactics.PatternMatching.matchOrFail;
 import static autodiff.reasoning.tactics.Stack.*;
+import static autodiff.reasoning.tactics.Stack.PropositionDescription.potentialJustificationsFor;
 import static multij.tools.Tools.*;
 
+import autodiff.reasoning.deductions.Autodiff.Special;
 import autodiff.reasoning.tactics.Auto.Simplifier;
 import autodiff.reasoning.tactics.Auto.Simplifier.Mode;
+import autodiff.reasoning.tactics.PatternMatching;
+import autodiff.reasoning.tactics.Stack.PropositionDescription;
 
 import java.util.List;
 
 import multij.rules.TryRule;
 import multij.rules.Variable;
 import multij.tools.IllegalInstantiationException;
+import multij.tools.Pair;
 
 /**
  * @author codistmonk (creation 2016-09-09)
@@ -153,6 +158,27 @@ public final class ToJavaCode {
 					$forall(_x, _c, _y, _d, _z,
 							$($("to_java", $("cases", $("", $(_x, "if", _c), $("", $(_y, "if", _d), _z)))), "=", $(p("to_java", _c), "?", p("to_java", _x), ":", p("to_java", $("cases", $("", $(_y, "if", _d), _z)))))));
 		}
+		
+		{
+			final Object _i = $new("i");
+			
+			suppose("definition_of_RES_element_to_java",
+					$forall(_i,
+							$($("to_java", $(Special.RES, "_", _i)), "=", $(app("read", str("result"), $("to_java", _i))))));
+		}
+		
+		{
+			final Object _a = $new("a");
+			final Object _s = $new("s");
+			final Object _i = $new("i");
+			
+			suppose("definition_of_ARG_element_to_java",
+					$forall(_a, _s, _i,
+							$rule($($(Special.ARG, _a), IN, $("M", "_", _s)),
+									$($("to_java", $($(Special.ARG, _a), "_", _i)), "=", app("read", str($("arg", _a)), $("to_java", $("index_from_indices", _s, _i)))))));
+		}
+		
+		// TODO to_java SUM
 		
 		{
 			final String javacode = "javacode";
@@ -1028,6 +1054,32 @@ public final class ToJavaCode {
 			rewrite(name(-2), name(-1), 1);
 			
 			conclude();
+		}))
+		.add(tryRule((e, m) -> {
+			final Variable vi = v("i");
+			
+			matchOrFail($("to_java", $(Special.RES, "_", vi)), e);
+			
+			autobindTrim("definition_of_RES_element_to_java", vi.get());
+		}))
+		.add(tryRule((e, m) -> {
+			final Variable va = v("a");
+			final Variable vi = v("i");
+			
+			matchOrFail($("to_java", $($(Special.ARG, va), "_", vi)), e);
+			
+			final Object _a = va.get();
+			final Object _i = vi.get();
+			
+			final Variable vs = v("s");
+			
+			for (final Pair<PropositionDescription, PatternMatching> pair : potentialJustificationsFor($($(Special.ARG, _a), IN, $("M", "_", vs)))) {
+				final Object _s = pair.getSecond().getMapping().get(vs);
+				
+				autobindTrim("definition_of_ARG_element_to_java", _a, _s, _i);
+				
+				abort("TODO");
+			}
 		}))
 		.add(tryRule((e, m) -> {
 			final Variable vx = v("x");

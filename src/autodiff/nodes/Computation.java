@@ -1,6 +1,7 @@
 package autodiff.nodes;
 
 import static autodiff.reasoning.deductions.Autodiff.*;
+import static autodiff.reasoning.deductions.Autodiff.Special.*;
 import static autodiff.reasoning.deductions.Basics.*;
 import static autodiff.reasoning.deductions.ScalarAlgebra.canonicalizeLast;
 import static autodiff.reasoning.deductions.Sequences.*;
@@ -12,7 +13,6 @@ import static autodiff.reasoning.tactics.Stack.*;
 import static multij.rules.Variable.matchOrFail;
 
 import autodiff.reasoning.deductions.Basics;
-import autodiff.reasoning.deductions.ScalarAlgebra;
 import autodiff.reasoning.io.Simple;
 import autodiff.reasoning.proofs.Deduction;
 
@@ -187,9 +187,9 @@ public final class Computation extends AbstractNode<Computation> {
 				
 				checkArgument(_m.equals($n(mn[0])), _m + " != " + mn[0]);
 				
-				final Object _A = $new("A");
-				final Object _B = $new("B");
-				final Object _C = $new("C");
+				final Object _A = $(ARG, $new("0"));
+				final Object _B = $(ARG, $new("1"));
+				final Object _C = $(RES);
 				
 				suppose($(_A, IN, $("M", "_", tuple(_l, _m))));
 				suppose($(_B, IN, $("M", "_", tuple(_m, _n))));

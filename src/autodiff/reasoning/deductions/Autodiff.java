@@ -1579,4 +1579,13 @@ public final class Autodiff {
 		simplifier.simplifyCompletely(proposition(-1));
 	}
 	
+	/**
+	 * @author codistmonk (creation 2016-09-19)
+	 */
+	public static enum Special {
+		
+		ARG, RES;
+		
+	}
+	
 }
