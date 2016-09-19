@@ -137,7 +137,6 @@ public abstract class ProcessorTest {
 	}
 	
 	@Test
-	@Ignore
 	public final void testComputation7() {
 		final Computation node = Computation.matrixMultiplication();
 		final Node<?> a = new Data().setShape(1, 2).set(1F, 2F);

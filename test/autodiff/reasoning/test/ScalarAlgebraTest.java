@@ -203,21 +203,41 @@ public final class ScalarAlgebraTest {
 				suppose($(_a, IN, N));
 				suppose($(_a, "<", 2));
 				
-				testAutodeduce($(_a, "<", 2));
-				testAutodeduce($(_a, "<", 3));
+//				testAutodeduce($(_a, "<", 2));
+//				testAutodeduce($(_a, "<", 3));
+//				
+//				final Object _b = $new("b");
+//				
+//				suppose($(_b, IN, $(N, "_", $("<", 2))));
+//				
+//				testAutodeduce($(_b, "<", 2));
+//				testAutodeduce($(_b, "<", 3));
+//				testAutodeduce($($(_a, "+", _b), "<", 5));
+//				testAutodeduce($($(_a, "+", _b), "<", 4));
+//				testAutodeduce($($(_a, "+", _b), "<", 3));
 				
-				final Object _b = $new("b");
-				
-				suppose($(_b, IN, $(N, "_", $("<", 2))));
-				
-				testAutodeduce($(_b, "<", 2));
-				testAutodeduce($(_b, "<", 3));
-				testAutodeduce($($(_a, "+", _b), "<", 5));
-				testAutodeduce($($(_a, "+", _b), "<", 4));
-				testAutodeduce($($(_a, "+", _b), "<", 3));
-				
-				setGlobal("debug", true);
 				testAutodeduce($($(_a, "*", 4), "<", 5));
+				
+//				{
+//					final Statistics s = new Statistics();
+//					Auto.okCounts.forEach((k, v) -> s.addValue(v));
+//					debugPrint(s.getCount(), s.getMaximum());
+//				}
+//				{
+//					final Statistics s = new Statistics();
+//					Auto.okTimes.forEach((k, v) -> s.addValue(v));
+//					debugPrint(s.getCount(), s.getMaximum() / 1.0E9);
+//				}
+//				{
+//					final Statistics s = new Statistics();
+//					Auto.koCounts.forEach((k, v) -> s.addValue(v));
+//					debugPrint(s.getCount(), s.getMaximum());
+//				}
+//				{
+//					final Statistics s = new Statistics();
+//					Auto.koTimes.forEach((k, v) -> s.addValue(v));
+//					debugPrint(s.getCount(), s.getMaximum() / 1.0E9);
+//				}
 			}
 			
 		});

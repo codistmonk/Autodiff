@@ -1106,7 +1106,7 @@ public final class ScalarAlgebra {
 									for (final Pair<PropositionDescription, PatternMatching> d : potentialJustificationsFor($(expression, IN, $(N, "_", $("<", vb))))) {
 										final BigDecimal n = cast(BigDecimal.class, $n(d.getSecond().getMapping().get(vb)));
 										
-										if (n != null) {
+										if (n != null && tryDeduction(() -> autodeduce($(expression, "<", n)))) {
 											rightBounds.computeIfAbsent(expression, __ -> new RightBound()).update(n, true);
 										}
 									}

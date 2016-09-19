@@ -14,6 +14,7 @@ import autodiff.reasoning.tactics.Stack.PropositionDescription;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
@@ -54,8 +55,22 @@ public final class Auto {
 		autodeduce(newName(), proposition);
 	}
 	
+	public static final Map<Object, Deduction> proofs = new LinkedHashMap<>();
+	
+//	public static final Map<Object, Integer> okCounts = new LinkedHashMap<>();
+//	
+//	public static final Map<Object, Long> okTimes = new LinkedHashMap<>();
+//	
+//	public static final Map<Object, Integer> koCounts = new LinkedHashMap<>();
+//	
+//	public static final Map<Object, Long> koTimes = new LinkedHashMap<>();
+	
 	public static final void autodeduce(final String propositionName, final Object proposition) {
 		checkState(pending.add(proposition), "Loop detected trying to autodeduce " + proposition);
+		
+		boolean ok = true;
+//		final long t0 = System.nanoTime();
+		Deduction existingProof = null;
 		
 		try {
 			{
@@ -68,7 +83,17 @@ public final class Auto {
 				}
 			}
 			
+			existingProof = proofs.get(proposition);
+			
+			if (existingProof != null) {
+				deduction().conclude(existingProof);
+				
+				return;
+			}
+			
 			final Deduction deduction = subdeduction(propositionName);
+			
+			existingProof = deduction;
 			
 			try {
 				try {
@@ -105,7 +130,22 @@ public final class Auto {
 				
 				throw exception;
 			}
+		} catch (final Exception exception) {
+			ok = false;
+			throw exception;
 		} finally {
+//			final long t = System.nanoTime() - t0;
+			
+			if (ok) {
+//				okCounts.compute(proposition, (k, v) -> v == null ? 1 : (v + 1));
+//				okTimes.compute(proposition, (k, v) -> v == null ? t : (v + t));
+				if (existingProof != null) {
+					proofs.put(proposition, existingProof);
+				}
+//			} else {
+//				koCounts.compute(proposition, (k, v) -> v == null ? 1 : (v + 1));
+//				koTimes.compute(proposition, (k, v) -> v == null ? t : (v + t));
+			}
 			pending.remove(proposition);
 		}
 	}
